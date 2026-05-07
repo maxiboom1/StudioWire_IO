@@ -47,3 +47,34 @@ export function createPlannedCablesForPorts(
     createPlannedCableForPort(port, prefix, firstCableNumber + offset, status),
   );
 }
+
+export function createLinkedPlannedCablesForPorts(
+  ports: Port[],
+  prefix: string,
+  firstCableNumber: number,
+  status: CableStatus = 'planned',
+): { ports: Port[]; cables: Cable[] } {
+  const cables = createPlannedCablesForPorts(ports, prefix, firstCableNumber, status);
+  const cableIdsByPortId = new Map<string, string>();
+
+  for (const cable of cables) {
+    const portId =
+      cable.sourceEndpoint.type === 'device_port'
+        ? cable.sourceEndpoint.id
+        : cable.destinationEndpoint.type === 'device_port'
+          ? cable.destinationEndpoint.id
+          : null;
+
+    if (portId) {
+      cableIdsByPortId.set(portId, cable.id);
+    }
+  }
+
+  return {
+    ports: ports.map((port) => ({
+      ...port,
+      plannedCableId: cableIdsByPortId.get(port.id) ?? port.plannedCableId,
+    })),
+    cables,
+  };
+}

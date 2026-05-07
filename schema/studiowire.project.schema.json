@@ -205,7 +205,7 @@
       "required": ["id", "locationId", "name", "heightRu", "numberingDirection"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "locationId": { "type": "string" },
+        "locationId": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
         "heightRu": { "type": "integer", "minimum": 1 },
         "numberingDirection": { "$ref": "#/$defs/RackNumberingDirection" }
@@ -240,7 +240,7 @@
         "manufacturer": { "type": "string" },
         "model": { "type": "string" },
         "categoryId": { "type": "string", "minLength": 1 },
-        "locationId": { "type": "string", "minLength": 1 },
+        "locationId": { "type": ["string", "null"] },
         "role": { "type": "string" },
         "labelPrefix": { "type": "string" },
         "mountType": { "$ref": "#/$defs/DeviceMountType" },

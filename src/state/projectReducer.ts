@@ -1,6 +1,6 @@
 import { allocateCableRange } from '../domain/cableNumbers';
 import { makeId, makeIndexedId, nowIso } from '../domain/id';
-import { createPlannedCableForPort } from '../domain/plannedCables';
+import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject } from '../domain/projectFactory';
 import { sampleProject } from '../domain/sampleProject';
 import { STUDIOWIRE_SCHEMA_VERSION } from '../domain/types';
@@ -34,7 +34,7 @@ export interface DeviceDraft {
   manufacturer: string;
   model: string;
   categoryId: string;
-  locationId: string;
+  locationId: string | null;
   role: string;
   labelPrefix: string;
   mountType: Device['mountType'];
@@ -319,10 +319,18 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     }
 
     case 'ADD_DEVICE': {
-      const project = createDeviceInProject(state.project, action.payload);
+      const result = createDeviceInProject(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: result.error,
+          importError: null,
+        };
+      }
 
       return {
-        project: stampProject(project, `Device created: ${action.payload.device.name}`),
+        project: stampProject(result.project, `Device created: ${action.payload.device.name}`),
         statusMessage: 'Device created',
         importError: null,
       };
@@ -471,7 +479,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
 function createDeviceInProject(
   project: ProjectRoot,
   payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] },
-): ProjectRoot {
+): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
   const timestamp = nowIso();
   const deviceId = payload.device.id ?? makeId('device', `${payload.device.code || payload.device.name}-${timestamp}`);
   const labelPrefix = payload.device.labelPrefix || payload.device.code || payload.device.name;
@@ -502,12 +510,20 @@ function createDeviceInProject(
   const newPorts: Port[] = [];
   const newCables: Cable[] = [];
 
-  payload.portGroups.forEach((draft, groupIndex) => {
+  for (let groupIndex = 0; groupIndex < payload.portGroups.length; groupIndex += 1) {
+    const draft = payload.portGroups[groupIndex];
     const portGroupId = makeId('port-group', `${deviceId}-${draft.name}-${groupIndex + 1}`);
     const firstCableNumber = draft.firstCableNumber;
     const lastCableNumber =
       firstCableNumber !== null && draft.count > 0 ? firstCableNumber + draft.count - 1 : null;
     let numberingRangeId: string | null = null;
+
+    if (draft.createPlannedCables && firstCableNumber === null) {
+      return {
+        ok: false,
+        error: `Device creation blocked: missing first cable number for ${draft.name}.`,
+      };
+    }
 
     if (draft.createPlannedCables && firstCableNumber !== null) {
       const allocation = allocateCableRange(nextProject, {
@@ -519,10 +535,15 @@ function createDeviceInProject(
         reason: `Planned cables for ${device.name} ${draft.name}`,
       });
 
-      if (allocation.preview.errors.length === 0) {
-        nextProject = allocation.project;
-        numberingRangeId = allocation.allocatedRange?.id ?? null;
+      if (allocation.preview.errors.length > 0 || !allocation.allocatedRange) {
+        return {
+          ok: false,
+          error: `Device creation blocked: cable allocation failed for ${draft.name}.`,
+        };
       }
+
+      nextProject = allocation.project;
+      numberingRangeId = allocation.allocatedRange.id;
     }
 
     const groupPorts = createPortsForDraft({
@@ -533,13 +554,16 @@ function createDeviceInProject(
     });
 
     if (draft.createPlannedCables && firstCableNumber !== null) {
-      groupPorts.forEach((port, portOffset) => {
-        const cableIndex = firstCableNumber + portOffset;
-        const cable = createPlannedCableForPort(port, draft.cablePrefix, cableIndex);
+      if (!numberingRangeId) {
+        return {
+          ok: false,
+          error: `Device creation blocked: no allocated cable range for ${draft.name}.`,
+        };
+      }
+      const linked = createLinkedPlannedCablesForPorts(groupPorts, draft.cablePrefix, firstCableNumber);
 
-        port.plannedCableId = cable.id;
-        newCables.push(cable);
-      });
+      groupPorts.splice(0, groupPorts.length, ...linked.ports);
+      newCables.push(...linked.cables);
     }
 
     newPortGroups.push({
@@ -559,13 +583,16 @@ function createDeviceInProject(
       locked: true,
     });
     newPorts.push(...groupPorts);
-  });
+  }
 
   return {
-    ...nextProject,
-    portGroups: [...nextProject.portGroups, ...newPortGroups],
-    ports: [...nextProject.ports, ...newPorts],
-    cables: [...nextProject.cables, ...newCables],
+    ok: true,
+    project: {
+      ...nextProject,
+      portGroups: [...nextProject.portGroups, ...newPortGroups],
+      ports: [...nextProject.ports, ...newPorts],
+      cables: [...nextProject.cables, ...newCables],
+    },
   };
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createPlannedCableForPort } from './plannedCables';
+import { createLinkedPlannedCablesForPorts, createPlannedCableForPort } from './plannedCables';
 import type { Port } from './types';
 
 function makePort(direction: Port['direction']): Port {
@@ -37,5 +37,14 @@ describe('createPlannedCableForPort', () => {
     expect(cable.labelTop).toBe('');
     expect(cable.labelMiddle).toBe('V-0002');
     expect(cable.labelBottom).toBe('INPUT-001');
+  });
+
+  it('returns ports linked to their planned cables', () => {
+    const port = makePort('bidirectional');
+    const result = createLinkedPlannedCablesForPorts([port], 'N', 10);
+
+    expect(result.cables).toHaveLength(1);
+    expect(result.ports[0].plannedCableId).toBe(result.cables[0].id);
+    expect(result.cables[0].sourceEndpoint).toMatchObject({ type: 'device_port', id: port.id });
   });
 });

@@ -1,9 +1,9 @@
 import {
   createDevice,
   createEmptyProject,
+  createLinkedPlannedCablesForPortGroup,
   createLocation,
   createNumberingLedger,
-  createPlannedCablesForPorts,
   createPortGroup,
   createPortsForGroup,
   createRack,
@@ -115,16 +115,16 @@ const multiviewerInputs = createPortGroup({
   locked: false,
 });
 
-const routerPorts = createPortsForGroup(routerOutputs, router.labelPrefix);
+const routerPortsDraft = createPortsForGroup(routerOutputs, router.labelPrefix);
 const multiviewerPorts = createPortsForGroup(multiviewerInputs, multiviewer.labelPrefix);
-const routerCables = createPlannedCablesForPorts({
+const { ports: routerPorts, cables: routerCables } = createLinkedPlannedCablesForPortGroup({
   portGroup: routerOutputs,
-  ports: routerPorts,
+  ports: routerPortsDraft,
 });
 
 const videoLedger = createNumberingLedger({
   prefix: 'V',
-  nextSuggested: 5,
+  nextSuggested: 9,
   ranges: [
     {
       id: 'range-v-router-outputs',

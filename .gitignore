@@ -1,5 +1,8 @@
-node_modules
-dist
+node_modules/
+dist/
+build/
+coverage/
+.vite/
 *.tsbuildinfo
 .env
 .env.local
@@ -7,3 +10,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+tools/diff_logs/*
+!tools/diff_logs/README.md
+/StudioWire_IO_*.zip

@@ -95,7 +95,7 @@ export interface Device {
   manufacturer: string;
   model: string;
   categoryId: string;
-  locationId: string;
+  locationId: string | null;
   role: string;
   labelPrefix: string;
   mountType: DeviceMountType;

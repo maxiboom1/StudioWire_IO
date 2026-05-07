@@ -9,6 +9,8 @@ Stabilization release for v0.1 before v0.2 planning.
 - Canonical planned cable creation module with source/cable/destination label rules.
 - Validator coverage for settings names, cable prefix format, rack/device location consistency, port group range references, and planned cable ledger coverage.
 - Tests for planned cable labels, stricter cable number parsing, and settings validation rules.
+- Review bundle tooling and Vitest exclusion for generated review artifacts.
+- Additional ledger and planned-cable consistency validation.
 
 ### Changed
 
@@ -16,6 +18,13 @@ Stabilization release for v0.1 before v0.2 planning.
 - Strengthened import behavior to reject malformed project objects and run validation immediately after import.
 - Standardized port label patterns on `{DEVICE}` and `{000}` tokens.
 - Updated sample project cable labels to use top/source, middle/cable number, bottom/destination.
+- Allowed `Device.locationId` to be `null` for virtual/unassigned handling while keeping rack and non-rack location validation.
+- Corrected the sample `V` ledger `nextSuggested` value to account for reserved gaps.
+- Made `ADD_DEVICE` reject failed cable allocations without mutating project state.
+
+### Removed
+
+- Removed unused `@playwright/test` dev dependency.
 
 ## v0.1.0
 

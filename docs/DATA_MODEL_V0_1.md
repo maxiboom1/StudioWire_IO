@@ -131,6 +131,8 @@ Fields:
 
 Current UI-created devices use `planned` or `retired` status. Retiring a device marks its related planned cables and ledger allocations as `retired`; it does not free cable numbers for reuse.
 
+`locationId` may be `null` for virtual devices and for unassigned handling. Rack and non-rack devices must reference an existing location.
+
 ## PortGroup
 
 Fields:
@@ -201,6 +203,8 @@ Fields:
 - `prefix`
 - `nextSuggested`
 - `ranges`: `NumberingRange[]`
+
+`nextSuggested` must be a positive integer greater than every `to` value in the ledger ranges, including allocated, reserved gap, and retired ranges.
 
 ## NumberingRange
 

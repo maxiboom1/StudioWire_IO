@@ -1,6 +1,6 @@
 import { createDefaultSettings } from './defaults';
 import { makeId, makeIndexedId, nowIso } from './id';
-import { createPlannedCablesForPorts as createCanonicalPlannedCablesForPorts } from './plannedCables';
+import { createLinkedPlannedCablesForPorts } from './plannedCables';
 import { STUDIOWIRE_SCHEMA_VERSION } from './types';
 import type {
   Cable,
@@ -115,7 +115,7 @@ export interface DeviceInput {
   manufacturer?: string;
   model?: string;
   categoryId: string;
-  locationId: string;
+  locationId: string | null;
   role?: string;
   labelPrefix?: string;
   mountType?: DeviceMountType;
@@ -217,13 +217,17 @@ export interface PlannedCablesInput {
 }
 
 export function createPlannedCablesForPorts(input: PlannedCablesInput): Cable[] {
+  return createLinkedPlannedCablesForPortGroup(input).cables;
+}
+
+export function createLinkedPlannedCablesForPortGroup(input: PlannedCablesInput): { ports: Port[]; cables: Cable[] } {
   const { portGroup, ports } = input;
 
   if (!portGroup.createPlannedCables || portGroup.firstCableNumber === null) {
-    return [];
+    return { ports, cables: [] };
   }
 
-  return createCanonicalPlannedCablesForPorts(
+  return createLinkedPlannedCablesForPorts(
     ports,
     portGroup.cablePrefix,
     portGroup.firstCableNumber,

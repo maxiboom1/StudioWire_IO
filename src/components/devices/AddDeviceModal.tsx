@@ -26,7 +26,7 @@ export function AddDeviceModal({
     manufacturer: '',
     model: '',
     categoryId: firstCategory?.id ?? '',
-    locationId: initialLocationId ?? project.locations[0]?.id ?? '',
+    locationId: initialLocationId ?? project.locations[0]?.id ?? null,
     role: '',
     labelPrefix: '',
     mountType: 'non_rack',
@@ -172,9 +172,9 @@ export function AddDeviceModal({
             <label>
               <span>Location</span>
               <select
-                value={device.locationId}
+                value={device.locationId ?? ''}
                 onChange={(event) =>
-                  setDevice({ ...device, locationId: event.target.value, rackId: null })
+                  setDevice({ ...device, locationId: event.target.value || null, rackId: null })
                 }
               >
                 <option value="">No location</option>

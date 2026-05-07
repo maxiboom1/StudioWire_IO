@@ -243,7 +243,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": null,
+      "plannedCableId": "cable-v-0001",
       "notes": ""
     },
     {
@@ -256,7 +256,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": null,
+      "plannedCableId": "cable-v-0002",
       "notes": ""
     },
     {
@@ -269,7 +269,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": null,
+      "plannedCableId": "cable-v-0003",
       "notes": ""
     },
     {
@@ -282,7 +282,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": null,
+      "plannedCableId": "cable-v-0004",
       "notes": ""
     },
     {
@@ -427,7 +427,7 @@
   "numberingLedgers": [
     {
       "prefix": "V",
-      "nextSuggested": 5,
+      "nextSuggested": 9,
       "ranges": [
         {
           "id": "range-v-router-outputs",

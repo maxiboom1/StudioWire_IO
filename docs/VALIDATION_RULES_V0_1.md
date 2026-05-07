@@ -37,8 +37,22 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `port-without-parent-device`: each port must reference an existing parent device.
 - `port-without-parent-port-group`: each port must reference an existing parent port group.
 - `port-group-numbering-range-missing`: locked port group numbering range references must resolve to a ledger range.
+- `port-group-numbering-range-reserved-gap`: port groups must reference allocated or retired ranges, not reserved gaps.
 - `cable-linked-to-missing-port`: device-port cable endpoints and port planned cable links must resolve.
+- `planned-cable-port-backlink-mismatch`: planned cables with device-port endpoints must have a matching `Port.plannedCableId`.
+- `planned-cable-missing-port-endpoint`: a port's planned cable must reference that port as source or destination.
+- `planned-output-cable-source-mismatch`: output planned cables must use the output port as source.
+- `planned-input-cable-destination-mismatch`: input planned cables must use the input port as destination.
+- `planned-bidirectional-cable-source-mismatch`: bidirectional planned cables use the bidirectional port as source in v0.1.
+- `planned-cable-label-middle-mismatch`: planned cable `labelMiddle` must equal `Cable.number`.
+- `planned-cable-label-top-mismatch`: planned output and bidirectional cable `labelTop` must equal the source endpoint label.
+- `planned-cable-label-bottom-mismatch`: planned input cable `labelBottom` must equal the destination endpoint label.
 - `allocated-range-without-owner`: allocated numbering ranges must have owner type and owner ID.
+- `ledger-next-suggested-positive`: ledger `nextSuggested` must be a positive integer.
+- `ledger-next-suggested-after-ranges`: ledger `nextSuggested` must be greater than every range `to` value in that ledger.
+- `numbering-range-positive`: numbering range `from` and `to` values must be positive integers.
+- `numbering-range-to-before-from`: numbering range `to` must be greater than or equal to `from`.
+- `numbering-range-prefix-mismatch`: numbering range prefix must match the parent ledger prefix.
 - `overlapping-numbering-ledger-ranges`: ranges in the same ledger must not overlap.
 - `planned-cable-without-ledger-range`: planned cables must be covered by an allocated or retired ledger range.
 - `reserved-gap-reused`: reserved gap numbers must not be used by cables or allocated ranges.

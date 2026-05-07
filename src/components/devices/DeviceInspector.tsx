@@ -12,7 +12,7 @@ export function DeviceInspector({ device }: { device: Device }) {
     model: device.model,
     role: device.role,
     notes: device.notes,
-    locationId: device.locationId,
+    locationId: device.locationId ?? '',
     rackId: device.rackId ?? '',
     rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
     rackBottomRu: device.rackBottomRu ? String(device.rackBottomRu) : '',
@@ -26,7 +26,7 @@ export function DeviceInspector({ device }: { device: Device }) {
       model: device.model,
       role: device.role,
       notes: device.notes,
-      locationId: device.locationId,
+      locationId: device.locationId ?? '',
       rackId: device.rackId ?? '',
       rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
       rackBottomRu: device.rackBottomRu ? String(device.rackBottomRu) : '',
@@ -42,7 +42,7 @@ export function DeviceInspector({ device }: { device: Device }) {
       model: form.model,
       role: form.role,
       notes: form.notes,
-      locationId: form.locationId,
+      locationId: form.locationId || null,
       rackId: form.rackId || null,
       rackSizeRu: form.rackSizeRu ? Number(form.rackSizeRu) : null,
       rackBottomRu: form.rackBottomRu ? Number(form.rackBottomRu) : null,
@@ -92,6 +92,7 @@ export function DeviceInspector({ device }: { device: Device }) {
             value={form.locationId}
             onChange={(event) => setForm({ ...form, locationId: event.target.value, rackId: '' })}
           >
+            <option value="">No location</option>
             {project.locations.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.name}

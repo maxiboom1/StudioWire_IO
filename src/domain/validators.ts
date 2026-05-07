@@ -175,6 +175,7 @@ function validateCables(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const cableNumberCounts = countBy(project.cables, (cable) => cable.number);
+  const cableById = new Map(project.cables.map((cable) => [cable.id, cable]));
 
   for (const cable of project.cables) {
     if ((cableNumberCounts.get(cable.number) ?? 0) > 1) {
@@ -195,6 +196,18 @@ function validateCables(
           'error',
           'planned-cable-duplicate',
           `Planned cable number ${cable.number} is duplicated.`,
+          'cable',
+          cable.id,
+        ),
+      );
+    }
+
+    if (cable.status === 'planned' && cable.labelMiddle !== cable.number) {
+      issues.push(
+        issue(
+          'error',
+          'planned-cable-label-middle-mismatch',
+          `Planned cable ${cable.number} labelMiddle must equal the cable number.`,
           'cable',
           cable.id,
         ),
@@ -233,6 +246,46 @@ function validateCables(
           ),
         );
       }
+
+      if (cable.status === 'planned' && endpoint.type === 'device_port' && endpoint.id) {
+        const endpointPort = ports.get(endpoint.id);
+
+        if (endpointPort && endpointPort.plannedCableId !== cable.id) {
+          issues.push(
+            issue(
+              'error',
+              'planned-cable-port-backlink-mismatch',
+              `Planned cable ${cable.number} references port ${endpointPort.label}, but the port does not link back to that cable.`,
+              'cable',
+              cable.id,
+            ),
+          );
+        }
+
+        if (endpointPort && endpoint === cable.sourceEndpoint && endpointPort.direction !== 'input' && cable.labelTop !== endpoint.label) {
+          issues.push(
+            issue(
+              'error',
+              'planned-cable-label-top-mismatch',
+              `Planned cable ${cable.number} labelTop must equal the source label.`,
+              'cable',
+              cable.id,
+            ),
+          );
+        }
+
+        if (endpointPort && endpoint === cable.destinationEndpoint && endpointPort.direction === 'input' && cable.labelBottom !== endpoint.label) {
+          issues.push(
+            issue(
+              'error',
+              'planned-cable-label-bottom-mismatch',
+              `Input planned cable ${cable.number} labelBottom must equal the destination label.`,
+              'cable',
+              cable.id,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -247,6 +300,104 @@ function validateCables(
           `Port ${port.label} links to missing planned cable ${port.plannedCableId}.`,
           'port',
           port.id,
+        ),
+      );
+    }
+
+    if (port.plannedCableId) {
+      const cable = cableById.get(port.plannedCableId);
+
+      if (cable) {
+        issues.push(...validatePortPlannedCableLink(port, cable, issue));
+      }
+    }
+  }
+
+  return issues;
+}
+
+function validatePortPlannedCableLink(
+  port: Port,
+  cable: Cable,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const hasPortEndpoint = endpointReferencesPort(cable.sourceEndpoint, port.id) || endpointReferencesPort(cable.destinationEndpoint, port.id);
+
+  if (!hasPortEndpoint) {
+    issues.push(
+      issue(
+        'error',
+        'planned-cable-missing-port-endpoint',
+        `Planned cable ${cable.number} does not reference port ${port.label}.`,
+        'port',
+        port.id,
+      ),
+    );
+  }
+
+  if (cable.labelMiddle !== cable.number) {
+    issues.push(
+      issue(
+        'error',
+        'planned-cable-label-middle-mismatch',
+        `Planned cable ${cable.number} labelMiddle must equal the cable number.`,
+        'cable',
+        cable.id,
+      ),
+    );
+  }
+
+  if (port.direction === 'input') {
+    if (!endpointReferencesPort(cable.destinationEndpoint, port.id)) {
+      issues.push(
+        issue(
+          'error',
+          'planned-input-cable-destination-mismatch',
+          `Input port ${port.label} must be the planned cable destination.`,
+          'port',
+          port.id,
+        ),
+      );
+    }
+
+    if (cable.labelBottom !== cable.destinationEndpoint.label) {
+      issues.push(
+        issue(
+          'error',
+          'planned-cable-label-bottom-mismatch',
+          `Input planned cable ${cable.number} labelBottom must equal the destination label.`,
+          'cable',
+          cable.id,
+        ),
+      );
+    }
+  } else {
+    const code =
+      port.direction === 'output'
+        ? 'planned-output-cable-source-mismatch'
+        : 'planned-bidirectional-cable-source-mismatch';
+
+    if (!endpointReferencesPort(cable.sourceEndpoint, port.id)) {
+      issues.push(
+        issue(
+          'error',
+          code,
+          `${port.direction} port ${port.label} must be the planned cable source.`,
+          'port',
+          port.id,
+        ),
+      );
+    }
+
+    if (cable.labelTop !== cable.sourceEndpoint.label) {
+      issues.push(
+        issue(
+          'error',
+          'planned-cable-label-top-mismatch',
+          `Planned cable ${cable.number} labelTop must equal the source label.`,
+          'cable',
+          cable.id,
         ),
       );
     }
@@ -548,7 +699,9 @@ function validatePortsAndGroups(
   issue: ReturnType<typeof createIssueBuilder>,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-  const rangeIds = new Set(project.numberingLedgers.flatMap((ledger) => ledger.ranges.map((range) => range.id)));
+  const rangesById = new Map(
+    project.numberingLedgers.flatMap((ledger) => ledger.ranges.map((range) => [range.id, range] as const)),
+  );
 
   for (const portGroup of project.portGroups) {
     const generatedPorts = project.ports.filter((port) => port.portGroupId === portGroup.id);
@@ -577,12 +730,26 @@ function validatePortsAndGroups(
       );
     }
 
-    if (portGroup.numberingRangeId && !rangeIds.has(portGroup.numberingRangeId)) {
+    if (portGroup.numberingRangeId && !rangesById.has(portGroup.numberingRangeId)) {
       issues.push(
         issue(
           'error',
           'port-group-numbering-range-missing',
           `Port group ${portGroup.name} references missing numbering range ${portGroup.numberingRangeId}.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    const numberingRange = portGroup.numberingRangeId ? rangesById.get(portGroup.numberingRangeId) : null;
+
+    if (numberingRange && numberingRange.status === 'reserved_gap') {
+      issues.push(
+        issue(
+          'error',
+          'port-group-numbering-range-reserved-gap',
+          `Port group ${portGroup.name} references a reserved gap instead of an allocated or retired range.`,
           'portGroup',
           portGroup.id,
         ),
@@ -620,7 +787,69 @@ function validateLedgerRanges(
       continue;
     }
 
+    if (!isPositiveInteger(ledger.nextSuggested)) {
+      issues.push(
+        issue(
+          'error',
+          'ledger-next-suggested-positive',
+          `Ledger ${ledger.prefix} nextSuggested must be a positive integer.`,
+          'numberingLedger',
+          ledger.prefix,
+        ),
+      );
+    }
+
+    const maxRangeTo = ledger.ranges.reduce((max, range) => Math.max(max, Number(range.to) || 0), 0);
+
+    if (maxRangeTo > 0 && ledger.nextSuggested <= maxRangeTo) {
+      issues.push(
+        issue(
+          'error',
+          'ledger-next-suggested-after-ranges',
+          `Ledger ${ledger.prefix} nextSuggested must be greater than all range end values.`,
+          'numberingLedger',
+          ledger.prefix,
+        ),
+      );
+    }
+
     for (const range of ledger.ranges) {
+      if (!isPositiveInteger(range.from) || !isPositiveInteger(range.to)) {
+        issues.push(
+          issue(
+            'error',
+            'numbering-range-positive',
+            `Numbering range ${range.id} from/to values must be positive integers.`,
+            'numberingRange',
+            range.id,
+          ),
+        );
+      }
+
+      if (Number.isFinite(range.from) && Number.isFinite(range.to) && range.to < range.from) {
+        issues.push(
+          issue(
+            'error',
+            'numbering-range-to-before-from',
+            `Numbering range ${range.id} must end at or after its start.`,
+            'numberingRange',
+            range.id,
+          ),
+        );
+      }
+
+      if (range.prefix !== ledger.prefix) {
+        issues.push(
+          issue(
+            'error',
+            'numbering-range-prefix-mismatch',
+            `Numbering range ${range.id} prefix must match parent ledger ${ledger.prefix}.`,
+            'numberingRange',
+            range.id,
+          ),
+        );
+      }
+
       if (range.status === 'allocated' && (!range.ownerType || !range.ownerId)) {
         issues.push(
           issue(
@@ -775,8 +1004,12 @@ function isRackPositionValid(device: Device): device is Device & { rackBottomRu:
   return isPositiveInteger(device.rackBottomRu) && isPositiveInteger(device.rackSizeRu);
 }
 
-function isPositiveInteger(value: number | null): value is number {
-  return Number.isSafeInteger(value) && value !== null && value > 0;
+function endpointReferencesPort(endpoint: Cable['sourceEndpoint'], portId: string): boolean {
+  return endpoint.type === 'device_port' && endpoint.id === portId;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 
 function rangesOverlap(leftFrom: number, leftTo: number, rightFrom: number, rightTo: number): boolean {
