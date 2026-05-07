@@ -29,23 +29,23 @@ npm run review:bundle -- --name 0.1.1 --snapshot
 
 ## Future Diff Bundle
 
-Use diff mode when the previous approved version has a valid tag or branch reference:
+After an approved tag exists, future reviews must use diff mode against that tag:
 
 ```bash
-npm run review:bundle -- --base v0.1.1 --name 0.2.0
+npm run review:bundle -- --base v0.1.1 --name 0.1.2
 ```
 
-If `--base` is omitted in diff mode, the tool tries the latest git tag, `main`, `master`, and `HEAD~1` in that order. If none exists, use snapshot mode.
+Snapshot mode should only be used for the first baseline or for an emergency full-state review when no reliable base ref exists. If `--base` is omitted in diff mode, the tool tries the latest git tag, `main`, `master`, and `HEAD~1` in that order.
 
 ## Rules
 
-- Review bundles are generated artifacts and should not be committed.
+- Review bundles are generated artifacts and should not be committed, except for `tools/diff_logs/README.md`.
 - Review bundles are excluded from Vitest using `vitest.config.ts`; tests must run only against the active source tree.
 - After a version is approved, tag it:
 
 ```bash
-git tag v0.1.1
+git tag v0.1.2
 ```
 
 - Future review should use diffs, not full project uploads.
-- v0.2 features should not be included in v0.1.1 review bundles: terminal blocks, rear/front TB logic, device-to-TB connections, Excel export, Bartender export, Visio export, backend, database, and auth.
+- v0.2 features should not be included in v0.1 review bundles: terminal blocks, rear/front TB logic, device-to-TB connections, Excel export, Bartender export, Visio export, backend, database, and auth.

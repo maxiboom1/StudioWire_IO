@@ -65,6 +65,24 @@ export function AddDeviceModal({
     );
   }
 
+  function handlePlannedCablesToggle(localId: string, checked: boolean) {
+    setPortGroups((current) =>
+      current.map((group) => {
+        if (group.localId !== localId) {
+          return group;
+        }
+
+        return {
+          ...group,
+          createPlannedCables: checked,
+          firstCableNumber: checked
+            ? getSuggestedFirstCableNumber(project, group.cablePrefix, current.filter((item) => item.localId !== localId))
+            : null,
+        };
+      }),
+    );
+  }
+
   function addPortGroup() {
     const category = project.settings.categories.find((item) => item.id === device.categoryId);
     const prefix = category?.defaultCablePrefix ?? project.settings.cablePrefixes[0]?.prefix ?? 'V';
@@ -117,7 +135,10 @@ export function AddDeviceModal({
         rackSizeRu: device.mountType === 'rack' ? device.rackSizeRu : null,
         rackBottomRu: device.mountType === 'rack' ? device.rackBottomRu : null,
       },
-      portGroups: portGroups.map(({ localId: _localId, ...group }) => group),
+      portGroups: portGroups.map(({ localId: _localId, ...group }) => ({
+        ...group,
+        firstCableNumber: group.createPlannedCables ? group.firstCableNumber : null,
+      })),
     });
     onCreated(id);
   }
@@ -272,7 +293,7 @@ export function AddDeviceModal({
           <div className="port-group-editor-list">
             {portGroups.map((group) => {
               const lastCableNumber =
-                group.firstCableNumber && group.count > 0
+                group.createPlannedCables && group.firstCableNumber && group.count > 0
                   ? group.firstCableNumber + group.count - 1
                   : null;
 
@@ -360,7 +381,9 @@ export function AddDeviceModal({
                         onChange={(event) =>
                           updatePortGroup(group.localId, {
                             cablePrefix: event.target.value,
-                            firstCableNumber: getSuggestedFirstCableNumber(project, event.target.value, portGroups),
+                            firstCableNumber: group.createPlannedCables
+                              ? getSuggestedFirstCableNumber(project, event.target.value, portGroups)
+                              : null,
                           })
                         }
                       >
@@ -374,6 +397,7 @@ export function AddDeviceModal({
                     <label>
                       <span>First cable number</span>
                       <input
+                        disabled={!group.createPlannedCables}
                         min="1"
                         type="number"
                         value={group.firstCableNumber ?? ''}
@@ -386,16 +410,18 @@ export function AddDeviceModal({
                     </label>
                     <label>
                       <span>Last cable number</span>
-                      <input readOnly value={lastCableNumber ? formatCableNumber(group.cablePrefix, lastCableNumber) : ''} />
+                      <input
+                        disabled={!group.createPlannedCables}
+                        readOnly
+                        value={lastCableNumber ? formatCableNumber(group.cablePrefix, lastCableNumber) : ''}
+                      />
                     </label>
                   </div>
                   <label className="checkbox-row">
                     <input
                       checked={group.createPlannedCables}
                       type="checkbox"
-                      onChange={(event) =>
-                        updatePortGroup(group.localId, { createPlannedCables: event.target.checked })
-                      }
+                      onChange={(event) => handlePlannedCablesToggle(group.localId, event.target.checked)}
                     />
                     <span>Create planned cables</span>
                   </label>

@@ -513,19 +513,22 @@ function createDeviceInProject(
   for (let groupIndex = 0; groupIndex < payload.portGroups.length; groupIndex += 1) {
     const draft = payload.portGroups[groupIndex];
     const portGroupId = makeId('port-group', `${deviceId}-${draft.name}-${groupIndex + 1}`);
-    const firstCableNumber = draft.firstCableNumber;
+    const createPlannedCables = draft.createPlannedCables;
+    const firstCableNumber = createPlannedCables ? draft.firstCableNumber : null;
     const lastCableNumber =
-      firstCableNumber !== null && draft.count > 0 ? firstCableNumber + draft.count - 1 : null;
+      createPlannedCables && firstCableNumber !== null && draft.count > 0
+        ? firstCableNumber + draft.count - 1
+        : null;
     let numberingRangeId: string | null = null;
 
-    if (draft.createPlannedCables && firstCableNumber === null) {
+    if (createPlannedCables && firstCableNumber === null) {
       return {
         ok: false,
         error: `Device creation blocked: missing first cable number for ${draft.name}.`,
       };
     }
 
-    if (draft.createPlannedCables && firstCableNumber !== null) {
+    if (createPlannedCables && firstCableNumber !== null) {
       const allocation = allocateCableRange(nextProject, {
         prefix: draft.cablePrefix,
         firstCableNumber,
@@ -553,7 +556,7 @@ function createDeviceInProject(
       labelPrefix,
     });
 
-    if (draft.createPlannedCables && firstCableNumber !== null) {
+    if (createPlannedCables && firstCableNumber !== null) {
       if (!numberingRangeId) {
         return {
           ok: false,
@@ -561,6 +564,13 @@ function createDeviceInProject(
         };
       }
       const linked = createLinkedPlannedCablesForPorts(groupPorts, draft.cablePrefix, firstCableNumber);
+
+      if (linked.cables.length !== groupPorts.length || linked.ports.some((port) => !port.plannedCableId)) {
+        return {
+          ok: false,
+          error: `Device creation blocked: planned cable creation failed for ${draft.name}.`,
+        };
+      }
 
       groupPorts.splice(0, groupPorts.length, ...linked.ports);
       newCables.push(...linked.cables);
@@ -579,7 +589,7 @@ function createDeviceInProject(
       firstCableNumber,
       lastCableNumber,
       numberingRangeId,
-      createPlannedCables: draft.createPlannedCables,
+      createPlannedCables,
       locked: true,
     });
     newPorts.push(...groupPorts);

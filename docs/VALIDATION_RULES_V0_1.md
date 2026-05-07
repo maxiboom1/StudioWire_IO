@@ -38,6 +38,15 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `port-without-parent-port-group`: each port must reference an existing parent port group.
 - `port-group-numbering-range-missing`: locked port group numbering range references must resolve to a ledger range.
 - `port-group-numbering-range-reserved-gap`: port groups must reference allocated or retired ranges, not reserved gaps.
+- `port-group-planned-cables-first-required`: planned-cables port groups require `firstCableNumber`.
+- `port-group-planned-cables-last-required`: planned-cables port groups require `lastCableNumber`.
+- `port-group-planned-cables-range-required`: planned-cables port groups require `numberingRangeId`.
+- `port-group-planned-cable-count-mismatch`: planned-cables port groups must have one linked planned cable per generated port.
+- `port-group-port-missing-planned-cable`: every port in a planned-cables group must have `plannedCableId`.
+- `port-group-planned-cable-outside-range`: planned cable numbers must be covered by the port group's allocated or retired ledger range.
+- `port-group-no-planned-cables-has-allocation`: no-planned-cables port groups must keep `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` as `null`.
+- `port-group-no-planned-cables-port-linked`: ports in no-planned-cables groups must not have `plannedCableId`.
+- `port-group-no-planned-cables-cable-reference`: planned cables must not reference ports from no-planned-cables groups.
 - `cable-linked-to-missing-port`: device-port cable endpoints and port planned cable links must resolve.
 - `planned-cable-port-backlink-mismatch`: planned cables with device-port endpoints must have a matching `Port.plannedCableId`.
 - `planned-cable-missing-port-endpoint`: a port's planned cable must reference that port as source or destination.
@@ -60,6 +69,8 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 ## Numbering Rules
 
 Cable numbers are unique project data. Allocating a later first number creates a `reserved_gap` range for skipped numbers, and the UI asks for confirmation before committing that reservation.
+
+When a port group has `createPlannedCables` set to `false`, v0.1.2 does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
 
 Reserved gaps and retired ranges remain unavailable. v0.1 does not free cable numbers when a device is retired.
 

@@ -20,6 +20,7 @@ interface CommandResult {
 const REPO_ROOT = process.cwd();
 const DIFF_LOG_ROOT = resolve(REPO_ROOT, 'tools', 'diff_logs');
 const EXCLUDED_PREFIXES = ['node_modules/', 'dist/', 'build/', '.git/', 'tools/diff_logs/', 'coverage/', '.vite/'];
+const EXCLUDED_FILE_PATTERNS = [/\.tsbuildinfo$/, /^StudioWire_IO_.*\.zip$/];
 const MAX_COPY_BYTES = 2 * 1024 * 1024;
 const TEST_COMMANDS = [
   ['npm', ['test', '--', '--run']],
@@ -473,7 +474,12 @@ function resolveExecutable(command: string): string {
 }
 
 function gitExcludes(): string[] {
-  return ['.', ...EXCLUDED_PREFIXES.map((prefix) => `:(exclude)${prefix}**`)];
+  return [
+    '.',
+    ...EXCLUDED_PREFIXES.map((prefix) => `:(exclude)${prefix}**`),
+    ':(exclude)*.tsbuildinfo',
+    ':(exclude)StudioWire_IO_*.zip',
+  ];
 }
 
 function filterPaths(paths: string[]): string[] {
@@ -486,8 +492,12 @@ function normalizePath(file: string): string {
 
 function isExcluded(file: string): boolean {
   const normalized = normalizePath(file);
+  const basename = normalized.split('/').pop() ?? normalized;
 
-  return EXCLUDED_PREFIXES.some((prefix) => normalized === prefix.slice(0, -1) || normalized.startsWith(prefix));
+  return (
+    EXCLUDED_PREFIXES.some((prefix) => normalized === prefix.slice(0, -1) || normalized.startsWith(prefix)) ||
+    EXCLUDED_FILE_PATTERNS.some((pattern) => pattern.test(basename))
+  );
 }
 
 function isBinaryFile(file: string): boolean {

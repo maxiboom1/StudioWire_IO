@@ -86,6 +86,87 @@ describe('validateProject planned cable rules', () => {
   });
 });
 
+describe('validateProject port group planned-cable mode rules', () => {
+  it('accepts a valid planned-cable port group', () => {
+    const project = structuredClone(sampleProject);
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).not.toContain('port-group-planned-cables-range-required');
+    expect(codes).not.toContain('port-group-planned-cable-count-mismatch');
+    expect(codes).not.toContain('port-group-port-missing-planned-cable');
+  });
+
+  it('accepts a valid no-planned-cables port group', () => {
+    const project = structuredClone(sampleProject);
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).not.toContain('port-group-no-planned-cables-has-allocation');
+    expect(codes).not.toContain('port-group-no-planned-cables-port-linked');
+    expect(codes).not.toContain('port-group-no-planned-cables-cable-reference');
+  });
+
+  it('reports a no-planned-cables group with firstCableNumber set', () => {
+    const project = structuredClone(sampleProject);
+    const portGroup = project.portGroups.find((group) => !group.createPlannedCables);
+
+    if (!portGroup) {
+      throw new Error('Expected sample no-planned-cables port group');
+    }
+
+    portGroup.firstCableNumber = 20;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('port-group-no-planned-cables-has-allocation');
+  });
+
+  it('reports a no-planned-cables group with a port plannedCableId set', () => {
+    const project = structuredClone(sampleProject);
+    const portGroup = project.portGroups.find((group) => !group.createPlannedCables);
+
+    if (!portGroup) {
+      throw new Error('Expected sample no-planned-cables port group');
+    }
+
+    const port = project.ports.find((item) => item.portGroupId === portGroup.id);
+
+    if (!port) {
+      throw new Error('Expected sample no-planned-cables port');
+    }
+
+    port.plannedCableId = project.cables[0].id;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('port-group-no-planned-cables-port-linked');
+  });
+
+  it('reports a planned-cables group without numberingRangeId', () => {
+    const project = structuredClone(sampleProject);
+    const portGroup = project.portGroups.find((group) => group.createPlannedCables);
+
+    if (!portGroup) {
+      throw new Error('Expected sample planned-cables port group');
+    }
+
+    portGroup.numberingRangeId = null;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('port-group-planned-cables-range-required');
+  });
+
+  it('reports a planned-cables group whose linked cable count does not match count', () => {
+    const project = structuredClone(sampleProject);
+
+    project.ports[0].plannedCableId = null;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('port-group-planned-cable-count-mismatch');
+  });
+});
+
 describe('validateProject ledger rules', () => {
   it('reports invalid ledger nextSuggested and range values', () => {
     const project = structuredClone(sampleProject);

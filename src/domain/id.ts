@@ -17,7 +17,3 @@ export function makeIndexedId(prefix: string, index: number): string {
 export function nowIso(): string {
   return new Date().toISOString();
 }
-
-export function formatCableNumber(prefix: string, index: number, padding = 4): string {
-  return `${prefix}-${String(index).padStart(padding, '0')}`;
-}

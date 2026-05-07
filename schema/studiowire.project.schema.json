@@ -302,7 +302,31 @@
         "numberingRangeId": { "type": ["string", "null"] },
         "createPlannedCables": { "type": "boolean" },
         "locked": { "type": "boolean" }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "createPlannedCables": { "const": true }
+            },
+            "required": ["createPlannedCables"]
+          },
+          "then": {
+            "properties": {
+              "firstCableNumber": { "type": "integer", "minimum": 1 },
+              "lastCableNumber": { "type": "integer", "minimum": 1 },
+              "numberingRangeId": { "type": "string", "minLength": 1 }
+            }
+          },
+          "else": {
+            "properties": {
+              "firstCableNumber": { "const": null },
+              "lastCableNumber": { "const": null },
+              "numberingRangeId": { "const": null }
+            }
+          }
+        }
+      ]
     },
     "Port": {
       "type": "object",
