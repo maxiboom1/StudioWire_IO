@@ -150,6 +150,8 @@ Fields:
 - `createPlannedCables`
 - `locked`
 
+`portLabelPattern` supports only `{DEVICE}` and `{000}` in v0.1.1. `{DEVICE}` resolves to the device label prefix. `{000}` resolves to the 1-based port index padded to three digits.
+
 ## Port
 
 Fields:
@@ -183,6 +185,14 @@ Fields:
 - `notes`
 
 v0.1 records planned cable numbers. Complete connection modeling remains outside v0.1 scope.
+
+Planned cable labels use this rule:
+
+- `labelTop`: source label.
+- `labelMiddle`: cable number.
+- `labelBottom`: destination label.
+
+Output and bidirectional planned cables use the device port as the source and unknown destination. Input planned cables use unknown source and the device port as the destination.
 
 ## NumberingLedger
 

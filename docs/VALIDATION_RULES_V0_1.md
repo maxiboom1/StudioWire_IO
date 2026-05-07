@@ -9,6 +9,13 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `planned-cable-duplicate`: planned cables must not duplicate another planned cable number.
 - `cable-number-format-invalid`: cable numbers must match `PREFIX-0001` style formatting.
 - `cable-index-mismatch`: `Cable.prefix` and `Cable.index` must match the parsed cable number.
+- `duplicate-cable-prefix-value`: cable prefix values must be unique.
+- `invalid-cable-prefix-format`: cable prefixes must contain uppercase letters only.
+- `category-default-prefix-missing`: category default cable prefixes must exist in settings.
+- `duplicate-category-name`: category names must be unique.
+- `empty-category-name`: category names are required.
+- `duplicate-connector-type-name`: connector type names must be unique.
+- `empty-connector-type-name`: connector type names are required.
 - `unknown-category`: device, port group, and port category references must exist in settings.
 - `unknown-connector-type`: port group and port connector type references must exist in settings.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
@@ -20,6 +27,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `device-code-required`: device code is required.
 - `device-without-location`: non-virtual devices must reference an existing location.
 - `rack-mounted-device-without-rack`: rack-mounted devices must reference a rack.
+- `rack-location-device-location-mismatch`: rack-mounted devices must be in the same location as their rack.
 - `rack-mounted-device-invalid-bottom-ru`: rack-mounted devices require a positive bottom RU.
 - `rack-mounted-device-invalid-size-ru`: rack-mounted devices require a positive rack size.
 - `rack-mounted-device-exceeds-rack-height`: rack-mounted devices must fit within rack height.
@@ -28,9 +36,11 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `port-group-count-positive`: port group count must be positive.
 - `port-without-parent-device`: each port must reference an existing parent device.
 - `port-without-parent-port-group`: each port must reference an existing parent port group.
+- `port-group-numbering-range-missing`: locked port group numbering range references must resolve to a ledger range.
 - `cable-linked-to-missing-port`: device-port cable endpoints and port planned cable links must resolve.
 - `allocated-range-without-owner`: allocated numbering ranges must have owner type and owner ID.
 - `overlapping-numbering-ledger-ranges`: ranges in the same ledger must not overlap.
+- `planned-cable-without-ledger-range`: planned cables must be covered by an allocated or retired ledger range.
 - `reserved-gap-reused`: reserved gap numbers must not be used by cables or allocated ranges.
 
 ## Numbering Rules

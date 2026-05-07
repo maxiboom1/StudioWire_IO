@@ -1,0 +1,123 @@
+import { useEffect, useState } from 'react';
+import { useProject } from '../../state/ProjectContext';
+import { AddDeviceModal } from '../devices/AddDeviceModal';
+import { AddLocationModal } from '../locations/AddLocationModal';
+import { AddRackModal } from '../racks/AddRackModal';
+import { resolveIssueSelection, resolveSelection, type SelectedObjectType, type SelectionState } from '../common/selection';
+import { Inspector } from './Inspector';
+import { LeftTree } from './LeftTree';
+import { TopBar } from './TopBar';
+import { ValidationPanel } from './ValidationPanel';
+import { Workspace } from './Workspace';
+
+type ModalState =
+  | null
+  | { type: 'location' }
+  | { type: 'rack'; locationId: string }
+  | { type: 'device'; locationId: string | null };
+
+export function StudioWireShell() {
+  const { project, importError, dismissImportError } = useProject();
+  const [selection, setSelection] = useState<SelectionState>({
+    selectedObjectType: null,
+    selectedObjectId: null,
+  });
+  const [modal, setModal] = useState<ModalState>(null);
+
+  useEffect(() => {
+    if (selection.selectedObjectType === 'settings') {
+      return;
+    }
+
+    if (
+      selection.selectedObjectType === 'project' &&
+      selection.selectedObjectId !== project.project.id
+    ) {
+      setSelection({ selectedObjectType: 'project', selectedObjectId: project.project.id });
+      return;
+    }
+
+    if (selection.selectedObjectType && !resolveSelection(project, selection)) {
+      setSelection({ selectedObjectType: 'project', selectedObjectId: project.project.id });
+    }
+  }, [project, selection]);
+
+  function selectObject(selectedObjectType: SelectedObjectType, selectedObjectId: string) {
+    setSelection({ selectedObjectType, selectedObjectId });
+  }
+
+  function selectProject() {
+    selectObject('project', project.project.id);
+  }
+
+  function selectSettings() {
+    selectObject('settings', 'settings');
+  }
+
+  function openAddDevice(locationId: string | null) {
+    setModal({ type: 'device', locationId });
+  }
+
+  return (
+    <main className="app-shell">
+      <TopBar onProjectLoaded={selectProject} onOpenSettings={selectSettings} />
+      {importError ? (
+        <div className="app-alert" role="alert">
+          <span>{importError}</span>
+          <button type="button" onClick={dismissImportError}>
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+      <section className="app-grid" aria-label={`${project.project.name} project editor`}>
+        <LeftTree
+          selection={selection}
+          onSelectObject={selectObject}
+          onAddLocation={() => setModal({ type: 'location' })}
+          onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
+          onAddDevice={openAddDevice}
+        />
+        <Workspace selection={selection} onAddDevice={openAddDevice} />
+        <Inspector selection={selection} />
+        <ValidationPanel
+          onSelectIssue={(issue) => {
+            const target = resolveIssueSelection(project, issue);
+
+            if (target) {
+              selectObject(target.selectedObjectType, target.selectedObjectId);
+            }
+          }}
+        />
+      </section>
+      {modal?.type === 'location' ? (
+        <AddLocationModal
+          onClose={() => setModal(null)}
+          onCreated={(id) => {
+            setModal(null);
+            selectObject('location', id);
+          }}
+        />
+      ) : null}
+      {modal?.type === 'rack' ? (
+        <AddRackModal
+          locationId={modal.locationId}
+          onClose={() => setModal(null)}
+          onCreated={(id) => {
+            setModal(null);
+            selectObject('rack', id);
+          }}
+        />
+      ) : null}
+      {modal?.type === 'device' ? (
+        <AddDeviceModal
+          initialLocationId={modal.locationId}
+          onClose={() => setModal(null)}
+          onCreated={(id) => {
+            setModal(null);
+            selectObject('device', id);
+          }}
+        />
+      ) : null}
+    </main>
+  );
+}

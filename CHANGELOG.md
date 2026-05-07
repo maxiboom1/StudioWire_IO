@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.1
+
+Stabilization release for v0.1 before v0.2 planning.
+
+### Added
+
+- Canonical planned cable creation module with source/cable/destination label rules.
+- Validator coverage for settings names, cable prefix format, rack/device location consistency, port group range references, and planned cable ledger coverage.
+- Tests for planned cable labels, stricter cable number parsing, and settings validation rules.
+
+### Changed
+
+- Refactored the monolithic app component into layout, settings, location, rack, device, and common component folders.
+- Strengthened import behavior to reject malformed project objects and run validation immediately after import.
+- Standardized port label patterns on `{DEVICE}` and `{000}` tokens.
+- Updated sample project cable labels to use top/source, middle/cable number, bottom/destination.
+
 ## v0.1.0
 
 Initial review-ready MVP.

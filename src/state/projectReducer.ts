@@ -660,7 +660,9 @@ export function parseImportedProject(payload: unknown):
   }
 
   for (const field of REQUIRED_ARRAY_FIELDS) {
-    if (payload[field].some((item) => !isRecord(item))) {
+    const entries = payload[field];
+
+    if (!Array.isArray(entries) || entries.some((item: unknown) => !isRecord(item))) {
       return { ok: false, error: `Imported JSON field "${field}" contains malformed entries.` };
     }
   }

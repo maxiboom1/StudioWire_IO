@@ -207,7 +207,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "count": 4,
-      "portLabelPattern": "OUT {index}",
+      "portLabelPattern": "{DEVICE}-OUT-{000}",
       "cablePrefix": "V",
       "firstCableNumber": 1,
       "lastCableNumber": 4,
@@ -223,7 +223,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "count": 4,
-      "portLabelPattern": "IN {index}",
+      "portLabelPattern": "{DEVICE}-IN-{000}",
       "cablePrefix": "V",
       "firstCableNumber": null,
       "lastCableNumber": null,
@@ -239,7 +239,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 1,
       "name": "OUT 1",
-      "label": "OUT 01",
+      "label": "RTR1-OUT-001",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -252,7 +252,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 2,
       "name": "OUT 2",
-      "label": "OUT 02",
+      "label": "RTR1-OUT-002",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -265,7 +265,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 3,
       "name": "OUT 3",
-      "label": "OUT 03",
+      "label": "RTR1-OUT-003",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -278,7 +278,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 4,
       "name": "OUT 4",
-      "label": "OUT 04",
+      "label": "RTR1-OUT-004",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -291,7 +291,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 1,
       "name": "IN 1",
-      "label": "IN 01",
+      "label": "MV1-IN-001",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -304,7 +304,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 2,
       "name": "IN 2",
-      "label": "IN 02",
+      "label": "MV1-IN-002",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -317,7 +317,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 3,
       "name": "IN 3",
-      "label": "IN 03",
+      "label": "MV1-IN-003",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -330,7 +330,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 4,
       "name": "IN 4",
-      "label": "IN 04",
+      "label": "MV1-IN-004",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -348,15 +348,15 @@
       "sourceEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
-        "label": "OUT 01"
+        "label": "RTR1-OUT-001"
       },
       "destinationEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "V-0001",
-      "labelMiddle": "OUT 01",
+      "labelTop": "RTR1-OUT-001",
+      "labelMiddle": "V-0001",
       "labelBottom": "",
       "notes": ""
     },
@@ -369,15 +369,15 @@
       "sourceEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0002",
-        "label": "OUT 02"
+        "label": "RTR1-OUT-002"
       },
       "destinationEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "V-0002",
-      "labelMiddle": "OUT 02",
+      "labelTop": "RTR1-OUT-002",
+      "labelMiddle": "V-0002",
       "labelBottom": "",
       "notes": ""
     },
@@ -390,15 +390,15 @@
       "sourceEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0003",
-        "label": "OUT 03"
+        "label": "RTR1-OUT-003"
       },
       "destinationEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "V-0003",
-      "labelMiddle": "OUT 03",
+      "labelTop": "RTR1-OUT-003",
+      "labelMiddle": "V-0003",
       "labelBottom": "",
       "notes": ""
     },
@@ -411,15 +411,15 @@
       "sourceEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0004",
-        "label": "OUT 04"
+        "label": "RTR1-OUT-004"
       },
       "destinationEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "V-0004",
-      "labelMiddle": "OUT 04",
+      "labelTop": "RTR1-OUT-004",
+      "labelMiddle": "V-0004",
       "labelBottom": "",
       "notes": ""
     }
