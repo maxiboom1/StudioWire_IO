@@ -1,0 +1,194 @@
+export const STUDIOWIRE_SCHEMA_VERSION = '0.1.0' as const;
+
+export type SchemaVersion = typeof STUDIOWIRE_SCHEMA_VERSION;
+
+export type ProjectStatus = 'draft' | 'approved' | 'as_built';
+export type RackNumberingDirection = 'bottom_to_top' | 'top_to_bottom';
+export type DeviceMountType = 'rack' | 'non_rack' | 'virtual';
+export type PortDirection = 'input' | 'output' | 'bidirectional';
+export type CableStatus = 'planned' | 'connected' | 'retired';
+export type NumberingRangeStatus = 'allocated' | 'reserved_gap' | 'retired';
+export type EndpointType = 'device_port' | 'tb_port' | 'external' | 'unknown';
+export type ValidationSeverity = 'error' | 'warning' | 'info';
+
+export interface ProjectRoot {
+  schemaVersion: SchemaVersion;
+  project: ProjectInfo;
+  settings: Settings;
+  locations: Location[];
+  racks: Rack[];
+  devices: Device[];
+  portGroups: PortGroup[];
+  ports: Port[];
+  cables: Cable[];
+  numberingLedgers: NumberingLedger[];
+  validationIssues: ValidationIssue[];
+  changeLog: ChangeLogEntry[];
+}
+
+export interface ProjectInfo {
+  id: string;
+  name: string;
+  customer: string;
+  revision: string;
+  status: ProjectStatus;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+export interface Settings {
+  categories: Category[];
+  connectorTypes: ConnectorType[];
+  cablePrefixes: CablePrefix[];
+  rackDefaults: RackDefaults;
+  labelRules: LabelRules;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  defaultCablePrefix: string;
+}
+
+export interface ConnectorType {
+  id: string;
+  name: string;
+}
+
+export interface CablePrefix {
+  id: string;
+  prefix: string;
+  name: string;
+}
+
+export interface RackDefaults {
+  heightRu: number;
+  numberingDirection: RackNumberingDirection;
+}
+
+export interface LabelRules {
+  cableNumberFormat: string;
+  cableNumberPadding: number;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+}
+
+export interface Rack {
+  id: string;
+  locationId: string;
+  name: string;
+  heightRu: number;
+  numberingDirection: RackNumberingDirection;
+}
+
+export interface Device {
+  id: string;
+  name: string;
+  code: string;
+  manufacturer: string;
+  model: string;
+  categoryId: string;
+  locationId: string;
+  role: string;
+  labelPrefix: string;
+  mountType: DeviceMountType;
+  rackId: string | null;
+  rackSizeRu: number | null;
+  rackBottomRu: number | null;
+  status: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PortGroup {
+  id: string;
+  deviceId: string;
+  name: string;
+  direction: PortDirection;
+  categoryId: string;
+  connectorTypeId: string;
+  count: number;
+  portLabelPattern: string;
+  cablePrefix: string;
+  firstCableNumber: number | null;
+  lastCableNumber: number | null;
+  numberingRangeId: string | null;
+  createPlannedCables: boolean;
+  locked: boolean;
+}
+
+export interface Port {
+  id: string;
+  deviceId: string;
+  portGroupId: string;
+  index: number;
+  name: string;
+  label: string;
+  direction: PortDirection;
+  categoryId: string;
+  connectorTypeId: string;
+  plannedCableId: string | null;
+  notes: string;
+}
+
+export interface Cable {
+  id: string;
+  number: string;
+  prefix: string;
+  index: number;
+  status: CableStatus;
+  sourceEndpoint: Endpoint;
+  destinationEndpoint: Endpoint;
+  labelTop: string;
+  labelMiddle: string;
+  labelBottom: string;
+  notes: string;
+}
+
+export interface NumberingLedger {
+  prefix: string;
+  nextSuggested: number;
+  ranges: NumberingRange[];
+}
+
+export interface NumberingRange {
+  id: string;
+  prefix: string;
+  from: number;
+  to: number;
+  status: NumberingRangeStatus;
+  ownerType: string;
+  ownerId: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface Endpoint {
+  type: EndpointType;
+  id: string | null;
+  label: string;
+}
+
+export interface ValidationIssue {
+  id: string;
+  severity: ValidationSeverity;
+  code: string;
+  message: string;
+  objectType: string;
+  objectId: string;
+}
+
+export interface ChangeLogEntry {
+  id: string;
+  timestamp: string;
+  message: string;
+  author: string;
+}
