@@ -702,6 +702,7 @@ function validatePortsAndGroups(
   const rangesById = new Map(
     project.numberingLedgers.flatMap((ledger) => ledger.ranges.map((range) => [range.id, range] as const)),
   );
+  const cablesById = new Map(project.cables.map((cable) => [cable.id, cable]));
 
   for (const portGroup of project.portGroups) {
     const generatedPorts = project.ports.filter((port) => port.portGroupId === portGroup.id);
@@ -755,6 +756,10 @@ function validatePortsAndGroups(
         ),
       );
     }
+
+    issues.push(
+      ...validatePortGroupPlannedCableMode(portGroup, generatedPorts, project.cables, cablesById, numberingRange, issue),
+    );
   }
 
   for (const port of project.ports) {
@@ -768,6 +773,158 @@ function validatePortsAndGroups(
       issues.push(
         issue('error', 'port-without-parent-port-group', `Port ${port.label} has no parent port group.`, 'port', port.id),
       );
+    }
+  }
+
+  return issues;
+}
+
+function validatePortGroupPlannedCableMode(
+  portGroup: ProjectRoot['portGroups'][number],
+  generatedPorts: Port[],
+  cables: Cable[],
+  cablesById: Map<string, Cable>,
+  numberingRange: ProjectRoot['numberingLedgers'][number]['ranges'][number] | null | undefined,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const groupPortIds = new Set(generatedPorts.map((port) => port.id));
+
+  if (!portGroup.createPlannedCables) {
+    if (
+      portGroup.firstCableNumber !== null ||
+      portGroup.lastCableNumber !== null ||
+      portGroup.numberingRangeId !== null
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-no-planned-cables-has-allocation',
+          `Port group ${portGroup.name} does not create planned cables, so cable allocation fields must be null.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    for (const port of generatedPorts) {
+      if (port.plannedCableId !== null) {
+        issues.push(
+          issue(
+            'error',
+            'port-group-no-planned-cables-port-linked',
+            `Port ${port.label} belongs to a no-planned-cables group but has a planned cable link.`,
+            'port',
+            port.id,
+          ),
+        );
+      }
+    }
+
+    for (const cable of cables) {
+      if (
+        cable.status === 'planned' &&
+        (endpointIdInSet(cable.sourceEndpoint, groupPortIds) ||
+          endpointIdInSet(cable.destinationEndpoint, groupPortIds))
+      ) {
+        issues.push(
+          issue(
+            'error',
+            'port-group-no-planned-cables-cable-reference',
+            `Planned cable ${cable.number} references a port in no-planned-cables group ${portGroup.name}.`,
+            'cable',
+            cable.id,
+          ),
+        );
+      }
+    }
+
+    return issues;
+  }
+
+  if (portGroup.firstCableNumber === null) {
+    issues.push(
+      issue(
+        'error',
+        'port-group-planned-cables-first-required',
+        `Port group ${portGroup.name} creates planned cables and requires firstCableNumber.`,
+        'portGroup',
+        portGroup.id,
+      ),
+    );
+  }
+
+  if (portGroup.lastCableNumber === null) {
+    issues.push(
+      issue(
+        'error',
+        'port-group-planned-cables-last-required',
+        `Port group ${portGroup.name} creates planned cables and requires lastCableNumber.`,
+        'portGroup',
+        portGroup.id,
+      ),
+    );
+  }
+
+  if (portGroup.numberingRangeId === null) {
+    issues.push(
+      issue(
+        'error',
+        'port-group-planned-cables-range-required',
+        `Port group ${portGroup.name} creates planned cables and requires numberingRangeId.`,
+        'portGroup',
+        portGroup.id,
+      ),
+    );
+  }
+
+  const linkedPlannedCables = generatedPorts
+    .map((port) => (port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null))
+    .filter((cable): cable is Cable => cable !== null && cable.status === 'planned');
+
+  if (linkedPlannedCables.length !== portGroup.count) {
+    issues.push(
+      issue(
+        'error',
+        'port-group-planned-cable-count-mismatch',
+        `Port group ${portGroup.name} expects ${portGroup.count} linked planned cable(s) but has ${linkedPlannedCables.length}.`,
+        'portGroup',
+        portGroup.id,
+      ),
+    );
+  }
+
+  for (const port of generatedPorts) {
+    if (!port.plannedCableId) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-port-missing-planned-cable',
+          `Port ${port.label} is in a planned-cables group but has no planned cable link.`,
+          'port',
+          port.id,
+        ),
+      );
+    }
+  }
+
+  if (numberingRange && (numberingRange.status === 'allocated' || numberingRange.status === 'retired')) {
+    for (const cable of linkedPlannedCables) {
+      if (
+        cable.prefix !== numberingRange.prefix ||
+        cable.index < numberingRange.from ||
+        cable.index > numberingRange.to
+      ) {
+        issues.push(
+          issue(
+            'error',
+            'port-group-planned-cable-outside-range',
+            `Planned cable ${cable.number} is not covered by ${portGroup.name}'s ledger range.`,
+            'cable',
+            cable.id,
+          ),
+        );
+      }
     }
   }
 
@@ -1006,6 +1163,10 @@ function isRackPositionValid(device: Device): device is Device & { rackBottomRu:
 
 function endpointReferencesPort(endpoint: Cable['sourceEndpoint'], portId: string): boolean {
   return endpoint.type === 'device_port' && endpoint.id === portId;
+}
+
+function endpointIdInSet(endpoint: Cable['sourceEndpoint'], ids: Set<string>): boolean {
+  return endpoint.type === 'device_port' && endpoint.id !== null && ids.has(endpoint.id);
 }
 
 function isPositiveInteger(value: unknown): value is number {

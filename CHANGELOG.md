@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.1.2
+
+Small stabilization cleanup before v0.2 planning.
+
+### Added
+
+- PortGroup validation for planned-cable mode versus no-planned-cables mode.
+- Reducer coverage for no-planned-cables device creation.
+- `.gitattributes` line-ending policy for source, docs, JSON, CSS, and HTML files.
+- README version changelog.
+
+### Changed
+
+- Bumped package version to `0.1.2`.
+- Normalized PortGroup allocation semantics: when `createPlannedCables` is false, cable-number fields and `numberingRangeId` stay `null`, ports remain unlinked, and no ledger allocation occurs.
+- Updated Add Device behavior to clear and disable cable-number fields when planned cable creation is disabled, then restore the next suggested number when re-enabled.
+- Strengthened review bundle exclusions for generated artifacts such as TypeScript build info and StudioWire zip exports.
+- Updated review workflow docs to prefer diff mode after approved version tags.
+
 ## v0.1.1
 
 Stabilization release for v0.1 before v0.2 planning.

@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.1 React, TypeScript, Vite, and plain CSS MVP. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.1.2 React, TypeScript, Vite, and plain CSS MVP. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -74,3 +74,9 @@ npm run dev
 Open the Vite URL, usually `http://localhost:5173/`, load the sample project, and use the browser screenshot tool.
 
 See `docs/ROADMAP.md` for planned version boundaries.
+
+## Version Changelog
+
+- `v0.1.2`: Tightened PortGroup planned-cable versus no-planned-cables rules, improved Add Device disabled-numbering behavior, added line-ending hygiene, and strengthened review bundle exclusions.
+- `v0.1.1`: Stabilized the v0.1 model with canonical planned cable helpers, stronger validation, sample ledger fixes, review bundle tooling, and cleaner app structure.
+- `v0.1.0`: Initial browser-only MVP with project settings, locations, racks, devices, port groups, generated ports, planned cable ledgers, validation, and JSON import/export.

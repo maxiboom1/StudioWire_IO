@@ -152,7 +152,12 @@ Fields:
 - `createPlannedCables`
 - `locked`
 
-`portLabelPattern` supports only `{DEVICE}` and `{000}` in v0.1.1. `{DEVICE}` resolves to the device label prefix. `{000}` resolves to the 1-based port index padded to three digits.
+`portLabelPattern` supports only `{DEVICE}` and `{000}` in v0.1.2. `{DEVICE}` resolves to the device label prefix. `{000}` resolves to the 1-based port index padded to three digits.
+
+PortGroup allocation semantics are mode-specific:
+
+- If `createPlannedCables` is `true`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be set. The range must reference an allocated or retired ledger range, generated ports must link to planned cables, and planned cable numbers must be covered by that range.
+- If `createPlannedCables` is `false`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be `null`. Generated ports must keep `plannedCableId` as `null`, no planned cables are created, and no cable ledger allocation is made.
 
 ## Port
 
