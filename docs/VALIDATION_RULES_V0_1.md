@@ -70,7 +70,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 
 Cable numbers are unique project data. Allocating a later first number creates a `reserved_gap` range for skipped numbers, and the UI asks for confirmation before committing that reservation.
 
-When a port group has `createPlannedCables` set to `false`, v0.1.2 does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
+When a port group has `createPlannedCables` set to `false`, v0.1 does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
 
 Reserved gaps and retired ranges remain unavailable. v0.1 does not free cable numbers when a device is retired.
 

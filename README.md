@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.1.2 React, TypeScript, Vite, and plain CSS MVP. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.1.3 React, TypeScript, Vite, and plain CSS MVP. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -31,6 +31,28 @@ npm test
 npm run validate:project -- samples/sample-project.studiowire.json
 npm run summary -- samples/sample-project.studiowire.json
 ```
+
+## Versioning Rule
+
+StudioWire IO uses versioned Codex changes.
+
+- Every Codex implementation/change prompt must specify a new app version.
+- Every Codex implementation/change must bump the app version using valid npm SemVer, such as `0.1.3`, `0.1.4`, `0.2.0`, or `0.2.1`.
+- Do not use invalid npm/package.json versions such as `0.1.3.1`.
+- Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and this README Version Changelog section.
+- Each prompt normally corresponds to one final versioned commit, made manually by the user.
+
+## Manual Commit Review Workflow
+
+Normal StudioWire IO review uses a master-only commit-SHA workflow.
+
+- Work happens directly on `master`.
+- Codex edits files and runs validation, but does not commit, push, tag, create branches, or generate review bundles.
+- The user manually commits and pushes after Codex finishes.
+- GPT-5.5 Pro reviews after the pushed commit using a GitHub compare URL or explicit commit SHAs.
+- Compare URL format: `https://github.com/maxiboom1/StudioWire_IO/compare/<BASE_SHA>..<AFTER_SHA>`.
+- If review finds a problem, the fix is made as the next versioned commit.
+- Do not rewrite public history, force-push, or rebase public `master`.
 
 ## v0.1 Supports
 
@@ -77,6 +99,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.1.3`: Workflow/docs cleanup release; removed review-bundle workflow/tooling, adopted the master-only commit-SHA review workflow, and documented mandatory version/changelog rules.
 - `v0.1.2`: Tightened PortGroup planned-cable versus no-planned-cables rules, improved Add Device disabled-numbering behavior, added line-ending hygiene, and strengthened review bundle exclusions.
 - `v0.1.1`: Stabilized the v0.1 model with canonical planned cable helpers, stronger validation, sample ledger fixes, review bundle tooling, and cleaner app structure.
 - `v0.1.0`: Initial browser-only MVP with project settings, locations, racks, devices, port groups, generated ports, planned cable ledgers, validation, and JSON import/export.

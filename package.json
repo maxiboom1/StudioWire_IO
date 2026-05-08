@@ -1,7 +1,7 @@
 {
   "name": "studiowire-io",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,8 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "validate:project": "tsx tools/validate-project.ts",
-    "summary": "tsx tools/print-project-summary.ts",
-    "review:bundle": "tsx tools/create-review-bundle.ts"
+    "summary": "tsx tools/print-project-summary.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

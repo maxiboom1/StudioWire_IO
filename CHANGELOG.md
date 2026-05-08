@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.1.3
+
+Docs and workflow cleanup release only.
+
+### Changed
+
+- Replaced the branch/tag/review-bundle workflow with a master-only commit-SHA review workflow.
+- Added and clarified the versioning rule requiring every Codex change to update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and the root `README.md` Version Changelog section.
+- Documented that Codex modifies files only and the user manually commits and pushes before GPT-5.5 Pro review.
+
+### Removed
+
+- Removed review-bundle/diff tooling and active workflow instructions.
+
 ## v0.1.2
 
 Small stabilization cleanup before v0.2 planning.

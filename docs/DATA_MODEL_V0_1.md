@@ -152,7 +152,7 @@ Fields:
 - `createPlannedCables`
 - `locked`
 
-`portLabelPattern` supports only `{DEVICE}` and `{000}` in v0.1.2. `{DEVICE}` resolves to the device label prefix. `{000}` resolves to the 1-based port index padded to three digits.
+`portLabelPattern` supports only `{DEVICE}` and `{000}` in v0.1. `{DEVICE}` resolves to the device label prefix. `{000}` resolves to the 1-based port index padded to three digits.
 
 PortGroup allocation semantics are mode-specific:
 

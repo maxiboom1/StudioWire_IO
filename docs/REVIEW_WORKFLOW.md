@@ -1,51 +1,70 @@
 # StudioWire IO Review Workflow
 
-Review bundles give the architecture reviewer a reproducible view of a version without committing generated artifacts.
+StudioWire IO uses a master-only manual commit workflow for normal Codex changes.
 
 ## Roles
 
-- Human/product owner: defines product scope, accepts or rejects version boundaries, and approves release readiness.
-- Architecture reviewer: reviews structure, data model stability, validation rules, and implementation risk.
-- Codex coder: implements requested work, runs validation, creates review bundles, and addresses approved findings.
+- Human/product owner: defines the requested version, reviews the result, and manually commits and pushes.
+- Codex coder: modifies files, runs validation, and reports exact manual commit and push commands. Codex does not commit, push, tag, or create branches.
+- GPT-5.5 Pro reviewer: reviews the pushed change using a GitHub compare URL or explicit commit SHAs.
 
-## Normal Future Workflow
+## Normal Workflow
 
-1. `main` contains the last approved version.
-2. Create a feature branch for the next version.
-3. Codex implements the requested scope on that branch.
-4. Run a review bundle.
-5. Upload `tools/diff_logs/<name>` to the reviewer.
-6. Reviewer approves or requests fixes.
-7. Merge the approved branch.
-8. Tag the approved version.
+1. Work directly on `master`.
+2. The prompt specifies the next app version.
+3. Codex edits files and runs validation.
+4. The user manually commits and pushes.
+5. The user sends GPT-5.5 Pro either the GitHub compare URL or `BASE_SHA` and `AFTER_SHA`.
+6. Review compares the previous commit to the new commit.
+7. If review finds a problem, fix it as the next versioned commit.
 
-## First Snapshot Bundle
+Do not rewrite public history, force-push, or rebase public `master`.
 
-Use snapshot mode when the repository was initialized after the implementation and no useful prior base exists:
+## Review Commands
 
-```bash
-npm run review:bundle -- --name 0.1.1 --snapshot
-```
-
-## Future Diff Bundle
-
-After an approved tag exists, future reviews must use diff mode against that tag:
+GitHub compare URL:
 
 ```bash
-npm run review:bundle -- --base v0.1.1 --name 0.1.2
+https://github.com/maxiboom1/StudioWire_IO/compare/<BASE_SHA>..<AFTER_SHA>
 ```
 
-Snapshot mode should only be used for the first baseline or for an emergency full-state review when no reliable base ref exists. If `--base` is omitted in diff mode, the tool tries the latest git tag, `main`, `master`, and `HEAD~1` in that order.
-
-## Rules
-
-- Review bundles are generated artifacts and should not be committed, except for `tools/diff_logs/README.md`.
-- Review bundles are excluded from Vitest using `vitest.config.ts`; tests must run only against the active source tree.
-- After a version is approved, tag it:
+Latest one-commit local review:
 
 ```bash
-git tag v0.1.2
+git diff HEAD~1..HEAD
 ```
 
-- Future review should use diffs, not full project uploads.
-- v0.2 features should not be included in v0.1 review bundles: terminal blocks, rear/front TB logic, device-to-TB connections, Excel export, Bartender export, Visio export, backend, database, and auth.
+Specific local commit review:
+
+```bash
+git diff <BASE_SHA>..<AFTER_SHA>
+```
+
+## Required Validation
+
+Run these before the manual commit:
+
+```bash
+npm test -- --run
+npm run build
+npm run validate:project -- samples/sample-project.studiowire.json
+npm run summary -- samples/sample-project.studiowire.json
+```
+
+## Versioning Rules
+
+StudioWire IO uses versioned Codex changes.
+
+1. Every Codex implementation/change prompt must specify a new app version.
+2. Every Codex implementation/change must bump the app version.
+3. Normal version bumps must use valid npm SemVer, such as `0.1.3`, `0.1.4`, `0.2.0`, or `0.2.1`.
+4. Do not use invalid npm/package.json versions such as `0.1.3.1`.
+5. Extremely small follow-up fixes still use the next valid SemVer patch version unless the product owner explicitly approves a valid prerelease form.
+6. Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and the root `README.md` Version Changelog section.
+7. Each prompt should normally correspond to one final versioned commit, made manually by the user.
+
+## Not Used For Normal Workflow
+
+- No feature branches are required.
+- No release tags are required for review.
+- No generated review bundles are used.
