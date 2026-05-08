@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.4
+
+Workflow/docs correction release only.
+
+### Changed
+
+- Simplified the review workflow so Codex performs no Git operations and only edits files, updates versioned docs, and runs non-Git validation.
+- Documented that the user manually publishes and then tells GPT-5.5 Pro `version published`.
+- Documented that GPT-5.5 Pro finds the latest pushed `master` diff by itself after publication.
+- Clarified that normal review no longer requires user-provided SHAs, compare URLs, branches, tags, or review bundles.
+
 ## v0.1.3
 
 Docs and workflow cleanup release only.
