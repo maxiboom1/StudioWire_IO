@@ -1,10 +1,12 @@
+import { X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
-import type { Device, ProjectRoot, Rack } from '../../domain/types';
+import type { ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectReducer';
 import { ModalFrame } from '../common/ModalFrame';
 import { Alert, AlertDescription } from '../ui/alert';
+import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { DialogFooter } from '../ui/dialog';
@@ -41,86 +43,102 @@ export function AddDeviceModal({
     manufacturer: '',
     model: '',
     categoryId: firstCategory?.id ?? '',
-    locationId: initialLocationId ?? project.locations[0]?.id ?? null,
+    locationId: initialLocationId ?? null,
     role: '',
     labelPrefix: '',
-    mountType: 'non_rack',
+    mountType: 'virtual',
     rackId: null,
     rackSizeRu: null,
     rackBottomRu: null,
     notes: '',
   });
   const [portGroups, setPortGroups] = useState<DevicePortGroupForm[]>(() =>
-    createQuickPortGroups(project, firstCategory?.id ?? '', ''),
+    createQuickPortGroups(project, firstCategory?.id ?? ''),
   );
-  const locationRacks = project.racks.filter((rack) => rack.locationId === device.locationId);
   const validation = getAddDeviceValidation(project, device, portGroups);
+  const effectiveLabelPrefix = normalizeDeviceToken(device.labelPrefix || device.name);
 
   function handleCategoryChange(categoryId: string) {
     setDevice({ ...device, categoryId });
-    setPortGroups(createQuickPortGroups(project, categoryId, device.labelPrefix || device.code));
+    setPortGroups(createQuickPortGroups(project, categoryId));
   }
 
   function updatePortGroup(localId: string, updates: Partial<DevicePortGroupForm>) {
     setPortGroups((current) =>
-      current.map((group) => {
-        if (group.localId !== localId) {
-          return group;
-        }
+      rebalancePlannedCableRanges(
+        project,
+        current.map((group) => {
+          if (group.localId !== localId) {
+            return group;
+          }
 
-        const updated = { ...group, ...updates };
-        const count = Number(updated.count);
+          const updated = { ...group, ...updates };
 
-        return {
-          ...updated,
-          count,
-          firstCableNumber: updated.firstCableNumber === null ? null : Number(updated.firstCableNumber),
-        };
-      }),
+          return {
+            ...updated,
+            count: Number(updated.count),
+          };
+        }),
+      ),
     );
+  }
+
+  function handlePortGroupCategoryChange(localId: string, categoryId: string) {
+    updatePortGroup(localId, {
+      categoryId,
+      cablePrefix: getDefaultPrefixForCategory(project, categoryId),
+    });
   }
 
   function handlePlannedCablesToggle(localId: string, checked: boolean) {
     setPortGroups((current) =>
-      current.map((group) => {
-        if (group.localId !== localId) {
-          return group;
-        }
-
-        return {
-          ...group,
-          createPlannedCables: checked,
-          firstCableNumber: checked
-            ? getSuggestedFirstCableNumber(project, group.cablePrefix, current.filter((item) => item.localId !== localId))
-            : null,
-        };
-      }),
+      rebalancePlannedCableRanges(
+        project,
+        current.map((group) =>
+          group.localId === localId
+            ? {
+                ...group,
+                createPlannedCables: checked,
+                firstCableNumber:
+                  group.firstCableNumber ??
+                  project.numberingLedgers.find((ledger) => ledger.prefix === group.cablePrefix)?.nextSuggested ??
+                  1,
+              }
+            : group,
+        ),
+      ),
     );
   }
 
   function addPortGroup() {
-    const category = project.settings.categories.find((item) => item.id === device.categoryId);
-    const prefix = category?.defaultCablePrefix ?? project.settings.cablePrefixes[0]?.prefix ?? 'V';
+    const prefix = getDefaultPrefixForCategory(project, device.categoryId);
 
-    setPortGroups((current) => [
-      ...current,
-      {
-        localId: `group-${Date.now()}`,
-        name: 'PORTS',
-        direction: 'bidirectional',
-        categoryId: device.categoryId,
-        connectorTypeId: project.settings.connectorTypes[0]?.id ?? '',
-        count: 1,
-        portLabelPattern: '{DEVICE}-{000}',
-        cablePrefix: prefix,
-        firstCableNumber: getSuggestedFirstCableNumber(project, prefix, current),
-        createPlannedCables: true,
-      },
-    ]);
+    setPortGroups((current) =>
+      rebalancePlannedCableRanges(project, [
+        ...current,
+        {
+          localId: `group-${Date.now()}`,
+          name: 'PORTS',
+          direction: 'bidirectional',
+          categoryId: device.categoryId,
+          connectorTypeId: project.settings.connectorTypes[0]?.id ?? '',
+          count: 1,
+          portLabelPattern: '{DEVICE}-{000}',
+          cablePrefix: prefix,
+          firstCableNumber: null,
+          createPlannedCables: true,
+        },
+      ]),
+    );
   }
 
   function removePortGroup(localId: string) {
-    setPortGroups((current) => current.filter((group) => group.localId !== localId));
+    setPortGroups((current) =>
+      rebalancePlannedCableRanges(
+        project,
+        current.filter((group) => group.localId !== localId),
+      ),
+    );
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -140,15 +158,19 @@ export function AddDeviceModal({
       }
     }
 
+    const generatedCode = normalizeDeviceToken(device.labelPrefix || device.name);
     const id = addDevice({
       device: {
         ...device,
         name: device.name.trim(),
-        code: device.code.trim(),
-        labelPrefix: (device.labelPrefix || device.code || device.name).trim(),
-        rackId: device.mountType === 'rack' ? device.rackId : null,
-        rackSizeRu: device.mountType === 'rack' ? device.rackSizeRu : null,
-        rackBottomRu: device.mountType === 'rack' ? device.rackBottomRu : null,
+        code: generatedCode,
+        role: '',
+        labelPrefix: effectiveLabelPrefix,
+        mountType: 'virtual',
+        rackId: null,
+        rackSizeRu: null,
+        rackBottomRu: null,
+        notes: '',
       },
       portGroups: portGroups.map(({ localId: _localId, ...group }) => ({
         ...group,
@@ -161,7 +183,7 @@ export function AddDeviceModal({
   return (
     <ModalFrame
       title="Add Device"
-      description="Create a device, its port groups, generated ports, and optional planned cables."
+      description="Create a virtual device with generated ports and optional planned cables."
       onClose={onClose}
     >
       <form className="editor-form add-device-form" onSubmit={handleSubmit}>
@@ -169,22 +191,13 @@ export function AddDeviceModal({
           <h3>Basic</h3>
           <div className="form-grid two">
             <div className="form-field">
-              <Label htmlFor="device-name">Device name</Label>
+              <Label htmlFor="device-name">Name</Label>
               <Input
                 autoFocus
                 id="device-name"
                 required
                 value={device.name}
                 onChange={(event) => setDevice({ ...device, name: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="device-code">Device code</Label>
-              <Input
-                id="device-code"
-                required
-                value={device.code}
-                onChange={(event) => setDevice({ ...device, code: event.target.value.toUpperCase() })}
               />
             </div>
             <div className="form-field">
@@ -210,11 +223,11 @@ export function AddDeviceModal({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                {project.settings.categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
+                  {project.settings.categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -222,31 +235,27 @@ export function AddDeviceModal({
               <Label htmlFor="device-location">Location</Label>
               <Select
                 value={device.locationId ?? NONE_VALUE}
-                onValueChange={(value) => setDevice({ ...device, locationId: value === NONE_VALUE ? null : value, rackId: null })}
+                onValueChange={(value) => setDevice({ ...device, locationId: value === NONE_VALUE ? null : value })}
               >
                 <SelectTrigger id="device-location">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                <SelectItem value={NONE_VALUE}>No location</SelectItem>
-                {project.locations.map((location) => (
-                  <SelectItem key={location.id} value={location.id}>
-                    {location.name}
-                  </SelectItem>
-                ))}
+                  <SelectItem value={NONE_VALUE}>No location</SelectItem>
+                  {project.locations.map((location) => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="form-field">
-              <Label htmlFor="device-role">Role</Label>
-              <Input id="device-role" value={device.role} onChange={(event) => setDevice({ ...device, role: event.target.value })} />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="device-label-prefix">Label prefix</Label>
+              <Label htmlFor="device-label-prefix">Label Prefix</Label>
               <Input
                 id="device-label-prefix"
                 value={device.labelPrefix}
-                placeholder={device.code || device.name || 'MTX'}
+                placeholder={device.name ? normalizeDeviceToken(device.name) : 'MTX'}
                 onChange={(event) => setDevice({ ...device, labelPrefix: event.target.value.toUpperCase() })}
               />
             </div>
@@ -254,250 +263,25 @@ export function AddDeviceModal({
         </section>
 
         <section className="modal-section">
-          <h3>Physical</h3>
-          <div className="form-grid two">
-            <div className="form-field">
-              <Label htmlFor="device-mount-type">Mount type</Label>
-              <Select
-                value={device.mountType}
-                onValueChange={(value) =>
-                  setDevice({
-                    ...device,
-                    mountType: value as Device['mountType'],
-                    rackId: value === 'rack' ? device.rackId : null,
-                  })
-                }
-              >
-                <SelectTrigger id="device-mount-type">
-                  <SelectValue placeholder="Select mount type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="rack">Rack</SelectItem>
-                  <SelectItem value="non_rack">Non-rack</SelectItem>
-                  <SelectItem value="virtual">Virtual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="device-rack">Rack</Label>
-              <Select
-                disabled={device.mountType !== 'rack'}
-                value={device.rackId ?? NONE_VALUE}
-                onValueChange={(value) => setDevice({ ...device, rackId: value === NONE_VALUE ? null : value })}
-              >
-                <SelectTrigger id="device-rack">
-                  <SelectValue placeholder="Select rack" />
-                </SelectTrigger>
-                <SelectContent>
-                <SelectItem value={NONE_VALUE}>No rack</SelectItem>
-                {locationRacks.map((rack) => (
-                  <SelectItem key={rack.id} value={rack.id}>
-                    {rack.name}
-                  </SelectItem>
-                ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="device-rack-size">Rack size RU</Label>
-              <Input
-                disabled={device.mountType !== 'rack'}
-                id="device-rack-size"
-                min="1"
-                type="number"
-                value={device.rackSizeRu ?? ''}
-                onChange={(event) =>
-                  setDevice({ ...device, rackSizeRu: event.target.value ? Number(event.target.value) : null })
-                }
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="device-rack-bottom">Rack bottom RU</Label>
-              <Input
-                disabled={device.mountType !== 'rack'}
-                id="device-rack-bottom"
-                min="1"
-                type="number"
-                value={device.rackBottomRu ?? ''}
-                onChange={(event) =>
-                  setDevice({ ...device, rackBottomRu: event.target.value ? Number(event.target.value) : null })
-                }
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="modal-section">
           <div className="section-heading">
-            <h3>Port Groups</h3>
-            <Button variant="outline" size="sm" type="button" onClick={addPortGroup}>
-              Add Port Group
-            </Button>
+            <h3>I/O Interfaces</h3>
           </div>
           <div className="port-group-editor-list">
-            {portGroups.map((group) => {
-              const lastCableNumber =
-                group.createPlannedCables && group.firstCableNumber && group.count > 0
-                  ? group.firstCableNumber + group.count - 1
-                  : null;
-
-              return (
-                <Card className="port-group-editor" key={group.localId}>
-                  <CardHeader className="port-group-editor-heading">
-                    <CardTitle>{group.name || 'Port group'}</CardTitle>
-                    <Button variant="outline" size="sm" type="button" onClick={() => removePortGroup(group.localId)}>
-                      Remove
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                  <div className="form-grid three">
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-name-${group.localId}`}>Name</Label>
-                      <Input
-                        id={`port-group-name-${group.localId}`}
-                        value={group.name}
-                        onChange={(event) => updatePortGroup(group.localId, { name: event.target.value })}
-                      />
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-direction-${group.localId}`}>Direction</Label>
-                      <Select
-                        value={group.direction}
-                        onValueChange={(value) =>
-                          updatePortGroup(group.localId, {
-                            direction: value as DevicePortGroupDraft['direction'],
-                          })
-                        }
-                      >
-                        <SelectTrigger id={`port-group-direction-${group.localId}`}>
-                          <SelectValue placeholder="Select direction" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="input">Input</SelectItem>
-                          <SelectItem value="output">Output</SelectItem>
-                          <SelectItem value="bidirectional">Bidirectional</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
-                      <Select
-                        value={group.categoryId}
-                        onValueChange={(value) => updatePortGroup(group.localId, { categoryId: value })}
-                      >
-                        <SelectTrigger id={`port-group-category-${group.localId}`}>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {project.settings.categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-connector-${group.localId}`}>Connector type</Label>
-                      <Select
-                        value={group.connectorTypeId}
-                        onValueChange={(value) => updatePortGroup(group.localId, { connectorTypeId: value })}
-                      >
-                        <SelectTrigger id={`port-group-connector-${group.localId}`}>
-                          <SelectValue placeholder="Select connector" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {project.settings.connectorTypes.map((connectorType) => (
-                          <SelectItem key={connectorType.id} value={connectorType.id}>
-                            {connectorType.name}
-                          </SelectItem>
-                        ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-count-${group.localId}`}>Count</Label>
-                      <Input
-                        id={`port-group-count-${group.localId}`}
-                        min="1"
-                        type="number"
-                        value={group.count}
-                        onChange={(event) => updatePortGroup(group.localId, { count: Number(event.target.value) })}
-                      />
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-pattern-${group.localId}`}>Port label pattern</Label>
-                      <Input
-                        id={`port-group-pattern-${group.localId}`}
-                        value={group.portLabelPattern}
-                        onChange={(event) =>
-                          updatePortGroup(group.localId, { portLabelPattern: event.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable prefix</Label>
-                      <Select
-                        value={group.cablePrefix}
-                        onValueChange={(value) =>
-                          updatePortGroup(group.localId, {
-                            cablePrefix: value,
-                            firstCableNumber: group.createPlannedCables
-                              ? getSuggestedFirstCableNumber(project, value, portGroups)
-                              : null,
-                          })
-                        }
-                      >
-                        <SelectTrigger id={`port-group-prefix-${group.localId}`}>
-                          <SelectValue placeholder="Select prefix" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {project.settings.cablePrefixes.map((prefix) => (
-                          <SelectItem key={prefix.id} value={prefix.prefix}>
-                            {prefix.prefix}
-                          </SelectItem>
-                        ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-first-cable-${group.localId}`}>First cable number</Label>
-                      <Input
-                        disabled={!group.createPlannedCables}
-                        id={`port-group-first-cable-${group.localId}`}
-                        min="1"
-                        type="number"
-                        value={group.firstCableNumber ?? ''}
-                        onChange={(event) =>
-                          updatePortGroup(group.localId, {
-                            firstCableNumber: event.target.value ? Number(event.target.value) : null,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="form-field">
-                      <Label htmlFor={`port-group-last-cable-${group.localId}`}>Last cable number</Label>
-                      <Input
-                        disabled={!group.createPlannedCables}
-                        id={`port-group-last-cable-${group.localId}`}
-                        readOnly
-                        value={lastCableNumber ? formatCableNumber(group.cablePrefix, lastCableNumber) : ''}
-                      />
-                    </div>
-                  </div>
-                  <Label className="checkbox-row">
-                    <input
-                      checked={group.createPlannedCables}
-                      type="checkbox"
-                      onChange={(event) => handlePlannedCablesToggle(group.localId, event.target.checked)}
-                    />
-                    <span>Create planned cables</span>
-                  </Label>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {portGroups.map((group) => (
+              <PortGroupEditor
+                group={group}
+                key={group.localId}
+                project={project}
+                onCategoryChange={handlePortGroupCategoryChange}
+                onPlannedCablesToggle={handlePlannedCablesToggle}
+                onRemove={removePortGroup}
+                onUpdate={updatePortGroup}
+              />
+            ))}
           </div>
+          <Button variant="outline" size="sm" type="button" onClick={addPortGroup}>
+            Add Port Group
+          </Button>
           <div className="form-messages">
             {validation.warnings.map((warning) => (
               <Alert className="border-amber-200 bg-amber-50 text-amber-800" key={warning}>
@@ -525,15 +309,188 @@ export function AddDeviceModal({
   );
 }
 
-function createQuickPortGroups(
-  project: ProjectRoot,
-  categoryId: string,
-  _deviceLabelPrefix: string,
-): DevicePortGroupForm[] {
+function PortGroupEditor({
+  group,
+  project,
+  onCategoryChange,
+  onPlannedCablesToggle,
+  onRemove,
+  onUpdate,
+}: {
+  group: DevicePortGroupForm;
+  project: ProjectRoot;
+  onCategoryChange: (localId: string, categoryId: string) => void;
+  onPlannedCablesToggle: (localId: string, checked: boolean) => void;
+  onRemove: (localId: string) => void;
+  onUpdate: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
+}) {
+  return (
+    <Card className="port-group-editor">
+      <CardHeader className="port-group-editor-heading">
+        <CardTitle>{group.name || 'Port group'}</CardTitle>
+        <div className="interface-card-actions">
+          <Badge>{formatPortGroupRange(group)}</Badge>
+          <Button
+            aria-label={`Remove ${group.name || 'interface'}`}
+            size="icon"
+            type="button"
+            variant="ghost"
+            onClick={() => onRemove(group.localId)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="port-group-editor-content">
+        <div className="port-group-row port-group-row-primary">
+          <div className="form-field">
+            <Label htmlFor={`port-group-name-${group.localId}`}>Name</Label>
+            <Input
+              id={`port-group-name-${group.localId}`}
+              value={group.name}
+              onChange={(event) => onUpdate(group.localId, { name: event.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
+            <Select value={group.categoryId} onValueChange={(value) => onCategoryChange(group.localId, value)}>
+              <SelectTrigger id={`port-group-category-${group.localId}`}>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {project.settings.categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-direction-${group.localId}`}>Direction</Label>
+            <Select
+              value={group.direction}
+              onValueChange={(value) =>
+                onUpdate(group.localId, {
+                  direction: value as DevicePortGroupDraft['direction'],
+                })
+              }
+            >
+              <SelectTrigger id={`port-group-direction-${group.localId}`}>
+                <SelectValue placeholder="Select direction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="input">Input</SelectItem>
+                <SelectItem value="output">Output</SelectItem>
+                <SelectItem value="bidirectional">Bidirectional</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-connector-${group.localId}`}>Connector</Label>
+            <Select
+              value={group.connectorTypeId}
+              onValueChange={(value) => onUpdate(group.localId, { connectorTypeId: value })}
+            >
+              <SelectTrigger id={`port-group-connector-${group.localId}`}>
+                <SelectValue placeholder="Select connector" />
+              </SelectTrigger>
+              <SelectContent>
+                {project.settings.connectorTypes.map((connectorType) => (
+                  <SelectItem key={connectorType.id} value={connectorType.id}>
+                    {connectorType.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-count-${group.localId}`}>Count</Label>
+            <Input
+              id={`port-group-count-${group.localId}`}
+              min="1"
+              type="number"
+              value={group.count}
+              onChange={(event) => onUpdate(group.localId, { count: Number(event.target.value) })}
+            />
+          </div>
+        </div>
+        <div className="port-group-row port-group-row-secondary">
+          <div className="form-field">
+            <Label>Mode</Label>
+            <Button
+              aria-pressed={group.createPlannedCables}
+              className="interface-auto-toggle"
+              type="button"
+              variant={group.createPlannedCables ? 'default' : 'outline'}
+              onClick={() => onPlannedCablesToggle(group.localId, !group.createPlannedCables)}
+            >
+              AUTO
+            </Button>
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable Prefix</Label>
+            <Select
+              value={group.cablePrefix}
+              onValueChange={(value) =>
+                onUpdate(group.localId, {
+                  cablePrefix: value,
+                })
+              }
+            >
+              <SelectTrigger id={`port-group-prefix-${group.localId}`}>
+                <SelectValue placeholder="Select prefix" />
+              </SelectTrigger>
+              <SelectContent>
+                {project.settings.cablePrefixes.map((prefix) => (
+                  <SelectItem key={prefix.id} value={prefix.prefix}>
+                    {prefix.prefix}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-pattern-${group.localId}`}>Label Pattern</Label>
+            <Input
+              id={`port-group-pattern-${group.localId}`}
+              value={group.portLabelPattern}
+              onChange={(event) => onUpdate(group.localId, { portLabelPattern: event.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-first-cable-${group.localId}`}>First Cable Number</Label>
+            <Input
+              id={`port-group-first-cable-${group.localId}`}
+              min="1"
+              readOnly={group.createPlannedCables}
+              type="number"
+              value={group.firstCableNumber ?? ''}
+              onChange={(event) =>
+                onUpdate(group.localId, {
+                  firstCableNumber: event.target.value ? Number(event.target.value) : null,
+                })
+              }
+            />
+          </div>
+          <div className="form-field">
+            <Label htmlFor={`port-group-last-cable-${group.localId}`}>Last Cable Number</Label>
+            <Input
+              id={`port-group-last-cable-${group.localId}`}
+              readOnly
+              value={formatPortGroupLastCableNumber(group)}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function createQuickPortGroups(project: ProjectRoot, categoryId: string): DevicePortGroupForm[] {
   const category = project.settings.categories.find((item) => item.id === categoryId);
   const categoryName = category?.name.toLowerCase() ?? '';
   const defaultPrefix = category?.defaultCablePrefix ?? project.settings.cablePrefixes[0]?.prefix ?? 'V';
-  const nextByPrefix = new Map(project.numberingLedgers.map((ledger) => [ledger.prefix, ledger.nextSuggested]));
 
   function makeGroup(input: {
     name: string;
@@ -543,27 +500,22 @@ function createQuickPortGroups(
     pattern: string;
     count?: number;
   }): DevicePortGroupForm {
-    const count = input.count ?? 4;
-    const firstCableNumber = nextByPrefix.get(input.prefix) ?? 1;
-
-    nextByPrefix.set(input.prefix, firstCableNumber + count);
-
     return {
       localId: `${input.name}-${Date.now()}-${Math.random()}`,
       name: input.name,
       direction: input.direction,
       categoryId,
       connectorTypeId: findConnectorTypeId(project, input.connectorName),
-      count,
+      count: input.count ?? 4,
       portLabelPattern: input.pattern,
       cablePrefix: input.prefix,
-      firstCableNumber,
+      firstCableNumber: null,
       createPlannedCables: true,
     };
   }
 
   if (categoryName === 'video') {
-    return [
+    return rebalancePlannedCableRanges(project, [
       makeGroup({
         name: 'SDI IN',
         direction: 'input',
@@ -578,11 +530,11 @@ function createQuickPortGroups(
         prefix: 'V',
         pattern: '{DEVICE}-OUT-{000}',
       }),
-    ];
+    ]);
   }
 
   if (categoryName === 'audio') {
-    return [
+    return rebalancePlannedCableRanges(project, [
       makeGroup({
         name: 'AUDIO IN',
         direction: 'input',
@@ -597,11 +549,11 @@ function createQuickPortGroups(
         prefix: 'A',
         pattern: '{DEVICE}-AOUT-{000}',
       }),
-    ];
+    ]);
   }
 
   if (categoryName === 'network') {
-    return [
+    return rebalancePlannedCableRanges(project, [
       makeGroup({
         name: 'NETWORK',
         direction: 'bidirectional',
@@ -609,10 +561,10 @@ function createQuickPortGroups(
         prefix: 'N',
         pattern: '{DEVICE}-NET-{000}',
       }),
-    ];
+    ]);
   }
 
-  return [
+  return rebalancePlannedCableRanges(project, [
     makeGroup({
       name: 'PORTS',
       direction: 'bidirectional',
@@ -620,7 +572,38 @@ function createQuickPortGroups(
       prefix: defaultPrefix,
       pattern: '{DEVICE}-{000}',
     }),
-  ];
+  ]);
+}
+
+function rebalancePlannedCableRanges(
+  project: ProjectRoot,
+  groups: DevicePortGroupForm[],
+): DevicePortGroupForm[] {
+  const nextByPrefix = new Map(project.numberingLedgers.map((ledger) => [ledger.prefix, ledger.nextSuggested]));
+
+  return groups.map((group) => {
+    const count = Number(group.count);
+
+    if (!group.createPlannedCables) {
+      return {
+        ...group,
+        count,
+        firstCableNumber: group.firstCableNumber ?? nextByPrefix.get(group.cablePrefix) ?? 1,
+      };
+    }
+
+    const nextCableNumber = nextByPrefix.get(group.cablePrefix) ?? 1;
+
+    if (Number.isSafeInteger(count) && count > 0) {
+      nextByPrefix.set(group.cablePrefix, nextCableNumber + count);
+    }
+
+    return {
+      ...group,
+      count,
+      firstCableNumber: nextCableNumber,
+    };
+  });
 }
 
 function findConnectorTypeId(project: ProjectRoot, name: string): string {
@@ -633,25 +616,43 @@ function findConnectorTypeId(project: ProjectRoot, name: string): string {
   );
 }
 
-function getSuggestedFirstCableNumber(
-  project: ProjectRoot,
-  prefix: string,
-  currentGroups: DevicePortGroupForm[],
-): number {
-  let nextSuggested = project.numberingLedgers.find((ledger) => ledger.prefix === prefix)?.nextSuggested ?? 1;
+function getDefaultPrefixForCategory(project: ProjectRoot, categoryId: string): string {
+  return (
+    project.settings.categories.find((category) => category.id === categoryId)?.defaultCablePrefix ??
+    project.settings.cablePrefixes[0]?.prefix ??
+    'V'
+  );
+}
 
-  for (const group of currentGroups) {
-    if (
-      group.cablePrefix === prefix &&
-      group.createPlannedCables &&
-      group.firstCableNumber !== null &&
-      group.count > 0
-    ) {
-      nextSuggested = Math.max(nextSuggested, group.firstCableNumber + group.count);
-    }
+function normalizeDeviceToken(value: string): string {
+  const normalized = value
+    .trim()
+    .toUpperCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^A-Z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return normalized || 'DEVICE';
+}
+
+function formatPortGroupRange(group: DevicePortGroupForm): string {
+  if (!group.firstCableNumber || !Number.isSafeInteger(group.count) || group.count <= 0) {
+    return group.createPlannedCables ? 'Set count' : 'Set first cable number';
   }
 
-  return nextSuggested;
+  return `${formatCableNumber(group.cablePrefix, group.firstCableNumber)} -> ${formatCableNumber(
+    group.cablePrefix,
+    group.firstCableNumber + group.count - 1,
+  )}`;
+}
+
+function formatPortGroupLastCableNumber(group: DevicePortGroupForm): string {
+  if (!group.firstCableNumber || !Number.isSafeInteger(group.count) || group.count <= 0) {
+    return '';
+  }
+
+  return formatCableNumber(group.cablePrefix, group.firstCableNumber + group.count - 1);
 }
 
 function getAddDeviceValidation(
@@ -667,30 +668,12 @@ function getAddDeviceValidation(
     errors.push('Device name is required.');
   }
 
-  if (!device.code.trim()) {
-    errors.push('Device code is required.');
-  }
-
   if (!device.categoryId) {
     errors.push('Device category is required.');
   }
 
-  if (device.mountType !== 'virtual' && !device.locationId) {
-    errors.push('Location is required unless the device is virtual.');
-  }
-
-  if (device.mountType === 'rack') {
-    const rack = device.rackId ? project.racks.find((candidate) => candidate.id === device.rackId) : null;
-
-    if (!rack || !device.rackSizeRu || !device.rackBottomRu) {
-      errors.push('Rack-mounted devices require rack, rack size, and rack bottom RU.');
-    } else if (
-      device.rackBottomRu < 1 ||
-      device.rackSizeRu < 1 ||
-      device.rackBottomRu + device.rackSizeRu - 1 > rack.heightRu
-    ) {
-      errors.push('Rack position must fit inside the rack height.');
-    }
+  if (!normalizeDeviceToken(device.labelPrefix || device.name)) {
+    errors.push('A label prefix or device name is required for generated port labels.');
   }
 
   if (portGroups.length === 0) {

@@ -149,6 +149,13 @@ textarea:not([data-ui]) {
   align-items: flex-start;
 }
 
+.workspace-context-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .eyebrow {
   color: #3b6f71;
   font-size: 0.75rem;
@@ -466,11 +473,6 @@ textarea:not([data-ui]) {
   color: #8ee0d5;
 }
 
-.bidirectional-groups {
-  border-top: 1px solid #3b4b52;
-  padding-top: 16px;
-}
-
 .inspector {
   grid-area: inspector;
   display: grid;
@@ -597,6 +599,35 @@ textarea:not([data-ui]) {
   gap: 10px;
 }
 
+.interface-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.port-group-editor-content {
+  display: grid;
+  gap: 12px;
+}
+
+.port-group-row {
+  display: grid;
+  gap: 10px;
+  align-items: end;
+}
+
+.port-group-row-primary {
+  grid-template-columns: minmax(150px, 1.2fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) 88px;
+}
+
+.port-group-row-secondary {
+  grid-template-columns: 84px 120px minmax(180px, 1fr) 130px 130px;
+}
+
+.interface-auto-toggle {
+  width: 100%;
+}
+
 .checkbox-row {
   display: inline-flex;
   align-items: center;
@@ -642,6 +673,8 @@ textarea:not([data-ui]) {
   .prefix-row,
   .form-grid.two,
   .form-grid.three,
+  .port-group-row-primary,
+  .port-group-row-secondary,
   .device-io-grid {
     grid-template-columns: 1fr;
   }

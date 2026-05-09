@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
@@ -19,6 +20,9 @@ const NONE_VALUE = '__none__';
 export function DeviceInspector({ device }: { device: Device }) {
   const { project, updateDevice, retireDevice } = useProject();
   const availableRacks = project.racks.filter((rack) => rack.locationId === device.locationId);
+  const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
+  const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
+  const portCount = project.ports.filter((port) => port.deviceId === device.id).length;
   const [form, setForm] = useState({
     name: device.name,
     code: device.code,
@@ -85,10 +89,6 @@ export function DeviceInspector({ device }: { device: Device }) {
             <div className="form-field">
               <Label htmlFor="inspector-device-name">Name</Label>
               <Input id="inspector-device-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-code">Code</Label>
-              <Input id="inspector-device-code" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
             </div>
             <div className="form-field">
               <Label htmlFor="inspector-device-manufacturer">Manufacturer</Label>
@@ -176,10 +176,36 @@ export function DeviceInspector({ device }: { device: Device }) {
       </Card>
       <Card className="inspector-card">
         <CardHeader>
-          <CardTitle>Cable Ranges</CardTitle>
+          <CardTitle>Device Details</CardTitle>
         </CardHeader>
         <CardContent>
-        <p>Port group cable allocation fields are locked in v0.1.</p>
+          <dl>
+            <div>
+              <dt>Category</dt>
+              <dd>{category?.name ?? 'Unknown category'}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <Badge>{device.status}</Badge>
+              </dd>
+            </div>
+            <div>
+              <dt>Label prefix</dt>
+              <dd>{device.labelPrefix || 'Not set'}</dd>
+            </div>
+            <div>
+              <dt>Mount</dt>
+              <dd>{device.mountType}</dd>
+            </div>
+            <div>
+              <dt>Port groups</dt>
+              <dd>
+                {portGroups.length} group(s), {portCount} port(s)
+              </dd>
+            </div>
+          </dl>
+          <p>Port group cable allocation fields are locked in v0.1.</p>
         </CardContent>
       </Card>
       <Card className="inspector-card danger-zone">

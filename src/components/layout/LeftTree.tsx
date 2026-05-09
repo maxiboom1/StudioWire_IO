@@ -46,7 +46,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.1.6';
+const APP_VERSION = '0.2.1.7';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -168,7 +168,14 @@ export function LeftTree({
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Project navigator</SidebarGroupLabel>
+          <ActionContextMenu
+            actions={[
+              { label: 'Add Location', onSelect: onAddLocation },
+              { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+            ]}
+          >
+            <SidebarGroupLabel className="cursor-context-menu">Project navigator</SidebarGroupLabel>
+          </ActionContextMenu>
           <SidebarGroupContent>
             <SidebarMenu>
               {isNavigatorEmpty ? (
@@ -211,11 +218,27 @@ export function LeftTree({
                   <UnassignedBranch
                     collapsedKeys={collapsedKeys}
                     devices={unassignedDevices}
+                    onAddLocation={onAddLocation}
                     onAddDevice={onAddDevice}
                     onSelectObject={onSelectObject}
                     onToggle={toggle}
                     selection={selection}
                   />
+                  <SidebarMenuItem>
+                    <ActionContextMenu
+                      actions={[
+                        { label: 'Add Location', onSelect: onAddLocation },
+                        { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+                      ]}
+                    >
+                      <div
+                        className="cursor-context-menu rounded-md px-2 py-2 text-xs text-studio-muted hover:bg-slate-50"
+                        data-ui="navigator-context-hint"
+                      >
+                        Right-click navigator to add items.
+                      </div>
+                    </ActionContextMenu>
+                  </SidebarMenuItem>
                 </>
               )}
             </SidebarMenu>
@@ -414,6 +437,7 @@ function UnassignedBranch({
   devices,
   selection,
   onSelectObject,
+  onAddLocation,
   onAddDevice,
   onToggle,
 }: {
@@ -421,6 +445,7 @@ function UnassignedBranch({
   devices: Device[];
   selection: SelectionState;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
+  onAddLocation: () => void;
   onAddDevice: (locationId: string | null) => void;
   onToggle: (key: string) => void;
 }) {
@@ -429,7 +454,12 @@ function UnassignedBranch({
   return (
     <SidebarMenuItem>
       <Collapsible open={isOpen} onOpenChange={() => onToggle(UNASSIGNED_KEY)}>
-        <ActionContextMenu actions={[{ label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) }]}>
+        <ActionContextMenu
+          actions={[
+            { label: 'Add Location', onSelect: onAddLocation },
+            { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+          ]}
+        >
           <div className="flex items-center gap-1">
             <CollapsibleTrigger asChild>
               <button
@@ -485,7 +515,7 @@ function DeviceTreeItem({
     <SidebarMenuSubItem>
       <SidebarMenuSubButton isActive={active} onClick={onSelect}>
         <span className="min-w-0 flex-1 truncate">{device.name}</span>
-        <span className="text-[0.68rem] text-studio-muted">{device.code || device.role || 'Device'}</span>
+        <span className="text-[0.68rem] text-studio-muted">{device.labelPrefix || device.role || 'Device'}</span>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );

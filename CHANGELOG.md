@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.1.7
+
+Continued the 0.2.1 UI-polish stage with focused navigator, device workspace, and Add Device workflow fixes.
+
+### Changed
+
+- Fixed generated artifact hygiene by adding the missing `output/` ignore pattern and keeping generated browser/test artifacts out of the source tree.
+- Added persistent navigator Add Location access from the Project Navigator context menu and the Unassigned Devices context menu.
+- Simplified the main device workspace by removing large metadata/statistics cards and leaving the canvas focused on the device/port diagram.
+- Simplified Add Device creation to user-facing basics, with new devices created as virtual and compatibility `Device.code` generated internally from label prefix or name.
+- Compacted port group creation with a two-row layout, planned cable toggle, read-only range preview, and automatic preview range recalculation.
+- Refined the Add Device I/O interface form with manual cable range fields when planned cables are off and moved bidirectional device-canvas groups into the side interface layout instead of the bottom band.
+- Polished I/O interface cards with a top-right remove icon, a compact AUTO toggle, and always-visible first/last cable fields that become read-only in automatic mode.
+
 ## v0.2.1.6
 
 Completed the 0.2.1 shadcn/ui polish sequence with a controlled consistency pass.
