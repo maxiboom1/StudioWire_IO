@@ -1,6 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useProject } from '../../state/ProjectContext';
 import { ModalFrame } from '../common/ModalFrame';
+import { Button } from '../ui/button';
+import { DialogFooter } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 
 export function AddLocationModal({
   onClose,
@@ -28,37 +33,44 @@ export function AddLocationModal({
   }
 
   return (
-    <ModalFrame title="Add Location" onClose={onClose}>
+    <ModalFrame
+      title="Add Location"
+      description="Create a project location for racks and devices."
+      onClose={onClose}
+    >
       <form className="editor-form" onSubmit={handleSubmit}>
-        <label>
-          <span>Name</span>
-          <input
+        <div className="form-field">
+          <Label htmlFor="location-name">Name</Label>
+          <Input
             autoFocus
+            id="location-name"
             required
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
           />
-        </label>
-        <label>
-          <span>Type</span>
-          <input
+        </div>
+        <div className="form-field">
+          <Label htmlFor="location-type">Type</Label>
+          <Input
+            id="location-type"
             value={form.type}
             onChange={(event) => setForm({ ...form, type: event.target.value })}
           />
-        </label>
-        <label>
-          <span>Description</span>
-          <textarea
+        </div>
+        <div className="form-field">
+          <Label htmlFor="location-description">Description</Label>
+          <Textarea
+            id="location-description"
             value={form.description}
             onChange={(event) => setForm({ ...form, description: event.target.value })}
           />
-        </label>
-        <div className="modal-actions">
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit">Add Location</button>
         </div>
+        <DialogFooter>
+          <Button variant="outline" type="button" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Add Location</Button>
+        </DialogFooter>
       </form>
     </ModalFrame>
   );

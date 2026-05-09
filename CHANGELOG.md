@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.1.4
+
+Continued the shadcn/ui migration for the 0.2.1 UI-polish stage.
+
+### Added
+
+- Added shadcn-style dialog, input, label, textarea, select, alert, and card primitives.
+
+### Changed
+
+- Migrated the add location, add rack, and add device modal flows to shadcn Dialog.
+- Migrated touched dialog buttons, inputs, labels, selects, and validation message surfaces toward shadcn-style components.
+- Preserved the shadcn Sidebar navigator, project actions dropdown, right-click context menus, and existing project behavior.
+- Removed obsolete custom modal CSS that was replaced by Dialog-based components.
+
 ## v0.2.1.3
 
 Began the shadcn/ui migration for the 0.2.1 UI-polish stage.

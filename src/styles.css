@@ -63,9 +63,9 @@ button:disabled {
   opacity: 0.55;
 }
 
-input,
+input:not([data-ui]),
 select,
-textarea {
+textarea:not([data-ui]) {
   width: 100%;
   border: 1px solid #c8d2d7;
   border-radius: 6px;
@@ -75,7 +75,7 @@ textarea {
   padding: 9px 10px;
 }
 
-textarea {
+textarea:not([data-ui]) {
   min-height: 92px;
   resize: vertical;
 }
@@ -408,6 +408,11 @@ textarea {
   gap: 6px;
 }
 
+.form-field {
+  display: grid;
+  gap: 6px;
+}
+
 .editor-form label span {
   color: #607177;
   font-size: 0.75rem;
@@ -702,48 +707,6 @@ textarea {
   color: #245b86;
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(14, 28, 32, 0.42);
-  backdrop-filter: blur(2px);
-}
-
-.modal-panel {
-  width: min(980px, 100%);
-  max-height: min(720px, calc(100vh - 48px));
-  overflow: auto;
-  border: 1px solid #c8d2d7;
-  border-radius: 8px;
-  background: #fbfcfc;
-  padding: 18px;
-  box-shadow: 0 24px 70px rgba(15, 37, 39, 0.28);
-}
-
-.modal-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.modal-heading h2 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-
 .modal-section {
   display: grid;
   gap: 12px;
@@ -767,19 +730,11 @@ textarea {
   gap: 12px;
 }
 
-.port-group-editor {
-  border: 1px solid #d7e0e4;
-  border-radius: 6px;
-  background: #ffffff;
-  padding: 12px;
-}
-
 .port-group-editor-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
 }
 
 .checkbox-row {
@@ -798,24 +753,6 @@ textarea {
 .form-messages {
   display: grid;
   gap: 6px;
-}
-
-.form-warning,
-.form-error {
-  margin: 0;
-  border-radius: 6px;
-  padding: 9px 10px;
-  font-size: 0.85rem;
-}
-
-.form-warning {
-  background: #fff4cf;
-  color: #765700;
-}
-
-.form-error {
-  background: #ffe4df;
-  color: #923521;
 }
 
 @media (max-width: 1080px) {

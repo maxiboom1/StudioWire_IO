@@ -4,10 +4,25 @@ import type { Device, ProjectRoot, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectReducer';
 import { ModalFrame } from '../common/ModalFrame';
+import { Alert, AlertDescription } from '../ui/alert';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { DialogFooter } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 interface DevicePortGroupForm extends DevicePortGroupDraft {
   localId: string;
 }
+
+const NONE_VALUE = '__none__';
 
 export function AddDeviceModal({
   initialLocationId,
@@ -144,122 +159,150 @@ export function AddDeviceModal({
   }
 
   return (
-    <ModalFrame title="Add Device" onClose={onClose}>
+    <ModalFrame
+      title="Add Device"
+      description="Create a device, its port groups, generated ports, and optional planned cables."
+      onClose={onClose}
+    >
       <form className="editor-form add-device-form" onSubmit={handleSubmit}>
         <section className="modal-section">
           <h3>Basic</h3>
           <div className="form-grid two">
-            <label>
-              <span>Device name</span>
-              <input
+            <div className="form-field">
+              <Label htmlFor="device-name">Device name</Label>
+              <Input
                 autoFocus
+                id="device-name"
                 required
                 value={device.name}
                 onChange={(event) => setDevice({ ...device, name: event.target.value })}
               />
-            </label>
-            <label>
-              <span>Device code</span>
-              <input
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-code">Device code</Label>
+              <Input
+                id="device-code"
                 required
                 value={device.code}
                 onChange={(event) => setDevice({ ...device, code: event.target.value.toUpperCase() })}
               />
-            </label>
-            <label>
-              <span>Manufacturer</span>
-              <input
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-manufacturer">Manufacturer</Label>
+              <Input
+                id="device-manufacturer"
                 value={device.manufacturer}
                 onChange={(event) => setDevice({ ...device, manufacturer: event.target.value })}
               />
-            </label>
-            <label>
-              <span>Model</span>
-              <input
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-model">Model</Label>
+              <Input
+                id="device-model"
                 value={device.model}
                 onChange={(event) => setDevice({ ...device, model: event.target.value })}
               />
-            </label>
-            <label>
-              <span>Category</span>
-              <select value={device.categoryId} onChange={(event) => handleCategoryChange(event.target.value)}>
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-category">Category</Label>
+              <Select value={device.categoryId} onValueChange={handleCategoryChange}>
+                <SelectTrigger id="device-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
                 {project.settings.categories.map((category) => (
-                  <option key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.id}>
                     {category.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-            </label>
-            <label>
-              <span>Location</span>
-              <select
-                value={device.locationId ?? ''}
-                onChange={(event) =>
-                  setDevice({ ...device, locationId: event.target.value || null, rackId: null })
-                }
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-location">Location</Label>
+              <Select
+                value={device.locationId ?? NONE_VALUE}
+                onValueChange={(value) => setDevice({ ...device, locationId: value === NONE_VALUE ? null : value, rackId: null })}
               >
-                <option value="">No location</option>
+                <SelectTrigger id="device-location">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value={NONE_VALUE}>No location</SelectItem>
                 {project.locations.map((location) => (
-                  <option key={location.id} value={location.id}>
+                  <SelectItem key={location.id} value={location.id}>
                     {location.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-            </label>
-            <label>
-              <span>Role</span>
-              <input value={device.role} onChange={(event) => setDevice({ ...device, role: event.target.value })} />
-            </label>
-            <label>
-              <span>Label prefix</span>
-              <input
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-role">Role</Label>
+              <Input id="device-role" value={device.role} onChange={(event) => setDevice({ ...device, role: event.target.value })} />
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-label-prefix">Label prefix</Label>
+              <Input
+                id="device-label-prefix"
                 value={device.labelPrefix}
                 placeholder={device.code || device.name || 'MTX'}
                 onChange={(event) => setDevice({ ...device, labelPrefix: event.target.value.toUpperCase() })}
               />
-            </label>
+            </div>
           </div>
         </section>
 
         <section className="modal-section">
           <h3>Physical</h3>
           <div className="form-grid two">
-            <label>
-              <span>Mount type</span>
-              <select
+            <div className="form-field">
+              <Label htmlFor="device-mount-type">Mount type</Label>
+              <Select
                 value={device.mountType}
-                onChange={(event) =>
+                onValueChange={(value) =>
                   setDevice({
                     ...device,
-                    mountType: event.target.value as Device['mountType'],
-                    rackId: event.target.value === 'rack' ? device.rackId : null,
+                    mountType: value as Device['mountType'],
+                    rackId: value === 'rack' ? device.rackId : null,
                   })
                 }
               >
-                <option value="rack">Rack</option>
-                <option value="non_rack">Non-rack</option>
-                <option value="virtual">Virtual</option>
-              </select>
-            </label>
-            <label>
-              <span>Rack</span>
-              <select
+                <SelectTrigger id="device-mount-type">
+                  <SelectValue placeholder="Select mount type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rack">Rack</SelectItem>
+                  <SelectItem value="non_rack">Non-rack</SelectItem>
+                  <SelectItem value="virtual">Virtual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-rack">Rack</Label>
+              <Select
                 disabled={device.mountType !== 'rack'}
-                value={device.rackId ?? ''}
-                onChange={(event) => setDevice({ ...device, rackId: event.target.value || null })}
+                value={device.rackId ?? NONE_VALUE}
+                onValueChange={(value) => setDevice({ ...device, rackId: value === NONE_VALUE ? null : value })}
               >
-                <option value="">No rack</option>
+                <SelectTrigger id="device-rack">
+                  <SelectValue placeholder="Select rack" />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value={NONE_VALUE}>No rack</SelectItem>
                 {locationRacks.map((rack) => (
-                  <option key={rack.id} value={rack.id}>
+                  <SelectItem key={rack.id} value={rack.id}>
                     {rack.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-            </label>
-            <label>
-              <span>Rack size RU</span>
-              <input
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-rack-size">Rack size RU</Label>
+              <Input
                 disabled={device.mountType !== 'rack'}
+                id="device-rack-size"
                 min="1"
                 type="number"
                 value={device.rackSizeRu ?? ''}
@@ -267,11 +310,12 @@ export function AddDeviceModal({
                   setDevice({ ...device, rackSizeRu: event.target.value ? Number(event.target.value) : null })
                 }
               />
-            </label>
-            <label>
-              <span>Rack bottom RU</span>
-              <input
+            </div>
+            <div className="form-field">
+              <Label htmlFor="device-rack-bottom">Rack bottom RU</Label>
+              <Input
                 disabled={device.mountType !== 'rack'}
+                id="device-rack-bottom"
                 min="1"
                 type="number"
                 value={device.rackBottomRu ?? ''}
@@ -279,16 +323,16 @@ export function AddDeviceModal({
                   setDevice({ ...device, rackBottomRu: event.target.value ? Number(event.target.value) : null })
                 }
               />
-            </label>
+            </div>
           </div>
         </section>
 
         <section className="modal-section">
           <div className="section-heading">
             <h3>Port Groups</h3>
-            <button type="button" onClick={addPortGroup}>
+            <Button variant="outline" size="sm" type="button" onClick={addPortGroup}>
               Add Port Group
-            </button>
+            </Button>
           </div>
           <div className="port-group-editor-list">
             {portGroups.map((group) => {
@@ -298,106 +342,129 @@ export function AddDeviceModal({
                   : null;
 
               return (
-                <section className="port-group-editor" key={group.localId}>
-                  <div className="port-group-editor-heading">
-                    <strong>{group.name || 'Port group'}</strong>
-                    <button type="button" onClick={() => removePortGroup(group.localId)}>
+                <Card className="port-group-editor" key={group.localId}>
+                  <CardHeader className="port-group-editor-heading">
+                    <CardTitle>{group.name || 'Port group'}</CardTitle>
+                    <Button variant="outline" size="sm" type="button" onClick={() => removePortGroup(group.localId)}>
                       Remove
-                    </button>
-                  </div>
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
                   <div className="form-grid three">
-                    <label>
-                      <span>Name</span>
-                      <input
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-name-${group.localId}`}>Name</Label>
+                      <Input
+                        id={`port-group-name-${group.localId}`}
                         value={group.name}
                         onChange={(event) => updatePortGroup(group.localId, { name: event.target.value })}
                       />
-                    </label>
-                    <label>
-                      <span>Direction</span>
-                      <select
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-direction-${group.localId}`}>Direction</Label>
+                      <Select
                         value={group.direction}
-                        onChange={(event) =>
+                        onValueChange={(value) =>
                           updatePortGroup(group.localId, {
-                            direction: event.target.value as DevicePortGroupDraft['direction'],
+                            direction: value as DevicePortGroupDraft['direction'],
                           })
                         }
                       >
-                        <option value="input">Input</option>
-                        <option value="output">Output</option>
-                        <option value="bidirectional">Bidirectional</option>
-                      </select>
-                    </label>
-                    <label>
-                      <span>Category</span>
-                      <select
+                        <SelectTrigger id={`port-group-direction-${group.localId}`}>
+                          <SelectValue placeholder="Select direction" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="input">Input</SelectItem>
+                          <SelectItem value="output">Output</SelectItem>
+                          <SelectItem value="bidirectional">Bidirectional</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
+                      <Select
                         value={group.categoryId}
-                        onChange={(event) => updatePortGroup(group.localId, { categoryId: event.target.value })}
+                        onValueChange={(value) => updatePortGroup(group.localId, { categoryId: value })}
                       >
+                        <SelectTrigger id={`port-group-category-${group.localId}`}>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
                         {project.settings.categories.map((category) => (
-                          <option key={category.id} value={category.id}>
+                          <SelectItem key={category.id} value={category.id}>
                             {category.name}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Connector type</span>
-                      <select
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-connector-${group.localId}`}>Connector type</Label>
+                      <Select
                         value={group.connectorTypeId}
-                        onChange={(event) =>
-                          updatePortGroup(group.localId, { connectorTypeId: event.target.value })
-                        }
+                        onValueChange={(value) => updatePortGroup(group.localId, { connectorTypeId: value })}
                       >
+                        <SelectTrigger id={`port-group-connector-${group.localId}`}>
+                          <SelectValue placeholder="Select connector" />
+                        </SelectTrigger>
+                        <SelectContent>
                         {project.settings.connectorTypes.map((connectorType) => (
-                          <option key={connectorType.id} value={connectorType.id}>
+                          <SelectItem key={connectorType.id} value={connectorType.id}>
                             {connectorType.name}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Count</span>
-                      <input
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-count-${group.localId}`}>Count</Label>
+                      <Input
+                        id={`port-group-count-${group.localId}`}
                         min="1"
                         type="number"
                         value={group.count}
                         onChange={(event) => updatePortGroup(group.localId, { count: Number(event.target.value) })}
                       />
-                    </label>
-                    <label>
-                      <span>Port label pattern</span>
-                      <input
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-pattern-${group.localId}`}>Port label pattern</Label>
+                      <Input
+                        id={`port-group-pattern-${group.localId}`}
                         value={group.portLabelPattern}
                         onChange={(event) =>
                           updatePortGroup(group.localId, { portLabelPattern: event.target.value })
                         }
                       />
-                    </label>
-                    <label>
-                      <span>Cable prefix</span>
-                      <select
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable prefix</Label>
+                      <Select
                         value={group.cablePrefix}
-                        onChange={(event) =>
+                        onValueChange={(value) =>
                           updatePortGroup(group.localId, {
-                            cablePrefix: event.target.value,
+                            cablePrefix: value,
                             firstCableNumber: group.createPlannedCables
-                              ? getSuggestedFirstCableNumber(project, event.target.value, portGroups)
+                              ? getSuggestedFirstCableNumber(project, value, portGroups)
                               : null,
                           })
                         }
                       >
+                        <SelectTrigger id={`port-group-prefix-${group.localId}`}>
+                          <SelectValue placeholder="Select prefix" />
+                        </SelectTrigger>
+                        <SelectContent>
                         {project.settings.cablePrefixes.map((prefix) => (
-                          <option key={prefix.id} value={prefix.prefix}>
+                          <SelectItem key={prefix.id} value={prefix.prefix}>
                             {prefix.prefix}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
-                    </label>
-                    <label>
-                      <span>First cable number</span>
-                      <input
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-first-cable-${group.localId}`}>First cable number</Label>
+                      <Input
                         disabled={!group.createPlannedCables}
+                        id={`port-group-first-cable-${group.localId}`}
                         min="1"
                         type="number"
                         value={group.firstCableNumber ?? ''}
@@ -407,50 +474,52 @@ export function AddDeviceModal({
                           })
                         }
                       />
-                    </label>
-                    <label>
-                      <span>Last cable number</span>
-                      <input
+                    </div>
+                    <div className="form-field">
+                      <Label htmlFor={`port-group-last-cable-${group.localId}`}>Last cable number</Label>
+                      <Input
                         disabled={!group.createPlannedCables}
+                        id={`port-group-last-cable-${group.localId}`}
                         readOnly
                         value={lastCableNumber ? formatCableNumber(group.cablePrefix, lastCableNumber) : ''}
                       />
-                    </label>
+                    </div>
                   </div>
-                  <label className="checkbox-row">
+                  <Label className="checkbox-row">
                     <input
                       checked={group.createPlannedCables}
                       type="checkbox"
                       onChange={(event) => handlePlannedCablesToggle(group.localId, event.target.checked)}
                     />
                     <span>Create planned cables</span>
-                  </label>
-                </section>
+                  </Label>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
           <div className="form-messages">
             {validation.warnings.map((warning) => (
-              <p className="form-warning" key={warning}>
-                {warning}
-              </p>
+              <Alert className="border-amber-200 bg-amber-50 text-amber-800" key={warning}>
+                <AlertDescription>{warning}</AlertDescription>
+              </Alert>
             ))}
             {validation.errors.map((error) => (
-              <p className="form-error" key={error}>
-                {error}
-              </p>
+              <Alert className="border-red-200 bg-red-50 text-red-800" key={error}>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             ))}
           </div>
         </section>
 
-        <div className="modal-actions">
-          <button type="button" onClick={onClose}>
+        <DialogFooter>
+          <Button variant="outline" type="button" onClick={onClose}>
             Cancel
-          </button>
-          <button disabled={validation.errors.length > 0} type="submit">
+          </Button>
+          <Button disabled={validation.errors.length > 0} type="submit">
             Create Device
-          </button>
-        </div>
+          </Button>
+        </DialogFooter>
       </form>
     </ModalFrame>
   );

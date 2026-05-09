@@ -1,25 +1,36 @@
 import type { ReactNode } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 
 export function ModalFrame({
   title,
+  description,
   children,
   onClose,
 }: {
   title: string;
+  description?: string;
   children: ReactNode;
   onClose: () => void;
 }) {
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="modal-panel" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="modal-heading">
-          <h2>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close modal">
-            Close
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
+      <DialogContent className="max-w-5xl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description ? <DialogDescription>{description}</DialogDescription> : null}
+        </DialogHeader>
         {children}
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
