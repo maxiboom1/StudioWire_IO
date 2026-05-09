@@ -529,6 +529,14 @@ textarea:not([data-ui]) {
   background: #3a332f;
 }
 
+.rack-device-block.invalid-placement {
+  border-color: #fbbf24;
+  background: linear-gradient(180deg, #4a3d20, #2f281b);
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 191, 36, 0.22),
+    0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
 .rack-device-block.is-dragging {
   opacity: 0.45;
 }
@@ -574,6 +582,15 @@ textarea:not([data-ui]) {
   color: #96f1e8;
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.rack-device-block em {
+  margin-top: 2px;
+  color: #fde68a;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .settings-project-form {
@@ -859,6 +876,10 @@ textarea:not([data-ui]) {
   margin: 10px 0 0;
   padding-left: 18px;
   color: #526269;
+}
+
+.warning-list {
+  color: #92400e;
 }
 
 .inspector dd {

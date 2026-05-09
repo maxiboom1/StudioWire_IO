@@ -199,3 +199,20 @@ describe('validateProject ledger rules', () => {
     expect(codes).toContain('planned-cable-without-ledger-range');
   });
 });
+
+describe('validateProject rack placement rules', () => {
+  it('reports missing rack references with a specific validation code', () => {
+    const project = structuredClone(sampleProject);
+    const device = project.devices.find((item) => item.id === 'device-router-1');
+
+    if (!device) {
+      throw new Error('Expected sample rack-mounted device');
+    }
+
+    device.rackId = 'rack-missing';
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('device-references-missing-rack');
+  });
+});

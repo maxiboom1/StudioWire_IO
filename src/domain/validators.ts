@@ -584,6 +584,19 @@ function validateDevices(
 
     const rack = device.rackId ? racks.get(device.rackId) : null;
 
+    if (device.rackId && !rack) {
+      issues.push(
+        issue(
+          'error',
+          'device-references-missing-rack',
+          `${device.name} references missing rack ${device.rackId}.`,
+          'device',
+          device.id,
+        ),
+      );
+      continue;
+    }
+
     if (!rack) {
       issues.push(
         issue('error', 'rack-mounted-device-without-rack', 'Rack-mounted device requires a rack.', 'device', device.id),

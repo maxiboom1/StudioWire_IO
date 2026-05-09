@@ -1,6 +1,7 @@
 import type { CSSProperties, DragEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { analyzeRackPlacements, type RackPlacementDiagnostic } from '../../domain/rackDiagnostics';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
@@ -25,12 +26,13 @@ interface MountedDevice {
   topRu: number;
   rowStart: number;
   rowEnd: number;
+  diagnostics: RackPlacementDiagnostic[];
 }
 
 interface RackCanvasModel {
   displayRus: number[];
   mountedDevices: MountedDevice[];
-  warnings: string[];
+  diagnostics: RackPlacementDiagnostic[];
 }
 
 interface DropPreview {
@@ -51,6 +53,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
   const [draggingDeviceId, setDraggingDeviceId] = useState<string | null>(null);
   const [dropPreview, setDropPreview] = useState<DropPreview | null>(null);
   const [dropMessage, setDropMessage] = useState<string | null>(null);
+  const placementDiagnostics = useMemo(() => analyzeRackPlacements(project), [project]);
   const viewedRacks = useMemo(
     () =>
       viewedRackIds
@@ -196,21 +199,30 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
             {viewedRacks.map((viewedRack) => {
               const location = project.locations.find((candidate) => candidate.id === viewedRack.locationId);
               const rackDevices = project.devices.filter((device) => device.rackId === viewedRack.id);
-              const canvasModel = buildRackCanvasModel(viewedRack, rackDevices);
+              const canvasModel = buildRackCanvasModel(
+                viewedRack,
+                rackDevices,
+                placementDiagnostics.filter((diagnostic) => diagnostic.rackId === viewedRack.id),
+              );
 
               return (
                 <div className="rack-canvas-panel" key={viewedRack.id}>
                   <div className="workspace-context-chips rack-panel-context" aria-label={`${viewedRack.name} context`}>
                     {location ? <Badge>Location: {location.name}</Badge> : null}
                     <Badge>{viewedRack.numberingDirection.replace(/_/g, ' ')}</Badge>
-                    <Badge>{canvasModel.mountedDevices.length} mounted</Badge>
+                    <Badge>{canvasModel.mountedDevices.length} drawn</Badge>
+                    {canvasModel.diagnostics.length > 0 ? (
+                      <Badge className="bg-amber-100 text-amber-800">{canvasModel.diagnostics.length} placement issue(s)</Badge>
+                    ) : null}
                   </div>
 
-                  {canvasModel.warnings.length > 0 ? (
+                  {canvasModel.diagnostics.length > 0 ? (
                     <Alert className="rack-warning border-amber-200 bg-amber-50 text-amber-900">
                       <AlertDescription>
-                        {canvasModel.warnings.map((warning) => (
-                          <span key={warning}>{warning}</span>
+                        {canvasModel.diagnostics.map((diagnostic) => (
+                          <span key={`${diagnostic.code}-${diagnostic.deviceId}-${diagnostic.relatedDeviceId ?? ''}`}>
+                            {diagnostic.message}
+                          </span>
                         ))}
                       </AlertDescription>
                     </Alert>
@@ -317,7 +329,7 @@ function RackElevationCanvas({
         <div>
           <CardTitle>{rack.name}</CardTitle>
           <p>
-            Full rack elevation, {rack.heightRu} RU capacity. This view is read-only in v0.2.2.3.
+            Full rack elevation, {rack.heightRu} RU capacity. This view is read-only in v0.2.2.6.
           </p>
         </div>
         <div className="rack-canvas-actions">
@@ -374,10 +386,11 @@ function RackElevationCanvas({
                 <span>{dropPreview?.ok ? 'Move here' : 'Blocked'}</span>
               </div>
             ) : null}
-            {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd }) => (
+            {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd, diagnostics }) => (
               <div
                 className={[
                   device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block',
+                  diagnostics.length > 0 ? 'invalid-placement' : '',
                   draggingDeviceId === device.id ? 'is-dragging' : '',
                 ]
                   .filter(Boolean)
@@ -394,6 +407,7 @@ function RackElevationCanvas({
                   RU {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
                   {device.rackSizeRu ? ` · ${device.rackSizeRu} RU` : ''}
                 </span>
+                {diagnostics.length > 0 ? <em>Placement issue</em> : null}
               </div>
             ))}
           </div>
@@ -451,24 +465,40 @@ function getPreviewRows(
   };
 }
 
-function buildRackCanvasModel(rack: Rack, devices: Device[]): RackCanvasModel {
+function buildRackCanvasModel(
+  rack: Rack,
+  devices: Device[],
+  diagnostics: RackPlacementDiagnostic[],
+): RackCanvasModel {
   const heightRu = Math.max(0, Math.floor(rack.heightRu));
   const displayRus =
     rack.numberingDirection === 'top_to_bottom'
       ? Array.from({ length: heightRu }, (_, index) => index + 1)
       : Array.from({ length: heightRu }, (_, index) => heightRu - index);
-  const warnings: string[] = [];
   const mountedDevices: MountedDevice[] = [];
-  const occupiedRus = new Map<number, string>();
 
   for (const device of devices) {
+    const deviceDiagnostics = diagnostics.filter((diagnostic) => diagnostic.deviceId === device.id);
+    const hasBlockingDiagnostic = deviceDiagnostics.some((diagnostic) =>
+      [
+        'device-references-missing-rack',
+        'rack-mounted-device-without-rack',
+        'rack-mounted-device-invalid-size-ru',
+        'rack-mounted-device-invalid-bottom-ru',
+        'rack-mounted-device-below-ru-one',
+        'rack-mounted-device-exceeds-rack-height',
+      ].includes(diagnostic.code),
+    );
+
+    if (hasBlockingDiagnostic) {
+      continue;
+    }
+
     if (!device.rackSizeRu || device.rackSizeRu <= 0 || !Number.isSafeInteger(device.rackSizeRu)) {
-      warnings.push(`${device.name} references this rack but has no valid rack size.`);
       continue;
     }
 
     if (!device.rackBottomRu || device.rackBottomRu <= 0 || !Number.isSafeInteger(device.rackBottomRu)) {
-      warnings.push(`${device.name} references this rack but has no valid bottom RU.`);
       continue;
     }
 
@@ -476,27 +506,15 @@ function buildRackCanvasModel(rack: Rack, devices: Device[]): RackCanvasModel {
     const topRu = device.rackBottomRu + device.rackSizeRu - 1;
 
     if (bottomRu < 1 || topRu > heightRu) {
-      warnings.push(`${device.name} placement RU ${bottomRu}-${topRu} is outside ${rack.name}.`);
       continue;
     }
 
     const occupied = Array.from({ length: device.rackSizeRu }, (_, index) => bottomRu + index);
-    const overlappingRu = occupied.find((ru) => occupiedRus.has(ru));
-
-    if (overlappingRu) {
-      warnings.push(`${device.name} overlaps ${occupiedRus.get(overlappingRu)} at RU ${overlappingRu}.`);
-    }
-
-    for (const ru of occupied) {
-      occupiedRus.set(ru, device.name);
-    }
-
     const rowIndexes = occupied
       .map((ru) => displayRus.indexOf(ru) + 1)
       .filter((rowIndex) => rowIndex > 0);
 
     if (rowIndexes.length === 0) {
-      warnings.push(`${device.name} could not be mapped to visible rack rows.`);
       continue;
     }
 
@@ -506,12 +524,13 @@ function buildRackCanvasModel(rack: Rack, devices: Device[]): RackCanvasModel {
       topRu,
       rowStart: Math.min(...rowIndexes),
       rowEnd: Math.max(...rowIndexes) + 1,
+      diagnostics: deviceDiagnostics,
     });
   }
 
   return {
     displayRus,
     mountedDevices,
-    warnings,
+    diagnostics,
   };
 }

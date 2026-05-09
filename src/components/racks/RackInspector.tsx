@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { analyzeRackPlacements } from '../../domain/rackDiagnostics';
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { Button } from '../ui/button';
@@ -16,6 +17,7 @@ import {
 export function RackInspector({ rack }: { rack: Rack }) {
   const { project, updateRack, deleteRack } = useProject();
   const devices = project.devices.filter((device) => device.rackId === rack.id);
+  const placementDiagnostics = analyzeRackPlacements(project).filter((diagnostic) => diagnostic.rackId === rack.id);
   const [form, setForm] = useState({
     name: rack.name,
     heightRu: String(rack.heightRu),
@@ -117,6 +119,22 @@ export function RackInspector({ rack }: { rack: Rack }) {
         )}
         </CardContent>
       </Card>
+      {placementDiagnostics.length > 0 ? (
+        <Card className="inspector-card">
+          <CardHeader>
+            <CardTitle>Placement Issues</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="compact-list warning-list">
+              {placementDiagnostics.map((diagnostic) => (
+                <li key={`${diagnostic.code}-${diagnostic.deviceId}-${diagnostic.relatedDeviceId ?? ''}`}>
+                  {diagnostic.message}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
       <Card className="inspector-card danger-zone">
         <CardHeader>
           <CardTitle>Danger Zone</CardTitle>

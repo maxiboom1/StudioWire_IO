@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.2.6
+
+Improved rack placement validation feedback on the rack canvas and inspector.
+
+### Added
+
+- Added shared rack placement diagnostics for missing rack references, invalid rack size/bottom RU, below-RU placement, above-height placement, rack location mismatch, and rack RU overlap.
+- Surfaced rack placement diagnostics as compact rack canvas warnings and rack inspector placement issue lists.
+- Marked overlapping or location-mismatched mounted device blocks with warning treatment while keeping valid rack views clean.
+
+### Changed
+
+- Preserved drag/drop assignment and repositioning behavior while using the same placement checks for clearer feedback.
+- Preserved project schema version, project JSON shape, import/export behavior, and terminal-block boundaries.
+
 ## v0.2.2.5
 
 Added tree-to-rack drag assignment for existing devices.
