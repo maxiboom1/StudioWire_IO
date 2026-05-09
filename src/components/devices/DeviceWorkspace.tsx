@@ -1,9 +1,21 @@
 import type { Device, ProjectRoot } from '../../domain/types';
+import { formatCableNumber } from '../../domain/cableNumbers';
 import { useProject } from '../../state/ProjectContext';
-import { WorkspaceHeader } from '../common/WorkspaceBits';
+import { EmptyState, SummaryGrid, WorkspaceCard, WorkspaceHeader } from '../common/WorkspaceBits';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
 
 export function DeviceWorkspace({ device }: { device: Device }) {
   const { project } = useProject();
+  const location = device.locationId ? project.locations.find((candidate) => candidate.id === device.locationId) : null;
+  const rack = device.rackId ? project.racks.find((candidate) => candidate.id === device.rackId) : null;
+  const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const ports = project.ports.filter((port) => port.deviceId === device.id);
   const cablesById = new Map(project.cables.map((cable) => [cable.id, cable]));
@@ -16,6 +28,49 @@ export function DeviceWorkspace({ device }: { device: Device }) {
   return (
     <section className="workspace" aria-label="Device canvas">
       <WorkspaceHeader eyebrow="Device" title={device.name} badge={device.code || device.mountType} />
+      <SummaryGrid
+        items={[
+          ['Code', device.code || 'Not set'],
+          ['Category', category?.name ?? 'Unknown category'],
+          ['Location', location?.name ?? 'No location'],
+          ['Rack', rack?.name ?? 'No rack'],
+          ['Mount', device.mountType],
+          ['Status', device.status],
+        ]}
+      />
+      <WorkspaceCard title="Port Groups" description={`${portGroups.length} group(s), ${ports.length} generated port(s).`}>
+        {portGroups.length === 0 ? (
+          <p className="panel-empty">No port groups generated.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Direction</TableHead>
+                <TableHead>Count</TableHead>
+                <TableHead>Cable Range</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {portGroups.map((group) => (
+                <TableRow key={group.id}>
+                  <TableCell>{group.name}</TableCell>
+                  <TableCell>{group.direction}</TableCell>
+                  <TableCell>{group.count}</TableCell>
+                  <TableCell>
+                    {group.firstCableNumber && group.lastCableNumber
+                      ? `${formatCableNumber(group.cablePrefix, group.firstCableNumber)} to ${formatCableNumber(
+                          group.cablePrefix,
+                          group.lastCableNumber,
+                        )}`
+                      : 'No planned cables'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </WorkspaceCard>
       <div className="device-canvas">
         <div className={device.status === 'retired' ? 'device-block retired' : 'device-block'}>
           <div className="device-title">
@@ -51,10 +106,9 @@ export function DeviceWorkspace({ device }: { device: Device }) {
           </div>
         </div>
         {ports.length === 0 ? (
-          <section className="empty-state">
-            <h2>No Generated Ports</h2>
-            <p>This device has no port groups yet. v0.1 locks port group creation to the Add Device workflow.</p>
-          </section>
+          <EmptyState title="No Generated Ports">
+            This device has no port groups yet. v0.1 locks port group creation to the Add Device workflow.
+          </EmptyState>
         ) : null}
       </div>
     </section>

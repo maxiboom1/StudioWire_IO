@@ -1,6 +1,14 @@
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import { SummaryGrid, WorkspaceHeader } from '../common/WorkspaceBits';
+import { EmptyState, SummaryGrid, WorkspaceCard, WorkspaceHeader } from '../common/WorkspaceBits';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
 
 export function RackWorkspace({ rack }: { rack: Rack }) {
   const { project } = useProject();
@@ -18,14 +26,35 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
           ['Rack devices', String(devices.length)],
         ]}
       />
-      <section className="workspace-section">
-        <h2>Rack Occupancy</h2>
-        <p>
-          {devices.length === 0
-            ? 'No devices are assigned to this rack.'
-            : `${devices.length} device(s) reference this rack.`}
-        </p>
-      </section>
+      <WorkspaceCard title="Rack Occupancy" description={`${devices.length} device(s) reference this rack.`}>
+        {devices.length === 0 ? (
+          <p className="panel-empty">No devices are assigned to this rack.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Device</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Bottom RU</TableHead>
+                <TableHead>Size</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {devices.map((device) => (
+                <TableRow key={device.id}>
+                  <TableCell>{device.name}</TableCell>
+                  <TableCell>{device.code || 'Not set'}</TableCell>
+                  <TableCell>{device.rackBottomRu ?? 'Not set'}</TableCell>
+                  <TableCell>{device.rackSizeRu ? `${device.rackSizeRu} RU` : 'Not set'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </WorkspaceCard>
+      {devices.length === 0 ? (
+        <EmptyState title="Rack Is Empty">Assign rack-mounted devices from the device inspector.</EmptyState>
+      ) : null}
     </section>
   );
 }

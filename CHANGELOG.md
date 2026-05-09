@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.1.5
+
+Continued the shadcn/ui polish stage for main workspace and detail surfaces.
+
+### Added
+
+- Added a shadcn-style table primitive for compact workspace and inspector data.
+
+### Changed
+
+- Migrated project, location, rack, and device detail views toward shadcn-style cards, badges, alerts, and tables.
+- Improved right inspector structure with card-based sections and shadcn-style controls where practical.
+- Polished the compact validation footer with badge-based severity counts and issue actions.
+- Preserved sidebar navigation, project/global actions, import/export, validation behavior, and project data semantics.
+
 ## v0.2.1.4
 
 Continued the shadcn/ui migration for the 0.2.1 UI-polish stage.

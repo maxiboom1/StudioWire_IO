@@ -1,6 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 export function RackInspector({ rack }: { rack: Rack }) {
   const { project, updateRack, deleteRack } = useProject();
@@ -41,43 +52,60 @@ export function RackInspector({ rack }: { rack: Rack }) {
   return (
     <aside className="inspector" aria-label="Right inspector">
       <h2>Rack Inspector</h2>
-      <form className="editor-form inspector-form" onSubmit={handleSubmit}>
-        <label>
-          <span>Name</span>
-          <input
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
-        </label>
-        <label>
-          <span>Height RU</span>
-          <input
-            min="1"
-            type="number"
-            value={form.heightRu}
-            onChange={(event) => setForm({ ...form, heightRu: event.target.value })}
-          />
-        </label>
-        <label>
-          <span>Numbering direction</span>
-          <select
-            value={form.numberingDirection}
-            onChange={(event) =>
-              setForm({
-                ...form,
-                numberingDirection: event.target.value as Rack['numberingDirection'],
-              })
-            }
-          >
-            <option value="bottom_to_top">Bottom to top</option>
-            <option value="top_to_bottom">Top to bottom</option>
-          </select>
-        </label>
-        <button type="submit">Save Rack</button>
-      </form>
+      <Card className="inspector-card">
+        <CardHeader>
+          <CardTitle>Edit Rack</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="editor-form inspector-form" onSubmit={handleSubmit}>
+            <div className="form-field">
+              <Label htmlFor="inspector-rack-name">Name</Label>
+              <Input
+                id="inspector-rack-name"
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
+            </div>
+            <div className="form-field">
+              <Label htmlFor="inspector-rack-height">Height RU</Label>
+              <Input
+                id="inspector-rack-height"
+                min="1"
+                type="number"
+                value={form.heightRu}
+                onChange={(event) => setForm({ ...form, heightRu: event.target.value })}
+              />
+            </div>
+            <div className="form-field">
+              <Label htmlFor="inspector-rack-direction">Numbering direction</Label>
+              <Select
+                value={form.numberingDirection}
+                onValueChange={(value) =>
+                  setForm({
+                    ...form,
+                    numberingDirection: value as Rack['numberingDirection'],
+                  })
+                }
+              >
+                <SelectTrigger id="inspector-rack-direction">
+                  <SelectValue placeholder="Select direction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bottom_to_top">Bottom to top</SelectItem>
+                  <SelectItem value="top_to_bottom">Top to bottom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit">Save Rack</Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <section className="inspector-section">
-        <h3>Assigned Devices</h3>
+      <Card className="inspector-card">
+        <CardHeader>
+          <CardTitle>Assigned Devices</CardTitle>
+        </CardHeader>
+        <CardContent>
         {devices.length === 0 ? (
           <p>No devices assigned to this rack.</p>
         ) : (
@@ -87,14 +115,19 @@ export function RackInspector({ rack }: { rack: Rack }) {
             ))}
           </ul>
         )}
-      </section>
-      <section className="inspector-section danger-zone">
-        <h3>Danger Zone</h3>
+        </CardContent>
+      </Card>
+      <Card className="inspector-card danger-zone">
+        <CardHeader>
+          <CardTitle>Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent>
         <p>Deleting a rack is allowed only when no devices are assigned to it.</p>
-        <button className="danger-button" type="button" onClick={handleDelete}>
+        <Button className="danger-button" variant="outline" type="button" onClick={handleDelete}>
           Delete Rack
-        </button>
-      </section>
+        </Button>
+        </CardContent>
+      </Card>
     </aside>
   );
 }

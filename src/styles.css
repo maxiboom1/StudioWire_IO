@@ -242,8 +242,8 @@ textarea:not([data-ui]) {
   max-width: 780px;
   margin: 6px 0 0;
   color: #102024;
-  font-size: clamp(2rem, 4vw, 3.75rem);
-  line-height: 1;
+  font-size: clamp(1.75rem, 3vw, 3rem);
+  line-height: 1.05;
   letter-spacing: 0;
 }
 
@@ -268,10 +268,8 @@ textarea:not([data-ui]) {
 .summary-grid,
 .metric-grid {
   display: grid;
-  gap: 1px;
+  gap: 12px;
   margin-top: 28px;
-  background: #d7e0e4;
-  border: 1px solid #d7e0e4;
 }
 
 .project-meta {
@@ -287,11 +285,10 @@ textarea:not([data-ui]) {
 }
 
 .project-meta div,
-.summary-grid div,
+.summary-card,
 .metric {
   min-width: 0;
   background: #fbfcfc;
-  padding: 16px;
 }
 
 .project-meta span,
@@ -320,7 +317,7 @@ textarea:not([data-ui]) {
 
 .workspace-section {
   margin-top: 34px;
-  max-width: 760px;
+  max-width: 920px;
 }
 
 .settings-project-form {
@@ -434,6 +431,7 @@ textarea:not([data-ui]) {
 }
 
 .workspace-section p,
+.workspace-section .panel-empty,
 .inspector-section p,
 .validation-panel p,
 .welcome-workspace p,
@@ -446,10 +444,7 @@ textarea:not([data-ui]) {
 }
 
 .empty-state {
-  border: 1px dashed #b8c6cb;
-  border-radius: 8px;
-  background: rgba(251, 252, 252, 0.72);
-  padding: 18px;
+  padding: 16px;
 }
 
 .empty-state h2 {
@@ -585,6 +580,9 @@ textarea:not([data-ui]) {
 
 .inspector {
   grid-area: inspector;
+  display: grid;
+  align-content: start;
+  gap: 14px;
   overflow: auto;
   padding: 18px;
   background: #f8fafb;
@@ -599,6 +597,12 @@ textarea:not([data-ui]) {
 
 .inspector-form {
   margin-top: 18px;
+}
+
+.inspector-card p {
+  margin: 0;
+  color: #526269;
+  line-height: 1.6;
 }
 
 .compact-list {
@@ -685,26 +689,6 @@ textarea:not([data-ui]) {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
-}
-
-.issue-empty {
-  background: #e3f1eb;
-  color: #1e6b48;
-}
-
-.issue-pill.error {
-  background: #ffe4df;
-  color: #923521;
-}
-
-.issue-pill.warning {
-  background: #fff4cf;
-  color: #765700;
-}
-
-.issue-pill.info {
-  background: #ddeefe;
-  color: #245b86;
 }
 
 .modal-section {

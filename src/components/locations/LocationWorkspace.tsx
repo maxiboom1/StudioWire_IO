@@ -1,6 +1,15 @@
 import type { Location } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import { SummaryGrid, WorkspaceHeader } from '../common/WorkspaceBits';
+import { Button } from '../ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
+import { EmptyState, SummaryGrid, WorkspaceCard, WorkspaceHeader } from '../common/WorkspaceBits';
 
 export function LocationWorkspace({
   location,
@@ -24,20 +33,70 @@ export function LocationWorkspace({
           ['Devices', String(devices.length)],
         ]}
       />
-      <section className="workspace-section">
-        <div className="section-heading">
-          <h2>Description</h2>
-          <button type="button" onClick={() => onAddDevice(location.id)}>
+      <WorkspaceCard
+        title="Description"
+        action={
+          <Button variant="outline" size="sm" type="button" onClick={() => onAddDevice(location.id)}>
             Add Device
-          </button>
-        </div>
+          </Button>
+        }
+      >
         <p>{location.description || 'No description set.'}</p>
-      </section>
+      </WorkspaceCard>
+      <WorkspaceCard title="Racks" description={`${racks.length} rack(s) in this location.`}>
+        {racks.length === 0 ? (
+          <p className="panel-empty">No racks yet.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Height</TableHead>
+                <TableHead>Direction</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {racks.map((rack) => (
+                <TableRow key={rack.id}>
+                  <TableCell>{rack.name}</TableCell>
+                  <TableCell>{rack.heightRu} RU</TableCell>
+                  <TableCell>{rack.numberingDirection}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </WorkspaceCard>
+      <WorkspaceCard title="Devices" description={`${devices.length} device(s) assigned to this location.`}>
+        {devices.length === 0 ? (
+          <p className="panel-empty">No devices in this location.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Mount</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {devices.map((device) => (
+                <TableRow key={device.id}>
+                  <TableCell>{device.name}</TableCell>
+                  <TableCell>{device.code || 'Not set'}</TableCell>
+                  <TableCell>{device.mountType}</TableCell>
+                  <TableCell>{device.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </WorkspaceCard>
       {racks.length === 0 && devices.length === 0 ? (
-        <section className="empty-state workspace-section">
-          <h2>No Rack Or Device Entries</h2>
-          <p>Add a rack from the Navigator, or add a device directly to this location.</p>
-        </section>
+        <EmptyState title="No Rack Or Device Entries">
+          Right-click this location in the sidebar to add a rack or device.
+        </EmptyState>
       ) : null}
     </section>
   );

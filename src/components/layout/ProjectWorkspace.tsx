@@ -1,17 +1,18 @@
 import { useProject } from '../../state/ProjectContext';
 import { formatDate } from '../common/selection';
-import { SummaryGrid, WorkspaceHeader } from '../common/WorkspaceBits';
+import { EmptyState, MetricGrid, SummaryGrid, WorkspaceHeader } from '../common/WorkspaceBits';
 
 export function ProjectWorkspace() {
   const { project } = useProject();
-  const metrics = [
+  const metrics: Array<[string, number]> = [
     ['Locations', project.locations.length],
     ['Racks', project.racks.length],
     ['Devices', project.devices.length],
     ['Port groups', project.portGroups.length],
     ['Ports', project.ports.length],
     ['Cables', project.cables.length],
-  ] as const;
+    ['Validation issues', project.validationIssues.length],
+  ];
 
   return (
     <section className="workspace" aria-label="Project summary">
@@ -24,19 +25,11 @@ export function ProjectWorkspace() {
           ['Updated', formatDate(project.project.updatedAt)],
         ]}
       />
-      <div className="metric-grid" aria-label="Project object counts">
-        {metrics.map(([label, value]) => (
-          <div className="metric" key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </div>
-        ))}
-      </div>
+      <MetricGrid items={metrics} />
       {project.locations.length === 0 && project.devices.length === 0 ? (
-        <section className="empty-state workspace-section">
-          <h2>Empty Project</h2>
-          <p>Create a location from the Navigator to start building the project structure.</p>
-        </section>
+        <EmptyState title="Empty Project">
+          Right-click the sidebar to create a location or unassigned device.
+        </EmptyState>
       ) : null}
     </section>
   );
