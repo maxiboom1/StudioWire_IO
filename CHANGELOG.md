@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.2.1
+
+Start of 0.2 UI polish phase.
+
+### Added
+
+- Tailwind CSS styling foundation with lightweight StudioWire visual tokens.
+- New original StudioWire IO SVG logo asset for the app navbar.
+- Top-right Settings app menu modal for global project actions.
+
+### Changed
+
+- Compacted the top navbar and bottom validation/footer area.
+- Moved New Project, Load Sample, Import JSON, Export JSON, Validate, and Settings actions out of the navbar and into the Settings modal.
+- Removed the Settings item from the left navigator.
+
 ## v0.1.5
 
 Documentation formatting cleanup release only.

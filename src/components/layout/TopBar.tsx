@@ -1,4 +1,7 @@
-import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
+import { useState } from 'react';
+import logoUrl from '../../assets/studiowire-logo.svg';
+import { useProject } from '../../state/ProjectContext';
+import { AppActionsModal } from './AppActionsModal';
 
 export function TopBar({
   onProjectLoaded,
@@ -7,60 +10,46 @@ export function TopBar({
   onProjectLoaded: () => void;
   onOpenSettings: () => void;
 }) {
-  const {
-    project,
-    statusMessage,
-    createNewProject,
-    loadSampleProject,
-    exportProjectJson,
-    validateProject,
-  } = useProject();
-
-  function handleNewProject() {
-    createNewProject();
-    onProjectLoaded();
-  }
-
-  function handleLoadSample() {
-    loadSampleProject();
-    onProjectLoaded();
-  }
+  const { project, statusMessage } = useProject();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="top-bar">
-      <button className="brand-block" type="button" onClick={onProjectLoaded} aria-label="Select project">
-        <div className="brand-mark">SW</div>
-        <div>
-          <p className="brand-name">StudioWire IO</p>
-          <p className="project-name">{project.project.name}</p>
-        </div>
+    <header className="relative z-10 flex min-h-[58px] items-center justify-between gap-5 border-b border-studio-border bg-white px-4 shadow-sm shadow-slate-900/[0.03]">
+      <button
+        aria-label="Select project"
+        className="flex min-w-0 items-center gap-3 border-0 bg-transparent p-0 text-left hover:border-transparent hover:bg-transparent"
+        onClick={onProjectLoaded}
+        type="button"
+      >
+        <img alt="StudioWire IO logo" className="h-9 w-24 shrink-0 object-contain" src={logoUrl} />
+        <span className="grid min-w-0 gap-0.5">
+          <span className="truncate text-[0.96rem] font-semibold leading-tight text-studio-text">
+            StudioWire IO
+          </span>
+          <span className="truncate text-xs leading-tight text-studio-muted">{project.project.name}</span>
+        </span>
       </button>
 
-      <div className="top-actions" aria-label="Project actions">
-        <button type="button" onClick={handleNewProject}>
-          New Project
-        </button>
-        <button type="button" onClick={handleLoadSample}>
-          Load Sample
-        </button>
-        <label className="file-action" htmlFor="project-json-input">
-          Import JSON
-        </label>
-        <ProjectJsonInput className="file-input" id="project-json-input" onImportComplete={onProjectLoaded} />
-        <button type="button" onClick={exportProjectJson}>
-          Export JSON
-        </button>
-        <button type="button" onClick={validateProject}>
-          Validate
-        </button>
-        <button type="button" onClick={onOpenSettings}>
-          Settings
-        </button>
-      </div>
-
-      <p className="status-line" aria-live="polite">
+      <p className="m-0 hidden min-w-0 flex-1 truncate text-center text-xs text-studio-muted lg:block" aria-live="polite">
         {statusMessage}
       </p>
+
+      <button
+        aria-expanded={isMenuOpen}
+        className="rounded-md border-studio-border bg-white px-3 py-2 text-sm font-semibold text-studio-text shadow-sm transition hover:border-studio-accent hover:bg-orange-50/50"
+        onClick={() => setIsMenuOpen(true)}
+        type="button"
+      >
+        Settings
+      </button>
+
+      {isMenuOpen ? (
+        <AppActionsModal
+          onClose={() => setIsMenuOpen(false)}
+          onOpenSettings={onOpenSettings}
+          onProjectLoaded={onProjectLoaded}
+        />
+      ) : null}
     </header>
   );
 }

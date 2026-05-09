@@ -43,13 +43,6 @@ export function LeftTree({
           meta="Project root"
           onClick={() => onSelectObject('project', project.project.id)}
         />
-        <TreeButton
-          active={isSelected(selection, 'settings', 'settings')}
-          depth={0}
-          label="Settings"
-          meta="Project config"
-          onClick={() => onSelectObject('settings', 'settings')}
-        />
 
         <TreeGroup
           label="Locations"
