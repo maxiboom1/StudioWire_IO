@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.5
+
+Documentation formatting cleanup release only.
+
+### Changed
+
+- Repaired Markdown formatting for the workflow and versioning documentation.
+- Reformatted the review workflow roles into readable role sections.
+- Preserved the simplified no-Git Codex workflow, manual user publish step, and `version published` GPT-5.5 Pro review trigger.
+
 ## v0.1.4
 
 Workflow/docs correction release only.

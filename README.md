@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.1.4 React, TypeScript, Vite, and plain CSS MVP. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.1.5 React, TypeScript, Vite, and plain CSS MVP. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -37,7 +37,7 @@ npm run summary -- samples/sample-project.studiowire.json
 StudioWire IO uses versioned Codex changes.
 
 - Every Codex implementation/change prompt must specify a new app version.
-- Every Codex implementation/change must bump the app version using valid npm SemVer, such as `0.1.4`, `0.1.5`, `0.1.6`, `0.2.0`, `0.2.1`, or `0.3.0`.
+- Every Codex implementation/change must bump the app version using valid npm SemVer, such as `0.1.5`, `0.1.6`, `0.1.7`, `0.2.0`, `0.2.1`, or `0.3.0`.
 - Do not use invalid npm/package.json versions such as `0.1.3.1`.
 - Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and this README Version Changelog section.
 - Each prompt normally corresponds to one final user-published version.
@@ -102,6 +102,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.1.5`: Repaired Markdown formatting for the workflow and versioning documentation without changing product behavior.
 - `v0.1.4`: Simplified the workflow docs so Codex performs no Git operations, the user manually publishes, and GPT-5.5 Pro reviews the latest pushed master diff after the user says `version published`.
 - `v0.1.3`: Workflow/docs cleanup release; removed review-bundle workflow/tooling, adopted the master-only commit-SHA review workflow, and documented mandatory version/changelog rules.
 - `v0.1.2`: Tightened PortGroup planned-cable versus no-planned-cables rules, improved Add Device disabled-numbering behavior, added line-ending hygiene, and strengthened review bundle exclusions.

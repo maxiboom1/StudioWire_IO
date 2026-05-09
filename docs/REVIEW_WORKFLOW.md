@@ -2,24 +2,29 @@
 
 ## Roles
 
-- Product owner/user:
-  - defines the requested change and target version,
-  - runs Codex,
-  - manually commits and publishes,
-  - tells GPT-5.5 Pro `version published`.
-- Codex:
-  - edits files,
-  - updates version/docs/changelog,
-  - runs non-Git validation commands,
-  - does not run Git commands,
-  - does not commit,
-  - does not push,
-  - does not create branches,
-  - does not create tags.
-- GPT-5.5 Pro:
-  - reviews after the user says `version published`,
-  - finds the latest pushed GitHub `master` diff by itself,
-  - approves or produces the next Codex prompt.
+### Product owner/user
+
+- Defines the requested change and target version.
+- Runs Codex.
+- Manually commits and publishes.
+- Tells GPT-5.5 Pro: `version published`.
+
+### Codex
+
+- Edits files.
+- Updates version/docs/changelog.
+- Runs non-Git validation commands.
+- Does not run Git commands.
+- Does not commit.
+- Does not push.
+- Does not create branches.
+- Does not create tags.
+
+### GPT-5.5 Pro
+
+- Reviews after the user says `version published`.
+- Finds the latest pushed GitHub `master` diff by itself.
+- Approves or produces the next Codex prompt.
 
 ## Normal Workflow
 
@@ -54,7 +59,7 @@ StudioWire IO uses versioned Codex changes.
 
 1. Every Codex implementation/change prompt must specify a new app version.
 2. Every Codex implementation/change must bump the app version.
-3. Normal version bumps must use valid npm SemVer, such as `0.1.4`, `0.1.5`, `0.1.6`, `0.2.0`, `0.2.1`, or `0.3.0`.
+3. Normal version bumps must use valid npm SemVer, such as `0.1.5`, `0.1.6`, `0.1.7`, `0.2.0`, `0.2.1`, or `0.3.0`.
 4. Do not use invalid npm/package.json versions such as `0.1.3.1`.
 5. Very small follow-up fixes still use the next valid SemVer patch version unless the product owner explicitly approves a valid prerelease form.
 6. Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and the root `README.md` Version Changelog section.
