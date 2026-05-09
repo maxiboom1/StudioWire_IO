@@ -46,7 +46,7 @@ export function validateRackPlacement(
   const rackSizeRu = device.rackSizeRu;
 
   if (!Number.isSafeInteger(rackSizeRu) || rackSizeRu === null || rackSizeRu <= 0) {
-    return { ok: false, message: 'Device must have a positive rack size before it can be moved.' };
+    return { ok: false, message: 'Set rack size before assigning to a rack.' };
   }
 
   if (!Number.isSafeInteger(request.targetBottomRu) || request.targetBottomRu < 1) {

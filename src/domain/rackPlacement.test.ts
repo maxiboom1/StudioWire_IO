@@ -52,6 +52,34 @@ describe('validateRackPlacement', () => {
     }
   });
 
+  it('allows assigning an eligible virtual device to a rack', () => {
+    const virtualDevice: Device = {
+      ...mountedDevice,
+      id: 'device-virtual-eligible',
+      name: 'Virtual Eligible',
+      locationId: null,
+      mountType: 'virtual',
+      rackId: null,
+      rackSizeRu: 1,
+      rackBottomRu: null,
+    };
+    const project = withProject({
+      devices: [...baseProject.devices, virtualDevice],
+    });
+    const result = validateRackPlacement(project, {
+      deviceId: virtualDevice.id,
+      targetRackId: 'rack-mcr-a',
+      targetBottomRu: 1,
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.targetBottomRu).toBe(1);
+      expect(result.targetRack.locationId).toBe('location-machine-room');
+    }
+  });
+
   it('rejects placement that overlaps another device', () => {
     const blocker: Device = {
       ...mountedDevice,
@@ -103,7 +131,7 @@ describe('validateRackPlacement', () => {
       }),
     ).toEqual({
       ok: false,
-      message: 'Device must have a positive rack size before it can be moved.',
+      message: 'Set rack size before assigning to a rack.',
     });
   });
 });

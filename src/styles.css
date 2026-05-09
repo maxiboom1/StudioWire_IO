@@ -368,6 +368,14 @@ textarea:not([data-ui]) {
   padding: 6px 10px;
 }
 
+.device-tree-draggable {
+  cursor: grab;
+}
+
+.device-tree-draggable:active {
+  cursor: grabbing;
+}
+
 .rack-canvas-card {
   max-width: 760px;
   margin-top: 28px;

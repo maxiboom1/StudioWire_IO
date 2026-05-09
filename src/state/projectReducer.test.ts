@@ -104,3 +104,77 @@ describe('projectReducer ADD_DEVICE safety', () => {
     expect(result.project.numberingLedgers).toEqual(state.project.numberingLedgers);
   });
 });
+
+describe('projectReducer MOVE_MOUNTED_DEVICE', () => {
+  it('assigns an eligible virtual device to a rack using existing placement fields', () => {
+    const state = createState();
+    const virtualDevice = {
+      ...state.project.devices[0],
+      id: 'device-tree-assign-test',
+      name: 'Tree Assign Test',
+      locationId: null,
+      mountType: 'virtual' as const,
+      rackId: null,
+      rackSizeRu: 1,
+      rackBottomRu: null,
+    };
+    const result = projectReducer(
+      {
+        ...state,
+        project: {
+          ...state.project,
+          devices: [...state.project.devices, virtualDevice],
+        },
+      },
+      {
+        type: 'MOVE_MOUNTED_DEVICE',
+        payload: {
+          deviceId: virtualDevice.id,
+          targetRackId: 'rack-mcr-a',
+          targetBottomRu: 1,
+        },
+      },
+    );
+    const movedDevice = result.project.devices.find((device) => device.id === virtualDevice.id);
+
+    expect(movedDevice).toMatchObject({
+      mountType: 'rack',
+      locationId: 'location-machine-room',
+      rackId: 'rack-mcr-a',
+      rackBottomRu: 1,
+      rackSizeRu: 1,
+    });
+  });
+
+  it('blocks assigning a tree device without a valid rack size', () => {
+    const state = createState();
+    const virtualDevice = {
+      ...state.project.devices[0],
+      id: 'device-tree-invalid-size-test',
+      name: 'Tree Invalid Size Test',
+      locationId: null,
+      mountType: 'virtual' as const,
+      rackId: null,
+      rackSizeRu: null,
+      rackBottomRu: null,
+    };
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        devices: [...state.project.devices, virtualDevice],
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'MOVE_MOUNTED_DEVICE',
+      payload: {
+        deviceId: virtualDevice.id,
+        targetRackId: 'rack-mcr-a',
+        targetBottomRu: 1,
+      },
+    });
+
+    expect(result.project).toBe(seededState.project);
+    expect(result.statusMessage).toContain('Set rack size before assigning to a rack');
+  });
+});

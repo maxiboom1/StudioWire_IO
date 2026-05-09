@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import logoUrl from '../../assets/studiowire-logo.svg';
 import type { Device, Location, Rack } from '../../domain/types';
 import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
+import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { isSelected, type SelectedObjectType, type SelectionState } from '../common/selection';
 import { Badge } from '../ui/badge';
 import {
@@ -46,7 +47,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.2.4';
+const APP_VERSION = '0.2.2.5';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -511,9 +512,20 @@ function DeviceTreeItem({
   device: Device;
   onSelect: () => void;
 }) {
+  const hasRackSize = Boolean(device.rackSizeRu && device.rackSizeRu > 0);
+
   return (
     <SidebarMenuSubItem>
-      <SidebarMenuSubButton isActive={active} onClick={onSelect}>
+      <SidebarMenuSubButton
+        className="device-tree-draggable"
+        data-canvas-draggable="true"
+        draggable
+        isActive={active}
+        title={hasRackSize ? 'Drag to a visible rack to assign or move' : 'Set rack size before assigning to a rack'}
+        onClick={onSelect}
+        onDragEnd={clearDeviceDragData}
+        onDragStart={(event) => writeDeviceDragData(event, device.id)}
+      >
         <span className="min-w-0 flex-1 truncate">{device.name}</span>
         <span className="text-[0.68rem] text-studio-muted">{device.labelPrefix || device.role || 'Device'}</span>
       </SidebarMenuSubButton>

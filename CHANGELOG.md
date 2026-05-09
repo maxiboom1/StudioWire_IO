@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.2.5
+
+Added tree-to-rack drag assignment for existing devices.
+
+### Added
+
+- Made device rows in the navigator draggable to visible rack canvases.
+- Supported assigning eligible virtual, unassigned, and non-mounted devices to empty rack RU ranges.
+- Reused rack placement validation for tree-to-rack assignment, invalid occupied drops, out-of-capacity drops, and missing rack-size rejection.
+
+### Changed
+
+- Successful tree-to-rack assignment updates only existing placement fields and preserves device identity, ports, port groups, cables, and code.
+- Preserved mounted-device repositioning, canvas zoom/pan behavior, project schema version, and import/export semantics.
+
 ## v0.2.2.4
 
 Added mounted-device drag repositioning on the rack canvas.

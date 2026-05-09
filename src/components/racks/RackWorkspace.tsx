@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { clearDeviceDragData, readDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
 import { CanvasViewport } from '../common/CanvasViewport';
 import { Alert, AlertDescription } from '../ui/alert';
@@ -43,7 +44,6 @@ interface DropPreview {
 
 const MAX_VIEWED_RACKS = 4;
 const ADD_RACK_PLACEHOLDER = '__add_rack__';
-const DRAG_DEVICE_MIME = 'application/x-studiowire-device-id';
 
 export function RackWorkspace({ rack }: { rack: Rack }) {
   const { project, moveMountedDevice } = useProject();
@@ -90,8 +90,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
       return;
     }
 
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData(DRAG_DEVICE_MIME, device.id);
+    writeDeviceDragData(event, device.id);
     setDraggingDeviceId(device.id);
     setDropMessage(null);
   }
@@ -99,10 +98,11 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
   function handleDeviceDragEnd() {
     setDraggingDeviceId(null);
     setDropPreview(null);
+    clearDeviceDragData();
   }
 
   function handleRackDragOver(event: DragEvent<HTMLDivElement>, targetRack: Rack, model: RackCanvasModel) {
-    const deviceId = draggingDeviceId || event.dataTransfer.getData(DRAG_DEVICE_MIME);
+    const deviceId = draggingDeviceId || readDeviceDragData(event);
 
     if (!deviceId) {
       return;
@@ -145,7 +145,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
 
   function handleRackDrop(event: DragEvent<HTMLDivElement>, targetRack: Rack, model: RackCanvasModel) {
     event.preventDefault();
-    const deviceId = draggingDeviceId || event.dataTransfer.getData(DRAG_DEVICE_MIME);
+    const deviceId = draggingDeviceId || readDeviceDragData(event);
     const bottomRu = getTargetBottomRu(event, model.displayRus);
 
     if (!deviceId || bottomRu === null) {
@@ -173,6 +173,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
     });
     setDropMessage(`${result.device.name} moved to ${targetRack.name} RU ${result.targetBottomRu}-${result.targetTopRu}.`);
     setDropPreview(null);
+    clearDeviceDragData();
   }
 
   return (
