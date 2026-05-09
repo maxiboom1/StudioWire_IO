@@ -35,8 +35,7 @@ body {
   min-height: 100vh;
 }
 
-button:not([data-ui]),
-.file-action {
+button:not([data-ui]) {
   border: 1px solid #c8d2d7;
   border-radius: 6px;
   background: #ffffff;
@@ -52,8 +51,7 @@ button:not([data-ui]),
     color 140ms ease;
 }
 
-button:not([data-ui]):hover,
-.file-action:hover {
+button:not([data-ui]):hover {
   background: #e7f3f3;
   border-color: #5f9494;
 }
@@ -86,71 +84,8 @@ textarea:not([data-ui]) {
   grid-template-rows: auto auto 1fr;
 }
 
-.top-bar {
-  min-height: 72px;
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto minmax(160px, 240px);
-  gap: 20px;
-  align-items: center;
-  padding: 12px 18px;
-  background: #fbfcfc;
-  border-bottom: 1px solid #d7e0e4;
-}
-
-.brand-block {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-}
-
-.brand-block:hover {
-  background: transparent;
-  border-color: transparent;
-}
-
-.brand-mark {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 6px;
-  background: #116466;
-  color: #ffffff;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.brand-name,
-.project-name,
-.status-line,
 .eyebrow {
   margin: 0;
-}
-
-.brand-name {
-  color: #0f2527;
-  font-weight: 800;
-}
-
-.project-name,
-.status-line {
-  overflow: hidden;
-  color: #607177;
-  font-size: 0.875rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.top-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
 }
 
 .file-input {
@@ -189,30 +124,14 @@ textarea:not([data-ui]) {
   min-width: 0;
 }
 
-.panel-heading,
 .inspector h2,
 .validation-panel h2,
-.workspace-section h2,
-.inspector-section h3 {
+.workspace-section h2 {
   margin: 0;
   color: #172126;
   font-size: 0.875rem;
   letter-spacing: 0;
 }
-
-.panel-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #172126;
-  font-weight: 800;
-}
-
-.panel-heading strong {
-  color: #607177;
-  font-size: 0.75rem;
-}
-
 
 .workspace {
   grid-area: workspace;
@@ -247,33 +166,11 @@ textarea:not([data-ui]) {
   letter-spacing: 0;
 }
 
-.schema-badge,
-.issue-empty,
-.issue-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  border-radius: 999px;
-  padding: 0 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.schema-badge {
-  background: #dfe8ec;
-  color: #42525a;
-}
-
-.project-meta,
 .summary-grid,
 .metric-grid {
   display: grid;
   gap: 12px;
   margin-top: 28px;
-}
-
-.project-meta {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .summary-grid {
@@ -284,14 +181,12 @@ textarea:not([data-ui]) {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-.project-meta div,
 .summary-card,
 .metric {
   min-width: 0;
   background: #fbfcfc;
 }
 
-.project-meta span,
 .summary-grid span,
 .metric span,
 .inspector dt {
@@ -302,7 +197,6 @@ textarea:not([data-ui]) {
   text-transform: uppercase;
 }
 
-.project-meta strong,
 .summary-grid strong,
 .metric strong {
   display: block;
@@ -432,7 +326,6 @@ textarea:not([data-ui]) {
 
 .workspace-section p,
 .workspace-section .panel-empty,
-.inspector-section p,
 .validation-panel p,
 .welcome-workspace p,
 .device-canvas p,
@@ -617,26 +510,9 @@ textarea:not([data-ui]) {
   color: #172126;
 }
 
-.inspector-section {
-  margin-top: 28px;
-  padding-top: 18px;
-  border-top: 1px solid #d7e0e4;
-}
-
 .danger-zone {
   display: grid;
   gap: 10px;
-}
-
-.danger-button {
-  border-color: #d28b7b;
-  background: #fff0ed;
-  color: #923521;
-}
-
-.danger-button:hover {
-  border-color: #aa4c38;
-  background: #ffe4df;
 }
 
 .validation-panel {
@@ -740,14 +616,6 @@ textarea:not([data-ui]) {
 }
 
 @media (max-width: 1080px) {
-  .top-bar {
-    grid-template-columns: 1fr;
-  }
-
-  .top-actions {
-    justify-content: flex-start;
-  }
-
   .app-grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
@@ -792,11 +660,6 @@ textarea:not([data-ui]) {
       "validation";
   }
 
-  .top-actions {
-    display: flex;
-    overflow-x: auto;
-  }
-
   .workspace {
     padding: 22px 18px;
   }
@@ -807,7 +670,6 @@ textarea:not([data-ui]) {
     flex-direction: column;
   }
 
-  .project-meta,
   .summary-grid,
   .metric-grid {
     grid-template-columns: 1fr;

@@ -188,7 +188,7 @@ export function DeviceInspector({ device }: { device: Device }) {
         </CardHeader>
         <CardContent>
         <p>Device deletion retires allocations in v0.1 so cable numbers are never freed for reuse.</p>
-        <Button className="danger-button" variant="outline" type="button" onClick={handleRetire}>
+        <Button variant="destructive" type="button" onClick={handleRetire}>
           Retire Device
         </Button>
         </CardContent>

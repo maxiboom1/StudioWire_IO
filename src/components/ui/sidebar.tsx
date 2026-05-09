@@ -198,6 +198,7 @@ const SidebarMenuButton = React.forwardRef<
         className,
       )}
       data-active={isActive}
+      aria-current={isActive ? 'page' : undefined}
       data-ui="sidebar-menu-button"
       {...props}
     />
@@ -233,6 +234,7 @@ const SidebarMenuSubButton = React.forwardRef<
       className,
     )}
     data-active={isActive}
+    aria-current={isActive ? 'page' : undefined}
     data-ui="sidebar-menu-sub-button"
     type="button"
     {...props}

@@ -123,7 +123,7 @@ export function RackInspector({ rack }: { rack: Rack }) {
         </CardHeader>
         <CardContent>
         <p>Deleting a rack is allowed only when no devices are assigned to it.</p>
-        <Button className="danger-button" variant="outline" type="button" onClick={handleDelete}>
+        <Button variant="destructive" type="button" onClick={handleDelete}>
           Delete Rack
         </Button>
         </CardContent>

@@ -86,7 +86,7 @@ export function LocationInspector({ location }: { location: Location }) {
           This location references {rackCount} rack(s) and {deviceCount} device(s). Deletion is allowed
           only when both counts are zero.
         </p>
-        <Button className="danger-button" variant="outline" type="button" onClick={handleDelete}>
+        <Button variant="destructive" type="button" onClick={handleDelete}>
           Delete Location
         </Button>
         </CardContent>

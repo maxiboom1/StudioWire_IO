@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.1.6
+
+Completed the 0.2.1 shadcn/ui polish sequence with a controlled consistency pass.
+
+### Changed
+
+- Standardized destructive inspector actions on the shared shadcn-style button variant.
+- Added clearer active navigation semantics for selected sidebar rows.
+- Consolidated obsolete custom CSS left behind by earlier shell, modal, status, and danger-button implementations.
+- Preserved app shell, sidebar, workspace, dialogs, validation display, and project data behavior.
+
 ## v0.2.1.5
 
 Continued the shadcn/ui polish stage for main workspace and detail surfaces.
