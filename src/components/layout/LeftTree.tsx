@@ -1,9 +1,22 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { isSelected, type SelectedObjectType, type SelectionState } from '../common/selection';
 
-type TreeSection = 'racks' | 'devices';
+type ContextAction = {
+  label: string;
+  onSelect: () => void;
+};
+
+type ContextMenuState = {
+  x: number;
+  y: number;
+  actions: ContextAction[];
+} | null;
+
+const PROJECT_KEY = 'project';
+const LOCATIONS_KEY = 'locations';
+const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
   selection,
@@ -19,6 +32,11 @@ export function LeftTree({
   onAddDevice: (locationId: string | null) => void;
 }) {
   const { project } = useProject();
+  const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(() => new Set());
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
+  const isProjectOpen = !collapsedKeys.has(PROJECT_KEY);
+  const isLocationsOpen = !collapsedKeys.has(LOCATIONS_KEY);
+  const isUnassignedOpen = !collapsedKeys.has(UNASSIGNED_KEY);
   const unassignedDevices = useMemo(
     () =>
       project.devices.filter((device) => {
@@ -29,67 +47,177 @@ export function LeftTree({
     [project.devices, project.locations],
   );
 
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setContextMenu(null);
+      }
+    }
+
+    function closeOnPointerDown() {
+      setContextMenu(null);
+    }
+
+    window.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('pointerdown', closeOnPointerDown);
+
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('pointerdown', closeOnPointerDown);
+    };
+  }, []);
+
+  function toggle(key: string) {
+    setCollapsedKeys((current) => {
+      const next = new Set(current);
+
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+
+      return next;
+    });
+  }
+
+  function openContextMenu(event: MouseEvent, actions: ContextAction[]) {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      actions,
+    });
+  }
+
+  function runContextAction(action: ContextAction) {
+    setContextMenu(null);
+    action.onSelect();
+  }
+
   return (
     <aside className="left-tree" aria-label="Project tree">
       <div className="panel-heading">
         <span>Navigator</span>
         <strong>{project.schemaVersion}</strong>
       </div>
-      <nav className="tree-nav">
-        <TreeButton
+      <p className="tree-hint">Right-click folders to add items.</p>
+
+      <nav className="tree-nav" aria-label="Project navigator">
+        <TreeRow
           active={isSelected(selection, 'project', project.project.id)}
+          count={project.locations.length + unassignedDevices.length}
           depth={0}
+          isOpen={isProjectOpen}
+          kind="folder"
           label={project.project.name}
           meta="Project root"
           onClick={() => onSelectObject('project', project.project.id)}
+          onContextMenu={(event) =>
+            openContextMenu(event, [
+              { label: 'Add Location', onSelect: onAddLocation },
+              { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+            ])
+          }
+          onToggle={() => toggle(PROJECT_KEY)}
         />
 
-        <TreeGroup
-          label="Locations"
-          count={project.locations.length}
-          actionLabel="Add Location"
-          onAction={onAddLocation}
-        />
-        {project.locations.length === 0 ? <TreeEmpty label="No locations" /> : null}
-        {project.locations.map((location) => (
-          <LocationBranch
-            key={location.id}
-            location={location}
-            projectRacks={project.racks}
-            projectDevices={project.devices}
-            selection={selection}
-            onSelectObject={onSelectObject}
-            onAddRack={onAddRack}
-            onAddDevice={onAddDevice}
-          />
-        ))}
-
-        <TreeGroup
-          label="Unassigned Devices"
-          count={unassignedDevices.length}
-          actionLabel="Add Device"
-          onAction={() => onAddDevice(null)}
-        />
-        {unassignedDevices.length === 0 ? (
-          <TreeEmpty label="No unassigned devices" />
-        ) : (
-          unassignedDevices.map((device) => (
-            <TreeButton
-              active={isSelected(selection, 'device', device.id)}
+        {isProjectOpen ? (
+          <div className="tree-children">
+            <TreeRow
+              count={project.locations.length}
               depth={1}
-              key={device.id}
-              label={device.name}
-              meta={device.code || device.role || 'Device'}
-              onClick={() => onSelectObject('device', device.id)}
+              isOpen={isLocationsOpen}
+              kind="folder"
+              label="Locations"
+              meta="Project locations"
+              onContextMenu={(event) =>
+                openContextMenu(event, [{ label: 'Add Location', onSelect: onAddLocation }])
+              }
+              onToggle={() => toggle(LOCATIONS_KEY)}
             />
-          ))
-        )}
+
+            {isLocationsOpen ? (
+              project.locations.length === 0 ? (
+                <TreeEmpty depth={2} label="No locations" />
+              ) : (
+                project.locations.map((location) => (
+                  <LocationBranch
+                    collapsedKeys={collapsedKeys}
+                    key={location.id}
+                    location={location}
+                    onAddDevice={onAddDevice}
+                    onAddRack={onAddRack}
+                    onContextMenu={openContextMenu}
+                    onSelectObject={onSelectObject}
+                    onToggle={toggle}
+                    projectDevices={project.devices}
+                    projectRacks={project.racks}
+                    selection={selection}
+                  />
+                ))
+              )
+            ) : null}
+
+            <TreeRow
+              count={unassignedDevices.length}
+              depth={1}
+              isOpen={isUnassignedOpen}
+              kind="folder"
+              label="Unassigned Devices"
+              meta="No location"
+              onContextMenu={(event) =>
+                openContextMenu(event, [{ label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) }])
+              }
+              onToggle={() => toggle(UNASSIGNED_KEY)}
+            />
+
+            {isUnassignedOpen ? (
+              unassignedDevices.length === 0 ? (
+                <TreeEmpty depth={2} label="No unassigned devices" />
+              ) : (
+                unassignedDevices.map((device) => (
+                  <TreeRow
+                    active={isSelected(selection, 'device', device.id)}
+                    depth={2}
+                    key={device.id}
+                    kind="item"
+                    label={device.name}
+                    meta={device.code || device.role || 'Device'}
+                    onClick={() => onSelectObject('device', device.id)}
+                  />
+                ))
+              )
+            ) : null}
+          </div>
+        ) : null}
       </nav>
+
+      {contextMenu ? (
+        <div
+          className="tree-context-menu"
+          role="menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {contextMenu.actions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => runContextAction(action)}
+              role="menuitem"
+              type="button"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </aside>
   );
 }
 
 function LocationBranch({
+  collapsedKeys,
   location,
   projectRacks,
   projectDevices,
@@ -97,7 +225,10 @@ function LocationBranch({
   onSelectObject,
   onAddRack,
   onAddDevice,
+  onContextMenu,
+  onToggle,
 }: {
+  collapsedKeys: Set<string>;
   location: Location;
   projectRacks: Rack[];
   projectDevices: Device[];
@@ -105,164 +236,168 @@ function LocationBranch({
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string | null) => void;
+  onContextMenu: (event: MouseEvent, actions: ContextAction[]) => void;
+  onToggle: (key: string) => void;
 }) {
+  const locationKey = `location:${location.id}`;
+  const racksKey = `location:${location.id}:racks`;
+  const devicesKey = `location:${location.id}:devices`;
+  const isLocationOpen = !collapsedKeys.has(locationKey);
+  const isRacksOpen = !collapsedKeys.has(racksKey);
+  const isDevicesOpen = !collapsedKeys.has(devicesKey);
   const racks = projectRacks.filter((rack) => rack.locationId === location.id);
   const devices = projectDevices.filter((device) => device.locationId === location.id);
 
   return (
-    <div className="tree-branch">
-      <TreeButton
+    <>
+      <TreeRow
         active={isSelected(selection, 'location', location.id)}
-        depth={1}
+        count={racks.length + devices.length}
+        depth={2}
+        isOpen={isLocationOpen}
+        kind="folder"
         label={location.name}
         meta={location.type || 'Location'}
         onClick={() => onSelectObject('location', location.id)}
-        onContextMenu={() => onAddDevice(location.id)}
-      />
-      <TreeCollection
-        depth={2}
-        label="Racks"
-        section="racks"
-        count={racks.length}
-        actionLabel="Add Rack"
-        onAction={() => onAddRack(location.id)}
-      />
-      {racks.length === 0 ? <TreeEmpty depth={3} label="No racks" /> : null}
-      {racks.map((rack) => (
-        <TreeButton
-          active={isSelected(selection, 'rack', rack.id)}
-          depth={3}
-          key={rack.id}
-          label={rack.name}
-          meta={`${rack.heightRu} RU`}
-          onClick={() => onSelectObject('rack', rack.id)}
-        />
-      ))}
-
-      <TreeCollection
-        depth={2}
-        label="Devices"
-        section="devices"
-        count={devices.length}
-        actionLabel="Add Device"
-        onAction={() => onAddDevice(location.id)}
-      />
-      {devices.length === 0 ? <TreeEmpty depth={3} label="No devices" /> : null}
-      {devices.map((device) => (
-        <TreeButton
-          active={isSelected(selection, 'device', device.id)}
-          depth={3}
-          key={device.id}
-          label={device.name}
-          meta={device.code || device.role || 'Device'}
-          onClick={() => onSelectObject('device', device.id)}
-        />
-      ))}
-    </div>
-  );
-}
-
-function TreeGroup({
-  label,
-  count,
-  actionLabel,
-  onAction,
-}: {
-  label: string;
-  count: number;
-  actionLabel?: string;
-  onAction?: () => void;
-}) {
-  return (
-    <div
-      className="tree-group"
-      onContextMenu={(event) => {
-        if (onAction) {
-          event.preventDefault();
-          onAction();
+        onContextMenu={(event) =>
+          onContextMenu(event, [
+            { label: 'Add Rack', onSelect: () => onAddRack(location.id) },
+            { label: 'Add Device', onSelect: () => onAddDevice(location.id) },
+          ])
         }
-      }}
-    >
-      <span>{label}</span>
-      <div className="tree-group-actions">
-        <strong>{count}</strong>
-        {onAction ? (
-          <button aria-label={actionLabel} className="tree-add-button" onClick={onAction} type="button">
-            +
-          </button>
-        ) : null}
-      </div>
-    </div>
+        onToggle={() => onToggle(locationKey)}
+      />
+
+      {isLocationOpen ? (
+        <>
+          <TreeRow
+            count={racks.length}
+            depth={3}
+            isOpen={isRacksOpen}
+            kind="folder"
+            label="Racks"
+            meta="Rack list"
+            onContextMenu={(event) =>
+              onContextMenu(event, [{ label: 'Add Rack', onSelect: () => onAddRack(location.id) }])
+            }
+            onToggle={() => onToggle(racksKey)}
+          />
+
+          {isRacksOpen ? (
+            racks.length === 0 ? (
+              <TreeEmpty depth={4} label="No racks" />
+            ) : (
+              racks.map((rack) => (
+                <TreeRow
+                  active={isSelected(selection, 'rack', rack.id)}
+                  depth={4}
+                  key={rack.id}
+                  kind="item"
+                  label={rack.name}
+                  meta={`${rack.heightRu} RU`}
+                  onClick={() => onSelectObject('rack', rack.id)}
+                />
+              ))
+            )
+          ) : null}
+
+          <TreeRow
+            count={devices.length}
+            depth={3}
+            isOpen={isDevicesOpen}
+            kind="folder"
+            label="Devices"
+            meta="Device list"
+            onContextMenu={(event) =>
+              onContextMenu(event, [{ label: 'Add Device', onSelect: () => onAddDevice(location.id) }])
+            }
+            onToggle={() => onToggle(devicesKey)}
+          />
+
+          {isDevicesOpen ? (
+            devices.length === 0 ? (
+              <TreeEmpty depth={4} label="No devices" />
+            ) : (
+              devices.map((device) => (
+                <TreeRow
+                  active={isSelected(selection, 'device', device.id)}
+                  depth={4}
+                  key={device.id}
+                  kind="item"
+                  label={device.name}
+                  meta={device.code || device.role || 'Device'}
+                  onClick={() => onSelectObject('device', device.id)}
+                />
+              ))
+            )
+          ) : null}
+        </>
+      ) : null}
+    </>
   );
 }
 
-function TreeCollection({
-  depth,
-  label,
-  section,
+function TreeRow({
+  active = false,
   count,
-  actionLabel,
-  onAction,
-}: {
-  depth: number;
-  label: string;
-  section: TreeSection;
-  count: number;
-  actionLabel?: string;
-  onAction?: () => void;
-}) {
-  return (
-    <div className={`tree-collection ${section}`} style={{ paddingLeft: `${depth * 14}px` }}>
-      <span>{label}</span>
-      <div className="tree-group-actions">
-        <strong>{count}</strong>
-        {onAction ? (
-          <button aria-label={actionLabel} className="tree-add-button" onClick={onAction} type="button">
-            +
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function TreeButton({
-  active,
   depth,
+  isOpen = false,
+  kind,
   label,
   meta,
   onClick,
   onContextMenu,
+  onToggle,
 }: {
-  active: boolean;
+  active?: boolean;
+  count?: number;
   depth: number;
+  isOpen?: boolean;
+  kind: 'folder' | 'item';
   label: string;
   meta: string;
-  onClick: () => void;
-  onContextMenu?: () => void;
+  onClick?: () => void;
+  onContextMenu?: (event: MouseEvent) => void;
+  onToggle?: () => void;
 }) {
+  const indent = 8 + depth * 14;
+
   return (
-    <button
-      className={active ? 'tree-item active' : 'tree-item'}
-      onClick={onClick}
-      onContextMenu={(event) => {
-        if (onContextMenu) {
-          event.preventDefault();
-          onContextMenu();
-        }
-      }}
-      style={{ paddingLeft: `${10 + depth * 14}px` }}
-      type="button"
+    <div
+      className={active ? 'tree-row active' : 'tree-row'}
+      onContextMenu={onContextMenu}
+      style={{ paddingLeft: `${indent}px` }}
     >
-      <span>{label}</span>
-      <small>{meta}</small>
-    </button>
+      {kind === 'folder' ? (
+        <button
+          aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${label}`}
+          aria-expanded={isOpen}
+          className="tree-toggle"
+          onClick={onToggle}
+          type="button"
+        >
+          {isOpen ? 'v' : '>'}
+        </button>
+      ) : (
+        <span className="tree-spacer" aria-hidden="true" />
+      )}
+      <button className="tree-label-button" onClick={onClick ?? onToggle} type="button">
+        <span className="tree-icon" aria-hidden="true">
+          {kind === 'folder' ? '[ ]' : '-'}
+        </span>
+        <span className="tree-label-text">
+          <span>{label}</span>
+          <small>{meta}</small>
+        </span>
+      </button>
+      {typeof count === 'number' ? <span className="tree-count">{count}</span> : null}
+    </div>
   );
 }
 
-function TreeEmpty({ depth = 1, label }: { depth?: number; label: string }) {
+function TreeEmpty({ depth, label }: { depth: number; label: string }) {
   return (
-    <div className="tree-empty" style={{ paddingLeft: `${10 + depth * 14}px` }}>
+    <div className="tree-empty" style={{ paddingLeft: `${34 + depth * 14}px` }}>
       {label}
     </div>
   );

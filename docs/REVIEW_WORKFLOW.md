@@ -59,12 +59,14 @@ StudioWire IO uses versioned Codex changes.
 
 1. Every Codex implementation/change prompt must specify a new app version.
 2. Every Codex implementation/change must bump the app version.
-3. Normal version bumps must use valid npm SemVer, such as `0.1.5`, `0.1.6`, `0.1.7`, `0.2.0`, `0.2.1`, or `0.3.0`.
-4. Do not use invalid npm/package.json versions such as `0.1.3.1`.
-5. Very small follow-up fixes still use the next valid SemVer patch version unless the product owner explicitly approves a valid prerelease form.
-6. Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and the root `README.md` Version Changelog section.
-7. Each prompt normally corresponds to one final user-published version.
-8. GPT-5.5 Pro reviews only after the user says `version published`.
+3. Every Codex implementation/change must bump the app/package version.
+4. Milestone versions may use normal forms such as `0.2.0`, `0.2.1`, or `0.3.0`.
+5. Within an active UI-polish or milestone substage, internal app/product versions may use forms such as `0.2.1.1`, `0.2.1.2`, or `0.2.1.3`.
+6. These are internal app/product versions for this local project; StudioWire IO is not being published to npm as a package.
+7. Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and the root `README.md` Version Changelog section.
+8. Do not change project `schemaVersion` unless the project JSON data model actually changes.
+9. Each prompt normally corresponds to one final user-published version.
+10. GPT-5.5 Pro reviews only after the user says `version published`.
 
 ## Not Used For Normal Workflow
 

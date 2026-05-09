@@ -3,6 +3,9 @@ dist/
 build/
 coverage/
 .vite/
+test-results/
+playwright-report/
+blob-report/
 *.tsbuildinfo
 .env
 .env.local

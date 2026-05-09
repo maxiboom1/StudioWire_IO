@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.1 React, TypeScript, Vite, and plain CSS app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.1.1 React, TypeScript, Vite, and plain CSS app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -37,9 +37,12 @@ npm run summary -- samples/sample-project.studiowire.json
 StudioWire IO uses versioned Codex changes.
 
 - Every Codex implementation/change prompt must specify a new app version.
-- Every Codex implementation/change must bump the app version using valid npm SemVer, such as `0.1.5`, `0.1.6`, `0.1.7`, `0.2.0`, `0.2.1`, or `0.3.0`.
-- Do not use invalid npm/package.json versions such as `0.1.3.1`.
+- Every Codex implementation/change must bump the app/package version.
+- Milestone versions may use normal forms such as `0.2.0`, `0.2.1`, or `0.3.0`.
+- Within an active UI-polish or milestone substage, internal app/product versions may use forms such as `0.2.1.1`, `0.2.1.2`, or `0.2.1.3`.
+- These are internal app/product versions for this local project; StudioWire IO is not being published to npm as a package.
 - Every version bump must update `package.json`, `package-lock.json` when present or affected, `CHANGELOG.md`, and this README Version Changelog section.
+- Do not change project `schemaVersion` unless the project JSON data model actually changes.
 - Each prompt normally corresponds to one final user-published version.
 - GPT-5.5 Pro reviews only after the user says `version published`.
 
@@ -102,6 +105,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.1.1`: Continued the 0.2.1 UI-polish stage with a collapsible project navigator, right-click creation menus, repository hygiene cleanup, and readable formatting restoration.
 - `v0.2.1`: Started the 0.2 UI polish phase with Tailwind styling foundation, a compact navbar/footer, global actions moved into a Settings modal, a new StudioWire IO logo, and the left-nav Settings item removed.
 - `v0.1.5`: Repaired Markdown formatting for the workflow and versioning documentation without changing product behavior.
 - `v0.1.4`: Simplified the workflow docs so Codex performs no Git operations, the user manually publishes, and GPT-5.5 Pro reviews the latest pushed master diff after the user says `version published`.

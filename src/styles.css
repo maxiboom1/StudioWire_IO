@@ -228,92 +228,159 @@ textarea {
   margin-top: 12px;
 }
 
-.tree-branch {
+.tree-hint {
+  margin: 8px 0 0;
+  color: #728188;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.tree-children {
   display: grid;
+  gap: 2px;
+}
+
+.tree-row {
+  min-width: 0;
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   gap: 4px;
-}
-
-.tree-group {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin: 15px 0 4px;
-  padding: 0 10px;
-  color: #607177;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #172126;
+  padding-right: 7px;
 }
 
-.tree-group strong,
-.tree-collection strong {
-  color: #6f7e84;
-  font-size: 0.72rem;
+.tree-row:hover {
+  background: #eef4f6;
+  border-color: #d4e0e5;
 }
 
-.tree-group-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.tree-row.active {
+  background: #fff1ec;
+  border-color: #f2aa9b;
+  color: #202326;
 }
 
-.tree-add-button {
-  width: 24px;
+.tree-toggle,
+.tree-spacer {
+  width: 22px;
   height: 24px;
   display: grid;
   place-items: center;
+}
+
+.tree-toggle {
+  border: 0;
   border-radius: 4px;
-  padding: 0;
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.tree-collection {
-  min-height: 26px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #607177;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.tree-empty {
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  color: #8a989e;
-  font-size: 0.8rem;
-}
-
-.tree-item {
-  width: 100%;
-  min-height: 38px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  border-color: transparent;
   background: transparent;
+  color: #66777f;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0;
+}
+
+.tree-toggle:hover {
+  background: #dde8ec;
+  border-color: transparent;
+}
+
+.tree-label-button {
+  min-width: 0;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  padding: 0;
   text-align: left;
 }
 
-.tree-item.active {
-  background: #e2eeee;
-  border-color: #6ba6a6;
-  color: #0f4f51;
+.tree-label-button:hover {
+  background: transparent;
+  border-color: transparent;
 }
 
-.tree-item span {
+.tree-icon {
+  flex: 0 0 auto;
+  color: #6e7d84;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.tree-label-text {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.tree-label-text span,
+.tree-label-text small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tree-item small {
-  color: #607177;
-  font-size: 0.75rem;
-  white-space: nowrap;
+.tree-label-text span {
+  color: #182327;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.tree-label-text small {
+  color: #62737b;
+  font-size: 0.7rem;
+}
+
+.tree-count {
+  min-width: 22px;
+  border-radius: 999px;
+  background: #e4ecf0;
+  color: #526269;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.tree-empty {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  color: #8a989e;
+  font-size: 0.76rem;
+}
+
+.tree-context-menu {
+  position: fixed;
+  z-index: 30;
+  min-width: 190px;
+  display: grid;
+  gap: 3px;
+  border: 1px solid #cfd9df;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 5px;
+  box-shadow: 0 18px 48px rgba(23, 33, 38, 0.18);
+}
+
+.tree-context-menu button {
+  justify-content: flex-start;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.tree-context-menu button:hover {
+  background: #fff1ec;
+  border-color: transparent;
 }
 
 .workspace {
@@ -989,16 +1056,13 @@ textarea {
     align-items: flex-start;
   }
 
-  .tree-group,
-  .tree-collection,
   .tree-empty {
     display: none;
   }
 
-  .tree-item {
+  .tree-row {
     width: auto;
-    min-width: 136px;
-    gap: 18px;
+    min-width: 160px;
   }
 
   .workspace {

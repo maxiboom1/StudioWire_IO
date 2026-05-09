@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.2.1.1
+
+Continued the 0.2.1 UI-polish stage.
+
+### Added
+
+- Collapsible folder-style project navigator with project, locations, racks, devices, and unassigned device branches.
+- Right-click context menus for creating locations, racks, and devices from supported tree rows.
+- Documentation for internal `0.2.1.x` UI-polish substep versions.
+
+### Changed
+
+- Removed small inline add buttons from the left navigator.
+- Updated repository hygiene ignores for generated browser and test artifacts.
+- Restored readable Markdown/config/source formatting in workflow and shell files.
+
 ## v0.2.1
 
 Start of 0.2 UI polish phase.
