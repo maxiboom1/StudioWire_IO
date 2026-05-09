@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.2.1
+
+Added the first read-only rack canvas/elevation view using existing rack and device placement data.
+
+### Added
+
+- Rendered a full selected-rack RU stack in the main workspace with stable RU labels, explicit blank filler rows, and mounted device blocks spanning their existing RU range.
+- Added defensive visual warnings for invalid rack placement data without mutating project data.
+
+### Changed
+
+- Updated generated artifact hygiene to ignore and remove `.playwright-cli/` browser console logs.
+- Preserved project JSON schema version, validation behavior, reducer behavior, import/export semantics, and all v0.2.2 terminal-block boundaries.
+
 ## v0.2.1.7
 
 Continued the 0.2.1 UI-polish stage with focused navigator, device workspace, and Add Device workflow fixes.

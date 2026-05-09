@@ -221,6 +221,151 @@ textarea:not([data-ui]) {
   max-width: 920px;
 }
 
+.rack-canvas-card {
+  max-width: 760px;
+  margin-top: 28px;
+  overflow: hidden;
+}
+
+.rack-canvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.rack-canvas-header p {
+  margin: 6px 0 0;
+  color: #607177;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.rack-warning {
+  max-width: 760px;
+  margin-top: 18px;
+}
+
+.rack-warning div {
+  display: grid;
+  gap: 4px;
+}
+
+.rack-elevation {
+  --rack-ru-height: 26px;
+  display: grid;
+  grid-template-columns: 18px 44px minmax(260px, 1fr) 18px;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid #0f1d22;
+  border-radius: 8px;
+  background: #10191d;
+  padding: 12px;
+}
+
+.rack-rail {
+  min-height: calc(var(--rack-row-count) * var(--rack-ru-height));
+  border: 1px solid #43545b;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #1b292e 0,
+      #1b292e 20px,
+      #2f4249 20px,
+      #2f4249 22px
+    );
+}
+
+.rack-rail-left {
+  border-radius: 6px 0 0 6px;
+}
+
+.rack-rail-right {
+  border-radius: 0 6px 6px 0;
+}
+
+.rack-ru-labels,
+.rack-stack {
+  display: grid;
+  grid-template-rows: repeat(var(--rack-row-count), var(--rack-ru-height));
+}
+
+.rack-ru-labels {
+  border-top: 1px solid #314148;
+  border-bottom: 1px solid #314148;
+  background: #18252a;
+}
+
+.rack-ru-label {
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid #314148;
+  color: #b8c7cd;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.rack-ru-label:last-child,
+.rack-ru-row:last-child {
+  border-bottom: 0;
+}
+
+.rack-stack {
+  position: relative;
+  border: 1px solid #314148;
+  border-left: 0;
+  background: #152126;
+}
+
+.rack-ru-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #2d3e45;
+  background: #18262b;
+  color: rgba(184, 199, 205, 0.55);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.rack-device-block {
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  min-height: 0;
+  margin: 2px 6px;
+  border: 1px solid #7bebe1;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #1f3b42, #172b31);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  color: #f4f7f8;
+  padding: 6px 10px;
+}
+
+.rack-device-block.retired {
+  border-color: #d5a06f;
+  background: #3a332f;
+}
+
+.rack-device-block strong,
+.rack-device-block span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rack-device-block strong {
+  font-size: 0.86rem;
+}
+
+.rack-device-block span {
+  margin-top: 2px;
+  color: #96f1e8;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .settings-project-form {
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   align-items: end;

@@ -3,6 +3,7 @@ dist/
 build/
 coverage/
 .vite/
+.playwright-cli/
 test-results/
 playwright-report/
 blob-report/
