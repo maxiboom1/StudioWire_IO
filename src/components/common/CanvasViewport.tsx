@@ -74,7 +74,14 @@ export function CanvasViewport({ ariaLabel, children, className = '' }: CanvasVi
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!panMode || event.button !== 0 || !viewportRef.current) {
+    const target = event.target instanceof HTMLElement ? event.target : null;
+
+    if (
+      !panMode ||
+      event.button !== 0 ||
+      !viewportRef.current ||
+      target?.closest('[data-canvas-draggable="true"]')
+    ) {
       return;
     }
 

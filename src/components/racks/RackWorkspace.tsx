@@ -1,6 +1,7 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, DragEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
@@ -31,12 +32,25 @@ interface RackCanvasModel {
   warnings: string[];
 }
 
+interface DropPreview {
+  deviceId: string;
+  rackId: string;
+  bottomRu: number;
+  topRu: number;
+  ok: boolean;
+  message: string;
+}
+
 const MAX_VIEWED_RACKS = 4;
 const ADD_RACK_PLACEHOLDER = '__add_rack__';
+const DRAG_DEVICE_MIME = 'application/x-studiowire-device-id';
 
 export function RackWorkspace({ rack }: { rack: Rack }) {
-  const { project } = useProject();
+  const { project, moveMountedDevice } = useProject();
   const [viewedRackIds, setViewedRackIds] = useState<string[]>([rack.id]);
+  const [draggingDeviceId, setDraggingDeviceId] = useState<string | null>(null);
+  const [dropPreview, setDropPreview] = useState<DropPreview | null>(null);
+  const [dropMessage, setDropMessage] = useState<string | null>(null);
   const viewedRacks = useMemo(
     () =>
       viewedRackIds
@@ -69,6 +83,98 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
     setViewedRackIds((current) => (current.length <= 1 ? current : current.filter((id) => id !== rackId)));
   }
 
+  function handleDeviceDragStart(event: DragEvent<HTMLDivElement>, device: Device) {
+    if (!device.rackSizeRu || device.rackSizeRu <= 0) {
+      event.preventDefault();
+      setDropMessage(`${device.name} cannot be moved because it has no positive rack size.`);
+      return;
+    }
+
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData(DRAG_DEVICE_MIME, device.id);
+    setDraggingDeviceId(device.id);
+    setDropMessage(null);
+  }
+
+  function handleDeviceDragEnd() {
+    setDraggingDeviceId(null);
+    setDropPreview(null);
+  }
+
+  function handleRackDragOver(event: DragEvent<HTMLDivElement>, targetRack: Rack, model: RackCanvasModel) {
+    const deviceId = draggingDeviceId || event.dataTransfer.getData(DRAG_DEVICE_MIME);
+
+    if (!deviceId) {
+      return;
+    }
+
+    const bottomRu = getTargetBottomRu(event, model.displayRus);
+
+    if (bottomRu === null) {
+      return;
+    }
+
+    event.preventDefault();
+    const result = validateRackPlacement(project, {
+      deviceId,
+      targetRackId: targetRack.id,
+      targetBottomRu: bottomRu,
+    });
+
+    setDropPreview(
+      result.ok
+        ? {
+            deviceId,
+            rackId: targetRack.id,
+            bottomRu: result.targetBottomRu,
+            topRu: result.targetTopRu,
+            ok: true,
+            message: `Move to ${targetRack.name} RU ${result.targetBottomRu}-${result.targetTopRu}`,
+          }
+        : {
+            deviceId,
+            rackId: targetRack.id,
+            bottomRu,
+            topRu: bottomRu,
+            ok: false,
+            message: result.message,
+          },
+    );
+    event.dataTransfer.dropEffect = result.ok ? 'move' : 'none';
+  }
+
+  function handleRackDrop(event: DragEvent<HTMLDivElement>, targetRack: Rack, model: RackCanvasModel) {
+    event.preventDefault();
+    const deviceId = draggingDeviceId || event.dataTransfer.getData(DRAG_DEVICE_MIME);
+    const bottomRu = getTargetBottomRu(event, model.displayRus);
+
+    if (!deviceId || bottomRu === null) {
+      setDropMessage('Device move blocked: no valid target RU was found.');
+      setDropPreview(null);
+      return;
+    }
+
+    const result = validateRackPlacement(project, {
+      deviceId,
+      targetRackId: targetRack.id,
+      targetBottomRu: bottomRu,
+    });
+
+    if (!result.ok) {
+      setDropMessage(`Device move blocked: ${result.message}`);
+      setDropPreview(null);
+      return;
+    }
+
+    moveMountedDevice({
+      deviceId,
+      targetRackId: targetRack.id,
+      targetBottomRu: result.targetBottomRu,
+    });
+    setDropMessage(`${result.device.name} moved to ${targetRack.name} RU ${result.targetBottomRu}-${result.targetTopRu}.`);
+    setDropPreview(null);
+  }
+
   return (
     <section className="workspace rack-workspace" aria-label="Rack canvas">
       <WorkspaceHeader eyebrow="Rack Elevation" title={rack.name} badge={`${viewedRacks.length} of ${MAX_VIEWED_RACKS} shown`} />
@@ -79,6 +185,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
         onAddRack={addRackToView}
         rackCount={viewedRacks.length}
       />
+      {dropMessage ? <p className="rack-drop-message">{dropMessage}</p> : null}
 
       {viewedRacks.length === 0 ? (
         <EmptyState title="Select A Rack">Select a rack from the navigator to open the rack elevation canvas.</EmptyState>
@@ -110,8 +217,14 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
 
                   <RackElevationCanvas
                     canRemove={viewedRacks.length > 1}
+                    dropPreview={dropPreview?.rackId === viewedRack.id ? dropPreview : null}
+                    draggingDeviceId={draggingDeviceId}
                     model={canvasModel}
                     rack={viewedRack}
+                    onDeviceDragEnd={handleDeviceDragEnd}
+                    onDeviceDragStart={handleDeviceDragStart}
+                    onRackDragOver={(event) => handleRackDragOver(event, viewedRack, canvasModel)}
+                    onRackDrop={(event) => handleRackDrop(event, viewedRack, canvasModel)}
                     onRemove={() => removeRackFromView(viewedRack.id)}
                   />
 
@@ -175,14 +288,28 @@ function RackViewSelector({
 function RackElevationCanvas({
   rack,
   model,
+  dropPreview,
+  draggingDeviceId,
   canRemove = false,
+  onDeviceDragEnd,
+  onDeviceDragStart,
+  onRackDragOver,
+  onRackDrop,
   onRemove,
 }: {
   rack: Rack;
   model: RackCanvasModel;
+  dropPreview: DropPreview | null;
+  draggingDeviceId: string | null;
   canRemove?: boolean;
+  onDeviceDragEnd: () => void;
+  onDeviceDragStart: (event: DragEvent<HTMLDivElement>, device: Device) => void;
+  onRackDragOver: (event: DragEvent<HTMLDivElement>) => void;
+  onRackDrop: (event: DragEvent<HTMLDivElement>) => void;
   onRemove?: () => void;
 }) {
+  const previewRows = dropPreview ? getPreviewRows(model.displayRus, dropPreview.bottomRu, dropPreview.topRu) : null;
+
   return (
     <Card className="rack-canvas-card">
       <CardHeader className="rack-canvas-header">
@@ -211,7 +338,23 @@ function RackElevationCanvas({
               </div>
             ))}
           </div>
-          <div className="rack-stack" aria-label={`${rack.name} RU stack`}>
+          <div
+            className="rack-stack"
+            aria-label={`${rack.name} RU stack`}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                event.currentTarget.classList.remove('is-drag-over');
+              }
+            }}
+            onDragOver={(event) => {
+              event.currentTarget.classList.add('is-drag-over');
+              onRackDragOver(event);
+            }}
+            onDrop={(event) => {
+              event.currentTarget.classList.remove('is-drag-over');
+              onRackDrop(event);
+            }}
+          >
             {model.displayRus.map((ru, index) => (
               <div
                 className="rack-ru-row"
@@ -222,11 +365,28 @@ function RackElevationCanvas({
                 <span>RU {String(ru).padStart(2, '0')}</span>
               </div>
             ))}
+            {previewRows ? (
+              <div
+                className={dropPreview?.ok ? 'rack-drop-preview valid' : 'rack-drop-preview invalid'}
+                style={{ gridRow: `${previewRows.rowStart} / ${previewRows.rowEnd}` }}
+              >
+                <span>{dropPreview?.ok ? 'Move here' : 'Blocked'}</span>
+              </div>
+            ) : null}
             {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd }) => (
               <div
-                className={device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block'}
+                className={[
+                  device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block',
+                  draggingDeviceId === device.id ? 'is-dragging' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                data-canvas-draggable="true"
+                draggable
                 key={device.id}
                 style={{ gridRow: `${rowStart} / ${rowEnd}` }}
+                onDragEnd={onDeviceDragEnd}
+                onDragStart={(event) => onDeviceDragStart(event, device)}
               >
                 <strong>{device.name}</strong>
                 <span>
@@ -247,6 +407,47 @@ function getRackOptionLabel(rack: Rack, locations: Location[]): string {
   const location = locations.find((candidate) => candidate.id === rack.locationId);
 
   return location ? `${location.name} / ${rack.name}` : rack.name;
+}
+
+function getTargetBottomRu(event: DragEvent<HTMLDivElement>, displayRus: number[]): number | null {
+  if (displayRus.length === 0) {
+    return null;
+  }
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  const rowHeight = rect.height / displayRus.length;
+
+  if (rowHeight <= 0) {
+    return null;
+  }
+
+  const rowIndex = Math.min(
+    displayRus.length - 1,
+    Math.max(0, Math.floor((event.clientY - rect.top) / rowHeight)),
+  );
+
+  return displayRus[rowIndex] ?? null;
+}
+
+function getPreviewRows(
+  displayRus: number[],
+  bottomRu: number,
+  topRu: number,
+): { rowStart: number; rowEnd: number } | null {
+  const rowIndexes = Array.from({ length: Math.max(0, topRu - bottomRu + 1) }, (_, index) => bottomRu + index)
+    .map((ru) => displayRus.indexOf(ru) + 1)
+    .filter((rowIndex) => rowIndex > 0);
+
+  if (rowIndexes.length === 0) {
+    const fallbackIndex = displayRus.indexOf(bottomRu) + 1;
+
+    return fallbackIndex > 0 ? { rowStart: fallbackIndex, rowEnd: fallbackIndex + 1 } : null;
+  }
+
+  return {
+    rowStart: Math.min(...rowIndexes),
+    rowEnd: Math.max(...rowIndexes) + 1,
+  };
 }
 
 function buildRackCanvasModel(rack: Rack, devices: Device[]): RackCanvasModel {

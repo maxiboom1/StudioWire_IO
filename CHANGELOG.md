@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.2.4
+
+Added mounted-device drag repositioning on the rack canvas.
+
+### Added
+
+- Made existing mounted device blocks draggable within the rack canvas.
+- Added same-rack and visible multi-rack drops onto valid empty RU ranges.
+- Added drop preview highlighting and invalid-drop messaging for occupied or out-of-capacity targets.
+
+### Changed
+
+- Device moves update only existing placement fields: rack, location, and bottom RU while preserving device identity, rack size, ports, port groups, cables, and code.
+- Preserved project schema version, import/export semantics, and terminal-block boundaries.
+
 ## v0.2.2.3
 
 Added reusable app-level canvas zoom and pan behavior to the read-only rack canvas.

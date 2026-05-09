@@ -2,6 +2,7 @@ import { allocateCableRange } from '../domain/cableNumbers';
 import { makeId, makeIndexedId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject } from '../domain/projectFactory';
+import { validateRackPlacement } from '../domain/rackPlacement';
 import { sampleProject } from '../domain/sampleProject';
 import { STUDIOWIRE_SCHEMA_VERSION } from '../domain/types';
 import { validateProject } from '../domain/validators';
@@ -72,6 +73,7 @@ export type ProjectAction =
   | { type: 'UPDATE_RACK'; payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> } }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: Pick<Device, 'name' | 'code' | 'manufacturer' | 'model' | 'role' | 'notes' | 'locationId' | 'rackId' | 'rackSizeRu' | 'rackBottomRu'> } }
+  | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
   | { type: 'RETIRE_DEVICE'; payload: { id: string } }
@@ -357,6 +359,41 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
           `Device updated: ${action.payload.id}`,
         ),
         statusMessage: 'Device updated',
+        importError: null,
+      };
+    }
+
+    case 'MOVE_MOUNTED_DEVICE': {
+      const placement = validateRackPlacement(state.project, action.payload);
+
+      if (!placement.ok) {
+        return {
+          ...state,
+          statusMessage: `Device move blocked: ${placement.message}`,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(
+          {
+            ...state.project,
+            devices: state.project.devices.map((device) =>
+              device.id === action.payload.deviceId
+                ? {
+                    ...device,
+                    mountType: 'rack',
+                    rackId: placement.targetRack.id,
+                    locationId: placement.targetRack.locationId,
+                    rackBottomRu: placement.targetBottomRu,
+                    updatedAt: nowIso(),
+                  }
+                : device,
+            ),
+          },
+          `Device moved: ${placement.device.name} to ${placement.targetRack.name} RU ${placement.targetBottomRu}`,
+        ),
+        statusMessage: `${placement.device.name} moved to ${placement.targetRack.name} RU ${placement.targetBottomRu}`,
         importError: null,
       };
     }
