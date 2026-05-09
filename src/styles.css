@@ -35,7 +35,7 @@ body {
   min-height: 100vh;
 }
 
-button,
+button:not([data-ui]),
 .file-action {
   border: 1px solid #c8d2d7;
   border-radius: 6px;
@@ -52,7 +52,7 @@ button,
     color 140ms ease;
 }
 
-button:hover,
+button:not([data-ui]):hover,
 .file-action:hover {
   background: #e7f3f3;
   border-color: #5f9494;
@@ -174,28 +174,19 @@ textarea {
 
 .app-grid {
   min-height: 0;
-  height: calc(100vh - 58px);
+  height: calc(100vh - 50px);
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
-    "tree workspace inspector"
-    "validation validation validation";
+    "workspace inspector"
+    "validation validation";
 }
 
-.left-tree,
 .workspace,
 .inspector,
 .validation-panel {
   min-width: 0;
-}
-
-.left-tree {
-  overflow: auto;
-  grid-area: tree;
-  padding: 14px 10px;
-  background: #f8fafb;
-  border-right: 1px solid #d7e0e4;
 }
 
 .panel-heading,
@@ -222,187 +213,6 @@ textarea {
   font-size: 0.75rem;
 }
 
-.tree-nav {
-  display: grid;
-  gap: 3px;
-  margin-top: 12px;
-}
-
-.tree-hint {
-  margin: 8px 0 0;
-  color: #728188;
-  font-size: 0.72rem;
-  line-height: 1.35;
-}
-
-.tree-children {
-  display: grid;
-  gap: 2px;
-}
-
-.tree-row {
-  min-width: 0;
-  min-height: 34px;
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
-  gap: 4px;
-  align-items: center;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: #172126;
-  padding-right: 7px;
-}
-
-.tree-row:hover {
-  background: #eef4f6;
-  border-color: #d4e0e5;
-}
-
-.tree-row.active {
-  background: #fff1ec;
-  border-color: #f2aa9b;
-  color: #202326;
-}
-
-.tree-toggle,
-.tree-spacer {
-  width: 22px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-}
-
-.tree-toggle {
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: #66777f;
-  font-size: 0.78rem;
-  font-weight: 900;
-  padding: 0;
-}
-
-.tree-toggle:hover {
-  background: #dde8ec;
-  border-color: transparent;
-}
-
-.tree-label-button {
-  min-width: 0;
-  min-height: 30px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-}
-
-.tree-label-button:hover {
-  background: transparent;
-  border-color: transparent;
-}
-
-.tree-icon {
-  flex: 0 0 auto;
-  color: #6e7d84;
-  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-  font-size: 0.7rem;
-  line-height: 1;
-}
-
-.tree-label-text {
-  min-width: 0;
-  display: grid;
-  gap: 1px;
-}
-
-.tree-label-text span,
-.tree-label-text small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tree-label-text span {
-  color: #182327;
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.tree-label-text small {
-  color: #62737b;
-  font-size: 0.7rem;
-}
-
-.tree-count {
-  min-width: 22px;
-  border-radius: 999px;
-  background: #e4ecf0;
-  color: #526269;
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1;
-  padding: 4px 6px;
-  text-align: center;
-}
-
-.tree-empty {
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-  color: #8a989e;
-  font-size: 0.76rem;
-}
-
-.tree-empty-prompt {
-  display: grid;
-  gap: 5px;
-  border: 1px dashed #c0cdd3;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #62737b;
-  cursor: context-menu;
-  padding: 14px 12px;
-}
-
-.tree-empty-prompt strong {
-  color: #172126;
-  font-size: 0.86rem;
-}
-
-.tree-empty-prompt span {
-  font-size: 0.76rem;
-  line-height: 1.35;
-}
-
-.tree-context-menu {
-  position: fixed;
-  z-index: 30;
-  min-width: 190px;
-  display: grid;
-  gap: 3px;
-  border: 1px solid #cfd9df;
-  border-radius: 7px;
-  background: #ffffff;
-  padding: 5px;
-  box-shadow: 0 18px 48px rgba(23, 33, 38, 0.18);
-}
-
-.tree-context-menu button {
-  justify-content: flex-start;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  padding: 9px 10px;
-  text-align: left;
-}
-
-.tree-context-menu button:hover {
-  background: #fff1ec;
-  border-color: transparent;
-}
 
 .workspace {
   grid-area: workspace;
@@ -1018,11 +828,11 @@ textarea {
   }
 
   .app-grid {
-    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "tree workspace"
-      "inspector inspector"
-      "validation validation";
+      "workspace"
+      "inspector"
+      "validation";
   }
 
   .inspector {
@@ -1056,34 +866,14 @@ textarea {
   .app-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "tree"
       "workspace"
       "inspector"
       "validation";
   }
 
-  .left-tree {
-    border-right: 0;
-    border-bottom: 1px solid #d7e0e4;
-  }
-
-  .tree-nav,
   .top-actions {
     display: flex;
     overflow-x: auto;
-  }
-
-  .tree-nav {
-    align-items: flex-start;
-  }
-
-  .tree-empty {
-    display: none;
-  }
-
-  .tree-row {
-    width: auto;
-    min-width: 160px;
   }
 
   .workspace {

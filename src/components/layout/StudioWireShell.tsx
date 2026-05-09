@@ -4,6 +4,7 @@ import { AddDeviceModal } from '../devices/AddDeviceModal';
 import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
 import { resolveIssueSelection, resolveSelection, type SelectedObjectType, type SelectionState } from '../common/selection';
+import { SidebarInset, SidebarProvider } from '../ui/sidebar';
 import { Inspector } from './Inspector';
 import { LeftTree } from './LeftTree';
 import { TopBar } from './TopBar';
@@ -59,36 +60,38 @@ export function StudioWireShell() {
   }
 
   return (
-    <main className="app-shell">
-      <TopBar onProjectLoaded={selectProject} onOpenSettings={selectSettings} />
-      {importError ? (
-        <div className="app-alert" role="alert">
-          <span>{importError}</span>
-          <button type="button" onClick={dismissImportError}>
-            Dismiss
-          </button>
-        </div>
-      ) : null}
-      <section className="app-grid" aria-label={`${project.project.name} project editor`}>
-        <LeftTree
-          selection={selection}
-          onSelectObject={selectObject}
-          onAddLocation={() => setModal({ type: 'location' })}
-          onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
-          onAddDevice={openAddDevice}
-        />
-        <Workspace selection={selection} onAddDevice={openAddDevice} />
-        <Inspector selection={selection} />
-        <ValidationPanel
-          onSelectIssue={(issue) => {
-            const target = resolveIssueSelection(project, issue);
+    <SidebarProvider>
+      <LeftTree
+        selection={selection}
+        onSelectObject={selectObject}
+        onAddLocation={() => setModal({ type: 'location' })}
+        onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
+        onAddDevice={openAddDevice}
+      />
+      <SidebarInset className="app-shell">
+        <TopBar />
+        {importError ? (
+          <div className="app-alert" role="alert">
+            <span>{importError}</span>
+            <button type="button" onClick={dismissImportError}>
+              Dismiss
+            </button>
+          </div>
+        ) : null}
+        <section className="app-grid" aria-label={`${project.project.name} project editor`}>
+          <Workspace selection={selection} onAddDevice={openAddDevice} />
+          <Inspector selection={selection} />
+          <ValidationPanel
+            onSelectIssue={(issue) => {
+              const target = resolveIssueSelection(project, issue);
 
-            if (target) {
-              selectObject(target.selectedObjectType, target.selectedObjectId);
-            }
-          }}
-        />
-      </section>
+              if (target) {
+                selectObject(target.selectedObjectType, target.selectedObjectId);
+              }
+            }}
+          />
+        </section>
+      </SidebarInset>
       {modal?.type === 'location' ? (
         <AddLocationModal
           onClose={() => setModal(null)}
@@ -118,6 +121,6 @@ export function StudioWireShell() {
           }}
         />
       ) : null}
-    </main>
+    </SidebarProvider>
   );
 }

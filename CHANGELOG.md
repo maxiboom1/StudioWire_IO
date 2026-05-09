@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.2.1.3
+
+Began the shadcn/ui migration for the 0.2.1 UI-polish stage.
+
+### Added
+
+- Added the shadcn/ui component foundation, including sidebar, menu, context menu, collapsible, button, badge, separator, and tooltip primitives.
+- Added the shared `cn` utility and shadcn component configuration.
+
+### Changed
+
+- Replaced the custom left navigation shell with a shadcn Sidebar-based project navigator.
+- Moved global project/app actions into the sidebar header project menu.
+- Kept locations as direct top-level navigator rows, with racks/devices nested under each location and Unassigned Devices as the final top-level member.
+- Simplified the top bar so it no longer duplicates global project actions.
+- Started reducing obsolete custom tree CSS while preserving existing workspace behavior.
+
 ## v0.2.1.2
 
 Continued the 0.2.1 UI-polish stage.
