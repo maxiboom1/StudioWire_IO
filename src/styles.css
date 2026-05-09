@@ -356,6 +356,27 @@ textarea {
   font-size: 0.76rem;
 }
 
+.tree-empty-prompt {
+  display: grid;
+  gap: 5px;
+  border: 1px dashed #c0cdd3;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #62737b;
+  cursor: context-menu;
+  padding: 14px 12px;
+}
+
+.tree-empty-prompt strong {
+  color: #172126;
+  font-size: 0.86rem;
+}
+
+.tree-empty-prompt span {
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
 .tree-context-menu {
   position: fixed;
   z-index: 30;

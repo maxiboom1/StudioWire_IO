@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.1.2
+
+Continued the 0.2.1 UI-polish stage.
+
+### Changed
+
+- Simplified the left navigator so locations are the first visible tree rows instead of nesting under project and locations folders.
+- Kept Unassigned Devices as the final tree member.
+- Added an empty-project navigator prompt for creating a location or unassigned device by right-clicking.
+- Kept project summary access on the project name in the top navbar.
+
 ## v0.2.1.1
 
 Continued the 0.2.1 UI-polish stage.

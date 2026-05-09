@@ -14,8 +14,6 @@ type ContextMenuState = {
   actions: ContextAction[];
 } | null;
 
-const PROJECT_KEY = 'project';
-const LOCATIONS_KEY = 'locations';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -34,8 +32,6 @@ export function LeftTree({
   const { project } = useProject();
   const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(() => new Set());
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
-  const isProjectOpen = !collapsedKeys.has(PROJECT_KEY);
-  const isLocationsOpen = !collapsedKeys.has(LOCATIONS_KEY);
   const isUnassignedOpen = !collapsedKeys.has(UNASSIGNED_KEY);
   const unassignedDevices = useMemo(
     () =>
@@ -46,6 +42,7 @@ export function LeftTree({
       }),
     [project.devices, project.locations],
   );
+  const isNavigatorEmpty = project.locations.length === 0 && unassignedDevices.length === 0;
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -104,64 +101,36 @@ export function LeftTree({
       <p className="tree-hint">Right-click folders to add items.</p>
 
       <nav className="tree-nav" aria-label="Project navigator">
-        <TreeRow
-          active={isSelected(selection, 'project', project.project.id)}
-          count={project.locations.length + unassignedDevices.length}
-          depth={0}
-          isOpen={isProjectOpen}
-          kind="folder"
-          label={project.project.name}
-          meta="Project root"
-          onClick={() => onSelectObject('project', project.project.id)}
-          onContextMenu={(event) =>
-            openContextMenu(event, [
-              { label: 'Add Location', onSelect: onAddLocation },
-              { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
-            ])
-          }
-          onToggle={() => toggle(PROJECT_KEY)}
-        />
-
-        {isProjectOpen ? (
-          <div className="tree-children">
-            <TreeRow
-              count={project.locations.length}
-              depth={1}
-              isOpen={isLocationsOpen}
-              kind="folder"
-              label="Locations"
-              meta="Project locations"
-              onContextMenu={(event) =>
-                openContextMenu(event, [{ label: 'Add Location', onSelect: onAddLocation }])
-              }
-              onToggle={() => toggle(LOCATIONS_KEY)}
-            />
-
-            {isLocationsOpen ? (
-              project.locations.length === 0 ? (
-                <TreeEmpty depth={2} label="No locations" />
-              ) : (
-                project.locations.map((location) => (
-                  <LocationBranch
-                    collapsedKeys={collapsedKeys}
-                    key={location.id}
-                    location={location}
-                    onAddDevice={onAddDevice}
-                    onAddRack={onAddRack}
-                    onContextMenu={openContextMenu}
-                    onSelectObject={onSelectObject}
-                    onToggle={toggle}
-                    projectDevices={project.devices}
-                    projectRacks={project.racks}
-                    selection={selection}
-                  />
-                ))
-              )
-            ) : null}
+        {isNavigatorEmpty ? (
+          <EmptyNavigatorPrompt
+            onContextMenu={(event) =>
+              openContextMenu(event, [
+                { label: 'Add Location', onSelect: onAddLocation },
+                { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+              ])
+            }
+          />
+        ) : (
+          <>
+            {project.locations.map((location) => (
+              <LocationBranch
+                collapsedKeys={collapsedKeys}
+                key={location.id}
+                location={location}
+                onAddDevice={onAddDevice}
+                onAddRack={onAddRack}
+                onContextMenu={openContextMenu}
+                onSelectObject={onSelectObject}
+                onToggle={toggle}
+                projectDevices={project.devices}
+                projectRacks={project.racks}
+                selection={selection}
+              />
+            ))}
 
             <TreeRow
               count={unassignedDevices.length}
-              depth={1}
+              depth={0}
               isOpen={isUnassignedOpen}
               kind="folder"
               label="Unassigned Devices"
@@ -174,12 +143,12 @@ export function LeftTree({
 
             {isUnassignedOpen ? (
               unassignedDevices.length === 0 ? (
-                <TreeEmpty depth={2} label="No unassigned devices" />
+                <TreeEmpty depth={1} label="No unassigned devices" />
               ) : (
                 unassignedDevices.map((device) => (
                   <TreeRow
                     active={isSelected(selection, 'device', device.id)}
-                    depth={2}
+                    depth={1}
                     key={device.id}
                     kind="item"
                     label={device.name}
@@ -189,8 +158,8 @@ export function LeftTree({
                 ))
               )
             ) : null}
-          </div>
-        ) : null}
+          </>
+        )}
       </nav>
 
       {contextMenu ? (
@@ -253,7 +222,7 @@ function LocationBranch({
       <TreeRow
         active={isSelected(selection, 'location', location.id)}
         count={racks.length + devices.length}
-        depth={2}
+        depth={0}
         isOpen={isLocationOpen}
         kind="folder"
         label={location.name}
@@ -272,7 +241,7 @@ function LocationBranch({
         <>
           <TreeRow
             count={racks.length}
-            depth={3}
+            depth={1}
             isOpen={isRacksOpen}
             kind="folder"
             label="Racks"
@@ -285,12 +254,12 @@ function LocationBranch({
 
           {isRacksOpen ? (
             racks.length === 0 ? (
-              <TreeEmpty depth={4} label="No racks" />
+              <TreeEmpty depth={2} label="No racks" />
             ) : (
               racks.map((rack) => (
                 <TreeRow
                   active={isSelected(selection, 'rack', rack.id)}
-                  depth={4}
+                  depth={2}
                   key={rack.id}
                   kind="item"
                   label={rack.name}
@@ -303,7 +272,7 @@ function LocationBranch({
 
           <TreeRow
             count={devices.length}
-            depth={3}
+            depth={1}
             isOpen={isDevicesOpen}
             kind="folder"
             label="Devices"
@@ -316,12 +285,12 @@ function LocationBranch({
 
           {isDevicesOpen ? (
             devices.length === 0 ? (
-              <TreeEmpty depth={4} label="No devices" />
+              <TreeEmpty depth={2} label="No devices" />
             ) : (
               devices.map((device) => (
                 <TreeRow
                   active={isSelected(selection, 'device', device.id)}
-                  depth={4}
+                  depth={2}
                   key={device.id}
                   kind="item"
                   label={device.name}
@@ -399,6 +368,19 @@ function TreeEmpty({ depth, label }: { depth: number; label: string }) {
   return (
     <div className="tree-empty" style={{ paddingLeft: `${34 + depth * 14}px` }}>
       {label}
+    </div>
+  );
+}
+
+function EmptyNavigatorPrompt({
+  onContextMenu,
+}: {
+  onContextMenu: (event: MouseEvent) => void;
+}) {
+  return (
+    <div className="tree-empty-prompt" onContextMenu={onContextMenu}>
+      <strong>Create location or device</strong>
+      <span>Right-click here to start the project tree.</span>
     </div>
   );
 }
