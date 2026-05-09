@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
+import { CanvasViewport } from '../common/CanvasViewport';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -82,44 +83,46 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
       {viewedRacks.length === 0 ? (
         <EmptyState title="Select A Rack">Select a rack from the navigator to open the rack elevation canvas.</EmptyState>
       ) : (
-        <div className="rack-canvas-grid" aria-label="Viewed rack elevations">
-          {viewedRacks.map((viewedRack) => {
-            const location = project.locations.find((candidate) => candidate.id === viewedRack.locationId);
-            const rackDevices = project.devices.filter((device) => device.rackId === viewedRack.id);
-            const canvasModel = buildRackCanvasModel(viewedRack, rackDevices);
+        <CanvasViewport ariaLabel="Rack canvas zoom and pan viewport" className="rack-canvas-viewport">
+          <div className="rack-canvas-grid" aria-label="Viewed rack elevations">
+            {viewedRacks.map((viewedRack) => {
+              const location = project.locations.find((candidate) => candidate.id === viewedRack.locationId);
+              const rackDevices = project.devices.filter((device) => device.rackId === viewedRack.id);
+              const canvasModel = buildRackCanvasModel(viewedRack, rackDevices);
 
-            return (
-              <div className="rack-canvas-panel" key={viewedRack.id}>
-                <div className="workspace-context-chips rack-panel-context" aria-label={`${viewedRack.name} context`}>
-                  {location ? <Badge>Location: {location.name}</Badge> : null}
-                  <Badge>{viewedRack.numberingDirection.replace(/_/g, ' ')}</Badge>
-                  <Badge>{canvasModel.mountedDevices.length} mounted</Badge>
+              return (
+                <div className="rack-canvas-panel" key={viewedRack.id}>
+                  <div className="workspace-context-chips rack-panel-context" aria-label={`${viewedRack.name} context`}>
+                    {location ? <Badge>Location: {location.name}</Badge> : null}
+                    <Badge>{viewedRack.numberingDirection.replace(/_/g, ' ')}</Badge>
+                    <Badge>{canvasModel.mountedDevices.length} mounted</Badge>
+                  </div>
+
+                  {canvasModel.warnings.length > 0 ? (
+                    <Alert className="rack-warning border-amber-200 bg-amber-50 text-amber-900">
+                      <AlertDescription>
+                        {canvasModel.warnings.map((warning) => (
+                          <span key={warning}>{warning}</span>
+                        ))}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+
+                  <RackElevationCanvas
+                    canRemove={viewedRacks.length > 1}
+                    model={canvasModel}
+                    rack={viewedRack}
+                    onRemove={() => removeRackFromView(viewedRack.id)}
+                  />
+
+                  {rackDevices.length === 0 ? (
+                    <EmptyState title="Rack Is Empty">Assign rack-mounted devices from the device inspector.</EmptyState>
+                  ) : null}
                 </div>
-
-                {canvasModel.warnings.length > 0 ? (
-                  <Alert className="rack-warning border-amber-200 bg-amber-50 text-amber-900">
-                    <AlertDescription>
-                      {canvasModel.warnings.map((warning) => (
-                        <span key={warning}>{warning}</span>
-                      ))}
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-
-                <RackElevationCanvas
-                  canRemove={viewedRacks.length > 1}
-                  model={canvasModel}
-                  rack={viewedRack}
-                  onRemove={() => removeRackFromView(viewedRack.id)}
-                />
-
-                {rackDevices.length === 0 ? (
-                  <EmptyState title="Rack Is Empty">Assign rack-mounted devices from the device inspector.</EmptyState>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </CanvasViewport>
       )}
     </section>
   );
@@ -186,7 +189,7 @@ function RackElevationCanvas({
         <div>
           <CardTitle>{rack.name}</CardTitle>
           <p>
-            Full rack elevation, {rack.heightRu} RU capacity. This view is read-only in v0.2.2.2.
+            Full rack elevation, {rack.heightRu} RU capacity. This view is read-only in v0.2.2.3.
           </p>
         </div>
         <div className="rack-canvas-actions">

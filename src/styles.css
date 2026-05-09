@@ -261,6 +261,85 @@ textarea:not([data-ui]) {
   font-weight: 700;
 }
 
+.canvas-viewport-shell {
+  margin-top: 20px;
+}
+
+.canvas-viewport-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.canvas-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-zoom-value {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 58px;
+  height: 32px;
+  border: 1px solid #d7e0e4;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #10242c;
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.canvas-viewport {
+  overflow: auto;
+  max-height: min(72vh, 920px);
+  min-height: 360px;
+  border: 1px solid #d7e0e4;
+  border-radius: 10px;
+  background:
+    linear-gradient(rgba(15, 79, 81, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 79, 81, 0.035) 1px, transparent 1px),
+    #f7fbfc;
+  background-size: 24px 24px;
+  padding: 18px;
+}
+
+.canvas-viewport:focus-visible {
+  outline: 2px solid #3bb7b5;
+  outline-offset: 2px;
+}
+
+.canvas-viewport.is-pan-mode {
+  cursor: grab;
+}
+
+.canvas-viewport.is-pan-mode .canvas-viewport-surface.is-panning {
+  cursor: grabbing;
+}
+
+.canvas-viewport-surface {
+  position: relative;
+  min-width: max-content;
+  min-height: max-content;
+}
+
+.canvas-viewport-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  min-width: max-content;
+  transform-origin: top left;
+}
+
+.canvas-viewport-content .rack-canvas-grid {
+  margin-top: 0;
+}
+
 .rack-canvas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
@@ -901,6 +980,11 @@ textarea:not([data-ui]) {
 
   .rack-canvas-grid {
     grid-template-columns: 1fr;
+  }
+
+  .canvas-viewport-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .rack-view-select {

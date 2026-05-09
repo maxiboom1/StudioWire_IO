@@ -46,7 +46,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.2.2';
+const APP_VERSION = '0.2.2.3';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.2.3
+
+Added reusable app-level canvas zoom and pan behavior to the read-only rack canvas.
+
+### Added
+
+- Added a reusable canvas viewport with zoom out, zoom percentage, zoom in, reset, and explicit pan-mode controls.
+- Applied the viewport to the multi-rack canvas so viewed racks can be zoomed and navigated without changing browser zoom.
+
+### Changed
+
+- Kept rack canvas behavior read-only and preserved project JSON, schema version, reducer behavior, validation behavior, and import/export semantics.
+
 ## v0.2.2.2
 
 Added a read-only multi-rack canvas view using local UI state only.
