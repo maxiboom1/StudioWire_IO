@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.2.2
+
+Added a read-only multi-rack canvas view using local UI state only.
+
+### Added
+
+- Added a rack-view selector in the rack workspace for viewing up to four racks concurrently.
+- Added duplicate prevention, remove controls for extra viewed racks, and a clear max-four limit message.
+
+### Changed
+
+- Reused the existing rack elevation renderer for each visible rack without changing project JSON, schema version, reducer behavior, validation behavior, or import/export semantics.
+
 ## v0.2.2.1
 
 Added the first read-only rack canvas/elevation view using existing rack and device placement data.
