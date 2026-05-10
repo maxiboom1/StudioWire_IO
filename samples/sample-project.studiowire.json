@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.0",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -198,6 +198,27 @@
       "updatedAt": "2026-05-06T00:00:00.000Z"
     }
   ],
+  "terminalBlocks": [
+    {
+      "id": "terminal-block-mcr-bnc-1",
+      "name": "MCR BNC TB 1",
+      "code": "TB-BNC-1",
+      "manufacturer": "Example Panels",
+      "model": "BNC-16",
+      "categoryId": "category-video",
+      "locationId": "location-machine-room",
+      "role": "Video terminal block",
+      "labelPrefix": "TB1",
+      "mountType": "non_rack",
+      "rackId": null,
+      "rackSizeRu": null,
+      "rackBottomRu": null,
+      "status": "planned",
+      "notes": "",
+      "createdAt": "2026-05-06T00:00:00.000Z",
+      "updatedAt": "2026-05-06T00:00:00.000Z"
+    }
+  ],
   "portGroups": [
     {
       "id": "port-group-router-outputs",
@@ -230,6 +251,22 @@
       "numberingRangeId": null,
       "createPlannedCables": false,
       "locked": false
+    }
+  ],
+  "terminalBlockPortGroups": [
+    {
+      "id": "tb-port-group-mcr-bnc-1",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "name": "BNC Positions",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "positionCount": 16,
+      "startPosition": 1,
+      "portLabelPattern": "{TB}-{FACE}-{00}",
+      "cablePrefix": "V",
+      "plannedCableMode": "none",
+      "firstCableNumber": null,
+      "lastCableNumber": null
     }
   ],
   "ports": [
@@ -336,6 +373,328 @@
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
       "notes": ""
+    }
+  ],
+  "terminalBlockPorts": [
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-01",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 1,
+      "face": "rear",
+      "label": "TB1-REAR-01",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-01",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 1,
+      "face": "front",
+      "label": "TB1-FRONT-01",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-02",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 2,
+      "face": "rear",
+      "label": "TB1-REAR-02",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-02",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 2,
+      "face": "front",
+      "label": "TB1-FRONT-02",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-03",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 3,
+      "face": "rear",
+      "label": "TB1-REAR-03",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-03",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 3,
+      "face": "front",
+      "label": "TB1-FRONT-03",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-04",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 4,
+      "face": "rear",
+      "label": "TB1-REAR-04",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-04",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 4,
+      "face": "front",
+      "label": "TB1-FRONT-04",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-05",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 5,
+      "face": "rear",
+      "label": "TB1-REAR-05",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-05",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 5,
+      "face": "front",
+      "label": "TB1-FRONT-05",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-06",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 6,
+      "face": "rear",
+      "label": "TB1-REAR-06",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-06",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 6,
+      "face": "front",
+      "label": "TB1-FRONT-06",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-07",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 7,
+      "face": "rear",
+      "label": "TB1-REAR-07",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-07",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 7,
+      "face": "front",
+      "label": "TB1-FRONT-07",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-08",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 8,
+      "face": "rear",
+      "label": "TB1-REAR-08",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-08",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 8,
+      "face": "front",
+      "label": "TB1-FRONT-08",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-09",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 9,
+      "face": "rear",
+      "label": "TB1-REAR-09",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-09",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 9,
+      "face": "front",
+      "label": "TB1-FRONT-09",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-10",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 10,
+      "face": "rear",
+      "label": "TB1-REAR-10",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-10",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 10,
+      "face": "front",
+      "label": "TB1-FRONT-10",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-11",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 11,
+      "face": "rear",
+      "label": "TB1-REAR-11",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-11",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 11,
+      "face": "front",
+      "label": "TB1-FRONT-11",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-12",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 12,
+      "face": "rear",
+      "label": "TB1-REAR-12",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-12",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 12,
+      "face": "front",
+      "label": "TB1-FRONT-12",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-13",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 13,
+      "face": "rear",
+      "label": "TB1-REAR-13",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-13",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 13,
+      "face": "front",
+      "label": "TB1-FRONT-13",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-14",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 14,
+      "face": "rear",
+      "label": "TB1-REAR-14",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-14",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 14,
+      "face": "front",
+      "label": "TB1-FRONT-14",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-15",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 15,
+      "face": "rear",
+      "label": "TB1-REAR-15",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-15",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 15,
+      "face": "front",
+      "label": "TB1-FRONT-15",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-rear-16",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 16,
+      "face": "rear",
+      "label": "TB1-REAR-16",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
+    },
+    {
+      "id": "tb-port-tb-port-group-mcr-bnc-1-front-16",
+      "terminalBlockId": "terminal-block-mcr-bnc-1",
+      "portGroupId": "tb-port-group-mcr-bnc-1",
+      "positionIndex": 16,
+      "face": "front",
+      "label": "TB1-FRONT-16",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc"
     }
   ],
   "cables": [

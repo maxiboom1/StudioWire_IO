@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.1
+
+Added the terminal block schema and data-model foundation.
+
+### Added
+
+- Added terminal block, terminal block port group, and rear/front terminal block port arrays to the project root.
+- Added terminal block TypeScript types, project factory helpers, sample terminal block data, and matching JSON Schema definitions.
+- Added import normalization so legacy `0.1.0` projects receive empty terminal block arrays and load as schema version `0.2.0`.
+- Added validators for terminal block references, duplicate TB face/position ports, and `tb_port` cable endpoint references.
+
+### Changed
+
+- Bumped project `schemaVersion` to `0.2.0` because the ProjectRoot shape now includes terminal block arrays.
+- Added the shared `ObjectStatus` type for devices and terminal blocks.
+- Preserved the physical cable segment model and did not add terminal block UI, crosspointing, or logical connection objects.
+
 ## v0.2.2.7
 
 Cleaned up rack placement ownership after the v0.2.2 rack-canvas milestone.

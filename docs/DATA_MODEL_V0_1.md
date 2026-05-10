@@ -1,6 +1,8 @@
 # StudioWire IO Data Model v0.1
 
-Project data is the source of truth. StudioWire IO v0.1 imports and exports a single JSON document using schema version `0.1.0`.
+Project data is the source of truth. StudioWire IO v0.3.1 imports and exports a single JSON document using schema version `0.2.0`.
+
+Schema version `0.2.0` adds terminal block data arrays. Legacy `0.1.0` project JSON imports through normalization and receives empty terminal block arrays.
 
 IDs are stable strings. References use IDs, not display names. Dates use ISO 8601 strings.
 
@@ -8,14 +10,17 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: fixed string `0.1.0`.
+- `schemaVersion`: fixed string `0.2.0`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
 - `racks`: `Rack[]`.
 - `devices`: `Device[]`.
+- `terminalBlocks`: `TerminalBlock[]`.
 - `portGroups`: `PortGroup[]`.
+- `terminalBlockPortGroups`: `TerminalBlockPortGroup[]`.
 - `ports`: `Port[]`.
+- `terminalBlockPorts`: `TerminalBlockPort[]`.
 - `cables`: `Cable[]`.
 - `numberingLedgers`: `NumberingLedger[]`.
 - `validationIssues`: `ValidationIssue[]`.
@@ -133,6 +138,32 @@ Current UI-created devices use `planned` or `retired` status. Retiring a device 
 
 `locationId` may be `null` for virtual devices and for unassigned handling. Rack and non-rack devices must reference an existing location.
 
+## TerminalBlock
+
+Terminal blocks are device-like project objects, but they are not `Device` records.
+
+Fields:
+
+- `id`
+- `name`
+- `code`
+- `manufacturer`
+- `model`
+- `categoryId`
+- `locationId`
+- `role`
+- `labelPrefix`
+- `mountType`: `rack`, `non_rack`, or `virtual`
+- `rackId`
+- `rackSizeRu`
+- `rackBottomRu`
+- `status`: `planned`, `connected`, or `retired`
+- `notes`
+- `createdAt`
+- `updatedAt`
+
+`locationId` may be `null` for virtual terminal blocks. Rack and non-rack terminal blocks must reference an existing location. Rack placement uses the same existing rack fields as devices.
+
 ## PortGroup
 
 Fields:
@@ -175,6 +206,40 @@ Fields:
 - `plannedCableId`
 - `notes`
 
+## TerminalBlockPortGroup
+
+Fields:
+
+- `id`
+- `terminalBlockId`
+- `name`
+- `categoryId`
+- `connectorTypeId`
+- `positionCount`
+- `startPosition`
+- `portLabelPattern`
+- `cablePrefix`
+- `plannedCableMode`: `none`, `rear`, `front`, or `both`
+- `firstCableNumber`
+- `lastCableNumber`
+
+Terminal block port groups describe a contiguous set of physical terminal block positions. They do not create logical connection objects.
+
+## TerminalBlockPort
+
+Fields:
+
+- `id`
+- `terminalBlockId`
+- `portGroupId`
+- `positionIndex`
+- `face`: `rear` or `front`
+- `label`
+- `categoryId`
+- `connectorTypeId`
+
+Each physical terminal block position has separate rear and front ports. Rear/front continuity is not modeled as a `Cable`.
+
 ## Cable
 
 Fields:
@@ -191,7 +256,7 @@ Fields:
 - `labelBottom`
 - `notes`
 
-v0.1 records planned cable numbers. Complete connection modeling remains outside v0.1 scope.
+`Cable` remains the physical cable segment object. A cable connects exactly two endpoints. StudioWire IO does not create a separate logical `Connection` object in v0.3.1.
 
 Planned cable labels use this rule:
 
@@ -237,7 +302,7 @@ Fields:
 - `id`
 - `label`
 
-`tb_port` is reserved as an endpoint type for future compatibility. v0.1 does not implement terminal block logic.
+`device_port` endpoint IDs reference `Port.id`. `tb_port` endpoint IDs reference `TerminalBlockPort.id`. `unknown` endpoints keep `id: null`. `external` remains future-facing.
 
 ## ValidationIssue
 

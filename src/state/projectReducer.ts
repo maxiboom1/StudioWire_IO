@@ -89,13 +89,21 @@ const REQUIRED_ARRAY_FIELDS = [
   'locations',
   'racks',
   'devices',
+  'terminalBlocks',
   'portGroups',
+  'terminalBlockPortGroups',
   'ports',
+  'terminalBlockPorts',
   'cables',
   'numberingLedgers',
   'validationIssues',
   'changeLog',
 ] as const;
+
+const LEGACY_SCHEMA_VERSIONS = ['0.1.0'] as const;
+const LEGACY_ARRAY_FIELDS = REQUIRED_ARRAY_FIELDS.filter(
+  (field) => !['terminalBlocks', 'terminalBlockPortGroups', 'terminalBlockPorts'].includes(field),
+);
 
 export function createInitialProjectState(): ProjectState {
   return {
@@ -706,10 +714,13 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported JSON must be an object.' };
   }
 
-  if (payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION) {
+  const isCurrentSchema = payload.schemaVersion === STUDIOWIRE_SCHEMA_VERSION;
+  const isLegacySchema = LEGACY_SCHEMA_VERSIONS.includes(payload.schemaVersion as '0.1.0');
+
+  if (!isCurrentSchema && !isLegacySchema) {
     return {
       ok: false,
-      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION}.`,
+      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION} or legacy 0.1.0.`,
     };
   }
 
@@ -721,7 +732,7 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported JSON is missing settings.' };
   }
 
-  for (const field of REQUIRED_ARRAY_FIELDS) {
+  for (const field of isLegacySchema ? LEGACY_ARRAY_FIELDS : REQUIRED_ARRAY_FIELDS) {
     if (!Array.isArray(payload[field])) {
       return { ok: false, error: `Imported JSON field "${field}" must be an array.` };
     }
@@ -751,8 +762,10 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported settings must include cablePrefixes and rackDefaults.' };
   }
 
+  const normalizedProject = normalizeImportedProject(payload, isLegacySchema);
+
   for (const field of REQUIRED_ARRAY_FIELDS) {
-    const entries = payload[field];
+    const entries = normalizedProject[field];
 
     if (!Array.isArray(entries) || entries.some((item: unknown) => !isRecord(item))) {
       return { ok: false, error: `Imported JSON field "${field}" contains malformed entries.` };
@@ -761,7 +774,19 @@ export function parseImportedProject(payload: unknown):
 
   return {
     ok: true,
-    project: payload as unknown as ProjectRoot,
+    project: normalizedProject,
+  };
+}
+
+function normalizeImportedProject(payload: Record<string, unknown>, isLegacySchema: boolean): ProjectRoot {
+  return {
+    ...(payload as unknown as ProjectRoot),
+    schemaVersion: STUDIOWIRE_SCHEMA_VERSION,
+    terminalBlocks: isLegacySchema ? [] : ((payload.terminalBlocks as ProjectRoot['terminalBlocks']) ?? []),
+    terminalBlockPortGroups: isLegacySchema
+      ? []
+      : ((payload.terminalBlockPortGroups as ProjectRoot['terminalBlockPortGroups']) ?? []),
+    terminalBlockPorts: isLegacySchema ? [] : ((payload.terminalBlockPorts as ProjectRoot['terminalBlockPorts']) ?? []),
   };
 }
 
