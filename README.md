@@ -94,7 +94,7 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 
 ## Screenshots
 
-Screenshots are intentionally not committed yet. For review, run the dev server and capture:
+Screenshots are intentionally not committed yet. For review, run the dev server and capture: 
 
 - `docs/screenshots/app-shell.png`: main editor shell with project tree, workspace, inspector, and validation panel.
 - `docs/screenshots/add-device-modal.png`: Add Device modal showing port groups and cable numbering preview.
