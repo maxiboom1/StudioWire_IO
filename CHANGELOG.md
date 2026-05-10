@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.3.2
+
+Replaced the generated app logo with the provided StudioWire IO wordmark.
+
+### Changed
+
+- Added a cropped PNG version of the provided StudioWire IO logo for app use.
+- Updated the sidebar header to show the new wordmark cleanly and avoid duplicating the app name beside it.
+- Bumped the app version to `0.2.3.2`.
+
 ## v0.2.3.1
 
 Cleaned up the rack canvas into a minimal engineering elevation view.

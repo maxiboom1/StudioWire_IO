@@ -1,9 +1,0 @@
-<svg width="128" height="48" viewBox="0 0 128 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="StudioWire IO mark">
-  <rect x="2" y="5" width="124" height="38" rx="12" fill="#F36B55"/>
-  <path d="M2 17C2 10.373 7.373 5 14 5H54C64.493 5 72.887 13.676 72.541 24.163C72.208 34.246 63.941 42.25 53.853 42.25H14C7.373 42.25 2 36.877 2 30.25V17Z" fill="#0A0D0F"/>
-  <path d="M21 16H34M27.5 16V32M21 32H34" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M44 33L54 15" stroke="white" stroke-width="5" stroke-linecap="round"/>
-  <path d="M93 15H82C78.686 15 76 17.686 76 21V27C76 30.314 78.686 33 82 33H93" stroke="#0A0D0F" stroke-width="5" stroke-linecap="round"/>
-  <path d="M106 15H113C117.418 15 121 18.582 121 23V25C121 29.418 117.418 33 113 33H106V15Z" stroke="#0A0D0F" stroke-width="5" stroke-linejoin="round"/>
-  <circle cx="101" cy="24" r="2.75" fill="#0A0D0F"/>
-</svg>

@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Folder, HardDrive, MapPin, MoreHorizontal, Server } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
-import logoUrl from '../../assets/studiowire-logo.svg';
+import logoUrl from '../../assets/studiowire-logo.png';
 import type { Device, Location, Rack } from '../../domain/types';
 import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
@@ -47,7 +47,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.3.1';
+const APP_VERSION = '0.2.3.2';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -125,12 +125,9 @@ export function LeftTree({
             onClick={selectProject}
             type="button"
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <img alt="StudioWire IO logo" className="h-9 w-24 shrink-0 object-contain" src={logoUrl} />
-              <span className="grid min-w-0 gap-0.5">
-                <span className="truncate text-sm font-semibold text-studio-text">StudioWire IO</span>
-                <span className="truncate text-xs text-studio-muted">{project.project.name}</span>
-              </span>
+            <div className="grid min-w-0 gap-1">
+              <img alt="StudioWire IO logo" className="h-8 w-40 shrink-0 object-contain object-left" src={logoUrl} />
+              <span className="truncate text-xs text-studio-muted">{project.project.name}</span>
             </div>
           </button>
 
