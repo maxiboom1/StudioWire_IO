@@ -4,7 +4,6 @@ import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { isSelected, type SelectedObjectType, type SelectionState } from '../common/selection';
-import { Badge } from '../ui/badge';
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,7 +36,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.3.5';
+const APP_VERSION = '0.2.3.7';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -64,7 +63,6 @@ export function LeftTree({
       }),
     [project.devices, project.locations],
   );
-  const validationCount = project.validationIssues.length;
   const isNavigatorEmpty = project.locations.length === 0 && unassignedDevices.length === 0;
 
   function toggle(key: string) {
@@ -163,19 +161,8 @@ export function LeftTree({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <div className="grid gap-2 text-xs text-studio-muted">
-          <div className="flex items-center justify-between gap-3">
-            <span>App {APP_VERSION}</span>
-            <Badge className={validationCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-700'}>
-              {validationCount > 0 ? `${validationCount} issue(s)` : 'Valid'}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <span>Schema</span>
-            <span>{project.schemaVersion}</span>
-          </div>
-        </div>
+      <SidebarFooter className="app-sidebar-footer">
+        <p className="sidebar-version-line">App {APP_VERSION}, Schema {project.schemaVersion}</p>
       </SidebarFooter>
     </Sidebar>
   );

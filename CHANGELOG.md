@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.2.3.7
+
+Aligned the left footer version text with the validation footer.
+
+### Changed
+
+- Matched the app/schema footer typography to the validation secondary line.
+- Lowered the app/schema footer line so it aligns with the `No validation issues.` row.
+- Bumped the app version to `0.2.3.7`.
+
+## v0.2.3.6
+
+Normalized the footer layout and notification area.
+
+### Changed
+
+- Removed validation badges from the sidebar footer and right footer notification area.
+- Combined app and schema versions into one comma-separated sidebar footer line.
+- Kept validation summary in the center footer while reserving the right footer section for app-level status messages.
+- Bumped the app version to `0.2.3.6`.
+
 ## v0.2.3.5
 
 Adjusted the unified navbar logo placement.

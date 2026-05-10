@@ -203,6 +203,21 @@ textarea:not([data-ui]) {
   min-height: 0;
 }
 
+.app-sidebar-footer {
+  min-height: 48px;
+  padding: 25px 14px 7px;
+}
+
+.sidebar-version-line {
+  margin: 0;
+  overflow: hidden;
+  color: var(--studio-muted);
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .app-shell {
   min-height: 0;
   display: flex;
@@ -1079,14 +1094,26 @@ textarea:not([data-ui]) {
 
 .validation-panel {
   grid-area: validation;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: stretch;
+  min-height: 48px;
+  background: #fbfcfc;
+  border-top: 1px solid #d7e0e4;
+}
+
+.validation-panel-main,
+.validation-panel-right {
+  min-height: 48px;
+  padding: 7px 14px;
+}
+
+.validation-panel-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  min-height: 48px;
-  padding: 7px 14px;
-  background: #fbfcfc;
-  border-top: 1px solid #d7e0e4;
+  min-width: 0;
 }
 
 .validation-panel h2 {
@@ -1107,15 +1134,16 @@ textarea:not([data-ui]) {
 }
 
 .validation-panel-right {
-  display: grid;
-  justify-items: end;
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   min-width: 0;
+  border-left: 1px solid #d7e0e4;
 }
 
 .status-message {
   overflow: hidden;
-  max-width: 460px;
+  max-width: 100%;
   color: var(--studio-muted);
   font-size: 0.76rem;
   text-align: right;
@@ -1248,6 +1276,21 @@ textarea:not([data-ui]) {
       "validation";
   }
 
+  .validation-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .validation-panel-right {
+    justify-content: flex-start;
+    border-top: 1px solid #d7e0e4;
+    border-left: 0;
+  }
+
+  .status-message {
+    max-width: 100%;
+    text-align: left;
+  }
+
   .inspector {
     border-top: 1px solid #d7e0e4;
     border-left: 0;
@@ -1326,8 +1369,7 @@ textarea:not([data-ui]) {
     padding: 0;
   }
 
-  .workspace-heading,
-  .validation-panel {
+  .workspace-heading {
     align-items: flex-start;
     flex-direction: column;
   }

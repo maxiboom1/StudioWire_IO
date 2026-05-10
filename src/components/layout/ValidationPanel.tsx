@@ -1,6 +1,5 @@
 import type { ValidationIssue } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
 export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: ValidationIssue) => void }) {
@@ -14,23 +13,17 @@ export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: Vali
 
   return (
     <footer className="validation-panel" aria-label="Bottom validation panel">
-      <div>
-        <h2>Validation</h2>
-        <p>{issues.length === 0 ? 'No validation issues.' : `${issues.length} validation issue(s).`}</p>
-      </div>
-      <div className="validation-panel-right">
-        <p className="status-message" aria-live="polite">{statusMessage}</p>
-        <div className="issue-list">
-          {issues.length === 0 ? (
-            <Badge className="bg-emerald-50 text-emerald-700">No validation issues.</Badge>
-          ) : (
-            (['error', 'warning', 'info'] as const).map((severity) => (
+      <div className="validation-panel-main">
+        <div>
+          <h2>Validation</h2>
+          <p>{issues.length === 0 ? 'No validation issues.' : `${issues.length} validation issue(s).`}</p>
+        </div>
+        {issues.length > 0 ? (
+          <div className="issue-list">
+            {(['error', 'warning', 'info'] as const).map((severity) => (
               <section className="issue-group" key={severity}>
                 <h3>
-                  {severity}s{' '}
-                  <Badge className={getSeverityBadgeClass(severity)}>
-                    {groupedIssues[severity].length}
-                  </Badge>
+                  {severity}s <span>{groupedIssues[severity].length}</span>
                 </h3>
                 <div>
                   {groupedIssues[severity].map((issue) => (
@@ -47,24 +40,15 @@ export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: Vali
                   ))}
                 </div>
               </section>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="validation-panel-right">
+        <p className="status-message" aria-live="polite">{statusMessage}</p>
       </div>
     </footer>
   );
-}
-
-function getSeverityBadgeClass(severity: ValidationIssue['severity']) {
-  if (severity === 'error') {
-    return 'bg-red-50 text-red-700';
-  }
-
-  if (severity === 'warning') {
-    return 'bg-amber-50 text-amber-800';
-  }
-
-  return 'bg-blue-50 text-blue-700';
 }
 
 function getIssueButtonClass(severity: ValidationIssue['severity']) {
