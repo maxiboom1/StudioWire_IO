@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.3.5
+
+Added a read-only selected terminal block canvas.
+
+### Added
+
+- Added a rear/front TB canvas that renders one selected terminal block by position.
+- Added per-face cable occupancy display using active `tb_port` cable endpoints.
+- Added center TB address labels, subtle rear/front continuity alignment, cable numbers, opposite endpoint labels, empty states, and multi-cable warnings.
+
+### Changed
+
+- Replaced the v0.3.4 terminal block placeholder workspace with the read-only canvas.
+- Preserved project schema version, reducer behavior, cable numbering behavior, and import/export semantics.
+- Did not add crosspoint mutation, drag/drop, or rear/front cable continuity records.
+
 ## v0.3.4
 
 Added user-facing terminal block creation and selection UI.

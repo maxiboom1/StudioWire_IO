@@ -1,7 +1,8 @@
 import type { TerminalBlock } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import { WorkspaceCard, WorkspaceHeader } from '../common/WorkspaceBits';
+import { WorkspaceHeader } from '../common/WorkspaceBits';
 import { Badge } from '../ui/badge';
+import { TerminalBlockCanvas } from './canvas/TerminalBlockCanvas';
 
 export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: TerminalBlock }) {
   const { project } = useProject();
@@ -20,29 +21,23 @@ export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: Termi
         {location ? <Badge>Location: {location.name}</Badge> : <Badge>Unassigned</Badge>}
         <Badge>{terminalBlock.labelPrefix || terminalBlock.code || 'TB'}</Badge>
       </div>
-      <WorkspaceCard
-        title="Terminal Block Canvas Deferred"
-        description="v0.3.4 creates and selects terminal blocks. The rear/front canvas is planned for the next TB canvas step."
-      >
-        <dl>
+      <div className="tb-canvas-shell">
+        <div className="tb-canvas-title">
           <div>
-            <dt>Port groups</dt>
-            <dd>{portGroups.length}</dd>
+            <h2>Rear / Front Endpoint Canvas</h2>
+            <p>
+              Read-only view of physical TB face endpoints. Rear/front continuity is shown by alignment only and is not a cable.
+            </p>
           </div>
-          <div>
-            <dt>Rear ports</dt>
-            <dd>{rearCount}</dd>
+          <div className="tb-canvas-stats" aria-label="Terminal block port counts">
+            <span>{portGroups.length} group(s)</span>
+            <span>{rearCount} rear</span>
+            <span>{frontCount} front</span>
+            <span>{portGroups[0]?.plannedCableMode ?? 'none'}</span>
           </div>
-          <div>
-            <dt>Front ports</dt>
-            <dd>{frontCount}</dd>
-          </div>
-          <div>
-            <dt>Planned cable mode</dt>
-            <dd>{portGroups[0]?.plannedCableMode ?? 'none'}</dd>
-          </div>
-        </dl>
-      </WorkspaceCard>
+        </div>
+        <TerminalBlockCanvas project={project} terminalBlock={terminalBlock} ports={ports} />
+      </div>
     </section>
   );
 }

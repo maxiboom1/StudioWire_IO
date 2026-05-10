@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.3.4 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.3.5 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -112,6 +112,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.3.5`: Added a read-only selected terminal block canvas that renders rear/front face endpoints by position with center TB addresses, active cable numbers, opposite endpoint labels, empty states, and multi-cable warnings without adding crosspointing or endpoint mutation.
 - `v0.3.4`: Added user-facing terminal block creation and selection UI with navigator sections, an Add Terminal Block modal, generated rear/front TB ports, optional planned cable stubs, a placeholder workspace, and a basic inspector without adding the full TB canvas or crosspointing.
 - `v0.3.3`: Refactored the selected device canvas from boxed port rows to line-based cable stubs with endpoint handles, active cable lookup, opposite endpoint labels, empty cable states, and multi-cable warnings without changing project data.
 - `v0.3.2`: Added terminal block cable-domain helpers for rear/front port generation, planned TB cable stubs, endpoint display resolution, and active versus retired endpoint cable usage without adding TB UI or connection objects.
