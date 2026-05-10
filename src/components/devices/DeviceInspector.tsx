@@ -19,35 +19,39 @@ const NONE_VALUE = '__none__';
 
 export function DeviceInspector({ device }: { device: Device }) {
   const { project, updateDevice, retireDevice } = useProject();
-  const availableRacks = project.racks.filter((rack) => rack.locationId === device.locationId);
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
+  const assignedRack = device.rackId
+    ? project.racks.find((candidate) => candidate.id === device.rackId)
+    : null;
+  const placementLocation = assignedRack
+    ? project.locations.find((candidate) => candidate.id === assignedRack.locationId)
+    : project.locations.find((candidate) => candidate.id === device.locationId);
+  const canEditLocation = device.mountType !== 'rack';
+  const topRu =
+    device.rackBottomRu && device.rackSizeRu
+      ? device.rackBottomRu + device.rackSizeRu - 1
+      : null;
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const portCount = project.ports.filter((port) => port.deviceId === device.id).length;
   const [form, setForm] = useState({
     name: device.name,
-    code: device.code,
     manufacturer: device.manufacturer,
     model: device.model,
     role: device.role,
     notes: device.notes,
     locationId: device.locationId ?? '',
-    rackId: device.rackId ?? '',
     rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
-    rackBottomRu: device.rackBottomRu ? String(device.rackBottomRu) : '',
   });
 
   useEffect(() => {
     setForm({
       name: device.name,
-      code: device.code,
       manufacturer: device.manufacturer,
       model: device.model,
       role: device.role,
       notes: device.notes,
       locationId: device.locationId ?? '',
-      rackId: device.rackId ?? '',
       rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
-      rackBottomRu: device.rackBottomRu ? String(device.rackBottomRu) : '',
     });
   }, [device]);
 
@@ -55,15 +59,12 @@ export function DeviceInspector({ device }: { device: Device }) {
     event.preventDefault();
     updateDevice(device.id, {
       name: form.name,
-      code: form.code,
       manufacturer: form.manufacturer,
       model: form.model,
       role: form.role,
       notes: form.notes,
-      locationId: form.locationId || null,
-      rackId: form.rackId || null,
+      locationId: canEditLocation ? form.locationId || null : device.locationId,
       rackSizeRu: form.rackSizeRu ? Number(form.rackSizeRu) : null,
-      rackBottomRu: form.rackBottomRu ? Number(form.rackBottomRu) : null,
     });
   }
 
@@ -106,48 +107,31 @@ export function DeviceInspector({ device }: { device: Device }) {
               <Label htmlFor="inspector-device-role">Role</Label>
               <Input id="inspector-device-role" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })} />
             </div>
+            {canEditLocation ? (
+              <div className="form-field">
+                <Label htmlFor="inspector-device-location">Location</Label>
+                <Select
+                  value={form.locationId || NONE_VALUE}
+                  onValueChange={(value) =>
+                    setForm({ ...form, locationId: value === NONE_VALUE ? '' : value })
+                  }
+                >
+                  <SelectTrigger id="inspector-device-location">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>No location</SelectItem>
+                    {project.locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <div className="form-field">
-              <Label htmlFor="inspector-device-location">Location</Label>
-              <Select
-                value={form.locationId || NONE_VALUE}
-                onValueChange={(value) =>
-                  setForm({ ...form, locationId: value === NONE_VALUE ? '' : value, rackId: '' })
-                }
-              >
-                <SelectTrigger id="inspector-device-location">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>No location</SelectItem>
-                  {project.locations.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-rack">Rack assignment</Label>
-              <Select
-                value={form.rackId || NONE_VALUE}
-                onValueChange={(value) => setForm({ ...form, rackId: value === NONE_VALUE ? '' : value })}
-              >
-                <SelectTrigger id="inspector-device-rack">
-                  <SelectValue placeholder="Select rack" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>No rack</SelectItem>
-                  {availableRacks.map((rack) => (
-                    <SelectItem key={rack.id} value={rack.id}>
-                      {rack.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-rack-size">Rack size RU</Label>
+              <Label htmlFor="inspector-device-rack-size">Mount height (RU)</Label>
               <Input
                 id="inspector-device-rack-size"
                 min="1"
@@ -155,16 +139,7 @@ export function DeviceInspector({ device }: { device: Device }) {
                 value={form.rackSizeRu}
                 onChange={(event) => setForm({ ...form, rackSizeRu: event.target.value })}
               />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-rack-bottom">Rack bottom RU</Label>
-              <Input
-                id="inspector-device-rack-bottom"
-                min="1"
-                type="number"
-                value={form.rackBottomRu}
-                onChange={(event) => setForm({ ...form, rackBottomRu: event.target.value })}
-              />
+              <p className="form-help">Required before dragging this device onto a rack canvas.</p>
             </div>
             <div className="form-field">
               <Label htmlFor="inspector-device-notes">Notes</Label>
@@ -199,12 +174,37 @@ export function DeviceInspector({ device }: { device: Device }) {
               <dd>{device.mountType}</dd>
             </div>
             <div>
+              <dt>Location</dt>
+              <dd>{placementLocation?.name ?? 'Not assigned'}</dd>
+            </div>
+            <div>
+              <dt>Rack</dt>
+              <dd>{assignedRack?.name ?? 'Not assigned'}</dd>
+            </div>
+            <div>
+              <dt>Rack position</dt>
+              <dd>
+                {device.rackBottomRu && topRu
+                  ? `RU ${device.rackBottomRu}-${topRu}`
+                  : 'Not placed'}
+              </dd>
+            </div>
+            <div>
+              <dt>Mount height</dt>
+              <dd>{device.rackSizeRu ? `${device.rackSizeRu} RU` : 'Not set'}</dd>
+            </div>
+            <div>
               <dt>Port groups</dt>
               <dd>
                 {portGroups.length} group(s), {portCount} port(s)
               </dd>
             </div>
           </dl>
+          <p>
+            {device.mountType === 'rack'
+              ? 'Rack assignment and RU position are changed on the Rack Canvas.'
+              : 'Set a mount height, then drag this device from the navigator onto a rack canvas when it is ready to be mounted.'}
+          </p>
           <p>Port group cable allocation fields are locked in v0.1.</p>
         </CardContent>
       </Card>

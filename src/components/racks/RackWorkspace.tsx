@@ -242,7 +242,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
                   />
 
                   {rackDevices.length === 0 ? (
-                    <EmptyState title="Rack Is Empty">Assign rack-mounted devices from the device inspector.</EmptyState>
+                    <EmptyState title="Rack Is Empty">Drag eligible devices from the navigator onto empty rack space.</EmptyState>
                   ) : null}
                 </div>
               );
@@ -329,7 +329,8 @@ function RackElevationCanvas({
         <div>
           <CardTitle>{rack.name}</CardTitle>
           <p>
-            Full rack elevation, {rack.heightRu} RU capacity. This view is read-only in v0.2.2.6.
+            Full rack elevation, {rack.heightRu} RU capacity. Drag mounted devices to reposition them,
+            or drag eligible devices from the navigator onto empty rack space.
           </p>
         </div>
         <div className="rack-canvas-actions">
@@ -405,7 +406,7 @@ function RackElevationCanvas({
                 <strong>{device.name}</strong>
                 <span>
                   RU {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
-                  {device.rackSizeRu ? ` · ${device.rackSizeRu} RU` : ''}
+                  {device.rackSizeRu ? ` - ${device.rackSizeRu} RU` : ''}
                 </span>
                 {diagnostics.length > 0 ? <em>Placement issue</em> : null}
               </div>

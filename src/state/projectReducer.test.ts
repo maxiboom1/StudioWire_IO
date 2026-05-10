@@ -105,6 +105,82 @@ describe('projectReducer ADD_DEVICE safety', () => {
   });
 });
 
+describe('projectReducer UPDATE_DEVICE placement safety', () => {
+  it('ignores rackId and rackBottomRu fields from normal device updates', () => {
+    const state = createState();
+    const result = projectReducer(state, {
+      type: 'UPDATE_DEVICE',
+      payload: {
+        id: 'device-router-1',
+        updates: {
+          name: 'Router 1 Updated',
+          manufacturer: 'Updated Manufacturer',
+          model: 'Updated Model',
+          role: 'Updated Role',
+          notes: 'Updated notes',
+          locationId: 'location-machine-room',
+          rackSizeRu: 2,
+          rackId: null,
+          rackBottomRu: 1,
+        } as any,
+      },
+    });
+    const device = result.project.devices.find((candidate) => candidate.id === 'device-router-1');
+
+    expect(device).toMatchObject({
+      name: 'Router 1 Updated',
+      rackId: 'rack-mcr-a',
+      rackBottomRu: 20,
+    });
+  });
+
+  it('keeps a rack-mounted device location derived from the assigned rack', () => {
+    const state = createState();
+    const result = projectReducer(state, {
+      type: 'UPDATE_DEVICE',
+      payload: {
+        id: 'device-router-1',
+        updates: {
+          name: 'Router 1',
+          manufacturer: '',
+          model: '',
+          role: '',
+          notes: '',
+          locationId: 'location-control-room',
+          rackSizeRu: 2,
+        },
+      },
+    });
+    const device = result.project.devices.find((candidate) => candidate.id === 'device-router-1');
+
+    expect(device?.locationId).toBe('location-machine-room');
+  });
+
+  it('allows rackSizeRu to be updated as mount-height metadata', () => {
+    const state = createState();
+    const result = projectReducer(state, {
+      type: 'UPDATE_DEVICE',
+      payload: {
+        id: 'device-router-1',
+        updates: {
+          name: 'Router 1',
+          manufacturer: '',
+          model: '',
+          role: '',
+          notes: '',
+          locationId: 'location-control-room',
+          rackSizeRu: 4,
+        },
+      },
+    });
+    const device = result.project.devices.find((candidate) => candidate.id === 'device-router-1');
+
+    expect(device?.rackSizeRu).toBe(4);
+    expect(device?.rackId).toBe('rack-mcr-a');
+    expect(device?.rackBottomRu).toBe(20);
+  });
+});
+
 describe('projectReducer MOVE_MOUNTED_DEVICE', () => {
   it('assigns an eligible virtual device to a rack using existing placement fields', () => {
     const state = createState();

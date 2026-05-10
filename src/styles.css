@@ -683,6 +683,13 @@ textarea:not([data-ui]) {
   gap: 6px;
 }
 
+.form-help {
+  margin: 0;
+  color: #607177;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .editor-form label span {
   color: #607177;
   font-size: 0.75rem;

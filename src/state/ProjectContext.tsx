@@ -14,7 +14,6 @@ import type {
   CablePrefix,
   Category,
   ConnectorType,
-  Device,
   Location,
   ProjectInfo,
   ProjectRoot,
@@ -26,6 +25,7 @@ import {
   projectReducer,
   type DeviceDraft,
   type DevicePortGroupDraft,
+  type DeviceUpdate,
   type ProjectState,
 } from './projectReducer';
 
@@ -52,22 +52,7 @@ interface ProjectContextValue extends ProjectState {
   deleteRack: (id: string) => void;
   addDevice: (input: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] }) => string;
   moveMountedDevice: (input: { deviceId: string; targetRackId: string; targetBottomRu: number }) => void;
-  updateDevice: (
-    id: string,
-    updates: Pick<
-      Device,
-      | 'name'
-      | 'code'
-      | 'manufacturer'
-      | 'model'
-      | 'role'
-      | 'notes'
-      | 'locationId'
-      | 'rackId'
-      | 'rackSizeRu'
-      | 'rackBottomRu'
-    >,
-  ) => void;
+  updateDevice: (id: string, updates: DeviceUpdate) => void;
   retireDevice: (id: string) => void;
 }
 
@@ -247,27 +232,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
-  const updateDevice = useCallback(
-    (
-      id: string,
-      updates: Pick<
-        Device,
-        | 'name'
-        | 'code'
-        | 'manufacturer'
-        | 'model'
-        | 'role'
-        | 'notes'
-        | 'locationId'
-        | 'rackId'
-        | 'rackSizeRu'
-        | 'rackBottomRu'
-      >,
-    ) => {
-      dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } });
-    },
-    [],
-  );
+  const updateDevice = useCallback((id: string, updates: DeviceUpdate) => {
+    dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } });
+  }, []);
 
   const moveMountedDevice = useCallback(
     (input: { deviceId: string; targetRackId: string; targetBottomRu: number }) => {

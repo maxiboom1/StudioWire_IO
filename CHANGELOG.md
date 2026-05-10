@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.2.7
+
+Cleaned up rack placement ownership after the v0.2.2 rack-canvas milestone.
+
+### Changed
+
+- Removed manual rack assignment and bottom-RU editing from the device inspector so rack placement is controlled by the rack canvas drag/drop workflow.
+- Kept mount height editable as device metadata required before a device can be placed on a rack.
+- Hardened normal device updates so they preserve rack placement fields and keep rack-mounted device location derived from the assigned rack.
+- Replaced stale rack-canvas read-only copy with accurate drag/drop guidance.
+
 ## v0.2.2.6
 
 Improved rack placement validation feedback on the rack canvas and inspector.

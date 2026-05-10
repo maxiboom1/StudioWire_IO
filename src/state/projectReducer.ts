@@ -57,6 +57,11 @@ export interface DevicePortGroupDraft {
   createPlannedCables: boolean;
 }
 
+export type DeviceUpdate = Pick<
+  Device,
+  'name' | 'manufacturer' | 'model' | 'role' | 'notes' | 'locationId' | 'rackSizeRu'
+>;
+
 export type ProjectAction =
   | { type: 'NEW_PROJECT' }
   | { type: 'LOAD_SAMPLE_PROJECT' }
@@ -72,7 +77,7 @@ export type ProjectAction =
   | { type: 'ADD_RACK'; payload: Rack }
   | { type: 'UPDATE_RACK'; payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> } }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
-  | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: Pick<Device, 'name' | 'code' | 'manufacturer' | 'model' | 'role' | 'notes' | 'locationId' | 'rackId' | 'rackSizeRu' | 'rackBottomRu'> } }
+  | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
   | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
@@ -343,18 +348,31 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
         project: stampProject(
           {
             ...state.project,
-            devices: state.project.devices.map((device) =>
-              device.id === action.payload.id
-                ? {
-                    ...device,
-                    ...action.payload.updates,
-                    rackId: action.payload.updates.rackId ?? null,
-                    rackSizeRu: action.payload.updates.rackSizeRu ?? null,
-                    rackBottomRu: action.payload.updates.rackBottomRu ?? null,
-                    updatedAt: nowIso(),
-                  }
-                : device,
-            ),
+            devices: state.project.devices.map((device) => {
+              if (device.id !== action.payload.id) {
+                return device;
+              }
+
+              const assignedRack = device.rackId
+                ? state.project.racks.find((rack) => rack.id === device.rackId)
+                : null;
+              const locationId =
+                device.mountType === 'rack'
+                  ? assignedRack?.locationId ?? device.locationId
+                  : action.payload.updates.locationId;
+
+              return {
+                ...device,
+                name: action.payload.updates.name,
+                manufacturer: action.payload.updates.manufacturer,
+                model: action.payload.updates.model,
+                role: action.payload.updates.role,
+                notes: action.payload.updates.notes,
+                locationId,
+                rackSizeRu: action.payload.updates.rackSizeRu ?? null,
+                updatedAt: nowIso(),
+              };
+            }),
           },
           `Device updated: ${action.payload.id}`,
         ),
