@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.3.8
+
+Aligned the footer section heights.
+
+### Changed
+
+- Added a shared app footer height for the sidebar footer and main validation footer.
+- Kept the app/schema version text aligned to the validation secondary line within the equal-height footer.
+- Bumped the app version to `0.2.3.8`.
+
 ## v0.2.3.7
 
 Aligned the left footer version text with the validation footer.

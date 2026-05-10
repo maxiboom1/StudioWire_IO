@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  --app-footer-height: 52px;
   --app-topbar-height: 56px;
   --studio-bg: #f3f6f8;
   --studio-panel: #ffffff;
@@ -204,8 +205,11 @@ textarea:not([data-ui]) {
 }
 
 .app-sidebar-footer {
-  min-height: 48px;
-  padding: 25px 14px 7px;
+  display: flex;
+  align-items: flex-start;
+  height: var(--app-footer-height);
+  min-height: var(--app-footer-height);
+  padding: 29px 14px 0;
 }
 
 .sidebar-version-line {
@@ -253,7 +257,7 @@ textarea:not([data-ui]) {
   flex: 1 1 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) var(--app-footer-height);
   grid-template-areas:
     "workspace inspector"
     "validation validation";
@@ -1097,14 +1101,15 @@ textarea:not([data-ui]) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   align-items: stretch;
-  min-height: 48px;
+  height: var(--app-footer-height);
+  min-height: var(--app-footer-height);
   background: #fbfcfc;
   border-top: 1px solid #d7e0e4;
 }
 
 .validation-panel-main,
 .validation-panel-right {
-  min-height: 48px;
+  min-height: var(--app-footer-height);
   padding: 7px 14px;
 }
 
