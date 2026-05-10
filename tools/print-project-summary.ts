@@ -16,8 +16,11 @@ console.log(`Project: ${project.project.name}`);
 console.log(`Locations: ${project.locations.length}`);
 console.log(`Racks: ${project.racks.length}`);
 console.log(`Devices: ${project.devices.length}`);
+console.log(`Terminal blocks: ${project.terminalBlocks?.length ?? 0}`);
 console.log(`Port groups: ${project.portGroups.length}`);
+console.log(`Terminal block port groups: ${project.terminalBlockPortGroups?.length ?? 0}`);
 console.log(`Ports: ${project.ports.length}`);
+console.log(`Terminal block ports: ${project.terminalBlockPorts?.length ?? 0}`);
 console.log(`Planned cables: ${plannedCables.length}`);
 console.log('Cable prefixes:');
 

@@ -1,6 +1,15 @@
 import { parseCableNumber } from './cableNumbers';
 import { makeId } from './id';
-import type { Cable, Device, Port, ProjectRoot, ValidationIssue, ValidationSeverity } from './types';
+import type {
+  Cable,
+  Device,
+  Port,
+  ProjectRoot,
+  TerminalBlock,
+  TerminalBlockPort,
+  ValidationIssue,
+  ValidationSeverity,
+} from './types';
 
 export function validateProject(project: ProjectRoot): ValidationIssue[] {
   const builder = createIssueBuilder();
@@ -13,17 +22,55 @@ export function validateProject(project: ProjectRoot): ValidationIssue[] {
   const devices = new Map(project.devices.map((device) => [device.id, device]));
   const portGroups = new Map(project.portGroups.map((portGroup) => [portGroup.id, portGroup]));
   const ports = new Map(project.ports.map((port) => [port.id, port]));
+  const terminalBlocks = safeArray(project.terminalBlocks);
+  const terminalBlockPortGroups = safeArray(project.terminalBlockPortGroups);
+  const terminalBlockPorts = safeArray(project.terminalBlockPorts);
+  const terminalBlockPortsById = new Map(terminalBlockPorts.map((port) => [port.id, port]));
 
+  issues.push(...validateTopLevelArrays(project, builder));
   issues.push(...validateDuplicateIds(project, builder));
   issues.push(...validateSettings(project, builder));
-  issues.push(...validateCables(project, ports, builder));
+  issues.push(...validateCables(project, ports, terminalBlockPortsById, builder));
   issues.push(...validateReferences(project, categories, connectorTypes, cablePrefixes, builder));
   issues.push(...validateLocationsAndRacks(project, locations, builder));
   issues.push(...validateDevices(project, locations, racks, builder));
+  issues.push(
+    ...validateTerminalBlocks(
+      terminalBlocks,
+      terminalBlockPortGroups,
+      terminalBlockPorts,
+      locations,
+      racks,
+      builder,
+    ),
+  );
   issues.push(...validateRackOverlaps(project, builder));
   issues.push(...validatePortsAndGroups(project, devices, portGroups, builder));
   issues.push(...validateLedgerRanges(project, cablePrefixes, builder));
   issues.push(...validateReservedGapReuse(project, builder));
+
+  return issues;
+}
+
+function validateTopLevelArrays(
+  project: ProjectRoot,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+
+  for (const field of ['terminalBlocks', 'terminalBlockPortGroups', 'terminalBlockPorts'] as const) {
+    if (!Array.isArray(project[field])) {
+      issues.push(
+        issue(
+          'error',
+          'missing-terminal-block-array',
+          `Project must include top-level ${field} array after migration.`,
+          'project',
+          project.project.id,
+        ),
+      );
+    }
+  }
 
   return issues;
 }
@@ -134,8 +181,14 @@ function validateDuplicateIds(
     ...project.locations.map((item) => ({ objectType: 'location', objectId: item.id })),
     ...project.racks.map((item) => ({ objectType: 'rack', objectId: item.id })),
     ...project.devices.map((item) => ({ objectType: 'device', objectId: item.id })),
+    ...safeArray(project.terminalBlocks).map((item) => ({ objectType: 'terminalBlock', objectId: item.id })),
     ...project.portGroups.map((item) => ({ objectType: 'portGroup', objectId: item.id })),
+    ...safeArray(project.terminalBlockPortGroups).map((item) => ({
+      objectType: 'terminalBlockPortGroup',
+      objectId: item.id,
+    })),
     ...project.ports.map((item) => ({ objectType: 'port', objectId: item.id })),
+    ...safeArray(project.terminalBlockPorts).map((item) => ({ objectType: 'terminalBlockPort', objectId: item.id })),
     ...project.cables.map((item) => ({ objectType: 'cable', objectId: item.id })),
     ...project.numberingLedgers.flatMap((ledger) =>
       ledger.ranges.map((range) => ({ objectType: 'numberingRange', objectId: range.id })),
@@ -171,6 +224,7 @@ function validateDuplicateIds(
 function validateCables(
   project: ProjectRoot,
   ports: Map<string, Port>,
+  terminalBlockPorts: Map<string, TerminalBlockPort>,
   issue: ReturnType<typeof createIssueBuilder>,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -241,6 +295,18 @@ function validateCables(
             'error',
             'cable-linked-to-missing-port',
             `Cable ${cable.number} references missing port ${endpoint.id}.`,
+            'cable',
+            cable.id,
+          ),
+        );
+      }
+
+      if (endpoint.type === 'tb_port' && (!endpoint.id || !terminalBlockPorts.has(endpoint.id))) {
+        issues.push(
+          issue(
+            'error',
+            'cable-linked-to-missing-tb-port',
+            `Cable ${cable.number} references missing terminal block port ${endpoint.id ?? '(none)'}.`,
             'cable',
             cable.id,
           ),
@@ -423,6 +489,20 @@ function validateReferences(
     }
   }
 
+  for (const terminalBlock of safeArray(project.terminalBlocks)) {
+    if (!categories.has(terminalBlock.categoryId)) {
+      issues.push(
+        issue(
+          'error',
+          'unknown-category',
+          `Terminal block ${terminalBlock.name} uses unknown category.`,
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+    }
+  }
+
   for (const portGroup of project.portGroups) {
     if (!categories.has(portGroup.categoryId)) {
       issues.push(
@@ -461,6 +541,44 @@ function validateReferences(
     }
   }
 
+  for (const portGroup of safeArray(project.terminalBlockPortGroups)) {
+    if (!categories.has(portGroup.categoryId)) {
+      issues.push(
+        issue(
+          'error',
+          'unknown-category',
+          `Terminal block port group ${portGroup.name} uses unknown category.`,
+          'terminalBlockPortGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    if (!connectorTypes.has(portGroup.connectorTypeId)) {
+      issues.push(
+        issue(
+          'error',
+          'unknown-connector-type',
+          `Terminal block port group ${portGroup.name} uses unknown connector type.`,
+          'terminalBlockPortGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    if (!cablePrefixes.has(portGroup.cablePrefix)) {
+      issues.push(
+        issue(
+          'error',
+          'unknown-cable-prefix',
+          `Terminal block port group ${portGroup.name} uses unknown cable prefix ${portGroup.cablePrefix}.`,
+          'terminalBlockPortGroup',
+          portGroup.id,
+        ),
+      );
+    }
+  }
+
   for (const port of project.ports) {
     if (!categories.has(port.categoryId)) {
       issues.push(issue('error', 'unknown-category', `Port ${port.label} uses unknown category.`, 'port', port.id));
@@ -473,6 +591,32 @@ function validateReferences(
           'unknown-connector-type',
           `Port ${port.label} uses unknown connector type.`,
           'port',
+          port.id,
+        ),
+      );
+    }
+  }
+
+  for (const port of safeArray(project.terminalBlockPorts)) {
+    if (!categories.has(port.categoryId)) {
+      issues.push(
+        issue(
+          'error',
+          'unknown-category',
+          `Terminal block port ${port.label} uses unknown category.`,
+          'terminalBlockPort',
+          port.id,
+        ),
+      );
+    }
+
+    if (!connectorTypes.has(port.connectorTypeId)) {
+      issues.push(
+        issue(
+          'error',
+          'unknown-connector-type',
+          `Terminal block port ${port.label} uses unknown connector type.`,
+          'terminalBlockPort',
           port.id,
         ),
       );
@@ -502,6 +646,197 @@ function validateReferences(
           `Numbering ledger uses unknown cable prefix ${ledger.prefix}.`,
           'numberingLedger',
           ledger.prefix,
+        ),
+      );
+    }
+  }
+
+  return issues;
+}
+
+function validateTerminalBlocks(
+  terminalBlocks: TerminalBlock[],
+  terminalBlockPortGroups: ProjectRoot['terminalBlockPortGroups'],
+  terminalBlockPorts: TerminalBlockPort[],
+  locations: Set<string>,
+  racks: Map<string, ProjectRoot['racks'][number]>,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const terminalBlocksById = new Map(terminalBlocks.map((terminalBlock) => [terminalBlock.id, terminalBlock]));
+  const portGroupsById = new Map(terminalBlockPortGroups.map((portGroup) => [portGroup.id, portGroup]));
+  const facePositionCounts = countBy(
+    terminalBlockPorts,
+    (port) => `${port.terminalBlockId}:${port.face}:${port.positionIndex}`,
+  );
+
+  for (const terminalBlock of terminalBlocks) {
+    if (terminalBlock.mountType !== 'virtual' && (!terminalBlock.locationId || !locations.has(terminalBlock.locationId))) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-without-location',
+          'Terminal block must reference an existing location unless it is virtual.',
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+    }
+
+    const rack = terminalBlock.rackId ? racks.get(terminalBlock.rackId) : null;
+
+    if (terminalBlock.rackId && !rack) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-references-missing-rack',
+          `${terminalBlock.name} references missing rack ${terminalBlock.rackId}.`,
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+      continue;
+    }
+
+    if (terminalBlock.mountType !== 'rack') {
+      continue;
+    }
+
+    if (!rack) {
+      issues.push(
+        issue(
+          'error',
+          'rack-mounted-terminal-block-without-rack',
+          'Rack-mounted terminal block requires a rack.',
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+      continue;
+    }
+
+    if (terminalBlock.locationId && rack.locationId !== terminalBlock.locationId) {
+      issues.push(
+        issue(
+          'error',
+          'rack-location-terminal-block-location-mismatch',
+          `${terminalBlock.name} is assigned to a rack in a different location.`,
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+    }
+
+    if (!isPositiveInteger(terminalBlock.rackBottomRu)) {
+      issues.push(
+        issue(
+          'error',
+          'rack-mounted-terminal-block-invalid-bottom-ru',
+          'Rack-mounted terminal block requires a positive bottom RU.',
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+      continue;
+    }
+
+    if (!isPositiveInteger(terminalBlock.rackSizeRu)) {
+      issues.push(
+        issue(
+          'error',
+          'rack-mounted-terminal-block-invalid-size-ru',
+          'Rack-mounted terminal block requires a positive rack size.',
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+      continue;
+    }
+
+    if ((terminalBlock.rackBottomRu ?? 0) + (terminalBlock.rackSizeRu ?? 0) - 1 > rack.heightRu) {
+      issues.push(
+        issue(
+          'error',
+          'rack-mounted-terminal-block-exceeds-rack-height',
+          `${terminalBlock.name} exceeds rack height for ${rack.name}.`,
+          'terminalBlock',
+          terminalBlock.id,
+        ),
+      );
+    }
+  }
+
+  for (const portGroup of terminalBlockPortGroups) {
+    if (!terminalBlocksById.has(portGroup.terminalBlockId)) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-port-group-missing-terminal-block',
+          `Terminal block port group ${portGroup.name} references missing terminal block ${portGroup.terminalBlockId}.`,
+          'terminalBlockPortGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    if (!isPositiveInteger(portGroup.positionCount)) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-port-group-count-positive',
+          `Terminal block port group ${portGroup.name} positionCount must be positive.`,
+          'terminalBlockPortGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    if (!isPositiveInteger(portGroup.startPosition)) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-port-group-start-positive',
+          `Terminal block port group ${portGroup.name} startPosition must be positive.`,
+          'terminalBlockPortGroup',
+          portGroup.id,
+        ),
+      );
+    }
+  }
+
+  for (const port of terminalBlockPorts) {
+    if (!terminalBlocksById.has(port.terminalBlockId)) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-port-missing-terminal-block',
+          `Terminal block port ${port.label} references missing terminal block ${port.terminalBlockId}.`,
+          'terminalBlockPort',
+          port.id,
+        ),
+      );
+    }
+
+    if (!portGroupsById.has(port.portGroupId)) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-port-missing-port-group',
+          `Terminal block port ${port.label} references missing port group ${port.portGroupId}.`,
+          'terminalBlockPort',
+          port.id,
+        ),
+      );
+    }
+
+    if ((facePositionCounts.get(`${port.terminalBlockId}:${port.face}:${port.positionIndex}`) ?? 0) > 1) {
+      issues.push(
+        issue(
+          'error',
+          'duplicate-terminal-block-face-position',
+          `Terminal block ${port.terminalBlockId} has duplicate ${port.face} port at position ${port.positionIndex}.`,
+          'terminalBlockPort',
+          port.id,
         ),
       );
     }
@@ -1188,4 +1523,8 @@ function isPositiveInteger(value: unknown): value is number {
 
 function rangesOverlap(leftFrom: number, leftTo: number, rightFrom: number, rightTo: number): boolean {
   return leftFrom <= rightTo && rightFrom <= leftTo;
+}
+
+function safeArray<T>(value: T[] | undefined): T[] {
+  return Array.isArray(value) ? value : [];
 }

@@ -7,6 +7,9 @@ import {
   createPortGroup,
   createPortsForGroup,
   createRack,
+  createTerminalBlock,
+  createTerminalBlockPortGroup,
+  createTerminalBlockPortsForGroup,
 } from './projectFactory';
 import type { ProjectRoot } from './types';
 
@@ -44,6 +47,22 @@ const rackA = createRack({
   name: 'MCR Rack A',
   heightRu: 42,
   numberingDirection: 'bottom_to_top',
+});
+
+const bncTerminalBlock = createTerminalBlock({
+  id: 'terminal-block-mcr-bnc-1',
+  name: 'MCR BNC TB 1',
+  code: 'TB-BNC-1',
+  manufacturer: 'Example Panels',
+  model: 'BNC-16',
+  categoryId: 'category-video',
+  locationId: machineRoom.id,
+  role: 'Video terminal block',
+  labelPrefix: 'TB1',
+  mountType: 'non_rack',
+  status: 'planned',
+  createdAt: SAMPLE_TIMESTAMP,
+  updatedAt: SAMPLE_TIMESTAMP,
 });
 
 const router = createDevice({
@@ -115,8 +134,24 @@ const multiviewerInputs = createPortGroup({
   locked: false,
 });
 
+const bncTerminalBlockGroup = createTerminalBlockPortGroup({
+  id: 'tb-port-group-mcr-bnc-1',
+  terminalBlockId: bncTerminalBlock.id,
+  name: 'BNC Positions',
+  categoryId: 'category-video',
+  connectorTypeId: 'connector-bnc',
+  positionCount: 16,
+  startPosition: 1,
+  portLabelPattern: '{TB}-{FACE}-{00}',
+  cablePrefix: 'V',
+  plannedCableMode: 'none',
+  firstCableNumber: null,
+  lastCableNumber: null,
+});
+
 const routerPortsDraft = createPortsForGroup(routerOutputs, router.labelPrefix);
 const multiviewerPorts = createPortsForGroup(multiviewerInputs, multiviewer.labelPrefix);
+const bncTerminalBlockPorts = createTerminalBlockPortsForGroup(bncTerminalBlockGroup, bncTerminalBlock.labelPrefix);
 const { ports: routerPorts, cables: routerCables } = createLinkedPlannedCablesForPortGroup({
   portGroup: routerOutputs,
   ports: routerPortsDraft,
@@ -156,8 +191,11 @@ export const sampleProject: ProjectRoot = {
   locations: [controlRoom, machineRoom],
   racks: [rackA],
   devices: [router, multiviewer],
+  terminalBlocks: [bncTerminalBlock],
   portGroups: [routerOutputs, multiviewerInputs],
+  terminalBlockPortGroups: [bncTerminalBlockGroup],
   ports: [...routerPorts, ...multiviewerPorts],
+  terminalBlockPorts: bncTerminalBlockPorts,
   cables: routerCables,
   numberingLedgers: [videoLedger],
 };

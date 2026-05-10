@@ -1,9 +1,16 @@
 import { allocateCableRange } from '../domain/cableNumbers';
+import {
+  connectCableEndpoint,
+  disconnectCableEndpoint,
+  type ConnectCableEndpointInput,
+  type DisconnectCableEndpointInput,
+} from '../domain/crosspointing';
 import { makeId, makeIndexedId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
-import { createEmptyProject } from '../domain/projectFactory';
+import { createEmptyProject, createTerminalBlock, createTerminalBlockPortGroup } from '../domain/projectFactory';
 import { validateRackPlacement } from '../domain/rackPlacement';
 import { sampleProject } from '../domain/sampleProject';
+import { createTerminalBlockPortGroupCabling } from '../domain/terminalBlockCables';
 import { STUDIOWIRE_SCHEMA_VERSION } from '../domain/types';
 import { validateProject } from '../domain/validators';
 import type {
@@ -20,6 +27,8 @@ import type {
   ProjectInfo,
   ProjectRoot,
   Rack,
+  TerminalBlock,
+  TerminalBlockPlannedCableMode,
 } from '../domain/types';
 
 export interface ProjectState {
@@ -62,6 +71,30 @@ export type DeviceUpdate = Pick<
   'name' | 'manufacturer' | 'model' | 'role' | 'notes' | 'locationId' | 'rackSizeRu'
 >;
 
+export interface TerminalBlockDraft {
+  id?: string;
+  name: string;
+  code: string;
+  manufacturer: string;
+  model: string;
+  categoryId: string;
+  locationId: string | null;
+  role: string;
+  labelPrefix: string;
+  rackSizeRu: number | null;
+  notes: string;
+  connectorTypeId: string;
+  cablePrefix: string;
+  positionCount: number;
+  plannedCableMode: TerminalBlockPlannedCableMode;
+  firstCableNumber: number | null;
+}
+
+export type TerminalBlockUpdate = Pick<
+  TerminalBlock,
+  'name' | 'code' | 'manufacturer' | 'model' | 'role' | 'labelPrefix' | 'notes' | 'rackSizeRu'
+>;
+
 export type ProjectAction =
   | { type: 'NEW_PROJECT' }
   | { type: 'LOAD_SAMPLE_PROJECT' }
@@ -78,6 +111,10 @@ export type ProjectAction =
   | { type: 'UPDATE_RACK'; payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> } }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
+  | { type: 'ADD_TERMINAL_BLOCK'; payload: TerminalBlockDraft }
+  | { type: 'UPDATE_TERMINAL_BLOCK'; payload: { id: string; updates: TerminalBlockUpdate } }
+  | { type: 'CONNECT_CABLE_ENDPOINT'; payload: ConnectCableEndpointInput }
+  | { type: 'DISCONNECT_CABLE_ENDPOINT'; payload: DisconnectCableEndpointInput }
   | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
@@ -89,13 +126,21 @@ const REQUIRED_ARRAY_FIELDS = [
   'locations',
   'racks',
   'devices',
+  'terminalBlocks',
   'portGroups',
+  'terminalBlockPortGroups',
   'ports',
+  'terminalBlockPorts',
   'cables',
   'numberingLedgers',
   'validationIssues',
   'changeLog',
 ] as const;
+
+const LEGACY_SCHEMA_VERSIONS = ['0.1.0'] as const;
+const LEGACY_ARRAY_FIELDS = REQUIRED_ARRAY_FIELDS.filter(
+  (field) => !['terminalBlocks', 'terminalBlockPortGroups', 'terminalBlockPorts'].includes(field),
+);
 
 export function createInitialProjectState(): ProjectState {
   return {
@@ -343,6 +388,24 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     }
 
+    case 'ADD_TERMINAL_BLOCK': {
+      const result = createTerminalBlockInProject(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: result.error,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(result.project, `Terminal block created: ${action.payload.name}`),
+        statusMessage: 'Terminal block created',
+        importError: null,
+      };
+    }
+
     case 'UPDATE_DEVICE': {
       return {
         project: stampProject(
@@ -377,6 +440,71 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
           `Device updated: ${action.payload.id}`,
         ),
         statusMessage: 'Device updated',
+        importError: null,
+      };
+    }
+
+    case 'UPDATE_TERMINAL_BLOCK': {
+      return {
+        project: stampProject(
+          {
+            ...state.project,
+            terminalBlocks: state.project.terminalBlocks.map((terminalBlock) =>
+              terminalBlock.id === action.payload.id
+                ? {
+                    ...terminalBlock,
+                    name: action.payload.updates.name,
+                    code: action.payload.updates.code,
+                    manufacturer: action.payload.updates.manufacturer,
+                    model: action.payload.updates.model,
+                    role: action.payload.updates.role,
+                    labelPrefix: action.payload.updates.labelPrefix,
+                    notes: action.payload.updates.notes,
+                    rackSizeRu: action.payload.updates.rackSizeRu,
+                    updatedAt: nowIso(),
+                  }
+                : terminalBlock,
+            ),
+          },
+          `Terminal block updated: ${action.payload.id}`,
+        ),
+        statusMessage: 'Terminal block updated',
+        importError: null,
+      };
+    }
+
+    case 'CONNECT_CABLE_ENDPOINT': {
+      const result = connectCableEndpoint(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: `Connection blocked: ${result.message}`,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(result.project, result.message),
+        statusMessage: result.message,
+        importError: null,
+      };
+    }
+
+    case 'DISCONNECT_CABLE_ENDPOINT': {
+      const result = disconnectCableEndpoint(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: `Disconnect skipped: ${result.message}`,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(result.project, result.message),
+        statusMessage: result.message,
         importError: null,
       };
     }
@@ -661,6 +789,90 @@ function createDeviceInProject(
   };
 }
 
+function createTerminalBlockInProject(
+  project: ProjectRoot,
+  draft: TerminalBlockDraft,
+): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
+  const timestamp = nowIso();
+  const terminalBlockId = draft.id ?? makeId('terminal-block', `${draft.code || draft.name}-${timestamp}`);
+  const labelPrefix = draft.labelPrefix || draft.code || draft.name;
+  const terminalBlock = createTerminalBlock({
+    id: terminalBlockId,
+    name: draft.name,
+    code: draft.code,
+    manufacturer: draft.manufacturer,
+    model: draft.model,
+    categoryId: draft.categoryId,
+    locationId: draft.locationId,
+    role: draft.role,
+    labelPrefix,
+    mountType: draft.locationId ? 'non_rack' : 'virtual',
+    rackId: null,
+    rackSizeRu: draft.rackSizeRu,
+    rackBottomRu: null,
+    status: 'planned',
+    notes: draft.notes,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+  const portGroup = createTerminalBlockPortGroup({
+    id: makeId('tb-port-group', `${terminalBlockId}-positions`),
+    terminalBlockId,
+    name: 'Positions',
+    categoryId: draft.categoryId,
+    connectorTypeId: draft.connectorTypeId,
+    positionCount: draft.positionCount,
+    startPosition: 1,
+    portLabelPattern: '{TB}-{00} {FACE}',
+    cablePrefix: draft.cablePrefix,
+    plannedCableMode: draft.plannedCableMode,
+    firstCableNumber: draft.plannedCableMode === 'none' ? null : draft.firstCableNumber,
+    lastCableNumber: null,
+  });
+
+  if (draft.positionCount < 1 || !Number.isInteger(draft.positionCount)) {
+    return {
+      ok: false,
+      error: 'Terminal block creation blocked: position count must be a positive integer.',
+    };
+  }
+
+  if (draft.plannedCableMode !== 'none' && draft.firstCableNumber === null) {
+    return {
+      ok: false,
+      error: 'Terminal block creation blocked: first cable number is required for planned cable stubs.',
+    };
+  }
+
+  const seededProject: ProjectRoot = {
+    ...project,
+    terminalBlocks: [...project.terminalBlocks, terminalBlock],
+    terminalBlockPortGroups: [...project.terminalBlockPortGroups, portGroup],
+  };
+  const cabling = createTerminalBlockPortGroupCabling(
+    seededProject,
+    terminalBlock,
+    portGroup,
+    draft.firstCableNumber ?? undefined,
+  );
+
+  if (!cabling.ok) {
+    return {
+      ok: false,
+      error: `Terminal block creation blocked: ${cabling.errors.join(' ') || 'cable allocation failed.'}`,
+    };
+  }
+
+  return {
+    ok: true,
+    project: {
+      ...cabling.project,
+      terminalBlockPorts: mergeById(cabling.project.terminalBlockPorts, cabling.ports),
+      cables: mergeById(cabling.project.cables, cabling.cables),
+    },
+  };
+}
+
 function createPortsForDraft({
   device,
   portGroupId,
@@ -706,10 +918,13 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported JSON must be an object.' };
   }
 
-  if (payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION) {
+  const isCurrentSchema = payload.schemaVersion === STUDIOWIRE_SCHEMA_VERSION;
+  const isLegacySchema = LEGACY_SCHEMA_VERSIONS.includes(payload.schemaVersion as '0.1.0');
+
+  if (!isCurrentSchema && !isLegacySchema) {
     return {
       ok: false,
-      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION}.`,
+      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION} or legacy 0.1.0.`,
     };
   }
 
@@ -721,7 +936,7 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported JSON is missing settings.' };
   }
 
-  for (const field of REQUIRED_ARRAY_FIELDS) {
+  for (const field of isLegacySchema ? LEGACY_ARRAY_FIELDS : REQUIRED_ARRAY_FIELDS) {
     if (!Array.isArray(payload[field])) {
       return { ok: false, error: `Imported JSON field "${field}" must be an array.` };
     }
@@ -751,8 +966,10 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported settings must include cablePrefixes and rackDefaults.' };
   }
 
+  const normalizedProject = normalizeImportedProject(payload, isLegacySchema);
+
   for (const field of REQUIRED_ARRAY_FIELDS) {
-    const entries = payload[field];
+    const entries = normalizedProject[field];
 
     if (!Array.isArray(entries) || entries.some((item: unknown) => !isRecord(item))) {
       return { ok: false, error: `Imported JSON field "${field}" contains malformed entries.` };
@@ -761,7 +978,19 @@ export function parseImportedProject(payload: unknown):
 
   return {
     ok: true,
-    project: payload as unknown as ProjectRoot,
+    project: normalizedProject,
+  };
+}
+
+function normalizeImportedProject(payload: Record<string, unknown>, isLegacySchema: boolean): ProjectRoot {
+  return {
+    ...(payload as unknown as ProjectRoot),
+    schemaVersion: STUDIOWIRE_SCHEMA_VERSION,
+    terminalBlocks: isLegacySchema ? [] : ((payload.terminalBlocks as ProjectRoot['terminalBlocks']) ?? []),
+    terminalBlockPortGroups: isLegacySchema
+      ? []
+      : ((payload.terminalBlockPortGroups as ProjectRoot['terminalBlockPortGroups']) ?? []),
+    terminalBlockPorts: isLegacySchema ? [] : ((payload.terminalBlockPorts as ProjectRoot['terminalBlockPorts']) ?? []),
   };
 }
 
@@ -801,6 +1030,12 @@ function createChangeLogEntry(message: string, timestamp: string): ChangeLogEntr
     message,
     author: 'local',
   };
+}
+
+function mergeById<T extends { id: string }>(existing: T[], next: T[]): T[] {
+  const nextIds = new Set(next.map((item) => item.id));
+
+  return [...existing.filter((item) => !nextIds.has(item.id)), ...next];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

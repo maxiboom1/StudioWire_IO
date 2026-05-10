@@ -1,10 +1,13 @@
 import { ProjectProvider } from './state/ProjectContext';
+import { CanvasInteractionProvider } from './state/CanvasInteractionContext';
 import { StudioWireShell } from './components/layout/StudioWireShell';
 
 function App() {
   return (
     <ProjectProvider>
-      <StudioWireShell />
+      <CanvasInteractionProvider>
+        <StudioWireShell />
+      </CanvasInteractionProvider>
     </ProjectProvider>
   );
 }

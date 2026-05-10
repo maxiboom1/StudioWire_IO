@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, Folder, HardDrive, MapPin, MoreHorizontal, Server } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import logoUrl from '../../assets/studiowire-logo.svg';
-import type { Device, Location, Rack } from '../../domain/types';
+import type { Device, Location, Rack, TerminalBlock } from '../../domain/types';
 import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { isSelected, type SelectedObjectType, type SelectionState } from '../common/selection';
@@ -47,8 +47,9 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.2.7';
+const APP_VERSION = '0.3.7';
 const UNASSIGNED_KEY = 'unassigned-devices';
+const UNASSIGNED_TB_KEY = 'unassigned-terminal-blocks';
 
 export function LeftTree({
   selection,
@@ -56,12 +57,14 @@ export function LeftTree({
   onAddLocation,
   onAddRack,
   onAddDevice,
+  onAddTerminalBlock,
 }: {
   selection: SelectionState;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddLocation: () => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string | null) => void;
+  onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const {
     project,
@@ -80,8 +83,18 @@ export function LeftTree({
       }),
     [project.devices, project.locations],
   );
+  const unassignedTerminalBlocks = useMemo(
+    () =>
+      project.terminalBlocks.filter((terminalBlock) => {
+        const hasKnownLocation = project.locations.some((location) => location.id === terminalBlock.locationId);
+
+        return !terminalBlock.locationId || !hasKnownLocation;
+      }),
+    [project.terminalBlocks, project.locations],
+  );
   const validationCount = project.validationIssues.length;
-  const isNavigatorEmpty = project.locations.length === 0 && unassignedDevices.length === 0;
+  const isNavigatorEmpty =
+    project.locations.length === 0 && unassignedDevices.length === 0 && unassignedTerminalBlocks.length === 0;
 
   function toggle(key: string) {
     setCollapsedKeys((current) => {
@@ -173,6 +186,7 @@ export function LeftTree({
             actions={[
               { label: 'Add Location', onSelect: onAddLocation },
               { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+              { label: 'Add Unassigned Terminal Block', onSelect: () => onAddTerminalBlock(null) },
             ]}
           >
             <SidebarGroupLabel className="cursor-context-menu">Project navigator</SidebarGroupLabel>
@@ -185,6 +199,7 @@ export function LeftTree({
                     actions={[
                       { label: 'Add Location', onSelect: onAddLocation },
                       { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+                      { label: 'Add Unassigned Terminal Block', onSelect: () => onAddTerminalBlock(null) },
                     ]}
                   >
                     <button
@@ -208,10 +223,12 @@ export function LeftTree({
                       location={location}
                       onAddDevice={onAddDevice}
                       onAddRack={onAddRack}
+                      onAddTerminalBlock={onAddTerminalBlock}
                       onSelectObject={onSelectObject}
                       onToggle={toggle}
                       projectDevices={project.devices}
                       projectRacks={project.racks}
+                      projectTerminalBlocks={project.terminalBlocks}
                       selection={selection}
                     />
                   ))}
@@ -225,11 +242,21 @@ export function LeftTree({
                     onToggle={toggle}
                     selection={selection}
                   />
+                  <UnassignedTerminalBlocksBranch
+                    collapsedKeys={collapsedKeys}
+                    onAddLocation={onAddLocation}
+                    onAddTerminalBlock={onAddTerminalBlock}
+                    onSelectObject={onSelectObject}
+                    onToggle={toggle}
+                    selection={selection}
+                    terminalBlocks={unassignedTerminalBlocks}
+                  />
                   <SidebarMenuItem>
                     <ActionContextMenu
                       actions={[
                         { label: 'Add Location', onSelect: onAddLocation },
                         { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+                        { label: 'Add Unassigned Terminal Block', onSelect: () => onAddTerminalBlock(null) },
                       ]}
                     >
                       <div
@@ -270,30 +297,37 @@ function LocationBranch({
   location,
   projectRacks,
   projectDevices,
+  projectTerminalBlocks,
   selection,
   onSelectObject,
   onAddRack,
   onAddDevice,
+  onAddTerminalBlock,
   onToggle,
 }: {
   collapsedKeys: Set<string>;
   location: Location;
   projectRacks: Rack[];
   projectDevices: Device[];
+  projectTerminalBlocks: TerminalBlock[];
   selection: SelectionState;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string | null) => void;
+  onAddTerminalBlock: (locationId: string | null) => void;
   onToggle: (key: string) => void;
 }) {
   const locationKey = `location:${location.id}`;
   const racksKey = `location:${location.id}:racks`;
   const devicesKey = `location:${location.id}:devices`;
+  const terminalBlocksKey = `location:${location.id}:terminal-blocks`;
   const isLocationOpen = !collapsedKeys.has(locationKey);
   const isRacksOpen = !collapsedKeys.has(racksKey);
   const isDevicesOpen = !collapsedKeys.has(devicesKey);
+  const isTerminalBlocksOpen = !collapsedKeys.has(terminalBlocksKey);
   const racks = projectRacks.filter((rack) => rack.locationId === location.id);
   const devices = projectDevices.filter((device) => device.locationId === location.id);
+  const terminalBlocks = projectTerminalBlocks.filter((terminalBlock) => terminalBlock.locationId === location.id);
 
   return (
     <SidebarMenuItem>
@@ -302,6 +336,7 @@ function LocationBranch({
           actions={[
             { label: 'Add Rack', onSelect: () => onAddRack(location.id) },
             { label: 'Add Device', onSelect: () => onAddDevice(location.id) },
+            { label: 'Add Terminal Block', onSelect: () => onAddTerminalBlock(location.id) },
           ]}
         >
           <div className="flex items-center gap-1">
@@ -321,7 +356,7 @@ function LocationBranch({
             >
               <MapPin className="h-4 w-4 text-studio-muted" />
               <span className="min-w-0 flex-1 truncate">{location.name}</span>
-              <SidebarMenuBadge>{racks.length + devices.length}</SidebarMenuBadge>
+              <SidebarMenuBadge>{racks.length + devices.length + terminalBlocks.length}</SidebarMenuBadge>
             </SidebarMenuButton>
           </div>
         </ActionContextMenu>
@@ -365,6 +400,25 @@ function LocationBranch({
                   device={device}
                   key={device.id}
                   onSelect={() => onSelectObject('device', device.id)}
+                />
+              ))}
+            </FolderBranch>
+
+            <FolderBranch
+              actions={[{ label: 'Add Terminal Block', onSelect: () => onAddTerminalBlock(location.id) }]}
+              count={terminalBlocks.length}
+              emptyLabel="No terminal blocks"
+              icon={<Server className="h-3.5 w-3.5" />}
+              isOpen={isTerminalBlocksOpen}
+              label="Terminal Blocks"
+              onToggle={() => onToggle(terminalBlocksKey)}
+            >
+              {terminalBlocks.map((terminalBlock) => (
+                <TerminalBlockTreeItem
+                  active={isSelected(selection, 'terminalBlock', terminalBlock.id)}
+                  key={terminalBlock.id}
+                  onSelect={() => onSelectObject('terminalBlock', terminalBlock.id)}
+                  terminalBlock={terminalBlock}
                 />
               ))}
             </FolderBranch>
@@ -503,6 +557,76 @@ function UnassignedBranch({
   );
 }
 
+function UnassignedTerminalBlocksBranch({
+  collapsedKeys,
+  terminalBlocks,
+  selection,
+  onSelectObject,
+  onAddLocation,
+  onAddTerminalBlock,
+  onToggle,
+}: {
+  collapsedKeys: Set<string>;
+  terminalBlocks: TerminalBlock[];
+  selection: SelectionState;
+  onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
+  onAddLocation: () => void;
+  onAddTerminalBlock: (locationId: string | null) => void;
+  onToggle: (key: string) => void;
+}) {
+  const isOpen = !collapsedKeys.has(UNASSIGNED_TB_KEY);
+
+  return (
+    <SidebarMenuItem>
+      <Collapsible open={isOpen} onOpenChange={() => onToggle(UNASSIGNED_TB_KEY)}>
+        <ActionContextMenu
+          actions={[
+            { label: 'Add Location', onSelect: onAddLocation },
+            { label: 'Add Unassigned Terminal Block', onSelect: () => onAddTerminalBlock(null) },
+          ]}
+        >
+          <div className="flex items-center gap-1">
+            <CollapsibleTrigger asChild>
+              <button
+                aria-label={`${isOpen ? 'Collapse' : 'Expand'} Unassigned Terminal Blocks`}
+                className="grid h-8 w-6 shrink-0 place-items-center rounded-md text-studio-muted hover:bg-slate-100"
+                data-ui="unassigned-terminal-blocks-collapse-trigger"
+                type="button"
+              >
+                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+            </CollapsibleTrigger>
+            <SidebarMenuButton onClick={() => onToggle(UNASSIGNED_TB_KEY)}>
+              <Folder className="h-4 w-4 text-studio-muted" />
+              <span className="min-w-0 flex-1 truncate">Unassigned Terminal Blocks</span>
+              <SidebarMenuBadge>{terminalBlocks.length}</SidebarMenuBadge>
+            </SidebarMenuButton>
+          </div>
+        </ActionContextMenu>
+
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {terminalBlocks.length === 0 ? (
+              <SidebarMenuSubItem>
+                <div className="px-2 py-1 text-xs text-studio-muted">No unassigned terminal blocks</div>
+              </SidebarMenuSubItem>
+            ) : (
+              terminalBlocks.map((terminalBlock) => (
+                <TerminalBlockTreeItem
+                  active={isSelected(selection, 'terminalBlock', terminalBlock.id)}
+                  key={terminalBlock.id}
+                  onSelect={() => onSelectObject('terminalBlock', terminalBlock.id)}
+                  terminalBlock={terminalBlock}
+                />
+              ))
+            )}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  );
+}
+
 function DeviceTreeItem({
   active,
   device,
@@ -528,6 +652,27 @@ function DeviceTreeItem({
       >
         <span className="min-w-0 flex-1 truncate">{device.name}</span>
         <span className="text-[0.68rem] text-studio-muted">{device.labelPrefix || device.role || 'Device'}</span>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  );
+}
+
+function TerminalBlockTreeItem({
+  active,
+  terminalBlock,
+  onSelect,
+}: {
+  active: boolean;
+  terminalBlock: TerminalBlock;
+  onSelect: () => void;
+}) {
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton isActive={active} onClick={onSelect}>
+        <span className="min-w-0 flex-1 truncate">{terminalBlock.name}</span>
+        <span className="text-[0.68rem] text-studio-muted">
+          {terminalBlock.labelPrefix || terminalBlock.code || 'TB'}
+        </span>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );

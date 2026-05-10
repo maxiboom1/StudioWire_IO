@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.2.7 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.3.7 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -112,6 +112,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.3.7`: Added pointer-event canvas drag/drop endpoint crosspointing on device and terminal block canvases, including exact endpoint drops, object-body target picking, compatible target feedback, and reuse of the existing cable connect/merge/block reducer behavior without adding logical connection objects.
+- `v0.3.6`: Added the endpoint selection and cable merge foundation for segment-by-segment crosspointing, including compatibility checks, planned-stub merge/retire behavior, disconnect support, and a simple compatible target picker on device and terminal block canvases without adding logical connection objects.
+- `v0.3.5`: Added a read-only selected terminal block canvas that renders rear/front face endpoints by position with center TB addresses, active cable numbers, opposite endpoint labels, empty states, and multi-cable warnings without adding crosspointing or endpoint mutation.
+- `v0.3.4`: Added user-facing terminal block creation and selection UI with navigator sections, an Add Terminal Block modal, generated rear/front TB ports, optional planned cable stubs, a placeholder workspace, and a basic inspector without adding the full TB canvas or crosspointing.
+- `v0.3.3`: Refactored the selected device canvas from boxed port rows to line-based cable stubs with endpoint handles, active cable lookup, opposite endpoint labels, empty cable states, and multi-cable warnings without changing project data.
+- `v0.3.2`: Added terminal block cable-domain helpers for rear/front port generation, planned TB cable stubs, endpoint display resolution, and active versus retired endpoint cable usage without adding TB UI or connection objects.
+- `v0.3.1`: Added the terminal block data-model foundation with schema version `0.2.0`, legacy `0.1.0` import normalization, sample TB data, and validators for TB references and TB-port cable endpoints.
 - `v0.2.2.7`: Removed manual rack assignment from the device inspector, kept mount height editable for rack canvas drops, and replaced stale rack read-only copy with current drag/drop guidance.
 - `v0.2.2.6`: Added rack placement diagnostics on the rack canvas and inspector so invalid mounted-device data is visible without changing project JSON.
 - `v0.2.2.5`: Added tree-to-rack drag assignment for eligible existing devices, including unassigned devices, while preserving rack placement validation and existing project fields.

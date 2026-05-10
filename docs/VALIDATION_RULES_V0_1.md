@@ -5,6 +5,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 ## Implemented Rules
 
 - `duplicate-object-id`: object IDs must not collide across project data objects.
+- `missing-terminal-block-array`: migrated projects must include terminal block top-level arrays.
 - `duplicate-cable-number`: cable numbers must be unique per project.
 - `planned-cable-duplicate`: planned cables must not duplicate another planned cable number.
 - `cable-number-format-invalid`: cable numbers must match `PREFIX-0001` style formatting.
@@ -16,9 +17,9 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `empty-category-name`: category names are required.
 - `duplicate-connector-type-name`: connector type names must be unique.
 - `empty-connector-type-name`: connector type names are required.
-- `unknown-category`: device, port group, and port category references must exist in settings.
-- `unknown-connector-type`: port group and port connector type references must exist in settings.
-- `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
+- `unknown-category`: device, terminal block, port group, terminal block port group, port, and terminal block port category references must exist in settings.
+- `unknown-connector-type`: port group, terminal block port group, port, and terminal block port connector type references must exist in settings.
+- `unknown-cable-prefix`: port group, terminal block port group, cable, and numbering ledger prefixes must exist in settings.
 - `duplicate-location-name`: duplicate location names are reported as warnings.
 - `rack-without-location`: rack `locationId` must reference an existing location.
 - `rack-height-positive`: rack height must be a positive integer.
@@ -32,6 +33,19 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `rack-mounted-device-invalid-size-ru`: rack-mounted devices require a positive rack size.
 - `rack-mounted-device-exceeds-rack-height`: rack-mounted devices must fit within rack height.
 - `rack-ru-overlap`: rack-mounted devices in the same rack must not overlap rack units.
+- `terminal-block-without-location`: non-virtual terminal blocks must reference an existing location.
+- `terminal-block-references-missing-rack`: terminal block rack references must resolve to an existing rack.
+- `rack-mounted-terminal-block-without-rack`: rack-mounted terminal blocks must reference a rack.
+- `rack-location-terminal-block-location-mismatch`: rack-mounted terminal blocks must be in the same location as their rack.
+- `rack-mounted-terminal-block-invalid-bottom-ru`: rack-mounted terminal blocks require a positive bottom RU.
+- `rack-mounted-terminal-block-invalid-size-ru`: rack-mounted terminal blocks require a positive rack size.
+- `rack-mounted-terminal-block-exceeds-rack-height`: rack-mounted terminal blocks must fit within rack height.
+- `terminal-block-port-group-missing-terminal-block`: terminal block port groups must reference an existing terminal block.
+- `terminal-block-port-group-count-positive`: terminal block port group position counts must be positive.
+- `terminal-block-port-group-start-positive`: terminal block port group start positions must be positive.
+- `terminal-block-port-missing-terminal-block`: terminal block ports must reference an existing terminal block.
+- `terminal-block-port-missing-port-group`: terminal block ports must reference an existing terminal block port group.
+- `duplicate-terminal-block-face-position`: each terminal block may have only one port per face and position index.
 - `port-group-count-mismatch`: generated ports must match `PortGroup.count`.
 - `port-group-count-positive`: port group count must be positive.
 - `port-without-parent-device`: each port must reference an existing parent device.
@@ -48,6 +62,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `port-group-no-planned-cables-port-linked`: ports in no-planned-cables groups must not have `plannedCableId`.
 - `port-group-no-planned-cables-cable-reference`: planned cables must not reference ports from no-planned-cables groups.
 - `cable-linked-to-missing-port`: device-port cable endpoints and port planned cable links must resolve.
+- `cable-linked-to-missing-tb-port`: terminal-block-port cable endpoints must resolve.
 - `planned-cable-port-backlink-mismatch`: planned cables with device-port endpoints must have a matching `Port.plannedCableId`.
 - `planned-cable-missing-port-endpoint`: a port's planned cable must reference that port as source or destination.
 - `planned-output-cable-source-mismatch`: output planned cables must use the output port as source.
