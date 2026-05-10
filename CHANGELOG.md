@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.3.3
+
+Refactored the selected device canvas from boxed port rows to line-based cable stubs.
+
+### Added
+
+- Added small device-canvas primitives for cable stub lines, endpoint handles, and side-based port columns.
+- Added active cable lookup by `device_port` endpoint reference so the canvas can show cables connected through either cable endpoint.
+- Added opposite endpoint labels for active cable rows and a clear empty line state for unplanned ports.
+- Added a warning/stacked state when multiple active cables reference the same device port.
+
+### Changed
+
+- Moved the selected device canvas toward engineering-style horizontal cable lines while preserving the central device body.
+- Kept project schema version unchanged and did not mutate cable endpoints, retire cables, merge cables, add crosspointing, or add terminal block UI.
+
 ## v0.3.2
 
 Added the terminal block cable-domain foundation before terminal block UI work.
