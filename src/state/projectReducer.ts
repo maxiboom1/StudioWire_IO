@@ -1,5 +1,5 @@
 import { allocateCableRange } from '../domain/cableNumbers';
-import { connectPorts } from '../domain/connections';
+import { connectPorts, disconnectPort } from '../domain/connections';
 import { makeId, makeIndexedId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject } from '../domain/projectFactory';
@@ -101,6 +101,7 @@ export type ProjectAction =
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'ADD_TERMINAL_BLOCK'; payload: { terminalBlock: TerminalBlockDraft } }
   | { type: 'CONNECT_PORTS'; payload: { fromPortId: string; toPortId: string } }
+  | { type: 'DISCONNECT_PORT'; payload: { portId: string } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
   | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
@@ -387,6 +388,25 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
 
     case 'CONNECT_PORTS': {
       const result = connectPorts(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: result.error,
+          importError: null,
+        };
+      }
+
+      return {
+        ...state,
+        project: stampProject(result.project, result.message),
+        statusMessage: result.message,
+        importError: null,
+      };
+    }
+
+    case 'DISCONNECT_PORT': {
+      const result = disconnectPort(state.project, action.payload);
 
       if (!result.ok) {
         return {

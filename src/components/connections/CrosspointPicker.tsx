@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getConnectionTargetStatus } from '../../domain/connections';
+import { describePortConnection, getConnectionTargetStatus } from '../../domain/connections';
 import type { Device, Location, Port, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import {
@@ -26,7 +26,7 @@ interface PortCandidate {
 }
 
 export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPickerProps) {
-  const { project, connectPorts } = useProject();
+  const { project, connectPorts, disconnectPort } = useProject();
   const [search, setSearch] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
   const [expandedDevices, setExpandedDevices] = useState<Set<string>>(new Set());
@@ -43,6 +43,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
   }, [candidates, search]);
   const groupedCandidates = useMemo(() => groupCandidates(visibleCandidates), [visibleCandidates]);
   const isSearching = search.trim().length > 0;
+  const originConnection = useMemo(() => describePortConnection(project, portId), [project, portId]);
 
   function toggleLocation(key: string) {
     setExpandedLocations((current) => toggleSetValue(current, key));
@@ -71,6 +72,20 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
           />
         </div>
         <DropdownMenuSeparator />
+        {originConnection.isConnected ? (
+          <>
+            <DropdownMenuItem
+              className="crosspoint-clear-item"
+              onSelect={() => {
+                disconnectPort({ portId });
+              }}
+            >
+              <span>Clear connection</span>
+              {originConnection.cable ? <small>{originConnection.cable.number}</small> : null}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        ) : null}
         <div className="crosspoint-candidates">
           {groupedCandidates.length === 0 ? (
             <div className="crosspoint-empty">No matching ports.</div>
@@ -83,7 +98,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
                   onClick={() => toggleLocation(locationGroup.key)}
                 >
                   <span className={isExpanded(expandedLocations, locationGroup.key, isSearching) ? 'expanded' : ''}>
-                    ▸
+                    {'>'}
                   </span>
                   <strong>{locationGroup.name}</strong>
                   <small>{countPorts(locationGroup.devices)}</small>
@@ -99,7 +114,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
                           <span
                             className={isExpanded(expandedDevices, deviceGroup.device.id, isSearching) ? 'expanded' : ''}
                           >
-                            ▸
+                            {'>'}
                           </span>
                           <strong>
                             {deviceGroup.device.kind === 'terminal_block' ? 'TB' : 'Device'}: {deviceGroup.device.name}

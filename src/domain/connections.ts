@@ -11,6 +11,10 @@ export interface ConnectPortsInput {
   toPortId: string;
 }
 
+export interface DisconnectPortInput {
+  portId: string;
+}
+
 export interface PortConnectionSummary {
   cable: Cable | null;
   isConnected: boolean;
@@ -116,6 +120,65 @@ export function connectPorts(
     ok: true,
     project: nextProject,
     message: `${winner.number} connected ${fromPort.label} to ${toPort.label}`,
+  };
+}
+
+export function disconnectPort(
+  project: ProjectRoot,
+  input: DisconnectPortInput,
+): { ok: true; project: ProjectRoot; message: string } | { ok: false; error: string } {
+  const originPort = project.ports.find((port) => port.id === input.portId);
+
+  if (!originPort) {
+    return { ok: false, error: 'Disconnect blocked: selected port no longer exists.' };
+  }
+
+  const activeCables = project.cables.filter(
+    (cable) => cable.status === 'connected' && cableReferencesPort(cable, originPort.id),
+  );
+
+  if (activeCables.length === 0) {
+    return { ok: false, error: 'No active connection to clear.' };
+  }
+
+  const nextProject = structuredClone(project);
+  const portsById = new Map(nextProject.ports.map((port) => [port.id, port]));
+  const cablesById = new Map(nextProject.cables.map((cable) => [cable.id, cable]));
+  const affectedPortIds = new Set<string>();
+
+  for (const cable of activeCables) {
+    const nextCable = cablesById.get(cable.id);
+
+    if (!nextCable) {
+      continue;
+    }
+
+    for (const portId of getCablePortIds(nextCable)) {
+      affectedPortIds.add(portId);
+    }
+
+    const ownerPort = nextProject.ports.find((port) => port.plannedCableId === nextCable.id) ?? null;
+
+    if (ownerPort) {
+      resetCableToPortSlot(nextCable, ownerPort, 'planned');
+    } else {
+      resetCableToUnknownSlot(nextCable, 'planned');
+    }
+  }
+
+  for (const portId of affectedPortIds) {
+    const port = portsById.get(portId);
+    const cable = port?.plannedCableId ? cablesById.get(port.plannedCableId) : null;
+
+    if (port && cable) {
+      resetCableToPortSlot(cable, port, 'planned');
+    }
+  }
+
+  return {
+    ok: true,
+    project: nextProject,
+    message: `Connection cleared for ${originPort.label}`,
   };
 }
 
@@ -275,6 +338,15 @@ function resetCableToPortSlot(cable: Cable, port: Port, status: Cable['status'])
   cable.labelTop = isInput ? '' : port.label;
   cable.labelMiddle = cable.number;
   cable.labelBottom = isInput ? port.label : '';
+}
+
+function resetCableToUnknownSlot(cable: Cable, status: Cable['status']) {
+  cable.status = status;
+  cable.sideAEndpoint = UNKNOWN_ENDPOINT;
+  cable.sideBEndpoint = UNKNOWN_ENDPOINT;
+  cable.labelTop = '';
+  cable.labelMiddle = cable.number;
+  cable.labelBottom = '';
 }
 
 function compareCableNumbers(left: Cable, right: Cable): number {

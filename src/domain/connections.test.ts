@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { connectPorts, describePortConnection } from './connections';
+import { connectPorts, describePortConnection, disconnectPort } from './connections';
 import { sampleProject } from './sampleProject';
 import { validateProject } from './validators';
 import { projectReducer, type ProjectState } from '../state/projectReducer';
@@ -249,6 +249,36 @@ describe('connectPorts', () => {
     expect(getCableByNumber(secondResult.project, 'V-0001').status).toBe('planned');
     expect(getCableByNumber(secondResult.project, 'V-0009').status).toBe('connected');
     expect(getCableByNumber(secondResult.project, 'V-0010').status).toBe('retired');
+  });
+
+  it('clears a connection and restores both planned cable slots', () => {
+    let project = structuredClone(sampleProject);
+    project = addDevicePort(project, {
+      id: 'device-switcher',
+      labelPrefix: 'SW',
+      direction: 'input',
+      firstCableNumber: 9,
+    });
+    const routerOut = getPort(project, 'device-router-1', 'output');
+    const switcherIn = getPort(project, 'device-switcher', 'input');
+    const connectResult = connectPorts(project, { fromPortId: routerOut.id, toPortId: switcherIn.id });
+
+    expect(connectResult.ok).toBe(true);
+    if (!connectResult.ok) {
+      return;
+    }
+
+    const disconnectResult = disconnectPort(connectResult.project, { portId: routerOut.id });
+
+    expect(disconnectResult.ok).toBe(true);
+    if (!disconnectResult.ok) {
+      return;
+    }
+
+    expect(getCableByNumber(disconnectResult.project, 'V-0001').status).toBe('planned');
+    expect(getCableByNumber(disconnectResult.project, 'V-0009').status).toBe('planned');
+    expect(describePortConnection(disconnectResult.project, routerOut.id).isConnected).toBe(false);
+    expect(describePortConnection(disconnectResult.project, switcherIn.id).isConnected).toBe(false);
   });
 
   it('blocks a pair with no planned cable slot on either side', () => {

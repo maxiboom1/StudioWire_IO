@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.5.2 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.5.3 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -77,6 +77,7 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
 - Crosspoint creation from Device and TB views, including direct device links, device/TB segments, and TB front-to-front patches.
+- Crosspoint disconnect from the shared picker, restoring affected cable slots to planned state.
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
@@ -112,6 +113,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.5.3`: Refined inline TB marker geometry, added shared-picker clear/disconnect that restores affected cable slots to planned, and reduced remote endpoint label weight.
 - `v0.2.5.2`: Polished crosspoint drawing affordances with cable-end pickers, valid-target collapsible picker trees, inline terminal-block cable markers, and TB pickers outside the panel border.
 - `v0.2.5.1`: Added connection logic and crosspoint UI for direct device links, device/TB links, TB front-to-front patching, lower-number-wins cable selection, connection replacement, and inline chain drawing.
 - `v0.2.4.3`: Replaced the Cables placeholder with a shadcn-based project cable register, including endpoint-derived side labels, locations, connectors, statuses, and Excel-style multi-select column filters.

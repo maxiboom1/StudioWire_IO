@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.5.3
+
+Polished crosspoint drawing and added disconnect.
+
+### Changed
+
+- Reworked the inline TB marker chevron so it reads as an arrow-like cable element instead of an accidental stroke.
+- Added `Clear connection` to the shared crosspoint picker for connected ports.
+- Restored affected disconnected cable slots to `planned` instead of retiring them.
+- Reduced remote endpoint label size and weight on device cable rows.
+- Kept project schema version `0.2.5.1` and bumped the app version to `0.2.5.3`.
+
 ## v0.2.5.2
 
 Polished the crosspoint drawing and picker affordances.
