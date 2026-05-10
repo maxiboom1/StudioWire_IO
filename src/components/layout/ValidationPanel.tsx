@@ -4,7 +4,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
 export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: ValidationIssue) => void }) {
-  const { project } = useProject();
+  const { project, statusMessage } = useProject();
   const issues = project.validationIssues;
   const groupedIssues = {
     error: issues.filter((issue) => issue.severity === 'error'),
@@ -18,35 +18,38 @@ export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: Vali
         <h2>Validation</h2>
         <p>{issues.length === 0 ? 'No validation issues.' : `${issues.length} validation issue(s).`}</p>
       </div>
-      <div className="issue-list">
-        {issues.length === 0 ? (
-          <Badge className="bg-emerald-50 text-emerald-700">No validation issues.</Badge>
-        ) : (
-          (['error', 'warning', 'info'] as const).map((severity) => (
-            <section className="issue-group" key={severity}>
-              <h3>
-                {severity}s{' '}
-                <Badge className={getSeverityBadgeClass(severity)}>
-                  {groupedIssues[severity].length}
-                </Badge>
-              </h3>
-              <div>
-                {groupedIssues[severity].map((issue) => (
-                  <Button
-                    className={getIssueButtonClass(issue.severity)}
-                    key={issue.id}
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onSelectIssue(issue)}
-                    type="button"
-                  >
-                    {issue.code}
-                  </Button>
-                ))}
-              </div>
-            </section>
-          ))
-        )}
+      <div className="validation-panel-right">
+        <p className="status-message" aria-live="polite">{statusMessage}</p>
+        <div className="issue-list">
+          {issues.length === 0 ? (
+            <Badge className="bg-emerald-50 text-emerald-700">No validation issues.</Badge>
+          ) : (
+            (['error', 'warning', 'info'] as const).map((severity) => (
+              <section className="issue-group" key={severity}>
+                <h3>
+                  {severity}s{' '}
+                  <Badge className={getSeverityBadgeClass(severity)}>
+                    {groupedIssues[severity].length}
+                  </Badge>
+                </h3>
+                <div>
+                  {groupedIssues[severity].map((issue) => (
+                    <Button
+                      className={getIssueButtonClass(issue.severity)}
+                      key={issue.id}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onSelectIssue(issue)}
+                      type="button"
+                    >
+                      {issue.code}
+                    </Button>
+                  ))}
+                </div>
+              </section>
+            ))
+          )}
+        </div>
       </div>
     </footer>
   );

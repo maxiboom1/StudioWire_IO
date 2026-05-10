@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.2.3.5
+
+Adjusted the unified navbar logo placement.
+
+### Changed
+
+- Moved the StudioWire logo into the right navbar section above the inspector column.
+- Left only the project name and project gear actions in the left navbar section.
+- Bumped the app version to `0.2.3.5`.
+
+## v0.2.3.4
+
+Normalized the app navbar and added a placeholder Cables section.
+
+### Changed
+
+- Replaced the split sidebar header and workspace top bar with one unified app header.
+- Moved project actions to a canonical gear menu beside the logo and project name.
+- Added top-level `Workspace` and `Cables` navigation, with `Cables` showing an empty placeholder canvas for the future prewire table.
+- Moved transient project status messages from the top bar to the bottom validation footer.
+- Preserved project schema version, reducer behavior, validation behavior, import/export behavior, and connection-model boundaries.
+- Bumped the app version to `0.2.3.4`.
+
 ## v0.2.3.3
 
 Rebuilt the device workspace as a canvas-first technical drawing.

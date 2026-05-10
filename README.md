@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.3.3 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.3.5 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -112,6 +112,8 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.3.5`: Moved the StudioWire logo to the right inspector-aligned navbar section and left the project name plus gear actions in the left navbar section.
+- `v0.2.3.4`: Normalized the app header into a unified navbar, moved project actions to a gear menu, added a top-level Cables placeholder view, and moved status messages to the bottom footer.
 - `v0.2.3.3`: Rebuilt the device workspace as a canvas-first technical drawing with line-based cable rows, internal device labels, cable numbers, and port nodes while preserving project data behavior.
 - `v0.2.3.2`: Replaced the generated SVG app logo with the provided cropped StudioWire IO PNG wordmark and adjusted the sidebar header to display it cleanly.
 - `v0.2.3.1`: Cleaned up the rack canvas into a minimal canvas-first view with working in-canvas zoom controls, horizontal multi-rack layout, full-width device blocks, numeric RU cells, and reduced rack chrome.

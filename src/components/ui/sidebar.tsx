@@ -50,7 +50,7 @@ const SidebarProvider = React.forwardRef<
         className={cn('group/sidebar-wrapper flex min-h-svh w-full bg-studio-bg text-studio-text', className)}
         style={
           {
-            '--sidebar-width': '17rem',
+            '--sidebar-width': '18.5rem',
             ...style,
           } as React.CSSProperties
         }

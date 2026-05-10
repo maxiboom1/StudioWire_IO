@@ -1,19 +1,132 @@
-import { useProject } from '../../state/ProjectContext';
+import { Settings } from 'lucide-react';
+import logoUrl from '../../assets/studiowire-logo.png';
+import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
-export function TopBar() {
-  const { project, statusMessage } = useProject();
+export type AppView = 'workspace' | 'cables';
+
+export function TopBar({
+  activeView,
+  onSelectProject,
+  onSelectSettings,
+  onViewChange,
+}: {
+  activeView: AppView;
+  onSelectProject: () => void;
+  onSelectSettings: () => void;
+  onViewChange: (view: AppView) => void;
+}) {
+  const {
+    project,
+    createNewProject,
+    loadSampleProject,
+    exportProjectJson,
+    validateProject,
+  } = useProject();
+
+  function showWorkspace() {
+    onViewChange('workspace');
+  }
+
+  function loadSampleAndSelectProject() {
+    loadSampleProject();
+    onSelectProject();
+    showWorkspace();
+  }
+
+  function createNewAndSelectProject() {
+    createNewProject();
+    onSelectProject();
+    showWorkspace();
+  }
+
+  function openSettings() {
+    onSelectSettings();
+    showWorkspace();
+  }
 
   return (
-    <header className="relative z-10 flex min-h-[50px] items-center justify-between gap-4 border-b border-studio-border bg-white px-4 shadow-sm shadow-slate-900/[0.03]">
-      <div className="min-w-0">
-        <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-studio-muted">
-          Workspace
-        </p>
-        <h1 className="m-0 truncate text-sm font-semibold text-studio-text">{project.project.name}</h1>
+    <header className="app-topbar">
+      <div className="app-brand">
+        <button
+          aria-label="Open project workspace"
+          className="app-brand-button"
+          data-ui="app-brand-button"
+          onClick={() => {
+            onSelectProject();
+            showWorkspace();
+          }}
+          type="button"
+        >
+          <span className="app-brand-project">{project.project.name}</span>
+        </button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="Project actions"
+              className="app-settings-button"
+              data-ui="project-actions-trigger"
+              type="button"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-60">
+            <DropdownMenuLabel>Project actions</DropdownMenuLabel>
+            <DropdownMenuItem onSelect={createNewAndSelectProject}>New Project</DropdownMenuItem>
+            <DropdownMenuItem onSelect={loadSampleAndSelectProject}>Load Sample</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <label className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100">
+                Import JSON
+                <ProjectJsonInput
+                  className="file-input"
+                  onImportComplete={() => {
+                    onSelectProject();
+                    showWorkspace();
+                  }}
+                />
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={exportProjectJson}>Export JSON</DropdownMenuItem>
+            <DropdownMenuItem onSelect={validateProject}>Validate</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={openSettings}>Project Settings</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <p className="m-0 hidden min-w-0 truncate text-xs text-studio-muted md:block" aria-live="polite">
-        {statusMessage}
-      </p>
+
+      <nav className="app-section-tabs" aria-label="Primary workspace sections">
+        <button
+          className="app-section-tab"
+          data-active={activeView === 'workspace'}
+          data-ui="app-section-tab"
+          onClick={showWorkspace}
+          type="button"
+        >
+          Workspace
+        </button>
+        <button
+          className="app-section-tab"
+          data-active={activeView === 'cables'}
+          data-ui="app-section-tab"
+          onClick={() => onViewChange('cables')}
+          type="button"
+        >
+          Cables
+        </button>
+      </nav>
+
+      <div className="app-logo-zone">
+        <img alt="StudioWire IO logo" className="app-topbar-logo" src={logoUrl} />
+      </div>
     </header>
   );
 }

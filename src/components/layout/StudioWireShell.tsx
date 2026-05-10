@@ -5,9 +5,10 @@ import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
 import { resolveIssueSelection, resolveSelection, type SelectedObjectType, type SelectionState } from '../common/selection';
 import { SidebarInset, SidebarProvider } from '../ui/sidebar';
+import { CablesWorkspace } from './CablesWorkspace';
 import { Inspector } from './Inspector';
 import { LeftTree } from './LeftTree';
-import { TopBar } from './TopBar';
+import { TopBar, type AppView } from './TopBar';
 import { ValidationPanel } from './ValidationPanel';
 import { Workspace } from './Workspace';
 
@@ -23,6 +24,7 @@ export function StudioWireShell() {
     selectedObjectType: null,
     selectedObjectId: null,
   });
+  const [activeView, setActiveView] = useState<AppView>('workspace');
   const [modal, setModal] = useState<ModalState>(null);
 
   useEffect(() => {
@@ -60,38 +62,50 @@ export function StudioWireShell() {
   }
 
   return (
-    <SidebarProvider>
-      <LeftTree
-        selection={selection}
-        onSelectObject={selectObject}
-        onAddLocation={() => setModal({ type: 'location' })}
-        onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
-        onAddDevice={openAddDevice}
+    <SidebarProvider className="app-frame">
+      <TopBar
+        activeView={activeView}
+        onSelectProject={selectProject}
+        onSelectSettings={selectSettings}
+        onViewChange={setActiveView}
       />
-      <SidebarInset className="app-shell">
-        <TopBar />
-        {importError ? (
-          <div className="app-alert" role="alert">
-            <span>{importError}</span>
-            <button type="button" onClick={dismissImportError}>
-              Dismiss
-            </button>
-          </div>
-        ) : null}
-        <section className="app-grid" aria-label={`${project.project.name} project editor`}>
-          <Workspace selection={selection} onAddDevice={openAddDevice} />
-          <Inspector selection={selection} />
-          <ValidationPanel
-            onSelectIssue={(issue) => {
-              const target = resolveIssueSelection(project, issue);
+      <div className="app-body">
+        <LeftTree
+          selection={selection}
+          onSelectObject={selectObject}
+          onAddLocation={() => setModal({ type: 'location' })}
+          onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
+          onAddDevice={openAddDevice}
+        />
+        <SidebarInset className="app-shell">
+          {importError ? (
+            <div className="app-alert" role="alert">
+              <span>{importError}</span>
+              <button type="button" onClick={dismissImportError}>
+                Dismiss
+              </button>
+            </div>
+          ) : null}
+          <section className="app-grid" aria-label={`${project.project.name} project editor`}>
+            {activeView === 'workspace' ? (
+              <Workspace selection={selection} onAddDevice={openAddDevice} />
+            ) : (
+              <CablesWorkspace />
+            )}
+            <Inspector selection={selection} />
+            <ValidationPanel
+              onSelectIssue={(issue) => {
+                const target = resolveIssueSelection(project, issue);
 
-              if (target) {
-                selectObject(target.selectedObjectType, target.selectedObjectId);
-              }
-            }}
-          />
-        </section>
-      </SidebarInset>
+                if (target) {
+                  setActiveView('workspace');
+                  selectObject(target.selectedObjectType, target.selectedObjectId);
+                }
+              }}
+            />
+          </section>
+        </SidebarInset>
+      </div>
       {modal?.type === 'location' ? (
         <AddLocationModal
           onClose={() => setModal(null)}

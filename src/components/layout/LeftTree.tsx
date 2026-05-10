@@ -1,8 +1,7 @@
-import { ChevronDown, ChevronRight, Folder, HardDrive, MapPin, MoreHorizontal, Server } from 'lucide-react';
+import { ChevronDown, ChevronRight, Folder, HardDrive, MapPin, Server } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
-import logoUrl from '../../assets/studiowire-logo.png';
 import type { Device, Location, Rack } from '../../domain/types';
-import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
+import { useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { isSelected, type SelectedObjectType, type SelectionState } from '../common/selection';
 import { Badge } from '../ui/badge';
@@ -18,21 +17,12 @@ import {
   ContextMenuTrigger,
 } from '../ui/context-menu';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
@@ -47,7 +37,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.3.3';
+const APP_VERSION = '0.2.3.5';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -63,13 +53,7 @@ export function LeftTree({
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string | null) => void;
 }) {
-  const {
-    project,
-    createNewProject,
-    loadSampleProject,
-    exportProjectJson,
-    validateProject,
-  } = useProject();
+  const { project } = useProject();
   const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(() => new Set());
   const unassignedDevices = useMemo(
     () =>
@@ -97,73 +81,8 @@ export function LeftTree({
     });
   }
 
-  function selectProject() {
-    onSelectObject('project', project.project.id);
-  }
-
-  function openSettings() {
-    onSelectObject('settings', 'settings');
-  }
-
-  function loadSampleAndSelectProject() {
-    loadSampleProject();
-    onSelectObject('project', project.project.id);
-  }
-
-  function createNewAndSelectProject() {
-    createNewProject();
-    onSelectObject('project', project.project.id);
-  }
-
   return (
-    <Sidebar aria-label="StudioWire project sidebar">
-      <SidebarHeader>
-        <div className="flex items-center gap-3">
-          <button
-            className="min-w-0 flex-1 rounded-md border-0 bg-transparent p-0 text-left hover:bg-transparent"
-            data-ui="sidebar-project-header"
-            onClick={selectProject}
-            type="button"
-          >
-            <div className="grid min-w-0 gap-1">
-              <img alt="StudioWire IO logo" className="h-8 w-40 shrink-0 object-contain object-left" src={logoUrl} />
-              <span className="truncate text-xs text-studio-muted">{project.project.name}</span>
-            </div>
-          </button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                aria-label="Project actions"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-studio-muted hover:bg-slate-100 hover:text-studio-text"
-                data-ui="project-actions-trigger"
-                type="button"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuLabel>Project actions</DropdownMenuLabel>
-              <DropdownMenuItem onSelect={createNewAndSelectProject}>New Project</DropdownMenuItem>
-              <DropdownMenuItem onSelect={loadSampleAndSelectProject}>Load Sample</DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100">
-                  Import JSON
-                  <ProjectJsonInput
-                    className="file-input"
-                    onImportComplete={() => onSelectObject('project', project.project.id)}
-                  />
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={exportProjectJson}>Export JSON</DropdownMenuItem>
-              <DropdownMenuItem onSelect={validateProject}>Validate</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={openSettings}>Project Settings</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </SidebarHeader>
-
+    <Sidebar aria-label="StudioWire project sidebar" className="app-sidebar">
       <SidebarContent>
         <SidebarGroup>
           <ActionContextMenu
