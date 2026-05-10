@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.3.3
+
+Rebuilt the device workspace as a canvas-first technical drawing.
+
+### Changed
+
+- Replaced the dark device card and cable boxes with line-based input and output rows.
+- Moved device and port labels into a central device body with an internal header divider.
+- Rendered planned cable numbers under their cable lines near the device body, with small circular port endpoints.
+- Preserved project schema version, reducer behavior, validation behavior, import/export behavior, and connection-model boundaries.
+- Bumped the app version to `0.2.3.3`.
+
 ## v0.2.3.2
 
 Replaced the generated app logo with the provided StudioWire IO wordmark.

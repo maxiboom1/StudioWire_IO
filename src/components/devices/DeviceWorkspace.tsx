@@ -1,12 +1,14 @@
-import type { Device, ProjectRoot } from '../../domain/types';
+import type { CSSProperties } from 'react';
+import type { Cable, Device, Port, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
-import { Badge } from '../ui/badge';
+
+interface DevicePortRow {
+  port: Port;
+  cable: Cable | null;
+}
 
 export function DeviceWorkspace({ device }: { device: Device }) {
   const { project } = useProject();
-  const location = device.locationId ? project.locations.find((candidate) => candidate.id === device.locationId) : null;
-  const rack = device.rackId ? project.racks.find((candidate) => candidate.id === device.rackId) : null;
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const ports = project.ports.filter((port) => port.deviceId === device.id);
   const cablesById = new Map(project.cables.map((cable) => [cable.id, cable]));
@@ -16,88 +18,95 @@ export function DeviceWorkspace({ device }: { device: Device }) {
     bidirectional: portGroups.filter((group) => group.direction === 'bidirectional'),
   };
   const sideOutputGroups = [...groupsByDirection.output, ...groupsByDirection.bidirectional];
+  const inputRows = buildPortRows(groupsByDirection.input, ports, cablesById);
+  const outputRows = buildPortRows(sideOutputGroups, ports, cablesById);
+  const rowCount = Math.max(inputRows.length, outputRows.length, 1);
+  const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
+  const secondaryLabel = device.code || device.labelPrefix || device.model || '';
+  const diagramStyle = { '--device-port-rows': rowCount } as CSSProperties;
 
   return (
-    <section className="workspace" aria-label="Device canvas">
-      <WorkspaceHeader eyebrow="Device" title={device.name} badge={device.status} />
-      {location || rack ? (
-        <div className="workspace-context-chips" aria-label="Device context">
-          {location ? <Badge>Location: {location.name}</Badge> : null}
-          {rack ? <Badge>Rack: {rack.name}</Badge> : null}
-        </div>
-      ) : null}
+    <section className="workspace device-workspace" aria-label="Device canvas">
       <div className="device-canvas">
-        <div className={device.status === 'retired' ? 'device-block retired' : 'device-block'}>
-          <div className="device-title">
-            <strong>{device.name}</strong>
-            <span>{device.status === 'retired' ? 'Retired' : device.code || device.labelPrefix || 'No code'}</span>
+        <div
+          className={device.status === 'retired' ? 'device-diagram retired' : 'device-diagram'}
+          style={diagramStyle}
+        >
+          <div className="device-line-column device-line-column-left" aria-label="Input cable rows">
+            <div className="device-line-header-spacer" />
+            {rowIndexes.map((index) => (
+              <CableLineRow key={`input-${index}`} row={inputRows[index]} side="input" />
+            ))}
           </div>
-          <div className="device-io-grid">
-            <PortGroupColumn
-              title="Inputs"
-              groups={groupsByDirection.input}
-              ports={ports}
-              cablesById={cablesById}
-            />
-            <div className="device-core">
-              <span>{device.manufacturer || 'Manufacturer not set'}</span>
-              <strong>{device.model || device.role || 'Device'}</strong>
-              <small>{device.mountType}</small>
+          <div className="device-body">
+            <div className="device-body-header">
+              <strong>{device.name}</strong>
+              {secondaryLabel ? <span>{secondaryLabel}</span> : null}
             </div>
-            <PortGroupColumn
-              title="Outputs / Bidirectional"
-              groups={sideOutputGroups}
-              ports={ports}
-              cablesById={cablesById}
-            />
+            {rowIndexes.map((index) => (
+              <div className="device-body-row" key={`body-${index}`}>
+                <span className="device-port-label device-port-label-input">
+                  {inputRows[index]?.port.label ?? ''}
+                </span>
+                <span className="device-port-label device-port-label-output">
+                  {outputRows[index]?.port.label ?? ''}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="device-line-column device-line-column-right" aria-label="Output cable rows">
+            <div className="device-line-header-spacer" />
+            {rowIndexes.map((index) => (
+              <CableLineRow key={`output-${index}`} row={outputRows[index]} side="output" />
+            ))}
           </div>
         </div>
-        {ports.length === 0 ? (
-          <EmptyState title="No Generated Ports">
-            This device has no port groups yet. v0.1 locks port group creation to the Add Device workflow.
-          </EmptyState>
-        ) : null}
       </div>
     </section>
   );
 }
 
-function PortGroupColumn({
-  title,
-  groups,
-  ports,
-  cablesById,
+function CableLineRow({
+  row,
+  side,
 }: {
-  title: string;
-  groups: ProjectRoot['portGroups'];
-  ports: ProjectRoot['ports'];
-  cablesById: Map<string, ProjectRoot['cables'][number]>;
+  row: DevicePortRow | undefined;
+  side: 'input' | 'output';
 }) {
+  if (!row) {
+    return <div className="device-wire-row" />;
+  }
+
   return (
-    <div className="port-group-column">
-      <h2>{title}</h2>
-      {groups.length === 0 ? <p>No ports</p> : null}
-      {groups.map((group) => {
-        const groupPorts = ports.filter((port) => port.portGroupId === group.id);
-
-        return (
-          <section className="canvas-port-group" key={group.id}>
-            <h3>{group.name}</h3>
-            <div className="canvas-port-list">
-              {groupPorts.map((port) => {
-                const cable = port.plannedCableId ? cablesById.get(port.plannedCableId) : null;
-
-                return (
-                  <div className="canvas-port" key={port.id}>
-                    <span>{port.label}</span>
-                    <strong>{cable?.number ?? 'No cable'}</strong>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
+    <div className={`device-wire-row device-wire-row-${side}`}>
+      {side === 'input' ? (
+        <>
+          <span className="device-cable-line" aria-hidden="true" />
+          <span className="device-port-node" aria-hidden="true" />
+        </>
+      ) : (
+        <>
+          <span className="device-port-node" aria-hidden="true" />
+          <span className="device-cable-line" aria-hidden="true" />
+        </>
+      )}
+      {row.cable ? <span className="device-cable-number">{row.cable.number}</span> : null}
     </div>
+  );
+}
+
+function buildPortRows(
+  groups: ProjectRoot['portGroups'],
+  ports: ProjectRoot['ports'],
+  cablesById: Map<string, ProjectRoot['cables'][number]>,
+): DevicePortRow[] {
+  return groups.flatMap((group) =>
+    ports
+      .filter((port) => port.portGroupId === group.id)
+      .sort((left, right) => left.index - right.index)
+      .map((port) => ({
+        port,
+        cable: port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null,
+      })),
   );
 }
