@@ -3,6 +3,7 @@ import { useProject } from '../../state/ProjectContext';
 import { AddDeviceModal } from '../devices/AddDeviceModal';
 import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
+import { AddTerminalBlockModal } from '../terminalBlocks/AddTerminalBlockModal';
 import { resolveIssueSelection, resolveSelection, type SelectedObjectType, type SelectionState } from '../common/selection';
 import { SidebarInset, SidebarProvider } from '../ui/sidebar';
 import { Inspector } from './Inspector';
@@ -15,7 +16,8 @@ type ModalState =
   | null
   | { type: 'location' }
   | { type: 'rack'; locationId: string }
-  | { type: 'device'; locationId: string | null };
+  | { type: 'device'; locationId: string | null }
+  | { type: 'terminalBlock'; locationId: string | null };
 
 export function StudioWireShell() {
   const { project, importError, dismissImportError } = useProject();
@@ -59,6 +61,10 @@ export function StudioWireShell() {
     setModal({ type: 'device', locationId });
   }
 
+  function openAddTerminalBlock(locationId: string | null) {
+    setModal({ type: 'terminalBlock', locationId });
+  }
+
   return (
     <SidebarProvider>
       <LeftTree
@@ -67,6 +73,7 @@ export function StudioWireShell() {
         onAddLocation={() => setModal({ type: 'location' })}
         onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
         onAddDevice={openAddDevice}
+        onAddTerminalBlock={openAddTerminalBlock}
       />
       <SidebarInset className="app-shell">
         <TopBar />
@@ -118,6 +125,16 @@ export function StudioWireShell() {
           onCreated={(id) => {
             setModal(null);
             selectObject('device', id);
+          }}
+        />
+      ) : null}
+      {modal?.type === 'terminalBlock' ? (
+        <AddTerminalBlockModal
+          initialLocationId={modal.locationId}
+          onClose={() => setModal(null)}
+          onCreated={(id) => {
+            setModal(null);
+            selectObject('terminalBlock', id);
           }}
         />
       ) : null}

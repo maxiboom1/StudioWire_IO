@@ -27,6 +27,8 @@ import {
   type DevicePortGroupDraft,
   type DeviceUpdate,
   type ProjectState,
+  type TerminalBlockDraft,
+  type TerminalBlockUpdate,
 } from './projectReducer';
 
 const STORAGE_KEY = 'studiowire.io.project.v0.1';
@@ -51,6 +53,8 @@ interface ProjectContextValue extends ProjectState {
   updateRack: (id: string, updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'>) => void;
   deleteRack: (id: string) => void;
   addDevice: (input: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] }) => string;
+  addTerminalBlock: (input: TerminalBlockDraft) => string;
+  updateTerminalBlock: (id: string, updates: TerminalBlockUpdate) => void;
   moveMountedDevice: (input: { deviceId: string; targetRackId: string; targetBottomRu: number }) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
   retireDevice: (id: string) => void;
@@ -232,6 +236,18 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
+  const addTerminalBlock = useCallback((input: TerminalBlockDraft) => {
+    const id = input.id ?? makeId('terminal-block', `${input.code || input.name}-${nowIso()}`);
+
+    dispatch({ type: 'ADD_TERMINAL_BLOCK', payload: { ...input, id } });
+
+    return id;
+  }, []);
+
+  const updateTerminalBlock = useCallback((id: string, updates: TerminalBlockUpdate) => {
+    dispatch({ type: 'UPDATE_TERMINAL_BLOCK', payload: { id, updates } });
+  }, []);
+
   const updateDevice = useCallback((id: string, updates: DeviceUpdate) => {
     dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } });
   }, []);
@@ -269,6 +285,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateRack,
       deleteRack,
       addDevice,
+      addTerminalBlock,
+      updateTerminalBlock,
       moveMountedDevice,
       updateDevice,
       retireDevice,
@@ -294,6 +312,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateRack,
       deleteRack,
       addDevice,
+      addTerminalBlock,
+      updateTerminalBlock,
       moveMountedDevice,
       updateDevice,
       retireDevice,

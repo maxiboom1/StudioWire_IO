@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.4
+
+Added user-facing terminal block creation and selection UI.
+
+### Added
+
+- Added terminal block sections under each location in the navigator, plus an unassigned terminal blocks section.
+- Added Add Terminal Block modal for creating a TB, one default TB port group, generated rear/front TB ports, and optional planned cable stubs.
+- Added reducer and context support for terminal block creation and safe editable inspector fields.
+- Added a placeholder terminal block workspace until the full TB canvas is implemented.
+- Added reducer tests for TB creation without planned cables, with rear/front/both planned cables, and invalid range rejection.
+
+### Changed
+
+- Preserved project schema version, cable numbering rules, import/export semantics, and existing rack/device navigator behavior.
+- Did not add the full terminal block canvas, endpoint mutation, or crosspointing.
+
 ## v0.3.3
 
 Refactored the selected device canvas from boxed port rows to line-based cable stubs.

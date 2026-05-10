@@ -1,7 +1,7 @@
 {
   "name": "studiowire-io",
   "private": true,
-  "version": "0.3.3",
+  "version": "0.3.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -41,3 +41,4 @@
     "vitest": "^3.2.4"
   }
 }
+
