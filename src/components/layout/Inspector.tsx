@@ -3,7 +3,6 @@ import { useProject } from '../../state/ProjectContext';
 import { DeviceInspector } from '../devices/DeviceInspector';
 import { LocationInspector } from '../locations/LocationInspector';
 import { RackInspector } from '../racks/RackInspector';
-import { TerminalBlockInspector } from '../terminalBlocks/TerminalBlockInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function Inspector({ selection }: { selection: SelectionState }) {
@@ -35,10 +34,6 @@ export function Inspector({ selection }: { selection: SelectionState }) {
 
   if (selected.type === 'device') {
     return <DeviceInspector device={selected.value} />;
-  }
-
-  if (selected.type === 'terminalBlock') {
-    return <TerminalBlockInspector terminalBlock={selected.value} />;
   }
 
   return (

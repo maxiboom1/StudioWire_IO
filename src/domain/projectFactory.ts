@@ -10,7 +10,6 @@ import type {
   Location,
   NumberingLedger,
   NumberingRange,
-  ObjectStatus,
   Port,
   PortDirection,
   PortGroup,
@@ -19,12 +18,6 @@ import type {
   ProjectStatus,
   Rack,
   RackNumberingDirection,
-  TerminalBlock,
-  TerminalBlockFace,
-  TerminalBlockMountType,
-  TerminalBlockPlannedCableMode,
-  TerminalBlockPort,
-  TerminalBlockPortGroup,
 } from './types';
 
 export interface ProjectInfoInput {
@@ -65,11 +58,8 @@ export function createEmptyProject(input: ProjectInfoInput): ProjectRoot {
     locations: [],
     racks: [],
     devices: [],
-    terminalBlocks: [],
     portGroups: [],
-    terminalBlockPortGroups: [],
     ports: [],
-    terminalBlockPorts: [],
     cables: [],
     numberingLedgers: [],
     validationIssues: [],
@@ -132,7 +122,7 @@ export interface DeviceInput {
   rackId?: string | null;
   rackSizeRu?: number | null;
   rackBottomRu?: number | null;
-  status?: ObjectStatus;
+  status?: string;
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -143,50 +133,6 @@ export function createDevice(input: DeviceInput): Device {
 
   return {
     id: input.id ?? makeId('device', input.name),
-    name: input.name,
-    code: input.code ?? '',
-    manufacturer: input.manufacturer ?? '',
-    model: input.model ?? '',
-    categoryId: input.categoryId,
-    locationId: input.locationId,
-    role: input.role ?? '',
-    labelPrefix: input.labelPrefix ?? input.code ?? '',
-    mountType: input.mountType ?? 'non_rack',
-    rackId: input.rackId ?? null,
-    rackSizeRu: input.rackSizeRu ?? null,
-    rackBottomRu: input.rackBottomRu ?? null,
-    status: input.status ?? 'planned',
-    notes: input.notes ?? '',
-    createdAt: input.createdAt ?? timestamp,
-    updatedAt: input.updatedAt ?? timestamp,
-  };
-}
-
-export interface TerminalBlockInput {
-  id?: string;
-  name: string;
-  code?: string;
-  manufacturer?: string;
-  model?: string;
-  categoryId: string;
-  locationId: string | null;
-  role?: string;
-  labelPrefix?: string;
-  mountType?: TerminalBlockMountType;
-  rackId?: string | null;
-  rackSizeRu?: number | null;
-  rackBottomRu?: number | null;
-  status?: ObjectStatus;
-  notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export function createTerminalBlock(input: TerminalBlockInput): TerminalBlock {
-  const timestamp = nowIso();
-
-  return {
-    id: input.id ?? makeId('terminal-block', input.name),
     name: input.name,
     code: input.code ?? '',
     manufacturer: input.manufacturer ?? '',
@@ -264,65 +210,6 @@ export function createPortsForGroup(portGroup: PortGroup, deviceLabelPrefix = ''
   });
 }
 
-export interface TerminalBlockPortGroupInput {
-  id?: string;
-  terminalBlockId: string;
-  name: string;
-  categoryId: string;
-  connectorTypeId: string;
-  positionCount: number;
-  startPosition?: number;
-  portLabelPattern?: string;
-  cablePrefix: string;
-  plannedCableMode?: TerminalBlockPlannedCableMode;
-  firstCableNumber?: number | null;
-  lastCableNumber?: number | null;
-}
-
-export function createTerminalBlockPortGroup(input: TerminalBlockPortGroupInput): TerminalBlockPortGroup {
-  return {
-    id: input.id ?? makeId('tb-port-group', `${input.terminalBlockId}-${input.name}`),
-    terminalBlockId: input.terminalBlockId,
-    name: input.name,
-    categoryId: input.categoryId,
-    connectorTypeId: input.connectorTypeId,
-    positionCount: input.positionCount,
-    startPosition: input.startPosition ?? 1,
-    portLabelPattern: input.portLabelPattern ?? '{TB}-{FACE}-{00}',
-    cablePrefix: input.cablePrefix,
-    plannedCableMode: input.plannedCableMode ?? 'none',
-    firstCableNumber: input.firstCableNumber ?? null,
-    lastCableNumber: input.lastCableNumber ?? null,
-  };
-}
-
-export function createTerminalBlockPortsForGroup(
-  portGroup: TerminalBlockPortGroup,
-  terminalBlockLabelPrefix = '',
-): TerminalBlockPort[] {
-  const ports: TerminalBlockPort[] = [];
-  const labelPrefix = terminalBlockLabelPrefix || portGroup.name;
-
-  for (let offset = 0; offset < portGroup.positionCount; offset += 1) {
-    const positionIndex = portGroup.startPosition + offset;
-
-    for (const face of ['rear', 'front'] satisfies TerminalBlockFace[]) {
-      ports.push({
-        id: makeId('tb-port', `${portGroup.id}-${face}-${String(positionIndex).padStart(2, '0')}`),
-        terminalBlockId: portGroup.terminalBlockId,
-        portGroupId: portGroup.id,
-        positionIndex,
-        face,
-        label: formatTerminalBlockPortLabel(portGroup.portLabelPattern, labelPrefix, face, positionIndex),
-        categoryId: portGroup.categoryId,
-        connectorTypeId: portGroup.connectorTypeId,
-      });
-    }
-  }
-
-  return ports;
-}
-
 export interface PlannedCablesInput {
   portGroup: PortGroup;
   ports: Port[];
@@ -360,23 +247,6 @@ export function createNumberingLedger(input: NumberingLedgerInput): NumberingLed
     nextSuggested: input.nextSuggested,
     ranges: input.ranges ?? [],
   };
-}
-
-function formatTerminalBlockPortLabel(
-  pattern: string,
-  terminalBlockLabelPrefix: string,
-  face: TerminalBlockFace,
-  positionIndex: number,
-): string {
-  return pattern
-    .split('{TB}')
-    .join(terminalBlockLabelPrefix)
-    .split('{FACE}')
-    .join(face.toUpperCase())
-    .split('{000}')
-    .join(String(positionIndex).padStart(3, '0'))
-    .split('{00}')
-    .join(String(positionIndex).padStart(2, '0'));
 }
 
 function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: number): string {

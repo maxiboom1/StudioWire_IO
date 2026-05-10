@@ -1,14 +1,10 @@
-export const STUDIOWIRE_SCHEMA_VERSION = '0.2.0' as const;
+export const STUDIOWIRE_SCHEMA_VERSION = '0.1.0' as const;
 
 export type SchemaVersion = typeof STUDIOWIRE_SCHEMA_VERSION;
 
 export type ProjectStatus = 'draft' | 'approved' | 'as_built';
 export type RackNumberingDirection = 'bottom_to_top' | 'top_to_bottom';
 export type DeviceMountType = 'rack' | 'non_rack' | 'virtual';
-export type ObjectStatus = 'planned' | 'connected' | 'retired';
-export type TerminalBlockMountType = DeviceMountType;
-export type TerminalBlockFace = 'rear' | 'front';
-export type TerminalBlockPlannedCableMode = 'none' | 'rear' | 'front' | 'both';
 export type PortDirection = 'input' | 'output' | 'bidirectional';
 export type CableStatus = 'planned' | 'connected' | 'retired';
 export type NumberingRangeStatus = 'allocated' | 'reserved_gap' | 'retired';
@@ -22,11 +18,8 @@ export interface ProjectRoot {
   locations: Location[];
   racks: Rack[];
   devices: Device[];
-  terminalBlocks: TerminalBlock[];
   portGroups: PortGroup[];
-  terminalBlockPortGroups: TerminalBlockPortGroup[];
   ports: Port[];
-  terminalBlockPorts: TerminalBlockPort[];
   cables: Cable[];
   numberingLedgers: NumberingLedger[];
   validationIssues: ValidationIssue[];
@@ -109,27 +102,7 @@ export interface Device {
   rackId: string | null;
   rackSizeRu: number | null;
   rackBottomRu: number | null;
-  status: ObjectStatus;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface TerminalBlock {
-  id: string;
-  name: string;
-  code: string;
-  manufacturer: string;
-  model: string;
-  categoryId: string;
-  locationId: string | null;
-  role: string;
-  labelPrefix: string;
-  mountType: TerminalBlockMountType;
-  rackId: string | null;
-  rackSizeRu: number | null;
-  rackBottomRu: number | null;
-  status: ObjectStatus;
+  status: string;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -152,21 +125,6 @@ export interface PortGroup {
   locked: boolean;
 }
 
-export interface TerminalBlockPortGroup {
-  id: string;
-  terminalBlockId: string;
-  name: string;
-  categoryId: string;
-  connectorTypeId: string;
-  positionCount: number;
-  startPosition: number;
-  portLabelPattern: string;
-  cablePrefix: string;
-  plannedCableMode: TerminalBlockPlannedCableMode;
-  firstCableNumber: number | null;
-  lastCableNumber: number | null;
-}
-
 export interface Port {
   id: string;
   deviceId: string;
@@ -179,17 +137,6 @@ export interface Port {
   connectorTypeId: string;
   plannedCableId: string | null;
   notes: string;
-}
-
-export interface TerminalBlockPort {
-  id: string;
-  terminalBlockId: string;
-  portGroupId: string;
-  positionIndex: number;
-  face: TerminalBlockFace;
-  label: string;
-  categoryId: string;
-  connectorTypeId: string;
 }
 
 export interface Cable {

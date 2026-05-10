@@ -4,7 +4,6 @@ import { DeviceWorkspace } from '../devices/DeviceWorkspace';
 import { LocationWorkspace } from '../locations/LocationWorkspace';
 import { RackWorkspace } from '../racks/RackWorkspace';
 import { SettingsWorkspace } from '../settings/SettingsWorkspace';
-import { TerminalBlockWorkspace } from '../terminalBlocks/TerminalBlockWorkspace';
 import { ProjectWorkspace } from './ProjectWorkspace';
 
 export function Workspace({
@@ -23,7 +22,7 @@ export function Workspace({
         <p className="eyebrow">StudioWire IO</p>
         <h1>Open a project object from the tree.</h1>
         <p>
-          Select the project root, a location, a rack, a device, or a terminal block to inspect the current project
+          Select the project root, a location, a rack, or a device to inspect the current project
           data.
         </p>
       </section>
@@ -46,9 +45,5 @@ export function Workspace({
     return <RackWorkspace rack={selected.value} />;
   }
 
-  if (selected.type === 'device') {
-    return <DeviceWorkspace device={selected.value} />;
-  }
-
-  return <TerminalBlockWorkspace terminalBlock={selected.value} />;
+  return <DeviceWorkspace device={selected.value} />;
 }

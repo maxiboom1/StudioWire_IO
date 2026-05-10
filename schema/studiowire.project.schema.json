@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.0",
+  "title": "StudioWire IO Project v0.1.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,11 +11,8 @@
     "locations",
     "racks",
     "devices",
-    "terminalBlocks",
     "portGroups",
-    "terminalBlockPortGroups",
     "ports",
-    "terminalBlockPorts",
     "cables",
     "numberingLedgers",
     "validationIssues",
@@ -23,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.0"
+      "const": "0.1.0"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -49,34 +46,16 @@
         "$ref": "#/$defs/Device"
       }
     },
-    "terminalBlocks": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/TerminalBlock"
-      }
-    },
     "portGroups": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PortGroup"
       }
     },
-    "terminalBlockPortGroups": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/TerminalBlockPortGroup"
-      }
-    },
     "ports": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Port"
-      }
-    },
-    "terminalBlockPorts": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/TerminalBlockPort"
       }
     },
     "cables": {
@@ -268,64 +247,7 @@
         "rackId": { "type": ["string", "null"] },
         "rackSizeRu": { "type": ["integer", "null"], "minimum": 1 },
         "rackBottomRu": { "type": ["integer", "null"], "minimum": 1 },
-        "status": { "$ref": "#/$defs/ObjectStatus" },
-        "notes": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "mountType": { "enum": ["rack", "non_rack"] }
-            },
-            "required": ["mountType"]
-          },
-          "then": {
-            "properties": {
-              "locationId": { "type": "string", "minLength": 1 }
-            }
-          }
-        }
-      ]
-    },
-    "TerminalBlock": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "code",
-        "manufacturer",
-        "model",
-        "categoryId",
-        "locationId",
-        "role",
-        "labelPrefix",
-        "mountType",
-        "rackId",
-        "rackSizeRu",
-        "rackBottomRu",
-        "status",
-        "notes",
-        "createdAt",
-        "updatedAt"
-      ],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "code": { "type": "string" },
-        "manufacturer": { "type": "string" },
-        "model": { "type": "string" },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "locationId": { "type": ["string", "null"] },
-        "role": { "type": "string" },
-        "labelPrefix": { "type": "string" },
-        "mountType": { "$ref": "#/$defs/DeviceMountType" },
-        "rackId": { "type": ["string", "null"] },
-        "rackSizeRu": { "type": ["integer", "null"], "minimum": 1 },
-        "rackBottomRu": { "type": ["integer", "null"], "minimum": 1 },
-        "status": { "$ref": "#/$defs/ObjectStatus" },
+        "status": { "type": "string" },
         "notes": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
@@ -406,38 +328,6 @@
         }
       ]
     },
-    "TerminalBlockPortGroup": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "terminalBlockId",
-        "name",
-        "categoryId",
-        "connectorTypeId",
-        "positionCount",
-        "startPosition",
-        "portLabelPattern",
-        "cablePrefix",
-        "plannedCableMode",
-        "firstCableNumber",
-        "lastCableNumber"
-      ],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "terminalBlockId": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "connectorTypeId": { "type": "string", "minLength": 1 },
-        "positionCount": { "type": "integer", "minimum": 1 },
-        "startPosition": { "type": "integer", "minimum": 1 },
-        "portLabelPattern": { "type": "string", "minLength": 1 },
-        "cablePrefix": { "type": "string", "pattern": "^[A-Z]+$" },
-        "plannedCableMode": { "$ref": "#/$defs/TerminalBlockPlannedCableMode" },
-        "firstCableNumber": { "type": ["integer", "null"], "minimum": 1 },
-        "lastCableNumber": { "type": ["integer", "null"], "minimum": 1 }
-      }
-    },
     "Port": {
       "type": "object",
       "additionalProperties": false,
@@ -466,30 +356,6 @@
         "connectorTypeId": { "type": "string", "minLength": 1 },
         "plannedCableId": { "type": ["string", "null"] },
         "notes": { "type": "string" }
-      }
-    },
-    "TerminalBlockPort": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "terminalBlockId",
-        "portGroupId",
-        "positionIndex",
-        "face",
-        "label",
-        "categoryId",
-        "connectorTypeId"
-      ],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "terminalBlockId": { "type": "string", "minLength": 1 },
-        "portGroupId": { "type": "string", "minLength": 1 },
-        "positionIndex": { "type": "integer", "minimum": 1 },
-        "face": { "$ref": "#/$defs/TerminalBlockFace" },
-        "label": { "type": "string" },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "connectorTypeId": { "type": "string", "minLength": 1 }
       }
     },
     "Cable": {
@@ -600,15 +466,6 @@
     },
     "DeviceMountType": {
       "enum": ["rack", "non_rack", "virtual"]
-    },
-    "ObjectStatus": {
-      "enum": ["planned", "connected", "retired"]
-    },
-    "TerminalBlockFace": {
-      "enum": ["rear", "front"]
-    },
-    "TerminalBlockPlannedCableMode": {
-      "enum": ["none", "rear", "front", "both"]
     },
     "PortDirection": {
       "enum": ["input", "output", "bidirectional"]

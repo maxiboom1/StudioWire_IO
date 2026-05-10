@@ -1,6 +1,6 @@
-import type { Device, Location, ProjectInfo, ProjectRoot, Rack, TerminalBlock, ValidationIssue } from '../../domain/types';
+import type { Device, Location, ProjectInfo, ProjectRoot, Rack, ValidationIssue } from '../../domain/types';
 
-export type SelectedObjectType = 'project' | 'settings' | 'location' | 'rack' | 'device' | 'terminalBlock';
+export type SelectedObjectType = 'project' | 'settings' | 'location' | 'rack' | 'device';
 
 export interface SelectionState {
   selectedObjectType: SelectedObjectType | null;
@@ -12,8 +12,7 @@ export type ResolvedSelection =
   | { type: 'settings'; value: ProjectRoot['settings'] }
   | { type: 'location'; value: Location }
   | { type: 'rack'; value: Rack }
-  | { type: 'device'; value: Device }
-  | { type: 'terminalBlock'; value: TerminalBlock };
+  | { type: 'device'; value: Device };
 
 export function resolveSelection(project: ProjectRoot, selection: SelectionState): ResolvedSelection | null {
   if (!selection.selectedObjectType) {
@@ -40,11 +39,6 @@ export function resolveSelection(project: ProjectRoot, selection: SelectionState
 
       return value ? { type: 'device' as const, value } : null;
     }
-    case 'terminalBlock': {
-      const value = project.terminalBlocks.find((terminalBlock) => terminalBlock.id === selection.selectedObjectId);
-
-      return value ? { type: 'terminalBlock' as const, value } : null;
-    }
   }
 }
 
@@ -68,13 +62,6 @@ export function resolveIssueSelection(
     return { selectedObjectType: 'device', selectedObjectId: issue.objectId };
   }
 
-  if (
-    issue.objectType === 'terminalBlock' &&
-    project.terminalBlocks.some((terminalBlock) => terminalBlock.id === issue.objectId)
-  ) {
-    return { selectedObjectType: 'terminalBlock', selectedObjectId: issue.objectId };
-  }
-
   if (issue.objectType === 'portGroup') {
     const portGroup = project.portGroups.find((candidate) => candidate.id === issue.objectId);
 
@@ -87,18 +74,6 @@ export function resolveIssueSelection(
     return port ? { selectedObjectType: 'device', selectedObjectId: port.deviceId } : null;
   }
 
-  if (issue.objectType === 'terminalBlockPortGroup') {
-    const portGroup = project.terminalBlockPortGroups.find((candidate) => candidate.id === issue.objectId);
-
-    return portGroup ? { selectedObjectType: 'terminalBlock', selectedObjectId: portGroup.terminalBlockId } : null;
-  }
-
-  if (issue.objectType === 'terminalBlockPort') {
-    const port = project.terminalBlockPorts.find((candidate) => candidate.id === issue.objectId);
-
-    return port ? { selectedObjectType: 'terminalBlock', selectedObjectId: port.terminalBlockId } : null;
-  }
-
   if (issue.objectType === 'cable') {
     const cable = project.cables.find((candidate) => candidate.id === issue.objectId);
     const endpointPortId =
@@ -109,23 +84,7 @@ export function resolveIssueSelection(
           : null;
     const port = endpointPortId ? project.ports.find((candidate) => candidate.id === endpointPortId) : null;
 
-    if (port) {
-      return { selectedObjectType: 'device', selectedObjectId: port.deviceId };
-    }
-
-    const endpointTerminalBlockPortId =
-      cable?.sourceEndpoint.type === 'tb_port'
-        ? cable.sourceEndpoint.id
-        : cable?.destinationEndpoint.type === 'tb_port'
-          ? cable.destinationEndpoint.id
-          : null;
-    const terminalBlockPort = endpointTerminalBlockPortId
-      ? project.terminalBlockPorts.find((candidate) => candidate.id === endpointTerminalBlockPortId)
-      : null;
-
-    return terminalBlockPort
-      ? { selectedObjectType: 'terminalBlock', selectedObjectId: terminalBlockPort.terminalBlockId }
-      : null;
+    return port ? { selectedObjectType: 'device', selectedObjectId: port.deviceId } : null;
   }
 
   return null;
@@ -192,27 +151,6 @@ export function getInspectorRows(
         ['Rack', rack?.name ?? 'Not rack-mounted'],
         ['Mount type', selected.value.mountType],
         ['Status', selected.value.status],
-      ];
-    }
-    case 'terminalBlock': {
-      const location = project.locations.find((candidate) => candidate.id === selected.value.locationId);
-      const portGroups = project.terminalBlockPortGroups.filter(
-        (group) => group.terminalBlockId === selected.value.id,
-      );
-      const portCount = project.terminalBlockPorts.filter((port) => port.terminalBlockId === selected.value.id).length;
-
-      return [
-        ['Type', 'Terminal Block'],
-        ['ID', selected.value.id],
-        ['Name', selected.value.name],
-        ['Code', selected.value.code || 'Not set'],
-        ['Manufacturer', selected.value.manufacturer || 'Not set'],
-        ['Model', selected.value.model || 'Not set'],
-        ['Location', (location?.name ?? selected.value.locationId) || 'Unassigned'],
-        ['Mount type', selected.value.mountType],
-        ['Status', selected.value.status],
-        ['Port groups', String(portGroups.length)],
-        ['Rear/front ports', String(portCount)],
       ];
     }
   }
