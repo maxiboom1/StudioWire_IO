@@ -867,32 +867,261 @@ textarea:not([data-ui]) {
 }
 
 .cables-workspace {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   padding: 0;
   background: #f7fbfc;
 }
 
-.cables-placeholder {
+.cables-register {
   display: grid;
-  align-content: start;
-  gap: 6px;
-  min-height: 100%;
-  padding: 28px;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  padding: 18px;
 }
 
-.cables-placeholder h1 {
+.cables-register-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.cables-register-toolbar h1 {
   margin: 0;
   color: #102024;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: 0;
 }
 
-.cables-placeholder p:not(.eyebrow) {
-  margin: 0;
+.cables-register-toolbar p {
+  margin: 4px 0 0;
   color: var(--studio-muted);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.cables-table-area {
+  min-height: 0;
+  border: 1px solid #d7e0e4;
+  background: #ffffff;
+}
+
+.cables-table-area > div {
+  height: 100%;
+  overflow: auto;
+}
+
+.cables-register-table {
+  table-layout: fixed;
+  min-width: 820px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.cables-register-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 38px;
+  border-bottom: 1px solid #cfd9de;
+  background: #f8fafb;
+  padding: 0;
+}
+
+.cables-register-table tbody td {
+  height: 38px;
+  border-bottom: 1px solid #edf1f3;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cables-register-table tbody tr:hover td {
+  background: #f8fbfc;
+}
+
+.cables-col-number {
+  width: 104px;
+}
+
+.cables-col-status {
+  width: 118px;
+}
+
+.cables-cell-number {
+  color: #0f4f51;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.cables-filter-button {
+  width: 100%;
+  justify-content: space-between;
+  min-width: 0;
+  height: 38px;
+  border-radius: 0;
+  padding: 0 8px;
+  color: #475b63;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cables-filter-button:hover {
+  color: #172126;
+  background: #eef4f6;
+}
+
+.cables-filter-button span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cables-filter-button.is-filtered {
+  color: #073f43;
+  background: #bdeaea;
+  box-shadow: inset 0 -3px 0 #0f6b70;
+}
+
+.cables-filter-button.is-filtered:hover {
+  color: #052f32;
+  background: #9fdddd;
+  box-shadow: inset 0 -3px 0 #084f54;
+}
+
+.cables-filter-menu {
+  width: 260px;
+}
+
+.cables-filter-menu [role="menuitemcheckbox"] {
+  min-width: 0;
+}
+
+.cables-filter-menu [role="menuitemcheckbox"] > span:last-child {
+  min-width: 0;
+}
+
+.cables-filter-menu [role="menuitem"] {
+  cursor: pointer;
+}
+
+.cables-filter-menu [role="menuitem"],
+.cables-filter-menu [role="menuitemcheckbox"] {
+  font-size: 0.78rem;
+}
+
+.cables-filter-menu [role="menuitemcheckbox"][data-state="unchecked"] {
+  color: #6c7c83;
+}
+
+.cables-filter-menu [role="menuitemcheckbox"][data-state="checked"] {
+  color: #122227;
+}
+
+.cables-filter-menu [data-radix-popper-content-wrapper] {
+  z-index: 60;
+}
+
+.cables-filter-menu [data-radix-dropdown-menu-label],
+.cables-filter-menu [role="menuitem"] {
+  min-width: 0;
+}
+
+.cables-filter-menu [data-radix-dropdown-menu-label] {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cables-filter-search {
+  padding: 6px 8px;
+}
+
+.cables-filter-search input {
+  height: 32px;
+  font-size: 0.78rem;
+}
+
+.cables-filter-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 0 6px 4px;
+}
+
+.cables-filter-values {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.cables-filter-value-label {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cables-filter-no-values {
+  padding: 8px;
+  color: var(--studio-muted);
+  font-size: 0.78rem;
+}
+
+.cables-status-badge {
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.cables-status-planned {
+  background: #eef4f7;
+  color: #315768;
+}
+
+.cables-status-connected {
+  background: #e8f6ef;
+  color: #16613f;
+}
+
+.cables-status-retired {
+  background: #f5e9e6;
+  color: #8a2e1f;
+}
+
+.cables-empty-state,
+.cables-filter-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 240px;
+  padding: 24px;
+  text-align: center;
+}
+
+.cables-filter-empty {
+  min-height: 180px;
+}
+
+.cables-empty-state h2,
+.cables-filter-empty h2 {
+  margin: 0;
+  color: #102024;
+  font-size: 1rem;
+}
+
+.cables-empty-state p,
+.cables-filter-empty p {
+  margin: 6px 0 0;
+  color: var(--studio-muted);
+  font-size: 0.84rem;
 }
 
 .device-workspace {

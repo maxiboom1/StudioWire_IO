@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.4.3
+
+Added the project-wide Cables register.
+
+### Changed
+
+- Replaced the Cables placeholder with a shadcn-based table showing every project cable.
+- Added endpoint-derived side labels, locations, connectors, and status columns.
+- Added Excel-style multi-select column filters with search, select all, clear, active header state, and visible row counts.
+- Kept this release UI-only and preserved project schema version `0.2.4.1`.
+- Bumped the app version to `0.2.4.3`.
+
 ## v0.2.4.2
 
 Polished terminal block UI and fixed app-shell scrolling.
