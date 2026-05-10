@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.2
+
+Added the terminal block cable-domain foundation before terminal block UI work.
+
+### Added
+
+- Added terminal block cable helpers for deterministic rear/front port labels and generated TB face ports.
+- Added planned TB cable stub generation for `plannedCableMode` values `none`, `rear`, `front`, and `both`.
+- Added atomic ledger allocation for TB planned cables, including separate rear and front range calls for `both`.
+- Added endpoint display resolution for `device_port` and `tb_port` endpoints.
+- Added helpers for active versus retired cable endpoint usage so retired cables do not count as active occupancy.
+
+### Changed
+
+- Kept project schema version at `0.2.0`; no JSON shape change was required.
+- Preserved the physical cable segment model and did not add terminal block UI, drag/drop, crosspointing, or logical connection objects.
+
 ## v0.3.1
 
 Added the terminal block schema and data-model foundation.

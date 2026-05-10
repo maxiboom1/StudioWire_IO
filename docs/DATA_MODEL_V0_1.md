@@ -225,6 +225,15 @@ Fields:
 
 Terminal block port groups describe a contiguous set of physical terminal block positions. They do not create logical connection objects.
 
+`plannedCableMode` controls optional planned cable stubs for terminal block faces:
+
+- `none`: generate rear/front TB ports only.
+- `rear`: generate planned cable stubs anchored to rear TB ports.
+- `front`: generate planned cable stubs anchored to front TB ports.
+- `both`: generate planned cable stubs for both faces.
+
+TB planned stubs use the TB face as `sourceEndpoint` and `unknown` as `destinationEndpoint`. This is only a stable physical cable stub convention; rear and front faces are neutral and do not imply signal direction.
+
 ## TerminalBlockPort
 
 Fields:
