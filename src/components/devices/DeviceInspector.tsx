@@ -147,12 +147,7 @@ export function DeviceInspector({ device }: { device: Device }) {
                 />
                 <p className="form-help">Required before dragging this device onto a rack canvas.</p>
               </div>
-            ) : (
-              <div className="form-field">
-                <Label>Mount height</Label>
-                <Input readOnly value="1 RU" />
-              </div>
-            )}
+            ) : null}
             <div className="form-field">
               <Label htmlFor="inspector-device-notes">Notes</Label>
               <Textarea id="inspector-device-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
@@ -201,10 +196,12 @@ export function DeviceInspector({ device }: { device: Device }) {
                   : 'Not placed'}
               </dd>
             </div>
-            <div>
-              <dt>Mount height</dt>
-              <dd>{device.rackSizeRu ? `${device.rackSizeRu} RU` : 'Not set'}</dd>
-            </div>
+            {!isTerminalBlock ? (
+              <div>
+                <dt>Mount height</dt>
+                <dd>{device.rackSizeRu ? `${device.rackSizeRu} RU` : 'Not set'}</dd>
+              </div>
+            ) : null}
             <div>
               <dt>Port groups</dt>
               <dd>

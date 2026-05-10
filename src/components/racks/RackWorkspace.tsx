@@ -330,6 +330,7 @@ function RackElevationCanvas({
             <div
               className={[
                 device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block',
+                device.kind === 'terminal_block' ? 'terminal-block-rack-device' : '',
                 diagnostics.length > 0 ? 'invalid-placement' : '',
                 draggingDeviceId === device.id ? 'is-dragging' : '',
               ]
@@ -343,10 +344,12 @@ function RackElevationCanvas({
               onDragStart={(event) => onDeviceDragStart(event, device)}
             >
               <strong>{device.name}</strong>
-              <span>
-                {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
-                {device.rackSizeRu ? ` / ${device.rackSizeRu} RU` : ''}
-              </span>
+              {device.kind !== 'terminal_block' ? (
+                <span>
+                  {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
+                  {device.rackSizeRu ? ` / ${device.rackSizeRu} RU` : ''}
+                </span>
+              ) : null}
               {diagnostics.length > 0 ? <em>Placement issue</em> : null}
             </div>
           ))}

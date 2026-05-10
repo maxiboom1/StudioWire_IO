@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.4.2
+
+Polished terminal block UI and fixed app-shell scrolling.
+
+### Changed
+
+- Replaced terminal block panel `Not Connected` labels with compact `N/C` labels.
+- Removed the rack placement line from terminal block rack blocks and reduced their rack-label typography.
+- Removed the read-only mount-height field from terminal block inspector UI.
+- Fixed the app shell so the top navbar, sidebars, inspector, and footer stay pinned while workspace/canvas content scrolls internally.
+- Bumped the app version to `0.2.4.2` without changing project schema version `0.2.4.1`.
+
 ## v0.2.4.1
 
 Added terminal block creation and a terminal block panel view.

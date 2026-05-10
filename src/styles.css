@@ -27,14 +27,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
-}
-
-#root {
-  min-height: 100vh;
+  min-height: 100%;
+  overflow: hidden;
 }
 
 button:not([data-ui]) {
@@ -83,8 +86,10 @@ textarea:not([data-ui]) {
 .app-frame {
   display: grid;
   grid-template-rows: var(--app-topbar-height) minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   width: 100%;
+  overflow: hidden;
 }
 
 .app-topbar {
@@ -197,11 +202,13 @@ textarea:not([data-ui]) {
 .app-body {
   display: flex;
   min-height: 0;
+  overflow: hidden;
 }
 
 .app-sidebar {
-  height: auto;
+  height: calc(100vh - var(--app-topbar-height));
   min-height: 0;
+  overflow: hidden;
 }
 
 .app-sidebar-footer {
@@ -227,6 +234,7 @@ textarea:not([data-ui]) {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .eyebrow {
@@ -253,6 +261,7 @@ textarea:not([data-ui]) {
 }
 
 .app-grid {
+  height: 100%;
   min-height: 0;
   flex: 1 1 auto;
   display: grid;
@@ -267,6 +276,7 @@ textarea:not([data-ui]) {
 .inspector,
 .validation-panel {
   min-width: 0;
+  min-height: 0;
 }
 
 .inspector h2,
@@ -680,6 +690,11 @@ textarea:not([data-ui]) {
 
 .rack-device-block strong {
   font-size: 0.68rem;
+}
+
+.rack-device-block.terminal-block-rack-device strong {
+  font-size: 0.56rem;
+  line-height: 1;
 }
 
 .rack-device-block span {

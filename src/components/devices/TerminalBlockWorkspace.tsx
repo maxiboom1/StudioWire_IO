@@ -42,9 +42,9 @@ export function TerminalBlockWorkspace({ device }: { device: Device }) {
             {pairs.map((pair) => (
               <div className="terminal-block-port" key={pair.index}>
                 <span className="terminal-block-port-number">{String(pair.index).padStart(2, '0')}</span>
-                <span className="terminal-block-rear-label">Not Connected</span>
+                <span className="terminal-block-rear-label">N/C</span>
                 <span className="terminal-block-connector" aria-hidden="true" />
-                <span className="terminal-block-front-label">Not Connected</span>
+                <span className="terminal-block-front-label">N/C</span>
                 <span className="terminal-block-cable-number">{pair.frontCable?.number ?? ''}</span>
               </div>
             ))}

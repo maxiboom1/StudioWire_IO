@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.4.1 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.4.2 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -112,6 +112,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.4.2`: Polished the terminal block panel labels, rack TB block typography, TB inspector fields, and fixed app-shell scrolling so the navbar, sidebars, and footer stay pinned while the workspace scrolls.
 - `v0.2.4.1`: Added terminal block creation as a schema-backed device kind, with fixed 1RU rack placement, rear/front ports, optional FRONT planned cable numbers, TB navigator/workspace/inspector UI, and import normalization from schema `0.1.0`.
 - `v0.2.3.8`: Forced the sidebar footer and main validation footer to use the same shared height so their top borders align exactly.
 - `v0.2.3.7`: Aligned the sidebar footer app/schema version text with the validation footer secondary line and matched its smaller footer typography.
