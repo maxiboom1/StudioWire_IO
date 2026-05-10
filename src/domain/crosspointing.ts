@@ -23,6 +23,11 @@ export interface EndpointCandidate {
   occupancy: EndpointOccupancy;
 }
 
+export interface CrosspointObjectTarget {
+  objectType: 'device' | 'terminalBlock';
+  objectId: string;
+}
+
 export interface ConnectCableEndpointInput {
   anchorEndpoint: Endpoint;
   targetEndpoint: Endpoint;
@@ -159,6 +164,14 @@ export function checkEndpointCompatibility(
     }
   }
 
+  if (
+    anchor.endpoint.type === 'tb_port' &&
+    target.endpoint.type === 'tb_port' &&
+    isTerminalBlockInternalContinuity(project, anchor.endpoint, target.endpoint)
+  ) {
+    return { ok: false, reason: 'Terminal block rear/front continuity is not a cable.' };
+  }
+
   return { ok: true };
 }
 
@@ -174,6 +187,18 @@ export function getCompatibleTargetEndpointCandidates(
       occupancy: classifyEndpointOccupancy(project, endpoint),
     }))
     .filter((candidate) => candidate.occupancy !== 'active_connected');
+}
+
+export function getCompatibleTargetEndpointCandidatesForObject(
+  project: ProjectRoot,
+  anchorEndpoint: Endpoint,
+  target: CrosspointObjectTarget,
+): EndpointCandidate[] {
+  return getCompatibleTargetEndpointCandidates(project, anchorEndpoint).filter(
+    (candidate) =>
+      candidate.display.objectType === target.objectType &&
+      candidate.display.objectId === target.objectId,
+  );
 }
 
 export function connectCableEndpoint(project: ProjectRoot, input: ConnectCableEndpointInput): CrosspointResult {
@@ -374,6 +399,19 @@ function getAllConnectableEndpoints(project: ProjectRoot): Endpoint[] {
     ...project.ports.map((port) => ({ type: 'device_port' as const, id: port.id, label: port.label })),
     ...project.terminalBlockPorts.map((port) => ({ type: 'tb_port' as const, id: port.id, label: port.label })),
   ];
+}
+
+function isTerminalBlockInternalContinuity(project: ProjectRoot, left: Endpoint, right: Endpoint): boolean {
+  const leftPort = left.id ? project.terminalBlockPorts.find((port) => port.id === left.id) ?? null : null;
+  const rightPort = right.id ? project.terminalBlockPorts.find((port) => port.id === right.id) ?? null : null;
+
+  return Boolean(
+    leftPort &&
+      rightPort &&
+      leftPort.terminalBlockId === rightPort.terminalBlockId &&
+      leftPort.positionIndex === rightPort.positionIndex &&
+      leftPort.face !== rightPort.face,
+  );
 }
 
 function cableReferencesEndpoint(cable: Cable, endpoint: Endpoint): boolean {

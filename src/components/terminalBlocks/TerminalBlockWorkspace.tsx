@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { TerminalBlock } from '../../domain/types';
+import { cn } from '../../lib/utils';
+import { useCanvasInteraction } from '../../state/CanvasInteractionContext';
 import { useProject } from '../../state/ProjectContext';
 import { CrosspointPanel, type CrosspointAnchor } from '../common/CrosspointPanel';
 import { WorkspaceHeader } from '../common/WorkspaceBits';
@@ -8,6 +10,7 @@ import { TerminalBlockCanvas } from './canvas/TerminalBlockCanvas';
 
 export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: TerminalBlock }) {
   const { project, disconnectCableEndpoint } = useProject();
+  const { clearObjectDropPicker, getObjectDropState, objectDropPicker } = useCanvasInteraction();
   const [crosspointAnchor, setCrosspointAnchor] = useState<CrosspointAnchor | null>(null);
   const location = terminalBlock.locationId
     ? project.locations.find((candidate) => candidate.id === terminalBlock.locationId)
@@ -16,6 +19,17 @@ export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: Termi
   const ports = project.terminalBlockPorts.filter((port) => port.terminalBlockId === terminalBlock.id);
   const rearCount = ports.filter((port) => port.face === 'rear').length;
   const frontCount = ports.filter((port) => port.face === 'front').length;
+  const canvasTarget = {
+    objectType: 'terminalBlock' as const,
+    objectId: terminalBlock.id,
+    label: terminalBlock.name,
+  };
+  const objectDropState = getObjectDropState(canvasTarget);
+  const objectDropAnchor =
+    objectDropPicker?.target.objectType === 'terminalBlock' &&
+    objectDropPicker.target.objectId === terminalBlock.id
+      ? objectDropPicker.anchor
+      : null;
 
   return (
     <section className="workspace" aria-label="Terminal block workspace">
@@ -24,7 +38,15 @@ export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: Termi
         {location ? <Badge>Location: {location.name}</Badge> : <Badge>Unassigned</Badge>}
         <Badge>{terminalBlock.labelPrefix || terminalBlock.code || 'TB'}</Badge>
       </div>
-      <div className="tb-canvas-shell">
+      <div
+        className={cn(
+          'tb-canvas-shell',
+          objectDropState !== 'idle' ? `canvas-object-drop-${objectDropState}` : null,
+        )}
+        data-crosspoint-object-id={terminalBlock.id}
+        data-crosspoint-object-label={terminalBlock.name}
+        data-crosspoint-object-type="terminalBlock"
+      >
         <div className="tb-canvas-title">
           <div>
             <h2>Rear / Front Endpoint Canvas</h2>
@@ -47,6 +69,11 @@ export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: Termi
           ports={ports}
         />
         <CrosspointPanel anchor={crosspointAnchor} onClear={() => setCrosspointAnchor(null)} />
+        <CrosspointPanel
+          anchor={objectDropAnchor}
+          objectFilter={objectDropPicker?.target}
+          onClear={clearObjectDropPicker}
+        />
       </div>
     </section>
   );

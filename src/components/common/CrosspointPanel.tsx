@@ -1,29 +1,37 @@
 import { useMemo, useState } from 'react';
-import { getCompatibleTargetEndpointCandidates, resolveEndpointInfo, type CableEndpointSide } from '../../domain/crosspointing';
+import {
+  getCompatibleTargetEndpointCandidates,
+  getCompatibleTargetEndpointCandidatesForObject,
+  resolveEndpointInfo,
+  type CrosspointObjectTarget,
+} from '../../domain/crosspointing';
+import type { EndpointMeta } from '../../domain/canvasDrag';
 import type { Endpoint } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
-export interface CrosspointAnchor {
-  endpoint: Endpoint;
-  cableId?: string;
-  side?: CableEndpointSide;
-  label: string;
-}
+export type CrosspointAnchor = EndpointMeta;
 
 export function CrosspointPanel({
   anchor,
+  objectFilter,
   onClear,
 }: {
   anchor: CrosspointAnchor | null;
+  objectFilter?: CrosspointObjectTarget & { label?: string };
   onClear: () => void;
 }) {
   const { project, connectCableEndpoint } = useProject();
   const [selectedTargetKey, setSelectedTargetKey] = useState('');
   const candidates = useMemo(
-    () => (anchor ? getCompatibleTargetEndpointCandidates(project, anchor.endpoint) : []),
-    [anchor, project],
+    () =>
+      anchor
+        ? objectFilter
+          ? getCompatibleTargetEndpointCandidatesForObject(project, anchor.endpoint, objectFilter)
+          : getCompatibleTargetEndpointCandidates(project, anchor.endpoint)
+        : [],
+    [anchor, objectFilter, project],
   );
   const selectedCandidate = candidates.find((candidate) => endpointKey(candidate.endpoint) === selectedTargetKey) ?? null;
 
@@ -51,7 +59,10 @@ export function CrosspointPanel({
       <div className="crosspoint-panel-heading">
         <div>
           <h2>Connect Endpoint</h2>
-          <p>{anchor.label}</p>
+          <p>
+            {anchor.label}
+            {objectFilter?.label ? ` -> choose on ${objectFilter.label}` : ''}
+          </p>
         </div>
         <Button type="button" variant="ghost" onClick={onClear}>
           Clear

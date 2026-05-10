@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Device } from '../../domain/types';
+import { cn } from '../../lib/utils';
+import { useCanvasInteraction } from '../../state/CanvasInteractionContext';
 import { useProject } from '../../state/ProjectContext';
 import { CrosspointPanel, type CrosspointAnchor } from '../common/CrosspointPanel';
 import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
@@ -8,6 +10,7 @@ import { PortCableColumn } from './canvas/PortCableColumn';
 
 export function DeviceWorkspace({ device }: { device: Device }) {
   const { project, disconnectCableEndpoint } = useProject();
+  const { clearObjectDropPicker, getObjectDropState, objectDropPicker } = useCanvasInteraction();
   const [crosspointAnchor, setCrosspointAnchor] = useState<CrosspointAnchor | null>(null);
   const location = device.locationId ? project.locations.find((candidate) => candidate.id === device.locationId) : null;
   const rack = device.rackId ? project.racks.find((candidate) => candidate.id === device.rackId) : null;
@@ -19,6 +22,12 @@ export function DeviceWorkspace({ device }: { device: Device }) {
     bidirectional: portGroups.filter((group) => group.direction === 'bidirectional'),
   };
   const sideOutputGroups = [...groupsByDirection.output, ...groupsByDirection.bidirectional];
+  const canvasTarget = { objectType: 'device' as const, objectId: device.id, label: device.name };
+  const objectDropState = getObjectDropState(canvasTarget);
+  const objectDropAnchor =
+    objectDropPicker?.target.objectType === 'device' && objectDropPicker.target.objectId === device.id
+      ? objectDropPicker.anchor
+      : null;
 
   return (
     <section className="workspace" aria-label="Device canvas">
@@ -30,7 +39,16 @@ export function DeviceWorkspace({ device }: { device: Device }) {
         </div>
       ) : null}
       <div className="device-canvas">
-        <div className={device.status === 'retired' ? 'device-block retired' : 'device-block'}>
+        <div
+          className={cn(
+            'device-block',
+            device.status === 'retired' ? 'retired' : null,
+            objectDropState !== 'idle' ? `canvas-object-drop-${objectDropState}` : null,
+          )}
+          data-crosspoint-object-id={device.id}
+          data-crosspoint-object-label={device.name}
+          data-crosspoint-object-type="device"
+        >
           <div className="device-title">
             <strong>{device.name}</strong>
             <span>{device.status === 'retired' ? 'Retired' : device.code || device.labelPrefix || 'No code'}</span>
@@ -67,6 +85,11 @@ export function DeviceWorkspace({ device }: { device: Device }) {
           </EmptyState>
         ) : null}
         <CrosspointPanel anchor={crosspointAnchor} onClear={() => setCrosspointAnchor(null)} />
+        <CrosspointPanel
+          anchor={objectDropAnchor}
+          objectFilter={objectDropPicker?.target}
+          onClear={clearObjectDropPicker}
+        />
       </div>
     </section>
   );

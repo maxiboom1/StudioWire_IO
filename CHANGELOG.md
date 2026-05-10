@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.7
+
+Added pointer-event drag/drop crosspointing for canvas endpoints using the v0.3.6 endpoint selection foundation.
+
+### Added
+
+- Added shared canvas endpoint drag state so device and terminal block canvases can use the same in-flight crosspoint interaction model.
+- Added draggable endpoint handles for device port cable stubs and terminal block rear/front face lines.
+- Added exact endpoint drop handling that reuses the existing reducer/domain connection action and preserves anchor-cable merge, losing planned-cable retirement, active-target blocking, and cable number invariants.
+- Added object-body drop handling that opens a compatible target picker filtered to the dropped device or terminal block.
+- Added visual feedback for compatible and incompatible endpoint/object drop targets during pointer drag.
+- Added tests for endpoint drag state helpers and object-level target filtering.
+
+### Changed
+
+- Preserved project schema version, reducer/domain cable semantics, import/export behavior, and the rule that no logical `Connection` object is added.
+
 ## v0.3.6
 
 Added the endpoint selection and cable merge foundation for segment-by-segment crosspointing.

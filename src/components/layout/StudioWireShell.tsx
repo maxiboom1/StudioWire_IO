@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CanvasInteractionOverlay } from '../../state/CanvasInteractionContext';
 import { useProject } from '../../state/ProjectContext';
 import { AddDeviceModal } from '../devices/AddDeviceModal';
 import { AddLocationModal } from '../locations/AddLocationModal';
@@ -138,6 +139,7 @@ export function StudioWireShell() {
           }}
         />
       ) : null}
+      <CanvasInteractionOverlay />
     </SidebarProvider>
   );
 }

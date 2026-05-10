@@ -68,7 +68,13 @@ function PortCableStack({
   if (activeCables.length === 0) {
     return (
       <div className="cable-stub-stack">
-        <CableStubLine side={side} portLabel={port.label} cableNumber={null} oppositeLabel="Unplanned endpoint" />
+        <CableStubLine
+          endpointMeta={createEndpointMeta(endpoint, null, port.label)}
+          side={side}
+          portLabel={port.label}
+          cableNumber={null}
+          oppositeLabel="Unplanned endpoint"
+        />
         {onSelectAnchor ? (
           <div className="crosspoint-inline-actions">
             <Button
@@ -90,6 +96,7 @@ function PortCableStack({
       {activeCables.map((cable) => (
         <div className="cable-stub-with-actions" key={cable.id}>
           <CableStubLine
+            endpointMeta={createEndpointMeta(endpoint, cable, port.label)}
             side={side}
             portLabel={port.label}
             cableNumber={cable.number}
@@ -155,6 +162,17 @@ function CableActions({
       ) : null}
     </div>
   );
+}
+
+function createEndpointMeta(endpoint: Endpoint, cable: Cable | null, portLabel: string): CrosspointAnchor {
+  const unknownSide = cable ? getUnknownSide(cable) : null;
+
+  return {
+    endpoint,
+    cableId: unknownSide && cable ? cable.id : undefined,
+    side: unknownSide ?? undefined,
+    label: unknownSide && cable ? `${cable.number} from ${portLabel}` : `New cable from ${portLabel}`,
+  };
 }
 
 function cableReferencesPort(cable: Cable, portId: string): boolean {

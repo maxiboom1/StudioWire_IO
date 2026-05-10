@@ -1,13 +1,16 @@
 import { cn } from '../../../lib/utils';
+import type { EndpointMeta } from '../../../domain/canvasDrag';
 import { EndpointHandle } from './EndpointHandle';
 
 export function CableStubLine({
+  endpointMeta,
   side,
   portLabel,
   cableNumber,
   oppositeLabel,
   warningLabel,
 }: {
+  endpointMeta?: EndpointMeta;
   side: 'left' | 'right';
   portLabel: string;
   cableNumber: string | null;
@@ -27,9 +30,13 @@ export function CableStubLine({
     >
       <div className="cable-stub-port-label">{portLabel}</div>
       <div className="cable-stub-track" aria-hidden="true">
-        {side === 'left' ? <EndpointHandle side="left" warning={Boolean(warningLabel)} /> : null}
+        {side === 'left' ? (
+          <EndpointHandle endpointMeta={endpointMeta} side="left" warning={Boolean(warningLabel)} />
+        ) : null}
         <span className="cable-stub-track-rule" />
-        {side === 'right' ? <EndpointHandle side="right" warning={Boolean(warningLabel)} /> : null}
+        {side === 'right' ? (
+          <EndpointHandle endpointMeta={endpointMeta} side="right" warning={Boolean(warningLabel)} />
+        ) : null}
       </div>
       <div className="cable-stub-meta">
         <strong>{cableNumber ?? 'No cable'}</strong>

@@ -941,6 +941,26 @@ textarea:not([data-ui]) {
   box-shadow: 0 0 0 2px rgba(142, 224, 213, 0.12);
 }
 
+.device-endpoint-handle-draggable {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.device-endpoint-handle-compatible {
+  border-color: #22c55e;
+  background: #dcfce7;
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.24),
+    0 0 14px rgba(34, 197, 94, 0.34);
+}
+
+.device-endpoint-handle-incompatible,
+.device-endpoint-handle-self {
+  border-color: #f97316;
+  background: #ffedd5;
+  opacity: 0.55;
+}
+
 .device-endpoint-handle-left {
   grid-column: 1;
 }
@@ -1199,6 +1219,34 @@ textarea:not([data-ui]) {
   background: #202b30;
   color: #c5d0d5;
   padding: 18px;
+}
+
+.canvas-object-drop-compatible {
+  outline: 2px solid #22c55e;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.13);
+}
+
+.canvas-object-drop-incompatible {
+  outline: 2px dashed #f97316;
+  outline-offset: 4px;
+  opacity: 0.82;
+}
+
+.canvas-drag-overlay {
+  position: fixed;
+  z-index: 80;
+  max-width: 280px;
+  transform: translate(14px, 14px);
+  border: 1px solid #bee5e3;
+  border-radius: 999px;
+  background: #f7fefd;
+  color: #10242c;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 6px 10px;
+  pointer-events: none;
+  box-shadow: 0 12px 28px rgba(16, 36, 44, 0.14);
 }
 
 .crosspoint-inline-actions {

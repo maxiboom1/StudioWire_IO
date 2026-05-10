@@ -107,9 +107,21 @@ function FaceCable({
       >
         <div className="tb-face-label">{face}</div>
         <div className="tb-face-track" aria-hidden="true">
-          {face === 'front' ? <EndpointHandle side="left" warning={Boolean(warningLabel)} /> : null}
+          {face === 'front' ? (
+            <EndpointHandle
+              endpointMeta={port ? createEndpointMeta({ type: 'tb_port', id: port.id, label: port.label }, cable, port.label) : undefined}
+              side="left"
+              warning={Boolean(warningLabel)}
+            />
+          ) : null}
           <span />
-          {face === 'rear' ? <EndpointHandle side="right" warning={Boolean(warningLabel)} /> : null}
+          {face === 'rear' ? (
+            <EndpointHandle
+              endpointMeta={port ? createEndpointMeta({ type: 'tb_port', id: port.id, label: port.label }, cable, port.label) : undefined}
+              side="right"
+              warning={Boolean(warningLabel)}
+            />
+          ) : null}
         </div>
         <div className="tb-face-meta">
           <strong>{statusLabel}</strong>
@@ -176,6 +188,17 @@ function CableActions({
       ) : null}
     </div>
   );
+}
+
+function createEndpointMeta(endpoint: Endpoint, cable: Cable | null, portLabel: string): CrosspointAnchor {
+  const unknownSide = cable ? getUnknownSide(cable) : null;
+
+  return {
+    endpoint,
+    cableId: unknownSide && cable ? cable.id : undefined,
+    side: unknownSide ?? undefined,
+    label: unknownSide && cable ? `${cable.number} from ${portLabel}` : `New cable from ${portLabel}`,
+  };
 }
 
 function getUnknownSide(cable: Cable): 'source' | 'destination' | null {

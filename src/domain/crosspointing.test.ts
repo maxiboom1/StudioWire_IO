@@ -9,6 +9,7 @@ import {
   findActiveCablesAttachedToEndpoint,
   findRetiredCablesAttachedToEndpoint,
   getCompatibleTargetEndpointCandidates,
+  getCompatibleTargetEndpointCandidatesForObject,
   resolveEndpointInfo,
 } from './crosspointing';
 
@@ -36,6 +37,11 @@ const tbRear1: Endpoint = {
   type: 'tb_port',
   id: 'tb-port-tb-port-group-mcr-bnc-1-rear-01',
   label: 'TB1-REAR-01',
+};
+const tbFront1: Endpoint = {
+  type: 'tb_port',
+  id: 'tb-port-tb-port-group-mcr-bnc-1-front-01',
+  label: 'TB1-FRONT-01',
 };
 
 function createProject(): ProjectRoot {
@@ -96,10 +102,18 @@ describe('crosspoint endpoint resolution and compatibility', () => {
     expect(
       checkEndpointCompatibility(project, tbRear1, {
         type: 'tb_port',
-        id: project.terminalBlockPorts[1].id,
-        label: project.terminalBlockPorts[1].label,
+        id: project.terminalBlockPorts[2].id,
+        label: project.terminalBlockPorts[2].label,
       }).ok,
     ).toBe(true);
+  });
+
+  it('blocks rear/front internal continuity on the same terminal block position', () => {
+    const project = createProject();
+    const result = checkEndpointCompatibility(project, tbRear1, tbFront1);
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.reason).toContain('continuity');
   });
 
   it('returns compatible target candidates without active connected endpoints', () => {
@@ -116,6 +130,22 @@ describe('crosspoint endpoint resolution and compatibility', () => {
 
     expect(candidates.some((candidate) => candidate.endpoint.id === input1.id)).toBe(false);
     expect(candidates.some((candidate) => candidate.endpoint.id === input2.id)).toBe(true);
+  });
+
+  it('filters compatible targets to a specific object for object-level drops', () => {
+    const project = createProject();
+    const inputDevice = project.devices.find((device) => device.id === 'device-multiviewer-1');
+
+    expect(inputDevice).toBeDefined();
+    const candidates = getCompatibleTargetEndpointCandidatesForObject(project, output1, {
+      objectType: 'device',
+      objectId: inputDevice!.id,
+    });
+
+    expect(candidates.length).toBeGreaterThan(0);
+    expect(candidates.every((candidate) => candidate.display.objectId === inputDevice!.id)).toBe(true);
+    expect(candidates.some((candidate) => candidate.endpoint.id === input1.id)).toBe(true);
+    expect(candidates.some((candidate) => candidate.endpoint.id === output2.id)).toBe(false);
   });
 });
 
