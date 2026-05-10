@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.5.4
+
+Completed the inline TB segment drawing polish.
+
+### Changed
+
+- Added a second crosspoint picker after inline TB markers so TB front routing can be controlled directly from the current device view.
+- Displayed the cable number for the TB front-to-destination segment when that segment is connected.
+- Kept the TB front picker visible even when only the device-to-TB-rear segment exists.
+- Moved cable numbers and remote destination labels closer to the red cable line.
+- Kept project schema version `0.2.5.1` and bumped the app version to `0.2.5.4`.
+
 ## v0.2.5.3
 
 Polished crosspoint drawing and added disconnect.

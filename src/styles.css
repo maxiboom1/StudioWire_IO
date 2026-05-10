@@ -1320,9 +1320,9 @@ textarea:not([data-ui]) {
 
 .device-cable-number {
   position: absolute;
-  top: calc(50% + 7px);
+  top: calc(50% + 3px);
   color: #004b7a;
-  font-size: 1rem;
+  font-size: 0.84rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -1330,7 +1330,7 @@ textarea:not([data-ui]) {
 
 .device-chain-label {
   position: absolute;
-  top: calc(50% - 20px);
+  top: calc(50% - 13px);
   z-index: 1;
   max-width: 126px;
   overflow: hidden;
@@ -1350,12 +1350,20 @@ textarea:not([data-ui]) {
   right: 28px;
 }
 
-.device-wire-row-input .device-cable-number {
+.device-wire-row-input .device-cable-number-primary {
   right: 28px;
 }
 
-.device-wire-row-output .device-cable-number {
+.device-wire-row-output .device-cable-number-primary {
   left: 28px;
+}
+
+.device-wire-row-input .device-cable-number-secondary {
+  left: 28px;
+}
+
+.device-wire-row-output .device-cable-number-secondary {
+  right: 28px;
 }
 
 .device-inline-tb-marker {
@@ -1364,16 +1372,16 @@ textarea:not([data-ui]) {
   align-items: center;
   align-self: center;
   height: 27px;
-  margin: 0 8px;
+  margin: 0 4px;
   color: #050505;
-  font-size: 0.86rem;
+  font-size: 0.98rem;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
 
 .device-inline-tb-label {
-  padding: 0 6px;
+  padding: 0 3px;
 }
 
 .device-inline-tb-rear-bar {

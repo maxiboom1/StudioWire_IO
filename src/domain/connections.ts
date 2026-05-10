@@ -28,6 +28,9 @@ export type PortConnectionChainPart =
       label: string;
       marker: string;
       orientation: 'rear-to-front' | 'front-to-rear' | 'front-to-front' | 'rear' | 'front';
+      entryPortId: string;
+      exitPortId: string | null;
+      continuationCable: Cable | null;
     }
   | {
       type: 'port';
@@ -382,14 +385,20 @@ function buildChainParts(project: ProjectRoot, originPortId: string): PortConnec
         const nextPort = path[index + 1]
           ? project.ports.find((candidate) => candidate.id === path[index + 1]) ?? null
           : null;
+        const followingPortId = path[index + 2] ?? null;
         const orientation = getTbMarkerOrientation(project, port, nextPort);
         const label = getTbInlineLabel(project, port);
+        const exitPort = isMatchingTbSibling(project, port, nextPort) ? nextPort : null;
 
         parts.push({
           type: 'terminal_block',
           label,
           marker: formatTbMarker(label, orientation),
           orientation,
+          entryPortId: port.id,
+          exitPortId: exitPort?.id ?? null,
+          continuationCable:
+            exitPort && followingPortId ? findConnectedCableBetween(project, exitPort.id, followingPortId) : null,
         });
       }
 
@@ -409,12 +418,7 @@ function getTbMarkerOrientation(
   port: Port,
   nextPort: Port | null,
 ): Extract<PortConnectionChainPart, { type: 'terminal_block' }>['orientation'] {
-  if (
-    nextPort &&
-    isTerminalBlockPort(project, nextPort) &&
-    nextPort.deviceId === port.deviceId &&
-    nextPort.index === port.index
-  ) {
+  if (isMatchingTbSibling(project, port, nextPort)) {
     if (port.direction === 'rear' && nextPort.direction === 'front') {
       return 'rear-to-front';
     }
@@ -450,6 +454,26 @@ function formatTbMarker(
   return `| ${label} >`;
 }
 
+function isMatchingTbSibling(project: ProjectRoot, port: Port, nextPort: Port | null): nextPort is Port {
+  return Boolean(
+    nextPort &&
+      isTerminalBlockPort(project, nextPort) &&
+      nextPort.deviceId === port.deviceId &&
+      nextPort.index === port.index,
+  );
+}
+
+function findConnectedCableBetween(project: ProjectRoot, leftPortId: string, rightPortId: string): Cable | null {
+  return (
+    project.cables.find(
+      (cable) =>
+        cable.status === 'connected' &&
+        cableReferencesPort(cable, leftPortId) &&
+        cableReferencesPort(cable, rightPortId),
+    ) ?? null
+  );
+}
+
 function findDisplayPath(project: ProjectRoot, originPortId: string): string[] {
   const neighbors = buildConnectionNeighbors(project);
   const queue: string[][] = [[originPortId]];
@@ -465,6 +489,10 @@ function findDisplayPath(project: ProjectRoot, originPortId: string): string[] {
     }
 
     const currentPort = project.ports.find((port) => port.id === current);
+
+    if (current !== originPortId && currentPort && isTerminalBlockPort(project, currentPort)) {
+      firstNonOriginPath = path;
+    }
 
     if (current !== originPortId && currentPort && !isTerminalBlockPort(project, currentPort)) {
       return path;

@@ -84,10 +84,28 @@ function CableLineRow({
 
   const inlineMarker = row.connection.chainParts.find((part) => part.type === 'terminal_block') ?? null;
   const remoteLabel = getRemoteChainLabel(row.connection.chainParts);
+  const hasInlineFrontPicker = Boolean(inlineMarker?.exitPortId);
 
   return (
     <div className={`device-wire-row device-wire-row-${side}`}>
-      {side === 'input' ? (
+      {side === 'input' && inlineMarker && hasInlineFrontPicker ? (
+        <>
+          <CrosspointPicker
+            ariaLabel={`Connect ${inlineMarker.label} front`}
+            className="device-cable-picker device-cable-picker-secondary"
+            portId={inlineMarker.exitPortId ?? row.port.id}
+          />
+          <span className="device-cable-line device-cable-line-outer" aria-hidden="true" />
+          <InlineTbMarker part={inlineMarker} />
+          <CrosspointPicker
+            ariaLabel={`Connect ${row.port.label}`}
+            className="device-cable-picker device-cable-picker-primary"
+            portId={row.port.id}
+          />
+          <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
+          <span className="device-port-anchor" aria-hidden="true" />
+        </>
+      ) : side === 'input' ? (
         <>
           <CrosspointPicker
             ariaLabel={`Connect ${row.port.label}`}
@@ -98,6 +116,23 @@ function CableLineRow({
           {inlineMarker ? <InlineTbMarker part={inlineMarker} /> : null}
           <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
           <span className="device-port-anchor" aria-hidden="true" />
+        </>
+      ) : inlineMarker && hasInlineFrontPicker ? (
+        <>
+          <span className="device-port-anchor" aria-hidden="true" />
+          <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
+          <CrosspointPicker
+            ariaLabel={`Connect ${row.port.label}`}
+            className="device-cable-picker device-cable-picker-primary"
+            portId={row.port.id}
+          />
+          <InlineTbMarker part={inlineMarker} />
+          <span className="device-cable-line device-cable-line-outer" aria-hidden="true" />
+          <CrosspointPicker
+            ariaLabel={`Connect ${inlineMarker.label} front`}
+            className="device-cable-picker device-cable-picker-secondary"
+            portId={inlineMarker.exitPortId ?? row.port.id}
+          />
         </>
       ) : (
         <>
@@ -113,7 +148,14 @@ function CableLineRow({
         </>
       )}
       {remoteLabel ? <span className="device-chain-label">{remoteLabel}</span> : null}
-      {row.connection.cable ? <span className="device-cable-number">{row.connection.cable.number}</span> : null}
+      {row.connection.cable ? (
+        <span className="device-cable-number device-cable-number-primary">{row.connection.cable.number}</span>
+      ) : null}
+      {inlineMarker?.continuationCable ? (
+        <span className="device-cable-number device-cable-number-secondary">
+          {inlineMarker.continuationCable.number}
+        </span>
+      ) : null}
     </div>
   );
 }

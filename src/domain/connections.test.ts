@@ -181,6 +181,15 @@ describe('connectPorts', () => {
       return;
     }
 
+    const rearOnlySummary = describePortConnection(rearResult.project, routerOut.id);
+    const rearOnlyTbPart = rearOnlySummary.chainParts.find((part) => part.type === 'terminal_block');
+
+    expect(rearOnlyTbPart).toMatchObject({
+      entryPortId: tbRear.id,
+      exitPortId: tbFront.id,
+      continuationCable: null,
+    });
+
     const frontResult = connectPorts(rearResult.project, { fromPortId: tbFront.id, toPortId: switcherIn.id });
 
     expect(frontResult.ok).toBe(true);
@@ -195,7 +204,13 @@ describe('connectPorts', () => {
     expect(codes).not.toContain('connection-chain-direction-invalid');
     expect(summary.chainLabel).toContain('| TB-A-01 >');
     expect(summary.chainLabel).toContain('SW-IN-001');
-    expect(tbPart).toMatchObject({ marker: '| TB-A-01 >', orientation: 'rear-to-front' });
+    expect(tbPart).toMatchObject({
+      marker: '| TB-A-01 >',
+      orientation: 'rear-to-front',
+      entryPortId: tbRear.id,
+      exitPortId: tbFront.id,
+    });
+    expect(tbPart?.continuationCable?.number).toBe('V-0009');
   });
 
   it('supports TB front to TB front patching with lower-number-wins', () => {
