@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { CrosspointPanel, type CrosspointAnchor } from '../common/CrosspointPanel';
 import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
 import { Badge } from '../ui/badge';
 import { PortCableColumn } from './canvas/PortCableColumn';
 
 export function DeviceWorkspace({ device }: { device: Device }) {
-  const { project } = useProject();
+  const { project, disconnectCableEndpoint } = useProject();
+  const [crosspointAnchor, setCrosspointAnchor] = useState<CrosspointAnchor | null>(null);
   const location = device.locationId ? project.locations.find((candidate) => candidate.id === device.locationId) : null;
   const rack = device.rackId ? project.racks.find((candidate) => candidate.id === device.rackId) : null;
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
@@ -37,6 +40,8 @@ export function DeviceWorkspace({ device }: { device: Device }) {
               title="Inputs"
               side="left"
               groups={groupsByDirection.input}
+              onDisconnectEndpoint={disconnectCableEndpoint}
+              onSelectAnchor={setCrosspointAnchor}
               ports={ports}
               project={project}
             />
@@ -49,6 +54,8 @@ export function DeviceWorkspace({ device }: { device: Device }) {
               title="Outputs / Bidirectional"
               side="right"
               groups={sideOutputGroups}
+              onDisconnectEndpoint={disconnectCableEndpoint}
+              onSelectAnchor={setCrosspointAnchor}
               ports={ports}
               project={project}
             />
@@ -59,6 +66,7 @@ export function DeviceWorkspace({ device }: { device: Device }) {
             This device has no port groups yet. v0.1 locks port group creation to the Add Device workflow.
           </EmptyState>
         ) : null}
+        <CrosspointPanel anchor={crosspointAnchor} onClear={() => setCrosspointAnchor(null)} />
       </div>
     </section>
   );

@@ -47,7 +47,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.3.5';
+const APP_VERSION = '0.3.6';
 const UNASSIGNED_KEY = 'unassigned-devices';
 const UNASSIGNED_TB_KEY = 'unassigned-terminal-blocks';
 

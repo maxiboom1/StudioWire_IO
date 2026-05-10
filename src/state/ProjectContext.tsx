@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { makeId, nowIso } from '../domain/id';
+import type { ConnectCableEndpointInput, DisconnectCableEndpointInput } from '../domain/crosspointing';
 import type {
   CablePrefix,
   Category,
@@ -55,6 +56,8 @@ interface ProjectContextValue extends ProjectState {
   addDevice: (input: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] }) => string;
   addTerminalBlock: (input: TerminalBlockDraft) => string;
   updateTerminalBlock: (id: string, updates: TerminalBlockUpdate) => void;
+  connectCableEndpoint: (input: ConnectCableEndpointInput) => void;
+  disconnectCableEndpoint: (input: DisconnectCableEndpointInput) => void;
   moveMountedDevice: (input: { deviceId: string; targetRackId: string; targetBottomRu: number }) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
   retireDevice: (id: string) => void;
@@ -248,6 +251,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'UPDATE_TERMINAL_BLOCK', payload: { id, updates } });
   }, []);
 
+  const connectEndpoint = useCallback((input: ConnectCableEndpointInput) => {
+    dispatch({ type: 'CONNECT_CABLE_ENDPOINT', payload: input });
+  }, []);
+
+  const disconnectEndpoint = useCallback((input: DisconnectCableEndpointInput) => {
+    dispatch({ type: 'DISCONNECT_CABLE_ENDPOINT', payload: input });
+  }, []);
+
   const updateDevice = useCallback((id: string, updates: DeviceUpdate) => {
     dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } });
   }, []);
@@ -287,6 +298,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       addDevice,
       addTerminalBlock,
       updateTerminalBlock,
+      connectCableEndpoint: connectEndpoint,
+      disconnectCableEndpoint: disconnectEndpoint,
       moveMountedDevice,
       updateDevice,
       retireDevice,
@@ -314,6 +327,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       addDevice,
       addTerminalBlock,
       updateTerminalBlock,
+      connectEndpoint,
+      disconnectEndpoint,
       moveMountedDevice,
       updateDevice,
       retireDevice,

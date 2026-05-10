@@ -1,4 +1,10 @@
 import { allocateCableRange } from '../domain/cableNumbers';
+import {
+  connectCableEndpoint,
+  disconnectCableEndpoint,
+  type ConnectCableEndpointInput,
+  type DisconnectCableEndpointInput,
+} from '../domain/crosspointing';
 import { makeId, makeIndexedId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject, createTerminalBlock, createTerminalBlockPortGroup } from '../domain/projectFactory';
@@ -107,6 +113,8 @@ export type ProjectAction =
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
   | { type: 'ADD_TERMINAL_BLOCK'; payload: TerminalBlockDraft }
   | { type: 'UPDATE_TERMINAL_BLOCK'; payload: { id: string; updates: TerminalBlockUpdate } }
+  | { type: 'CONNECT_CABLE_ENDPOINT'; payload: ConnectCableEndpointInput }
+  | { type: 'DISCONNECT_CABLE_ENDPOINT'; payload: DisconnectCableEndpointInput }
   | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
@@ -461,6 +469,42 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
           `Terminal block updated: ${action.payload.id}`,
         ),
         statusMessage: 'Terminal block updated',
+        importError: null,
+      };
+    }
+
+    case 'CONNECT_CABLE_ENDPOINT': {
+      const result = connectCableEndpoint(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: `Connection blocked: ${result.message}`,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(result.project, result.message),
+        statusMessage: result.message,
+        importError: null,
+      };
+    }
+
+    case 'DISCONNECT_CABLE_ENDPOINT': {
+      const result = disconnectCableEndpoint(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: `Disconnect skipped: ${result.message}`,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(result.project, result.message),
+        statusMessage: result.message,
         importError: null,
       };
     }

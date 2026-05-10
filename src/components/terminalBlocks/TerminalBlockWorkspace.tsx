@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import type { TerminalBlock } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { CrosspointPanel, type CrosspointAnchor } from '../common/CrosspointPanel';
 import { WorkspaceHeader } from '../common/WorkspaceBits';
 import { Badge } from '../ui/badge';
 import { TerminalBlockCanvas } from './canvas/TerminalBlockCanvas';
 
 export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: TerminalBlock }) {
-  const { project } = useProject();
+  const { project, disconnectCableEndpoint } = useProject();
+  const [crosspointAnchor, setCrosspointAnchor] = useState<CrosspointAnchor | null>(null);
   const location = terminalBlock.locationId
     ? project.locations.find((candidate) => candidate.id === terminalBlock.locationId)
     : null;
@@ -36,7 +39,14 @@ export function TerminalBlockWorkspace({ terminalBlock }: { terminalBlock: Termi
             <span>{portGroups[0]?.plannedCableMode ?? 'none'}</span>
           </div>
         </div>
-        <TerminalBlockCanvas project={project} terminalBlock={terminalBlock} ports={ports} />
+        <TerminalBlockCanvas
+          onDisconnectEndpoint={disconnectCableEndpoint}
+          onSelectAnchor={setCrosspointAnchor}
+          project={project}
+          terminalBlock={terminalBlock}
+          ports={ports}
+        />
+        <CrosspointPanel anchor={crosspointAnchor} onClear={() => setCrosspointAnchor(null)} />
       </div>
     </section>
   );

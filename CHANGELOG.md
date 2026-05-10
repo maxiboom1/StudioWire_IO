@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.6
+
+Added the endpoint selection and cable merge foundation for segment-by-segment crosspointing.
+
+### Added
+
+- Added crosspointing domain helpers for endpoint display resolution, active/retired/planned-stub occupancy lookup, compatibility checks, and compatible target candidate lists.
+- Added reducer/context actions for connecting a cable endpoint to a target endpoint and disconnecting a cable endpoint back to unknown state.
+- Added anchor-cable merge behavior where the anchor cable wins, target unresolved planned stubs are retired, and retired cable numbers are not reused.
+- Added a simple compatible endpoint picker on device and terminal block canvases.
+- Added disconnect affordances for non-unknown cable endpoints.
+- Added tests covering endpoint resolution, compatibility, merge/retire behavior, connected-target blocking, TB endpoint compatibility, retired occupancy, and disconnect behavior.
+
+### Changed
+
+- Preserved project schema version and did not add logical `Connection` objects, automatic routing, or drag/drop crosspointing.
+
 ## v0.3.5
 
 Added a read-only selected terminal block canvas.

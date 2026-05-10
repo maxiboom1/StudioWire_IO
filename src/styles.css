@@ -1201,6 +1201,97 @@ textarea:not([data-ui]) {
   padding: 18px;
 }
 
+.crosspoint-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.crosspoint-inline-actions [data-ui="button"] {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 0.68rem;
+}
+
+.crosspoint-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  border: 1px solid #bee5e3;
+  border-radius: 8px;
+  background: #f7fefd;
+  color: #10242c;
+  padding: 14px;
+}
+
+.crosspoint-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.crosspoint-panel-heading h2 {
+  margin: 0;
+  color: #10242c;
+  font-size: 0.95rem;
+}
+
+.crosspoint-panel-heading p {
+  margin: 4px 0 0;
+  color: #526269;
+  font-size: 0.8rem;
+}
+
+.crosspoint-target-list {
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.crosspoint-target {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid #d7e0e4;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.crosspoint-target.selected {
+  border-color: #3bb7b5;
+  background: #ecfdfb;
+}
+
+.crosspoint-target span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.crosspoint-target strong,
+.crosspoint-target small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crosspoint-target strong {
+  color: #10242c;
+  font-size: 0.82rem;
+}
+
+.crosspoint-target small {
+  color: #607177;
+  font-size: 0.72rem;
+}
+
 .inspector {
   grid-area: inspector;
   display: grid;
