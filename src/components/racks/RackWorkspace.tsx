@@ -6,12 +6,8 @@ import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, readDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
-import { EmptyState, WorkspaceHeader } from '../common/WorkspaceBits';
 import { CanvasViewport } from '../common/CanvasViewport';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import {
   Select,
   SelectContent,
@@ -52,7 +48,6 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
   const [viewedRackIds, setViewedRackIds] = useState<string[]>([rack.id]);
   const [draggingDeviceId, setDraggingDeviceId] = useState<string | null>(null);
   const [dropPreview, setDropPreview] = useState<DropPreview | null>(null);
-  const [dropMessage, setDropMessage] = useState<string | null>(null);
   const placementDiagnostics = useMemo(() => analyzeRackPlacements(project), [project]);
   const viewedRacks = useMemo(
     () =>
@@ -89,13 +84,11 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
   function handleDeviceDragStart(event: DragEvent<HTMLDivElement>, device: Device) {
     if (!device.rackSizeRu || device.rackSizeRu <= 0) {
       event.preventDefault();
-      setDropMessage(`${device.name} cannot be moved because it has no positive rack size.`);
       return;
     }
 
     writeDeviceDragData(event, device.id);
     setDraggingDeviceId(device.id);
-    setDropMessage(null);
   }
 
   function handleDeviceDragEnd() {
@@ -152,8 +145,9 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
     const bottomRu = getTargetBottomRu(event, model.displayRus);
 
     if (!deviceId || bottomRu === null) {
-      setDropMessage('Device move blocked: no valid target RU was found.');
+      setDraggingDeviceId(null);
       setDropPreview(null);
+      clearDeviceDragData();
       return;
     }
 
@@ -164,8 +158,9 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
     });
 
     if (!result.ok) {
-      setDropMessage(`Device move blocked: ${result.message}`);
+      setDraggingDeviceId(null);
       setDropPreview(null);
+      clearDeviceDragData();
       return;
     }
 
@@ -174,30 +169,30 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
       targetRackId: targetRack.id,
       targetBottomRu: result.targetBottomRu,
     });
-    setDropMessage(`${result.device.name} moved to ${targetRack.name} RU ${result.targetBottomRu}-${result.targetTopRu}.`);
+    setDraggingDeviceId(null);
     setDropPreview(null);
     clearDeviceDragData();
   }
 
   return (
     <section className="workspace rack-workspace" aria-label="Rack canvas">
-      <WorkspaceHeader eyebrow="Rack Elevation" title={rack.name} badge={`${viewedRacks.length} of ${MAX_VIEWED_RACKS} shown`} />
-      <RackViewSelector
-        addableRacks={addableRacks}
-        hasReachedRackLimit={hasReachedRackLimit}
-        locations={project.locations}
-        onAddRack={addRackToView}
-        rackCount={viewedRacks.length}
-      />
-      {dropMessage ? <p className="rack-drop-message">{dropMessage}</p> : null}
-
       {viewedRacks.length === 0 ? (
-        <EmptyState title="Select A Rack">Select a rack from the navigator to open the rack elevation canvas.</EmptyState>
+        null
       ) : (
-        <CanvasViewport ariaLabel="Rack canvas zoom and pan viewport" className="rack-canvas-viewport">
+        <CanvasViewport
+          ariaLabel="Rack canvas zoom and pan viewport"
+          className="rack-canvas-viewport"
+          toolbarContent={
+            <RackViewSelector
+              addableRacks={addableRacks}
+              hasReachedRackLimit={hasReachedRackLimit}
+              locations={project.locations}
+              onAddRack={addRackToView}
+            />
+          }
+        >
           <div className="rack-canvas-grid" aria-label="Viewed rack elevations">
             {viewedRacks.map((viewedRack) => {
-              const location = project.locations.find((candidate) => candidate.id === viewedRack.locationId);
               const rackDevices = project.devices.filter((device) => device.rackId === viewedRack.id);
               const canvasModel = buildRackCanvasModel(
                 viewedRack,
@@ -207,27 +202,6 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
 
               return (
                 <div className="rack-canvas-panel" key={viewedRack.id}>
-                  <div className="workspace-context-chips rack-panel-context" aria-label={`${viewedRack.name} context`}>
-                    {location ? <Badge>Location: {location.name}</Badge> : null}
-                    <Badge>{viewedRack.numberingDirection.replace(/_/g, ' ')}</Badge>
-                    <Badge>{canvasModel.mountedDevices.length} drawn</Badge>
-                    {canvasModel.diagnostics.length > 0 ? (
-                      <Badge className="bg-amber-100 text-amber-800">{canvasModel.diagnostics.length} placement issue(s)</Badge>
-                    ) : null}
-                  </div>
-
-                  {canvasModel.diagnostics.length > 0 ? (
-                    <Alert className="rack-warning border-amber-200 bg-amber-50 text-amber-900">
-                      <AlertDescription>
-                        {canvasModel.diagnostics.map((diagnostic) => (
-                          <span key={`${diagnostic.code}-${diagnostic.deviceId}-${diagnostic.relatedDeviceId ?? ''}`}>
-                            {diagnostic.message}
-                          </span>
-                        ))}
-                      </AlertDescription>
-                    </Alert>
-                  ) : null}
-
                   <RackElevationCanvas
                     canRemove={viewedRacks.length > 1}
                     dropPreview={dropPreview?.rackId === viewedRack.id ? dropPreview : null}
@@ -240,10 +214,6 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
                     onRackDrop={(event) => handleRackDrop(event, viewedRack, canvasModel)}
                     onRemove={() => removeRackFromView(viewedRack.id)}
                   />
-
-                  {rackDevices.length === 0 ? (
-                    <EmptyState title="Rack Is Empty">Drag eligible devices from the navigator onto empty rack space.</EmptyState>
-                  ) : null}
                 </div>
               );
             })}
@@ -258,43 +228,27 @@ function RackViewSelector({
   addableRacks,
   hasReachedRackLimit,
   locations,
-  rackCount,
   onAddRack,
 }: {
   addableRacks: Rack[];
   hasReachedRackLimit: boolean;
   locations: Location[];
-  rackCount: number;
   onAddRack: (rackId: string) => void;
 }) {
   return (
-    <Card className="rack-view-selector">
-      <CardContent className="rack-view-selector-content">
-        <div>
-          <strong>Rack view</strong>
-          <p>View up to four racks at once. This selection is local UI state only.</p>
-        </div>
-        <Select disabled={hasReachedRackLimit || addableRacks.length === 0} value={ADD_RACK_PLACEHOLDER} onValueChange={onAddRack}>
-          <SelectTrigger className="rack-view-select" aria-label="Add rack to canvas">
-            <SelectValue placeholder="Add rack to view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ADD_RACK_PLACEHOLDER}>Add rack to view</SelectItem>
-            {addableRacks.map((candidate) => (
-              <SelectItem key={candidate.id} value={candidate.id}>
-                {getRackOptionLabel(candidate, locations)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Badge>{rackCount}/{MAX_VIEWED_RACKS} racks</Badge>
-        {hasReachedRackLimit ? (
-          <span className="rack-view-limit">Maximum four racks can be viewed at once.</span>
-        ) : addableRacks.length === 0 ? (
-          <span className="rack-view-limit">No additional racks available.</span>
-        ) : null}
-      </CardContent>
-    </Card>
+    <Select disabled={hasReachedRackLimit || addableRacks.length === 0} value={ADD_RACK_PLACEHOLDER} onValueChange={onAddRack}>
+      <SelectTrigger className="rack-view-select" aria-label="Add rack to canvas">
+        <SelectValue placeholder="Add rack" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={ADD_RACK_PLACEHOLDER}>Add rack</SelectItem>
+        {addableRacks.map((candidate) => (
+          <SelectItem key={candidate.id} value={candidate.id}>
+            {getRackOptionLabel(candidate, locations)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -324,98 +278,81 @@ function RackElevationCanvas({
   const previewRows = dropPreview ? getPreviewRows(model.displayRus, dropPreview.bottomRu, dropPreview.topRu) : null;
 
   return (
-    <Card className="rack-canvas-card">
-      <CardHeader className="rack-canvas-header">
-        <div>
-          <CardTitle>{rack.name}</CardTitle>
-          <p>
-            Full rack elevation, {rack.heightRu} RU capacity. Drag mounted devices to reposition them,
-            or drag eligible devices from the navigator onto empty rack space.
-          </p>
+    <div className="rack-canvas-card">
+      <div className="rack-name-label">{rack.name}</div>
+      {canRemove ? (
+        <Button aria-label={`Remove ${rack.name} from rack view`} className="rack-remove-button" size="icon" type="button" variant="ghost" onClick={onRemove}>
+          <X className="h-4 w-4" />
+        </Button>
+      ) : null}
+      <div className="rack-elevation" style={{ '--rack-row-count': model.displayRus.length } as CSSProperties}>
+        <div className="rack-ru-labels" aria-label="Rack unit labels">
+          {model.displayRus.map((ru) => (
+            <div className="rack-ru-label" data-ru={ru} key={ru}>
+              {String(ru).padStart(2, '0')}
+            </div>
+          ))}
         </div>
-        <div className="rack-canvas-actions">
-          <Badge>{model.displayRus.length} RU shown</Badge>
-          {canRemove ? (
-            <Button aria-label={`Remove ${rack.name} from rack view`} size="icon" type="button" variant="ghost" onClick={onRemove}>
-              <X className="h-4 w-4" />
-            </Button>
-          ) : null}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="rack-elevation" style={{ '--rack-row-count': model.displayRus.length } as CSSProperties}>
-          <div className="rack-rail rack-rail-left" aria-hidden="true" />
-          <div className="rack-ru-labels" aria-label="Rack unit labels">
-            {model.displayRus.map((ru) => (
-              <div className="rack-ru-label" data-ru={ru} key={ru}>
-                {String(ru).padStart(2, '0')}
-              </div>
-            ))}
-          </div>
-          <div
-            className="rack-stack"
-            aria-label={`${rack.name} RU stack`}
-            onDragLeave={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                event.currentTarget.classList.remove('is-drag-over');
-              }
-            }}
-            onDragOver={(event) => {
-              event.currentTarget.classList.add('is-drag-over');
-              onRackDragOver(event);
-            }}
-            onDrop={(event) => {
+        <div
+          className="rack-stack"
+          aria-label={`${rack.name} RU stack`}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
               event.currentTarget.classList.remove('is-drag-over');
-              onRackDrop(event);
-            }}
-          >
-            {model.displayRus.map((ru, index) => (
-              <div
-                className="rack-ru-row"
-                data-ru={ru}
-                key={ru}
-                style={{ gridRow: `${index + 1} / ${index + 2}` }}
-              >
-                <span>RU {String(ru).padStart(2, '0')}</span>
-              </div>
-            ))}
-            {previewRows ? (
-              <div
-                className={dropPreview?.ok ? 'rack-drop-preview valid' : 'rack-drop-preview invalid'}
-                style={{ gridRow: `${previewRows.rowStart} / ${previewRows.rowEnd}` }}
-              >
-                <span>{dropPreview?.ok ? 'Move here' : 'Blocked'}</span>
-              </div>
-            ) : null}
-            {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd, diagnostics }) => (
-              <div
-                className={[
-                  device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block',
-                  diagnostics.length > 0 ? 'invalid-placement' : '',
-                  draggingDeviceId === device.id ? 'is-dragging' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                data-canvas-draggable="true"
-                draggable
-                key={device.id}
-                style={{ gridRow: `${rowStart} / ${rowEnd}` }}
-                onDragEnd={onDeviceDragEnd}
-                onDragStart={(event) => onDeviceDragStart(event, device)}
-              >
-                <strong>{device.name}</strong>
-                <span>
-                  RU {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
-                  {device.rackSizeRu ? ` - ${device.rackSizeRu} RU` : ''}
-                </span>
-                {diagnostics.length > 0 ? <em>Placement issue</em> : null}
-              </div>
-            ))}
-          </div>
-          <div className="rack-rail rack-rail-right" aria-hidden="true" />
+            }
+          }}
+          onDragOver={(event) => {
+            event.currentTarget.classList.add('is-drag-over');
+            onRackDragOver(event);
+          }}
+          onDrop={(event) => {
+            event.currentTarget.classList.remove('is-drag-over');
+            onRackDrop(event);
+          }}
+        >
+          {model.displayRus.map((ru, index) => (
+            <div
+              className="rack-ru-row"
+              data-ru={ru}
+              key={ru}
+              style={{ gridRow: `${index + 1} / ${index + 2}` }}
+            />
+          ))}
+          {previewRows ? (
+            <div
+              className={dropPreview?.ok ? 'rack-drop-preview valid' : 'rack-drop-preview invalid'}
+              style={{ gridRow: `${previewRows.rowStart} / ${previewRows.rowEnd}` }}
+            >
+              <span>{dropPreview?.ok ? 'Move here' : 'Blocked'}</span>
+            </div>
+          ) : null}
+          {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd, diagnostics }) => (
+            <div
+              className={[
+                device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block',
+                diagnostics.length > 0 ? 'invalid-placement' : '',
+                draggingDeviceId === device.id ? 'is-dragging' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              data-canvas-draggable="true"
+              draggable
+              key={device.id}
+              style={{ gridRow: `${rowStart} / ${rowEnd}` }}
+              onDragEnd={onDeviceDragEnd}
+              onDragStart={(event) => onDeviceDragStart(event, device)}
+            >
+              <strong>{device.name}</strong>
+              <span>
+                {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
+                {device.rackSizeRu ? ` / ${device.rackSizeRu} RU` : ''}
+              </span>
+              {diagnostics.length > 0 ? <em>Placement issue</em> : null}
+            </div>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

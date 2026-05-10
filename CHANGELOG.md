@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.3.1
+
+Cleaned up the rack canvas into a minimal engineering elevation view.
+
+### Changed
+
+- Removed the rack workspace heading, rack selector card, rack panel context badges, rack card headers, instructional copy, and persistent move-success badge from the rack view.
+- Moved the rack selector, zoom controls, and reset control into a compact in-canvas toolbar, and removed the pan toggle until the interaction can be made reliable.
+- Restyled rack elevations with full-width device blocks, numeric-only RU cells, dim dotted row guides across the full rack body, horizontal multi-rack placement, and quieter device blocks while preserving rack drag/drop behavior.
+- Fixed canvas zoom sizing so zoom changes take effect without collapsing the rack layout.
+- Preserved project schema version, reducer behavior, validation behavior, import/export behavior, and connection-model boundaries.
+
 ## v0.2.2.7
 
 Cleaned up rack placement ownership after the v0.2.2 rack-canvas milestone.
