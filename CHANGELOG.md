@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.4.1
+
+Added terminal block creation and a terminal block panel view.
+
+### Changed
+
+- Added terminal blocks as `terminal_block` device-kind records with fixed rackmount, 1RU placement.
+- Added rear/front terminal block port groups, optional planned cable creation for FRONT ports only, and `tb_port` planned cable endpoints.
+- Added Add TB, navigator TB grouping, terminal block workspace drawing, and terminal block inspector behavior.
+- Updated validation and import normalization for schema version `0.2.4.1`, including compatibility for older `0.1.0` imports.
+- Bumped the app version to `0.2.4.1`.
+
 ## v0.2.3.8
 
 Aligned the footer section heights.

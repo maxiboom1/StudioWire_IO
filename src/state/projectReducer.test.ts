@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sampleProject } from '../domain/sampleProject';
-import { projectReducer, type ProjectState } from './projectReducer';
+import { parseImportedProject, projectReducer, type ProjectState } from './projectReducer';
 
 function createState(): ProjectState {
   return {
@@ -100,6 +100,93 @@ describe('projectReducer ADD_DEVICE safety', () => {
     });
     expect(ports).toHaveLength(2);
     expect(ports.every((port) => port.plannedCableId === null)).toBe(true);
+    expect(result.project.cables).toHaveLength(state.project.cables.length);
+    expect(result.project.numberingLedgers).toEqual(state.project.numberingLedgers);
+  });
+});
+
+describe('projectReducer ADD_TERMINAL_BLOCK', () => {
+  it('creates rear/front ports and planned cables only for front ports', () => {
+    const state = createState();
+    const result = projectReducer(state, {
+      type: 'ADD_TERMINAL_BLOCK',
+      payload: {
+        terminalBlock: {
+          id: 'device-tb-a',
+          name: 'TB-A',
+          categoryId: 'category-video',
+          locationId: 'location-machine-room',
+          labelPrefix: 'TB-A',
+          rackId: 'rack-mcr-a',
+          rackBottomRu: 1,
+          connectorTypeId: 'connector-bnc',
+          count: 2,
+          cablePrefix: 'V',
+          firstCableNumber: 9,
+          createPlannedCables: true,
+          notes: '',
+        },
+      },
+    });
+    const terminalBlock = result.project.devices.find((device) => device.id === 'device-tb-a');
+    const portGroups = result.project.portGroups.filter((group) => group.deviceId === 'device-tb-a');
+    const rearPorts = result.project.ports.filter((port) => port.deviceId === 'device-tb-a' && port.direction === 'rear');
+    const frontPorts = result.project.ports.filter((port) => port.deviceId === 'device-tb-a' && port.direction === 'front');
+    const frontCables = frontPorts.map((port) =>
+      port.plannedCableId ? result.project.cables.find((cable) => cable.id === port.plannedCableId) : null,
+    );
+
+    expect(terminalBlock).toMatchObject({
+      kind: 'terminal_block',
+      mountType: 'rack',
+      rackSizeRu: 1,
+      rackId: 'rack-mcr-a',
+      rackBottomRu: 1,
+    });
+    expect(terminalBlock).not.toHaveProperty('code');
+    expect(portGroups.map((group) => group.direction).sort()).toEqual(['front', 'rear']);
+    expect(rearPorts).toHaveLength(2);
+    expect(frontPorts).toHaveLength(2);
+    expect(rearPorts.every((port) => port.plannedCableId === null)).toBe(true);
+    expect(frontCables.map((cable) => cable?.number)).toEqual(['V-0009', 'V-0010']);
+    expect(frontCables.every((cable) => cable?.sourceEndpoint.type === 'tb_port')).toBe(true);
+    expect(result.project.numberingLedgers[0].ranges).toContainEqual(
+      expect.objectContaining({
+        from: 9,
+        to: 10,
+        ownerId: expect.stringContaining('device-tb-a-front'),
+      }),
+    );
+  });
+
+  it('creates rear/front ports without cables when front planned numbering is disabled', () => {
+    const state = createState();
+    const result = projectReducer(state, {
+      type: 'ADD_TERMINAL_BLOCK',
+      payload: {
+        terminalBlock: {
+          id: 'device-tb-no-cables',
+          name: 'TB No Cables',
+          categoryId: 'category-video',
+          locationId: 'location-machine-room',
+          labelPrefix: 'TB-NC',
+          rackId: 'rack-mcr-a',
+          rackBottomRu: 1,
+          connectorTypeId: 'connector-bnc',
+          count: 2,
+          cablePrefix: 'V',
+          firstCableNumber: null,
+          createPlannedCables: false,
+          notes: '',
+        },
+      },
+    });
+    const ports = result.project.ports.filter((port) => port.deviceId === 'device-tb-no-cables');
+    const portGroups = result.project.portGroups.filter((group) => group.deviceId === 'device-tb-no-cables');
+
+    expect(ports).toHaveLength(4);
+    expect(ports.every((port) => port.plannedCableId === null)).toBe(true);
+    expect(portGroups.every((group) => group.numberingRangeId === null)).toBe(true);
     expect(result.project.cables).toHaveLength(state.project.cables.length);
     expect(result.project.numberingLedgers).toEqual(state.project.numberingLedgers);
   });
@@ -252,5 +339,26 @@ describe('projectReducer MOVE_MOUNTED_DEVICE', () => {
 
     expect(result.project).toBe(seededState.project);
     expect(result.statusMessage).toContain('Set rack size before assigning to a rack');
+  });
+});
+
+describe('parseImportedProject schema compatibility', () => {
+  it('normalizes old projects with devices missing kind', () => {
+    const oldProject = structuredClone(sampleProject) as any;
+
+    oldProject.schemaVersion = '0.1.0';
+    delete oldProject.devices[0].kind;
+
+    const result = parseImportedProject(oldProject);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.project.schemaVersion).toBe('0.2.4.1');
+    expect(result.project.devices[0]).toMatchObject({
+      kind: 'device',
+      code: 'RTR1',
+    });
   });
 });

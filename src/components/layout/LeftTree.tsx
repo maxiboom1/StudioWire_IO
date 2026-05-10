@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Folder, HardDrive, MapPin, Server } from 'lucide-react';
+import { ChevronDown, ChevronRight, Cable, Folder, HardDrive, MapPin, Server } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
@@ -36,7 +36,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.3.8';
+const APP_VERSION = '0.2.4.1';
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({
@@ -45,18 +45,24 @@ export function LeftTree({
   onAddLocation,
   onAddRack,
   onAddDevice,
+  onAddTerminalBlock,
 }: {
   selection: SelectionState;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddLocation: () => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string | null) => void;
+  onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const { project } = useProject();
   const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(() => new Set());
   const unassignedDevices = useMemo(
     () =>
       project.devices.filter((device) => {
+        if (device.kind === 'terminal_block') {
+          return false;
+        }
+
         const hasKnownLocation = project.locations.some((location) => location.id === device.locationId);
 
         return !device.locationId || !hasKnownLocation;
@@ -87,6 +93,7 @@ export function LeftTree({
             actions={[
               { label: 'Add Location', onSelect: onAddLocation },
               { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+              { label: 'Add TB', onSelect: () => onAddTerminalBlock(null) },
             ]}
           >
             <SidebarGroupLabel className="cursor-context-menu">Project navigator</SidebarGroupLabel>
@@ -99,6 +106,7 @@ export function LeftTree({
                     actions={[
                       { label: 'Add Location', onSelect: onAddLocation },
                       { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+                      { label: 'Add TB', onSelect: () => onAddTerminalBlock(null) },
                     ]}
                   >
                     <button
@@ -121,6 +129,7 @@ export function LeftTree({
                       key={location.id}
                       location={location}
                       onAddDevice={onAddDevice}
+                      onAddTerminalBlock={onAddTerminalBlock}
                       onAddRack={onAddRack}
                       onSelectObject={onSelectObject}
                       onToggle={toggle}
@@ -144,6 +153,7 @@ export function LeftTree({
                       actions={[
                         { label: 'Add Location', onSelect: onAddLocation },
                         { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
+                        { label: 'Add TB', onSelect: () => onAddTerminalBlock(null) },
                       ]}
                     >
                       <div
@@ -177,6 +187,7 @@ function LocationBranch({
   onSelectObject,
   onAddRack,
   onAddDevice,
+  onAddTerminalBlock,
   onToggle,
 }: {
   collapsedKeys: Set<string>;
@@ -187,16 +198,22 @@ function LocationBranch({
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string | null) => void;
+  onAddTerminalBlock: (locationId: string | null) => void;
   onToggle: (key: string) => void;
 }) {
   const locationKey = `location:${location.id}`;
   const racksKey = `location:${location.id}:racks`;
   const devicesKey = `location:${location.id}:devices`;
+  const terminalBlocksKey = `location:${location.id}:terminal-blocks`;
   const isLocationOpen = !collapsedKeys.has(locationKey);
   const isRacksOpen = !collapsedKeys.has(racksKey);
   const isDevicesOpen = !collapsedKeys.has(devicesKey);
+  const isTerminalBlocksOpen = !collapsedKeys.has(terminalBlocksKey);
   const racks = projectRacks.filter((rack) => rack.locationId === location.id);
-  const devices = projectDevices.filter((device) => device.locationId === location.id);
+  const devices = projectDevices.filter((device) => device.locationId === location.id && device.kind !== 'terminal_block');
+  const terminalBlocks = projectDevices.filter(
+    (device) => device.locationId === location.id && device.kind === 'terminal_block',
+  );
 
   return (
     <SidebarMenuItem>
@@ -205,6 +222,7 @@ function LocationBranch({
           actions={[
             { label: 'Add Rack', onSelect: () => onAddRack(location.id) },
             { label: 'Add Device', onSelect: () => onAddDevice(location.id) },
+            { label: 'Add TB', onSelect: () => onAddTerminalBlock(location.id) },
           ]}
         >
           <div className="flex items-center gap-1">
@@ -224,7 +242,7 @@ function LocationBranch({
             >
               <MapPin className="h-4 w-4 text-studio-muted" />
               <span className="min-w-0 flex-1 truncate">{location.name}</span>
-              <SidebarMenuBadge>{racks.length + devices.length}</SidebarMenuBadge>
+              <SidebarMenuBadge>{racks.length + devices.length + terminalBlocks.length}</SidebarMenuBadge>
             </SidebarMenuButton>
           </div>
         </ActionContextMenu>
@@ -263,6 +281,25 @@ function LocationBranch({
               onToggle={() => onToggle(devicesKey)}
             >
               {devices.map((device) => (
+                <DeviceTreeItem
+                  active={isSelected(selection, 'device', device.id)}
+                  device={device}
+                  key={device.id}
+                  onSelect={() => onSelectObject('device', device.id)}
+                />
+              ))}
+            </FolderBranch>
+
+            <FolderBranch
+              actions={[{ label: 'Add TB', onSelect: () => onAddTerminalBlock(location.id) }]}
+              count={terminalBlocks.length}
+              emptyLabel="No terminal blocks"
+              icon={<Cable className="h-3.5 w-3.5" />}
+              isOpen={isTerminalBlocksOpen}
+              label="TBs"
+              onToggle={() => onToggle(terminalBlocksKey)}
+            >
+              {terminalBlocks.map((device) => (
                 <DeviceTreeItem
                   active={isSelected(selection, 'device', device.id)}
                   device={device}
@@ -430,7 +467,9 @@ function DeviceTreeItem({
         onDragStart={(event) => writeDeviceDragData(event, device.id)}
       >
         <span className="min-w-0 flex-1 truncate">{device.name}</span>
-        <span className="text-[0.68rem] text-studio-muted">{device.labelPrefix || device.role || 'Device'}</span>
+        <span className="text-[0.68rem] text-studio-muted">
+          {device.kind === 'terminal_block' ? 'TB' : device.labelPrefix || device.role || 'Device'}
+        </span>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );

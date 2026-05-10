@@ -47,4 +47,13 @@ describe('createPlannedCableForPort', () => {
     expect(result.ports[0].plannedCableId).toBe(result.cables[0].id);
     expect(result.cables[0].sourceEndpoint).toMatchObject({ type: 'device_port', id: port.id });
   });
+
+  it('uses terminal block port endpoints for front planned cables', () => {
+    const port = makePort('front');
+    const result = createLinkedPlannedCablesForPorts([port], 'V', 20);
+
+    expect(result.ports[0].plannedCableId).toBe(result.cables[0].id);
+    expect(result.cables[0].sourceEndpoint).toMatchObject({ type: 'tb_port', id: port.id });
+    expect(result.cables[0].destinationEndpoint).toMatchObject({ type: 'unknown', id: null });
+  });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from './projectFactory';
 import { sampleProject } from './sampleProject';
 import { validateProject } from './validators';
+import { projectReducer, type ProjectState } from '../state/projectReducer';
 
 function createValidationTestProject() {
   return createEmptyProject({
@@ -214,5 +215,83 @@ describe('validateProject rack placement rules', () => {
     const codes = validateProject(project).map((issue) => issue.code);
 
     expect(codes).toContain('device-references-missing-rack');
+  });
+});
+
+describe('validateProject terminal block rules', () => {
+  function createProjectWithTerminalBlock() {
+    const state: ProjectState = {
+      project: structuredClone(sampleProject),
+      statusMessage: 'ready',
+      importError: null,
+    };
+
+    return projectReducer(state, {
+      type: 'ADD_TERMINAL_BLOCK',
+      payload: {
+        terminalBlock: {
+          id: 'device-tb-validation',
+          name: 'TB Validation',
+          categoryId: 'category-video',
+          locationId: 'location-machine-room',
+          labelPrefix: 'TB-V',
+          rackId: 'rack-mcr-a',
+          rackBottomRu: 1,
+          connectorTypeId: 'connector-bnc',
+          count: 2,
+          cablePrefix: 'V',
+          firstCableNumber: 9,
+          createPlannedCables: true,
+          notes: '',
+        },
+      },
+    }).project;
+  }
+
+  it('accepts a terminal block without standard device metadata', () => {
+    const project = createProjectWithTerminalBlock();
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).not.toContain('device-code-required');
+    expect(codes).not.toContain('terminal-block-face-groups-required');
+    expect(codes).not.toContain('terminal-block-front-cable-source-mismatch');
+  });
+
+  it('reports invalid terminal block rack size and rear planned cables', () => {
+    const project = createProjectWithTerminalBlock();
+    const terminalBlock = project.devices.find((device) => device.id === 'device-tb-validation');
+    const rearGroup = project.portGroups.find(
+      (group) => group.deviceId === 'device-tb-validation' && group.direction === 'rear',
+    );
+
+    if (!terminalBlock || !rearGroup) {
+      throw new Error('Expected terminal block test data');
+    }
+
+    terminalBlock.rackSizeRu = 2;
+    rearGroup.createPlannedCables = true;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('terminal-block-size-fixed');
+    expect(codes).toContain('terminal-block-rear-planned-cables');
+  });
+
+  it('reports mismatched terminal block rear/front face counts', () => {
+    const project = createProjectWithTerminalBlock();
+    const frontGroup = project.portGroups.find(
+      (group) => group.deviceId === 'device-tb-validation' && group.direction === 'front',
+    );
+
+    if (!frontGroup) {
+      throw new Error('Expected terminal block front group');
+    }
+
+    frontGroup.count = 3;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('terminal-block-face-mismatch');
+    expect(codes).toContain('port-group-count-mismatch');
   });
 });

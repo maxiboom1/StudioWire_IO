@@ -57,10 +57,31 @@ export interface DevicePortGroupDraft {
   createPlannedCables: boolean;
 }
 
-export type DeviceUpdate = Pick<
-  Device,
-  'name' | 'manufacturer' | 'model' | 'role' | 'notes' | 'locationId' | 'rackSizeRu'
->;
+export interface TerminalBlockDraft {
+  id?: string;
+  name: string;
+  categoryId: string;
+  locationId: string;
+  labelPrefix: string;
+  rackId: string;
+  rackBottomRu: number;
+  connectorTypeId: string;
+  count: number;
+  cablePrefix: string;
+  firstCableNumber: number | null;
+  createPlannedCables: boolean;
+  notes: string;
+}
+
+export interface DeviceUpdate {
+  name: string;
+  manufacturer?: string;
+  model?: string;
+  role?: string;
+  notes: string;
+  locationId: string | null;
+  rackSizeRu: number | null;
+}
 
 export type ProjectAction =
   | { type: 'NEW_PROJECT' }
@@ -77,6 +98,7 @@ export type ProjectAction =
   | { type: 'ADD_RACK'; payload: Rack }
   | { type: 'UPDATE_RACK'; payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> } }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
+  | { type: 'ADD_TERMINAL_BLOCK'; payload: { terminalBlock: TerminalBlockDraft } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
   | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
@@ -343,6 +365,24 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     }
 
+    case 'ADD_TERMINAL_BLOCK': {
+      const result = createTerminalBlockInProject(state.project, action.payload.terminalBlock);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: result.error,
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(result.project, `Terminal block created: ${action.payload.terminalBlock.name}`),
+        statusMessage: 'Terminal block created',
+        importError: null,
+      };
+    }
+
     case 'UPDATE_DEVICE': {
       return {
         project: stampProject(
@@ -364,12 +404,16 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
               return {
                 ...device,
                 name: action.payload.updates.name,
-                manufacturer: action.payload.updates.manufacturer,
-                model: action.payload.updates.model,
-                role: action.payload.updates.role,
+                ...(device.kind === 'terminal_block'
+                  ? {}
+                  : {
+                      manufacturer: action.payload.updates.manufacturer ?? '',
+                      model: action.payload.updates.model ?? '',
+                      role: action.payload.updates.role ?? '',
+                    }),
                 notes: action.payload.updates.notes,
                 locationId,
-                rackSizeRu: action.payload.updates.rackSizeRu ?? null,
+                rackSizeRu: device.kind === 'terminal_block' ? 1 : action.payload.updates.rackSizeRu ?? null,
                 updatedAt: nowIso(),
               };
             }),
@@ -541,6 +585,7 @@ function createDeviceInProject(
   const device: Device = {
     id: deviceId,
     name: payload.device.name,
+    kind: 'device',
     code: payload.device.code,
     manufacturer: payload.device.manufacturer,
     model: payload.device.model,
@@ -661,6 +706,156 @@ function createDeviceInProject(
   };
 }
 
+function createTerminalBlockInProject(
+  project: ProjectRoot,
+  draft: TerminalBlockDraft,
+): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
+  const timestamp = nowIso();
+  const rack = project.racks.find((candidate) => candidate.id === draft.rackId);
+
+  if (!rack) {
+    return { ok: false, error: 'Terminal block creation blocked: select a valid rack.' };
+  }
+
+  const placementProbe: Device = {
+    id: draft.id ?? makeId('terminal-block', `${draft.labelPrefix || draft.name}-${timestamp}`),
+    name: draft.name.trim(),
+    kind: 'terminal_block',
+    categoryId: draft.categoryId,
+    locationId: rack.locationId,
+    labelPrefix: draft.labelPrefix || draft.name,
+    mountType: 'rack',
+    rackId: rack.id,
+    rackSizeRu: 1,
+    rackBottomRu: draft.rackBottomRu,
+    status: 'planned',
+    notes: draft.notes,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  const placementProject = { ...project, devices: [...project.devices, placementProbe] };
+  const placement = validateRackPlacement(placementProject, {
+    deviceId: placementProbe.id,
+    targetRackId: rack.id,
+    targetBottomRu: draft.rackBottomRu,
+  });
+
+  if (!placement.ok) {
+    return { ok: false, error: `Terminal block creation blocked: ${placement.message}` };
+  }
+
+  if (!Number.isSafeInteger(draft.count) || draft.count <= 0) {
+    return { ok: false, error: 'Terminal block creation blocked: connector count must be positive.' };
+  }
+
+  const deviceId = placementProbe.id;
+  const labelPrefix = draft.labelPrefix || draft.name;
+  const rearGroupId = makeId('port-group', `${deviceId}-rear`);
+  const frontGroupId = makeId('port-group', `${deviceId}-front`);
+  const rearDraft: DevicePortGroupDraft = {
+    name: 'REAR',
+    direction: 'rear',
+    categoryId: draft.categoryId,
+    connectorTypeId: draft.connectorTypeId,
+    count: draft.count,
+    portLabelPattern: '{DEVICE} (R)-{00}',
+    cablePrefix: draft.cablePrefix,
+    firstCableNumber: null,
+    createPlannedCables: false,
+  };
+  const frontFirstCableNumber = draft.createPlannedCables ? draft.firstCableNumber : null;
+  const frontDraft: DevicePortGroupDraft = {
+    name: 'FRONT',
+    direction: 'front',
+    categoryId: draft.categoryId,
+    connectorTypeId: draft.connectorTypeId,
+    count: draft.count,
+    portLabelPattern: '{DEVICE} (F)-{00}',
+    cablePrefix: draft.cablePrefix,
+    firstCableNumber: frontFirstCableNumber,
+    createPlannedCables: draft.createPlannedCables,
+  };
+  let nextProject: ProjectRoot = {
+    ...project,
+    devices: [...project.devices, placementProbe],
+  };
+  let numberingRangeId: string | null = null;
+
+  if (draft.createPlannedCables && frontFirstCableNumber === null) {
+    return { ok: false, error: 'Terminal block creation blocked: missing first front cable number.' };
+  }
+
+  if (draft.createPlannedCables && frontFirstCableNumber !== null) {
+    const allocation = allocateCableRange(nextProject, {
+      prefix: draft.cablePrefix,
+      firstCableNumber: frontFirstCableNumber,
+      count: draft.count,
+      ownerType: 'portGroup',
+      ownerId: frontGroupId,
+      reason: `Planned front cables for ${placementProbe.name}`,
+    });
+
+    if (allocation.preview.errors.length > 0 || !allocation.allocatedRange) {
+      return { ok: false, error: 'Terminal block creation blocked: front cable allocation failed.' };
+    }
+
+    nextProject = allocation.project;
+    numberingRangeId = allocation.allocatedRange.id;
+  }
+
+  const rearPorts = createPortsForDraft({
+    device: placementProbe,
+    portGroupId: rearGroupId,
+    draft: rearDraft,
+    labelPrefix,
+  });
+  const frontPorts = createPortsForDraft({
+    device: placementProbe,
+    portGroupId: frontGroupId,
+    draft: frontDraft,
+    labelPrefix,
+  });
+  const linkedFront =
+    draft.createPlannedCables && frontFirstCableNumber !== null
+      ? createLinkedPlannedCablesForPorts(frontPorts, draft.cablePrefix, frontFirstCableNumber)
+      : { ports: frontPorts, cables: [] };
+
+  if (
+    draft.createPlannedCables &&
+    (linkedFront.cables.length !== frontPorts.length || linkedFront.ports.some((port) => !port.plannedCableId))
+  ) {
+    return { ok: false, error: 'Terminal block creation blocked: front planned cable creation failed.' };
+  }
+
+  const rearGroup: PortGroup = {
+    id: rearGroupId,
+    deviceId,
+    ...rearDraft,
+    lastCableNumber: null,
+    numberingRangeId: null,
+    locked: true,
+  };
+  const frontGroup: PortGroup = {
+    id: frontGroupId,
+    deviceId,
+    ...frontDraft,
+    lastCableNumber:
+      draft.createPlannedCables && frontFirstCableNumber !== null ? frontFirstCableNumber + draft.count - 1 : null,
+    numberingRangeId,
+    locked: true,
+  };
+
+  return {
+    ok: true,
+    project: {
+      ...nextProject,
+      portGroups: [...nextProject.portGroups, rearGroup, frontGroup],
+      ports: [...nextProject.ports, ...rearPorts, ...linkedFront.ports],
+      cables: [...nextProject.cables, ...linkedFront.cables],
+    },
+  };
+}
+
 function createPortsForDraft({
   device,
   portGroupId,
@@ -695,6 +890,8 @@ function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: numb
   return pattern
     .split('{DEVICE}')
     .join(deviceLabelPrefix)
+    .split('{00}')
+    .join(String(index).padStart(2, '0'))
     .split('{000}')
     .join(String(index).padStart(3, '0'));
 }
@@ -706,10 +903,10 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported JSON must be an object.' };
   }
 
-  if (payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION) {
+  if (payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION && payload.schemaVersion !== '0.1.0') {
     return {
       ok: false,
-      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION}.`,
+      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION} or 0.1.0.`,
     };
   }
 
@@ -761,7 +958,35 @@ export function parseImportedProject(payload: unknown):
 
   return {
     ok: true,
-    project: payload as unknown as ProjectRoot,
+    project: normalizeImportedProject(payload as unknown as ProjectRoot),
+  };
+}
+
+function normalizeImportedProject(project: ProjectRoot): ProjectRoot {
+  return {
+    ...project,
+    schemaVersion: STUDIOWIRE_SCHEMA_VERSION,
+    devices: project.devices.map((device) => {
+      if (device.kind === 'terminal_block') {
+        const { code: _code, manufacturer: _manufacturer, model: _model, role: _role, ...terminalBlock } = device;
+
+        return {
+          ...terminalBlock,
+          kind: 'terminal_block',
+          mountType: 'rack',
+          rackSizeRu: 1,
+        };
+      }
+
+      return {
+        ...device,
+        kind: 'device',
+        code: device.code ?? '',
+        manufacturer: device.manufacturer ?? '',
+        model: device.model ?? '',
+        role: device.role ?? '',
+      };
+    }),
   };
 }
 

@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.3.8 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.4.1 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -73,16 +73,16 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Project settings for project info, categories, connector types, and cable prefixes.
 - Location and rack creation, editing, and guarded deletion.
 - Device creation, simple device editing, and retirement.
+- Terminal block creation as fixed 1RU rack objects with rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- Stable JSON import and export using schema version `0.1.0`.
+- Stable JSON import and export using schema version `0.2.4.1`, with import normalization for older `0.1.0` projects.
 
 ## v0.1 Intentionally Does Not Support
 
-- Terminal blocks.
 - Device-to-TB connections.
 - Prewire export.
 - Excel export.
@@ -112,6 +112,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.4.1`: Added terminal block creation as a schema-backed device kind, with fixed 1RU rack placement, rear/front ports, optional FRONT planned cable numbers, TB navigator/workspace/inspector UI, and import normalization from schema `0.1.0`.
 - `v0.2.3.8`: Forced the sidebar footer and main validation footer to use the same shared height so their top borders align exactly.
 - `v0.2.3.7`: Aligned the sidebar footer app/schema version text with the validation footer secondary line and matched its smaller footer typography.
 - `v0.2.3.6`: Normalized the footer so app/schema version share one line, validation stays in the center footer, and app notifications own the right footer section without validation badges.

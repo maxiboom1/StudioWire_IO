@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.4.1",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -162,6 +162,7 @@
     {
       "id": "device-router-1",
       "name": "Router 1",
+      "kind": "device",
       "code": "RTR1",
       "manufacturer": "Example Systems",
       "model": "XR-16",
@@ -181,6 +182,7 @@
     {
       "id": "device-multiviewer-1",
       "name": "Multiviewer 1",
+      "kind": "device",
       "code": "MV1",
       "manufacturer": "Example Vision",
       "model": "MV-4",

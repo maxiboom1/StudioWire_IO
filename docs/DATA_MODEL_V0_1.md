@@ -1,6 +1,6 @@
-# StudioWire IO Data Model v0.1
+# StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO v0.1 imports and exports a single JSON document using schema version `0.1.0`.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.4.1`. Older `0.1.0` projects are accepted on import and normalized to the current schema.
 
 IDs are stable strings. References use IDs, not display names. Dates use ISO 8601 strings.
 
@@ -8,7 +8,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: fixed string `0.1.0`.
+- `schemaVersion`: current fixed string `0.2.4.1`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -109,16 +109,19 @@ Fields:
 
 ## Device
 
+Devices use a `kind` discriminator.
+
 Fields:
 
 - `id`
 - `name`
-- `code`
-- `manufacturer`
-- `model`
+- `kind`: `device` or `terminal_block`
+- `code` for standard devices
+- `manufacturer` for standard devices
+- `model` for standard devices
 - `categoryId`
 - `locationId`
-- `role`
+- `role` for standard devices
 - `labelPrefix`
 - `mountType`: `rack`, `non_rack`, or `virtual`
 - `rackId`
@@ -133,6 +136,10 @@ Current UI-created devices use `planned` or `retired` status. Retiring a device 
 
 `locationId` may be `null` for virtual devices and for unassigned handling. Rack and non-rack devices must reference an existing location.
 
+Standard devices use `kind: "device"` and may be virtual, non-rack, or rack-mounted. Imported older devices without `kind` are normalized to standard devices.
+
+Terminal blocks use `kind: "terminal_block"` and are stored in the same `devices` array. They omit `code`, `manufacturer`, `model`, and `role`. Terminal blocks are always rack-mounted, must reference a rack and bottom RU, and must have `rackSizeRu: 1`.
+
 ## PortGroup
 
 Fields:
@@ -140,7 +147,7 @@ Fields:
 - `id`
 - `deviceId`
 - `name`
-- `direction`: `input`, `output`, or `bidirectional`
+- `direction`: `input`, `output`, `bidirectional`, `rear`, or `front`
 - `categoryId`
 - `connectorTypeId`
 - `count`
@@ -152,7 +159,9 @@ Fields:
 - `createPlannedCables`
 - `locked`
 
-`portLabelPattern` supports only `{DEVICE}` and `{000}` in v0.1. `{DEVICE}` resolves to the device label prefix. `{000}` resolves to the 1-based port index padded to three digits.
+`portLabelPattern` supports `{DEVICE}`, `{00}`, and `{000}`. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits.
+
+Standard devices use `input`, `output`, or `bidirectional` groups. Terminal blocks use exactly one `rear` group and one `front` group with matching count, category, and connector type.
 
 PortGroup allocation semantics are mode-specific:
 
@@ -201,6 +210,8 @@ Planned cable labels use this rule:
 
 Output and bidirectional planned cables use the device port as the source and unknown destination. Input planned cables use unknown source and the device port as the destination.
 
+Terminal block rear ports do not generate planned cables in `0.2.4.1`. Terminal block front ports may optionally generate planned cables; those planned cables use the front port as a `tb_port` source endpoint and an unknown destination.
+
 ## NumberingLedger
 
 Fields:
@@ -237,7 +248,7 @@ Fields:
 - `id`
 - `label`
 
-`tb_port` is reserved as an endpoint type for future compatibility. v0.1 does not implement terminal block logic.
+`tb_port` identifies a terminal block port endpoint. In `0.2.4.1`, generated TB planned cables may reference FRONT ports as `tb_port` source endpoints. Full device-to-TB and front-to-front connection logic is still outside scope.
 
 ## ValidationIssue
 

@@ -235,7 +235,7 @@ function validateCables(
     }
 
     for (const endpoint of [cable.sourceEndpoint, cable.destinationEndpoint]) {
-      if (endpoint.type === 'device_port' && endpoint.id && !ports.has(endpoint.id)) {
+      if ((endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id && !ports.has(endpoint.id)) {
         issues.push(
           issue(
             'error',
@@ -247,7 +247,7 @@ function validateCables(
         );
       }
 
-      if (cable.status === 'planned' && endpoint.type === 'device_port' && endpoint.id) {
+      if (cable.status === 'planned' && (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id) {
         const endpointPort = ports.get(endpoint.id);
 
         if (endpointPort && endpointPort.plannedCableId !== cable.id) {
@@ -262,7 +262,13 @@ function validateCables(
           );
         }
 
-        if (endpointPort && endpoint === cable.sourceEndpoint && endpointPort.direction !== 'input' && cable.labelTop !== endpoint.label) {
+        if (
+          endpointPort &&
+          endpoint === cable.sourceEndpoint &&
+          endpointPort.direction !== 'input' &&
+          endpointPort.direction !== 'rear' &&
+          cable.labelTop !== endpoint.label
+        ) {
           issues.push(
             issue(
               'error',
@@ -376,7 +382,9 @@ function validatePortPlannedCableLink(
     const code =
       port.direction === 'output'
         ? 'planned-output-cable-source-mismatch'
-        : 'planned-bidirectional-cable-source-mismatch';
+        : port.direction === 'front'
+          ? 'terminal-block-front-cable-source-mismatch'
+          : 'planned-bidirectional-cable-source-mismatch';
 
     if (!endpointReferencesPort(cable.sourceEndpoint, port.id)) {
       issues.push(
@@ -562,8 +570,22 @@ function validateDevices(
       issues.push(issue('error', 'device-name-required', 'Device name is required.', 'device', device.id));
     }
 
-    if (!device.code.trim()) {
+    if (device.kind !== 'terminal_block' && !device.code?.trim()) {
       issues.push(issue('error', 'device-code-required', 'Device code is required.', 'device', device.id));
+    }
+
+    if (device.kind === 'terminal_block') {
+      if (device.mountType !== 'rack') {
+        issues.push(
+          issue('error', 'terminal-block-rack-mounted', 'Terminal block must be rack-mounted.', 'device', device.id),
+        );
+      }
+
+      if (device.rackSizeRu !== 1) {
+        issues.push(
+          issue('error', 'terminal-block-size-fixed', 'Terminal block rack size must be 1 RU.', 'device', device.id),
+        );
+      }
     }
 
     if (device.mountType !== 'virtual' && (!device.locationId || !locations.has(device.locationId))) {
@@ -719,6 +741,22 @@ function validatePortsAndGroups(
 
   for (const portGroup of project.portGroups) {
     const generatedPorts = project.ports.filter((port) => port.portGroupId === portGroup.id);
+    const parentDevice = devices.get(portGroup.deviceId);
+
+    if (
+      parentDevice?.kind !== 'terminal_block' &&
+      (portGroup.direction === 'rear' || portGroup.direction === 'front')
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'device-invalid-port-direction',
+          `Device group ${portGroup.name} must use input, output, or bidirectional direction.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
 
     if (portGroup.count !== generatedPorts.length) {
       issues.push(
@@ -773,6 +811,10 @@ function validatePortsAndGroups(
     issues.push(
       ...validatePortGroupPlannedCableMode(portGroup, generatedPorts, project.cables, cablesById, numberingRange, issue),
     );
+  }
+
+  for (const device of project.devices.filter((item) => item.kind === 'terminal_block')) {
+    issues.push(...validateTerminalBlockPortGroups(device, project, issue));
   }
 
   for (const port of project.ports) {
@@ -935,6 +977,121 @@ function validatePortGroupPlannedCableMode(
             `Planned cable ${cable.number} is not covered by ${portGroup.name}'s ledger range.`,
             'cable',
             cable.id,
+          ),
+        );
+      }
+    }
+  }
+
+  return issues;
+}
+
+function validateTerminalBlockPortGroups(
+  device: Device,
+  project: ProjectRoot,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const groups = project.portGroups.filter((portGroup) => portGroup.deviceId === device.id);
+  const rearGroups = groups.filter((portGroup) => portGroup.direction === 'rear');
+  const frontGroups = groups.filter((portGroup) => portGroup.direction === 'front');
+  const invalidGroups = groups.filter(
+    (portGroup) => portGroup.direction !== 'rear' && portGroup.direction !== 'front',
+  );
+
+  if (rearGroups.length !== 1 || frontGroups.length !== 1) {
+    issues.push(
+      issue(
+        'error',
+        'terminal-block-face-groups-required',
+        `${device.name} must have exactly one REAR group and one FRONT group.`,
+        'device',
+        device.id,
+      ),
+    );
+  }
+
+  for (const portGroup of invalidGroups) {
+    issues.push(
+      issue(
+        'error',
+        'terminal-block-invalid-port-direction',
+        `Terminal block group ${portGroup.name} must use rear or front direction.`,
+        'portGroup',
+        portGroup.id,
+      ),
+    );
+  }
+
+  const rearGroup = rearGroups[0];
+  const frontGroup = frontGroups[0];
+
+  if (rearGroup && rearGroup.createPlannedCables) {
+    issues.push(
+      issue(
+        'error',
+        'terminal-block-rear-planned-cables',
+        `Terminal block rear group ${rearGroup.name} must not create planned cables.`,
+        'portGroup',
+        rearGroup.id,
+      ),
+    );
+  }
+
+  if (rearGroup && frontGroup) {
+    if (
+      rearGroup.count !== frontGroup.count ||
+      rearGroup.categoryId !== frontGroup.categoryId ||
+      rearGroup.connectorTypeId !== frontGroup.connectorTypeId
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-face-mismatch',
+          `${device.name} rear and front groups must have matching count, category, and connector type.`,
+          'device',
+          device.id,
+        ),
+      );
+    }
+  }
+
+  for (const port of project.ports.filter((candidate) => candidate.deviceId === device.id)) {
+    if (port.direction !== 'rear' && port.direction !== 'front') {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-invalid-port-direction',
+          `Terminal block port ${port.label} must use rear or front direction.`,
+          'port',
+          port.id,
+        ),
+      );
+    }
+
+    if (port.direction === 'rear' && port.plannedCableId) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-rear-planned-cables',
+          `Terminal block rear port ${port.label} must not link to a planned cable.`,
+          'port',
+          port.id,
+        ),
+      );
+    }
+
+    if (port.direction === 'front' && port.plannedCableId) {
+      const cable = project.cables.find((candidate) => candidate.id === port.plannedCableId);
+
+      if (cable && !endpointReferencesPort(cable.sourceEndpoint, port.id)) {
+        issues.push(
+          issue(
+            'error',
+            'terminal-block-front-cable-source-mismatch',
+            `Terminal block front port ${port.label} must be the planned cable source.`,
+            'port',
+            port.id,
           ),
         );
       }
@@ -1175,11 +1332,11 @@ function isRackPositionValid(device: Device): device is Device & { rackBottomRu:
 }
 
 function endpointReferencesPort(endpoint: Cable['sourceEndpoint'], portId: string): boolean {
-  return endpoint.type === 'device_port' && endpoint.id === portId;
+  return (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id === portId;
 }
 
 function endpointIdInSet(endpoint: Cable['sourceEndpoint'], ids: Set<string>): boolean {
-  return endpoint.type === 'device_port' && endpoint.id !== null && ids.has(endpoint.id);
+  return (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id !== null && ids.has(endpoint.id);
 }
 
 function isPositiveInteger(value: unknown): value is number {

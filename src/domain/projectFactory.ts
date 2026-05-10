@@ -133,6 +133,7 @@ export function createDevice(input: DeviceInput): Device {
 
   return {
     id: input.id ?? makeId('device', input.name),
+    kind: 'device',
     name: input.name,
     code: input.code ?? '',
     manufacturer: input.manufacturer ?? '',
@@ -145,6 +146,41 @@ export function createDevice(input: DeviceInput): Device {
     rackId: input.rackId ?? null,
     rackSizeRu: input.rackSizeRu ?? null,
     rackBottomRu: input.rackBottomRu ?? null,
+    status: input.status ?? 'planned',
+    notes: input.notes ?? '',
+    createdAt: input.createdAt ?? timestamp,
+    updatedAt: input.updatedAt ?? timestamp,
+  };
+}
+
+export interface TerminalBlockInput {
+  id?: string;
+  name: string;
+  categoryId: string;
+  locationId: string;
+  labelPrefix?: string;
+  rackId: string;
+  rackBottomRu: number;
+  status?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export function createTerminalBlock(input: TerminalBlockInput): Device {
+  const timestamp = nowIso();
+
+  return {
+    id: input.id ?? makeId('terminal-block', input.name),
+    name: input.name,
+    kind: 'terminal_block',
+    categoryId: input.categoryId,
+    locationId: input.locationId,
+    labelPrefix: input.labelPrefix ?? input.name,
+    mountType: 'rack',
+    rackId: input.rackId,
+    rackSizeRu: 1,
+    rackBottomRu: input.rackBottomRu,
     status: input.status ?? 'planned',
     notes: input.notes ?? '',
     createdAt: input.createdAt ?? timestamp,
@@ -253,6 +289,8 @@ function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: numb
   return pattern
     .split('{DEVICE}')
     .join(deviceLabelPrefix)
+    .split('{00}')
+    .join(String(index).padStart(2, '0'))
     .split('{000}')
     .join(String(index).padStart(3, '0'));
 }

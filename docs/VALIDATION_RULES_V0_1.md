@@ -1,4 +1,4 @@
-# StudioWire IO Validation Rules v0.1
+# StudioWire IO Validation Rules
 
 Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and only mutates project state when the UI stores the returned issues after the user clicks Validate.
 
@@ -24,7 +24,9 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `rack-height-positive`: rack height must be a positive integer.
 - `rack-name-required`: rack name is required.
 - `device-name-required`: device name is required.
-- `device-code-required`: device code is required.
+- `device-code-required`: standard device code is required.
+- `terminal-block-rack-mounted`: terminal blocks must be rack-mounted.
+- `terminal-block-size-fixed`: terminal blocks must be fixed at 1 RU.
 - `device-without-location`: non-virtual devices must reference an existing location.
 - `rack-mounted-device-without-rack`: rack-mounted devices must reference a rack.
 - `rack-location-device-location-mismatch`: rack-mounted devices must be in the same location as their rack.
@@ -34,6 +36,12 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `rack-ru-overlap`: rack-mounted devices in the same rack must not overlap rack units.
 - `port-group-count-mismatch`: generated ports must match `PortGroup.count`.
 - `port-group-count-positive`: port group count must be positive.
+- `device-invalid-port-direction`: standard device port groups must use input, output, or bidirectional.
+- `terminal-block-face-groups-required`: terminal blocks must have exactly one rear and one front group.
+- `terminal-block-invalid-port-direction`: terminal block groups and ports must use rear or front.
+- `terminal-block-face-mismatch`: terminal block rear and front groups must have matching count, category, and connector type.
+- `terminal-block-rear-planned-cables`: terminal block rear ports/groups must not create or link planned cables.
+- `terminal-block-front-cable-source-mismatch`: terminal block front planned cables must use the front port as source.
 - `port-without-parent-device`: each port must reference an existing parent device.
 - `port-without-parent-port-group`: each port must reference an existing parent port group.
 - `port-group-numbering-range-missing`: locked port group numbering range references must resolve to a ledger range.
@@ -47,8 +55,8 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `port-group-no-planned-cables-has-allocation`: no-planned-cables port groups must keep `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` as `null`.
 - `port-group-no-planned-cables-port-linked`: ports in no-planned-cables groups must not have `plannedCableId`.
 - `port-group-no-planned-cables-cable-reference`: planned cables must not reference ports from no-planned-cables groups.
-- `cable-linked-to-missing-port`: device-port cable endpoints and port planned cable links must resolve.
-- `planned-cable-port-backlink-mismatch`: planned cables with device-port endpoints must have a matching `Port.plannedCableId`.
+- `cable-linked-to-missing-port`: device-port and terminal-block-port cable endpoints and port planned cable links must resolve.
+- `planned-cable-port-backlink-mismatch`: planned cables with device-port or terminal-block-port endpoints must have a matching `Port.plannedCableId`.
 - `planned-cable-missing-port-endpoint`: a port's planned cable must reference that port as source or destination.
 - `planned-output-cable-source-mismatch`: output planned cables must use the output port as source.
 - `planned-input-cable-destination-mismatch`: input planned cables must use the input port as destination.
@@ -73,6 +81,8 @@ Cable numbers are unique project data. Allocating a later first number creates a
 When a port group has `createPlannedCables` set to `false`, v0.1 does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
 
 Reserved gaps and retired ranges remain unavailable. v0.1 does not free cable numbers when a device is retired.
+
+Terminal blocks may create planned cable numbers for FRONT ports only. REAR ports remain unnumbered until connection logic exists. Terminal block front planned cables use `tb_port` source endpoints.
 
 ## UI Behavior
 

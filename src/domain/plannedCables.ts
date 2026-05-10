@@ -15,8 +15,8 @@ export function createPlannedCableForPort(
   status: CableStatus = 'planned',
 ): Cable {
   const cableNumber = formatCableNumber(prefix, index);
-  const devicePortEndpoint: Endpoint = {
-    type: 'device_port',
+  const portEndpoint: Endpoint = {
+    type: port.direction === 'front' ? 'tb_port' : 'device_port',
     id: port.id,
     label: port.label,
   };
@@ -28,8 +28,8 @@ export function createPlannedCableForPort(
     prefix,
     index,
     status,
-    sourceEndpoint: isInput ? UNKNOWN_ENDPOINT : devicePortEndpoint,
-    destinationEndpoint: isInput ? devicePortEndpoint : UNKNOWN_ENDPOINT,
+    sourceEndpoint: isInput ? UNKNOWN_ENDPOINT : portEndpoint,
+    destinationEndpoint: isInput ? portEndpoint : UNKNOWN_ENDPOINT,
     labelTop: isInput ? '' : port.label,
     labelMiddle: cableNumber,
     labelBottom: isInput ? port.label : '',
@@ -59,9 +59,9 @@ export function createLinkedPlannedCablesForPorts(
 
   for (const cable of cables) {
     const portId =
-      cable.sourceEndpoint.type === 'device_port'
+      cable.sourceEndpoint.type === 'device_port' || cable.sourceEndpoint.type === 'tb_port'
         ? cable.sourceEndpoint.id
-        : cable.destinationEndpoint.type === 'device_port'
+        : cable.destinationEndpoint.type === 'device_port' || cable.destinationEndpoint.type === 'tb_port'
           ? cable.destinationEndpoint.id
           : null;
 

@@ -19,6 +19,7 @@ const NONE_VALUE = '__none__';
 
 export function DeviceInspector({ device }: { device: Device }) {
   const { project, updateDevice, retireDevice } = useProject();
+  const isTerminalBlock = device.kind === 'terminal_block';
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
   const assignedRack = device.rackId
     ? project.racks.find((candidate) => candidate.id === device.rackId)
@@ -35,9 +36,9 @@ export function DeviceInspector({ device }: { device: Device }) {
   const portCount = project.ports.filter((port) => port.deviceId === device.id).length;
   const [form, setForm] = useState({
     name: device.name,
-    manufacturer: device.manufacturer,
-    model: device.model,
-    role: device.role,
+    manufacturer: device.manufacturer ?? '',
+    model: device.model ?? '',
+    role: device.role ?? '',
     notes: device.notes,
     locationId: device.locationId ?? '',
     rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
@@ -46,9 +47,9 @@ export function DeviceInspector({ device }: { device: Device }) {
   useEffect(() => {
     setForm({
       name: device.name,
-      manufacturer: device.manufacturer,
-      model: device.model,
-      role: device.role,
+      manufacturer: device.manufacturer ?? '',
+      model: device.model ?? '',
+      role: device.role ?? '',
       notes: device.notes,
       locationId: device.locationId ?? '',
       rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
@@ -70,7 +71,7 @@ export function DeviceInspector({ device }: { device: Device }) {
 
   function handleRetire() {
     const confirmed = window.confirm(
-      `Retire device "${device.name}"?\n\nThe device remains in the project. Its planned cables and cable ranges are marked retired, and cable numbers stay unavailable.`,
+      `Retire ${isTerminalBlock ? 'terminal block' : 'device'} "${device.name}"?\n\nThe ${isTerminalBlock ? 'terminal block' : 'device'} remains in the project. Its planned cables and cable ranges are marked retired, and cable numbers stay unavailable.`,
     );
 
     if (confirmed) {
@@ -80,10 +81,10 @@ export function DeviceInspector({ device }: { device: Device }) {
 
   return (
     <aside className="inspector" aria-label="Right inspector">
-      <h2>Device Inspector</h2>
+      <h2>{isTerminalBlock ? 'Terminal Block Inspector' : 'Device Inspector'}</h2>
       <Card className="inspector-card">
         <CardHeader>
-          <CardTitle>Edit Device</CardTitle>
+          <CardTitle>{isTerminalBlock ? 'Edit TB' : 'Edit Device'}</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="editor-form inspector-form" onSubmit={handleSubmit}>
@@ -91,22 +92,26 @@ export function DeviceInspector({ device }: { device: Device }) {
               <Label htmlFor="inspector-device-name">Name</Label>
               <Input id="inspector-device-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-manufacturer">Manufacturer</Label>
-              <Input
-                id="inspector-device-manufacturer"
-                value={form.manufacturer}
-                onChange={(event) => setForm({ ...form, manufacturer: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-model">Model</Label>
-              <Input id="inspector-device-model" value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-device-role">Role</Label>
-              <Input id="inspector-device-role" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })} />
-            </div>
+            {!isTerminalBlock ? (
+              <>
+                <div className="form-field">
+                  <Label htmlFor="inspector-device-manufacturer">Manufacturer</Label>
+                  <Input
+                    id="inspector-device-manufacturer"
+                    value={form.manufacturer}
+                    onChange={(event) => setForm({ ...form, manufacturer: event.target.value })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="inspector-device-model">Model</Label>
+                  <Input id="inspector-device-model" value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} />
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="inspector-device-role">Role</Label>
+                  <Input id="inspector-device-role" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })} />
+                </div>
+              </>
+            ) : null}
             {canEditLocation ? (
               <div className="form-field">
                 <Label htmlFor="inspector-device-location">Location</Label>
@@ -130,28 +135,35 @@ export function DeviceInspector({ device }: { device: Device }) {
                 </Select>
               </div>
             ) : null}
-            <div className="form-field">
-              <Label htmlFor="inspector-device-rack-size">Mount height (RU)</Label>
-              <Input
-                id="inspector-device-rack-size"
-                min="1"
-                type="number"
-                value={form.rackSizeRu}
-                onChange={(event) => setForm({ ...form, rackSizeRu: event.target.value })}
-              />
-              <p className="form-help">Required before dragging this device onto a rack canvas.</p>
-            </div>
+            {!isTerminalBlock ? (
+              <div className="form-field">
+                <Label htmlFor="inspector-device-rack-size">Mount height (RU)</Label>
+                <Input
+                  id="inspector-device-rack-size"
+                  min="1"
+                  type="number"
+                  value={form.rackSizeRu}
+                  onChange={(event) => setForm({ ...form, rackSizeRu: event.target.value })}
+                />
+                <p className="form-help">Required before dragging this device onto a rack canvas.</p>
+              </div>
+            ) : (
+              <div className="form-field">
+                <Label>Mount height</Label>
+                <Input readOnly value="1 RU" />
+              </div>
+            )}
             <div className="form-field">
               <Label htmlFor="inspector-device-notes">Notes</Label>
               <Textarea id="inspector-device-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
             </div>
-            <Button type="submit">Save Device</Button>
+            <Button type="submit">{isTerminalBlock ? 'Save TB' : 'Save Device'}</Button>
           </form>
         </CardContent>
       </Card>
       <Card className="inspector-card">
         <CardHeader>
-          <CardTitle>Device Details</CardTitle>
+          <CardTitle>{isTerminalBlock ? 'TB Details' : 'Device Details'}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl>
@@ -201,11 +213,13 @@ export function DeviceInspector({ device }: { device: Device }) {
             </div>
           </dl>
           <p>
-            {device.mountType === 'rack'
-              ? 'Rack assignment and RU position are changed on the Rack Canvas.'
-              : 'Set a mount height, then drag this device from the navigator onto a rack canvas when it is ready to be mounted.'}
+            {isTerminalBlock
+              ? 'Terminal blocks are fixed 1RU rackmount objects. Rack and RU changes are made on the Rack Canvas.'
+              : device.mountType === 'rack'
+                ? 'Rack assignment and RU position are changed on the Rack Canvas.'
+                : 'Set a mount height, then drag this device from the navigator onto a rack canvas when it is ready to be mounted.'}
           </p>
-          <p>Port group cable allocation fields are locked in v0.1.</p>
+          <p>{isTerminalBlock ? 'Rear and front port groups are locked in this release.' : 'Port group cable allocation fields are locked in v0.1.'}</p>
         </CardContent>
       </Card>
       <Card className="inspector-card danger-zone">
@@ -213,9 +227,9 @@ export function DeviceInspector({ device }: { device: Device }) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-        <p>Device deletion retires allocations in v0.1 so cable numbers are never freed for reuse.</p>
+        <p>{isTerminalBlock ? 'TB retirement keeps front planned cable numbers unavailable for reuse.' : 'Device deletion retires allocations in v0.1 so cable numbers are never freed for reuse.'}</p>
         <Button variant="destructive" type="button" onClick={handleRetire}>
-          Retire Device
+          {isTerminalBlock ? 'Retire TB' : 'Retire Device'}
         </Button>
         </CardContent>
       </Card>

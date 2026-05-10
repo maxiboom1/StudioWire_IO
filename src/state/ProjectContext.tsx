@@ -27,6 +27,7 @@ import {
   type DevicePortGroupDraft,
   type DeviceUpdate,
   type ProjectState,
+  type TerminalBlockDraft,
 } from './projectReducer';
 
 const STORAGE_KEY = 'studiowire.io.project.v0.1';
@@ -51,6 +52,7 @@ interface ProjectContextValue extends ProjectState {
   updateRack: (id: string, updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'>) => void;
   deleteRack: (id: string) => void;
   addDevice: (input: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] }) => string;
+  addTerminalBlock: (input: TerminalBlockDraft) => string;
   moveMountedDevice: (input: { deviceId: string; targetRackId: string; targetBottomRu: number }) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
   retireDevice: (id: string) => void;
@@ -232,6 +234,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
+  const addTerminalBlock = useCallback((input: TerminalBlockDraft) => {
+    const id = input.id ?? makeId('terminal-block', `${input.labelPrefix || input.name}-${nowIso()}`);
+
+    dispatch({ type: 'ADD_TERMINAL_BLOCK', payload: { terminalBlock: { ...input, id } } });
+
+    return id;
+  }, []);
+
   const updateDevice = useCallback((id: string, updates: DeviceUpdate) => {
     dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } });
   }, []);
@@ -269,6 +279,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateRack,
       deleteRack,
       addDevice,
+      addTerminalBlock,
       moveMountedDevice,
       updateDevice,
       retireDevice,
@@ -294,6 +305,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateRack,
       deleteRack,
       addDevice,
+      addTerminalBlock,
       moveMountedDevice,
       updateDevice,
       retireDevice,

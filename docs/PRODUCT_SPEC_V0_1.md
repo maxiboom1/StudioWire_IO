@@ -126,7 +126,7 @@ Each device has:
 
 Device creation can generate port groups, ports, planned cables, and ledger allocations in one workflow.
 
-v0.1 does not model terminal blocks, rear/front terminal block faces, or physical connection chains.
+As of v0.2.4.1, terminal blocks are modeled as a device kind with fixed 1RU rack placement, rear/front port faces, and optional planned cable numbers on FRONT ports only. Complete physical connection chains remain outside the current scope.
 
 ## Port Groups
 
@@ -163,8 +163,8 @@ The numbering model includes:
 
 Cable numbers must be unique per project. Skipped gaps are reserved and cannot be reused.
 
-v0.1 tracks planned cable numbers and validation, but does not model complete connection paths or export prewire documents.
+StudioWire IO tracks planned cable numbers and validation, but does not model complete connection paths or export prewire documents yet.
 
 ## Explicit Exclusions
 
-v0.1 intentionally excludes terminal blocks, device-to-TB connections, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage.
+The current app intentionally excludes device-to-TB connection logic, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage.

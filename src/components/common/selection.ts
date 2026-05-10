@@ -77,9 +77,9 @@ export function resolveIssueSelection(
   if (issue.objectType === 'cable') {
     const cable = project.cables.find((candidate) => candidate.id === issue.objectId);
     const endpointPortId =
-      cable?.sourceEndpoint.type === 'device_port'
+      cable?.sourceEndpoint.type === 'device_port' || cable?.sourceEndpoint.type === 'tb_port'
         ? cable.sourceEndpoint.id
-        : cable?.destinationEndpoint.type === 'device_port'
+        : cable?.destinationEndpoint.type === 'device_port' || cable?.destinationEndpoint.type === 'tb_port'
           ? cable.destinationEndpoint.id
           : null;
     const port = endpointPortId ? project.ports.find((candidate) => candidate.id === endpointPortId) : null;
@@ -140,13 +140,26 @@ export function getInspectorRows(
         ? project.racks.find((candidate) => candidate.id === selected.value.rackId)
         : null;
 
+      if (selected.value.kind === 'terminal_block') {
+        return [
+          ['Type', 'Terminal Block'],
+          ['ID', selected.value.id],
+          ['Name', selected.value.name],
+          ['Location', (location?.name ?? selected.value.locationId) || 'Unassigned'],
+          ['Rack', rack?.name ?? 'Not rack-mounted'],
+          ['Mount type', selected.value.mountType],
+          ['Mount height', selected.value.rackSizeRu ? `${selected.value.rackSizeRu} RU` : 'Not set'],
+          ['Status', selected.value.status],
+        ];
+      }
+
       return [
         ['Type', 'Device'],
         ['ID', selected.value.id],
         ['Name', selected.value.name],
-        ['Code', selected.value.code || 'Not set'],
-        ['Manufacturer', selected.value.manufacturer || 'Not set'],
-        ['Model', selected.value.model || 'Not set'],
+        ['Code', selected.value.code ?? 'Not set'],
+        ['Manufacturer', selected.value.manufacturer ?? 'Not set'],
+        ['Model', selected.value.model ?? 'Not set'],
         ['Location', (location?.name ?? selected.value.locationId) || 'Unassigned'],
         ['Rack', rack?.name ?? 'Not rack-mounted'],
         ['Mount type', selected.value.mountType],

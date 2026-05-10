@@ -1,11 +1,12 @@
-export const STUDIOWIRE_SCHEMA_VERSION = '0.1.0' as const;
+export const STUDIOWIRE_SCHEMA_VERSION = '0.2.4.1' as const;
 
-export type SchemaVersion = typeof STUDIOWIRE_SCHEMA_VERSION;
+export type SchemaVersion = typeof STUDIOWIRE_SCHEMA_VERSION | '0.1.0';
 
 export type ProjectStatus = 'draft' | 'approved' | 'as_built';
 export type RackNumberingDirection = 'bottom_to_top' | 'top_to_bottom';
+export type DeviceKind = 'device' | 'terminal_block';
 export type DeviceMountType = 'rack' | 'non_rack' | 'virtual';
-export type PortDirection = 'input' | 'output' | 'bidirectional';
+export type PortDirection = 'input' | 'output' | 'bidirectional' | 'rear' | 'front';
 export type CableStatus = 'planned' | 'connected' | 'retired';
 export type NumberingRangeStatus = 'allocated' | 'reserved_gap' | 'retired';
 export type EndpointType = 'device_port' | 'tb_port' | 'external' | 'unknown';
@@ -91,12 +92,13 @@ export interface Rack {
 export interface Device {
   id: string;
   name: string;
-  code: string;
-  manufacturer: string;
-  model: string;
+  kind: DeviceKind;
+  code?: string;
+  manufacturer?: string;
+  model?: string;
   categoryId: string;
   locationId: string | null;
-  role: string;
+  role?: string;
   labelPrefix: string;
   mountType: DeviceMountType;
   rackId: string | null;

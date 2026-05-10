@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useProject } from '../../state/ProjectContext';
 import { AddDeviceModal } from '../devices/AddDeviceModal';
+import { AddTerminalBlockModal } from '../devices/AddTerminalBlockModal';
 import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
 import { resolveIssueSelection, resolveSelection, type SelectedObjectType, type SelectionState } from '../common/selection';
@@ -16,7 +17,8 @@ type ModalState =
   | null
   | { type: 'location' }
   | { type: 'rack'; locationId: string }
-  | { type: 'device'; locationId: string | null };
+  | { type: 'device'; locationId: string | null }
+  | { type: 'terminal_block'; locationId: string | null };
 
 export function StudioWireShell() {
   const { project, importError, dismissImportError } = useProject();
@@ -61,6 +63,10 @@ export function StudioWireShell() {
     setModal({ type: 'device', locationId });
   }
 
+  function openAddTerminalBlock(locationId: string | null) {
+    setModal({ type: 'terminal_block', locationId });
+  }
+
   return (
     <SidebarProvider className="app-frame">
       <TopBar
@@ -76,6 +82,7 @@ export function StudioWireShell() {
           onAddLocation={() => setModal({ type: 'location' })}
           onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
           onAddDevice={openAddDevice}
+          onAddTerminalBlock={openAddTerminalBlock}
         />
         <SidebarInset className="app-shell">
           {importError ? (
@@ -88,7 +95,11 @@ export function StudioWireShell() {
           ) : null}
           <section className="app-grid" aria-label={`${project.project.name} project editor`}>
             {activeView === 'workspace' ? (
-              <Workspace selection={selection} onAddDevice={openAddDevice} />
+              <Workspace
+                selection={selection}
+                onAddDevice={openAddDevice}
+                onAddTerminalBlock={openAddTerminalBlock}
+              />
             ) : (
               <CablesWorkspace />
             )}
@@ -127,6 +138,16 @@ export function StudioWireShell() {
       ) : null}
       {modal?.type === 'device' ? (
         <AddDeviceModal
+          initialLocationId={modal.locationId}
+          onClose={() => setModal(null)}
+          onCreated={(id) => {
+            setModal(null);
+            selectObject('device', id);
+          }}
+        />
+      ) : null}
+      {modal?.type === 'terminal_block' ? (
+        <AddTerminalBlockModal
           initialLocationId={modal.locationId}
           onClose={() => setModal(null)}
           onCreated={(id) => {
