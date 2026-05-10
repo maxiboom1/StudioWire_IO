@@ -15,7 +15,21 @@ export interface PortConnectionSummary {
   cable: Cable | null;
   isConnected: boolean;
   chainLabel: string;
+  chainParts: PortConnectionChainPart[];
 }
+
+export type PortConnectionChainPart =
+  | {
+      type: 'terminal_block';
+      label: string;
+      marker: string;
+      orientation: 'rear-to-front' | 'front-to-rear' | 'front-to-front' | 'rear' | 'front';
+    }
+  | {
+      type: 'port';
+      label: string;
+      portId: string;
+    };
 
 export function connectPorts(
   project: ProjectRoot,
@@ -186,10 +200,13 @@ export function describePortConnection(project: ProjectRoot, portId: string): Po
     ? project.cables.find((candidate) => candidate.id === port.plannedCableId) ?? null
     : null;
 
+  const chainParts = connectedCable ? buildChainParts(project, portId) : [];
+
   return {
     cable: connectedCable ?? slotCable,
     isConnected: Boolean(connectedCable),
-    chainLabel: connectedCable ? buildChainLabel(project, portId) : '',
+    chainLabel: chainParts.map((part) => (part.type === 'terminal_block' ? part.marker : part.label)).join(' '),
+    chainParts,
   };
 }
 
@@ -268,39 +285,97 @@ function compareCableNumbers(left: Cable, right: Cable): number {
   return left.number.localeCompare(right.number, undefined, { numeric: true });
 }
 
-function buildChainLabel(project: ProjectRoot, originPortId: string): string {
+function buildChainParts(project: ProjectRoot, originPortId: string): PortConnectionChainPart[] {
   const path = findDisplayPath(project, originPortId);
 
   if (path.length <= 1) {
-    return '';
+    return [];
   }
 
-  const labels: string[] = [];
+  const parts: PortConnectionChainPart[] = [];
   let previousTbKey: string | null = null;
 
-  for (const portId of path.slice(1)) {
-      const port = project.ports.find((candidate) => candidate.id === portId);
+  for (let index = 1; index < path.length; index += 1) {
+    const portId = path[index];
+    const port = project.ports.find((candidate) => candidate.id === portId);
 
-      if (!port) {
-        continue;
+    if (!port) {
+      continue;
+    }
+
+    if (isTerminalBlockPort(project, port)) {
+      const tbKey = `${port.deviceId}:${port.index}`;
+
+      if (tbKey !== previousTbKey) {
+        const nextPort = path[index + 1]
+          ? project.ports.find((candidate) => candidate.id === path[index + 1]) ?? null
+          : null;
+        const orientation = getTbMarkerOrientation(project, port, nextPort);
+        const label = getTbInlineLabel(project, port);
+
+        parts.push({
+          type: 'terminal_block',
+          label,
+          marker: formatTbMarker(label, orientation),
+          orientation,
+        });
       }
 
-      if (isTerminalBlockPort(project, port)) {
-        const tbKey = `${port.deviceId}:${port.index}`;
+      previousTbKey = tbKey;
+      continue;
+    }
 
-        if (tbKey !== previousTbKey) {
-          labels.push(`| ${getTbInlineLabel(project, port)} >`);
-        }
-
-        previousTbKey = tbKey;
-        continue;
-      }
-
-      previousTbKey = null;
-      labels.push(port.label);
+    previousTbKey = null;
+    parts.push({ type: 'port', label: port.label, portId: port.id });
   }
 
-  return labels.join(' ');
+  return parts;
+}
+
+function getTbMarkerOrientation(
+  project: ProjectRoot,
+  port: Port,
+  nextPort: Port | null,
+): Extract<PortConnectionChainPart, { type: 'terminal_block' }>['orientation'] {
+  if (
+    nextPort &&
+    isTerminalBlockPort(project, nextPort) &&
+    nextPort.deviceId === port.deviceId &&
+    nextPort.index === port.index
+  ) {
+    if (port.direction === 'rear' && nextPort.direction === 'front') {
+      return 'rear-to-front';
+    }
+
+    if (port.direction === 'front' && nextPort.direction === 'rear') {
+      return 'front-to-rear';
+    }
+
+    if (port.direction === 'front' && nextPort.direction === 'front') {
+      return 'front-to-front';
+    }
+  }
+
+  if (port.direction === 'rear') {
+    return 'rear';
+  }
+
+  return 'front';
+}
+
+function formatTbMarker(
+  label: string,
+  orientation: Extract<PortConnectionChainPart, { type: 'terminal_block' }>['orientation'],
+): string {
+  if (orientation === 'front-to-rear' || orientation === 'front') {
+    return `< ${label} |`;
+  }
+
+  if (orientation === 'front-to-front') {
+    return `< ${label} >`;
+  }
+
+  return `| ${label} >`;
 }
 
 function findDisplayPath(project: ProjectRoot, originPortId: string): string[] {

@@ -1,5 +1,9 @@
 import type { CSSProperties } from 'react';
-import { describePortConnection, type PortConnectionSummary } from '../../domain/connections';
+import {
+  describePortConnection,
+  type PortConnectionChainPart,
+  type PortConnectionSummary,
+} from '../../domain/connections';
 import type { Device, Port, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { CrosspointPicker } from '../connections/CrosspointPicker';
@@ -78,32 +82,65 @@ function CableLineRow({
     return <div className="device-wire-row" />;
   }
 
+  const inlineMarker = row.connection.chainParts.find((part) => part.type === 'terminal_block') ?? null;
+  const remoteLabel = getRemoteChainLabel(row.connection.chainParts);
+
   return (
     <div className={`device-wire-row device-wire-row-${side}`}>
       {side === 'input' ? (
         <>
-          <span className="device-cable-line" aria-hidden="true" />
-          {row.connection.chainLabel ? <span className="device-chain-label">{row.connection.chainLabel}</span> : null}
           <CrosspointPicker
             ariaLabel={`Connect ${row.port.label}`}
-            className="device-port-node"
+            className="device-cable-picker"
             portId={row.port.id}
           />
+          <span className="device-cable-line device-cable-line-outer" aria-hidden="true" />
+          {inlineMarker ? <InlineTbMarker part={inlineMarker} /> : null}
+          <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
+          <span className="device-port-anchor" aria-hidden="true" />
         </>
       ) : (
         <>
+          <span className="device-port-anchor" aria-hidden="true" />
+          <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
+          {inlineMarker ? <InlineTbMarker part={inlineMarker} /> : null}
+          <span className="device-cable-line device-cable-line-outer" aria-hidden="true" />
           <CrosspointPicker
             ariaLabel={`Connect ${row.port.label}`}
-            className="device-port-node"
+            className="device-cable-picker"
             portId={row.port.id}
           />
-          <span className="device-cable-line" aria-hidden="true" />
-          {row.connection.chainLabel ? <span className="device-chain-label">{row.connection.chainLabel}</span> : null}
         </>
       )}
+      {remoteLabel ? <span className="device-chain-label">{remoteLabel}</span> : null}
       {row.connection.cable ? <span className="device-cable-number">{row.connection.cable.number}</span> : null}
     </div>
   );
+}
+
+function InlineTbMarker({ part }: { part: Extract<PortConnectionChainPart, { type: 'terminal_block' }> }) {
+  const isRearFirst = part.orientation === 'rear-to-front' || part.orientation === 'rear';
+  const isFrontFirst = part.orientation === 'front-to-rear' || part.orientation === 'front';
+
+  return (
+    <span className={`device-inline-tb-marker device-inline-tb-marker-${part.orientation}`}>
+      {isFrontFirst ? <span className="device-inline-tb-arrow device-inline-tb-arrow-left" aria-hidden="true" /> : null}
+      {isRearFirst ? <span className="device-inline-tb-rear-bar" aria-hidden="true" /> : null}
+      <span className="device-inline-tb-label">{part.label}</span>
+      {isRearFirst || part.orientation === 'front-to-front' ? (
+        <span className="device-inline-tb-arrow device-inline-tb-arrow-right" aria-hidden="true" />
+      ) : null}
+      {isFrontFirst ? <span className="device-inline-tb-rear-bar" aria-hidden="true" /> : null}
+    </span>
+  );
+}
+
+function getRemoteChainLabel(parts: PortConnectionChainPart[]) {
+  const labels = parts
+    .filter((part): part is Extract<PortConnectionChainPart, { type: 'port' }> => part.type === 'port')
+    .map((part) => part.label);
+
+  return labels.length > 0 ? labels[labels.length - 1] : '';
 }
 
 function buildPortRows(

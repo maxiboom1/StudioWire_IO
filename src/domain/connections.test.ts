@@ -190,10 +190,12 @@ describe('connectPorts', () => {
 
     const codes = validateProject(frontResult.project).map((issue) => issue.code);
     const summary = describePortConnection(frontResult.project, routerOut.id);
+    const tbPart = summary.chainParts.find((part) => part.type === 'terminal_block');
 
     expect(codes).not.toContain('connection-chain-direction-invalid');
     expect(summary.chainLabel).toContain('| TB-A-01 >');
     expect(summary.chainLabel).toContain('SW-IN-001');
+    expect(tbPart).toMatchObject({ marker: '| TB-A-01 >', orientation: 'rear-to-front' });
   });
 
   it('supports TB front to TB front patching with lower-number-wins', () => {

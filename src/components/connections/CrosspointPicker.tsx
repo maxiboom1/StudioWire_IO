@@ -28,6 +28,8 @@ interface PortCandidate {
 export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPickerProps) {
   const { project, connectPorts } = useProject();
   const [search, setSearch] = useState('');
+  const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
+  const [expandedDevices, setExpandedDevices] = useState<Set<string>>(new Set());
   const originPort = project.ports.find((port) => port.id === portId) ?? null;
   const candidates = useMemo(() => buildCandidates(project, portId), [project, portId]);
   const visibleCandidates = useMemo(() => {
@@ -40,6 +42,15 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
     return candidates.filter((candidate) => candidate.searchText.includes(normalizedSearch));
   }, [candidates, search]);
   const groupedCandidates = useMemo(() => groupCandidates(visibleCandidates), [visibleCandidates]);
+  const isSearching = search.trim().length > 0;
+
+  function toggleLocation(key: string) {
+    setExpandedLocations((current) => toggleSetValue(current, key));
+  }
+
+  function toggleDevice(key: string) {
+    setExpandedDevices((current) => toggleSetValue(current, key));
+  }
 
   return (
     <DropdownMenu>
@@ -66,36 +77,52 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
           ) : (
             groupedCandidates.map((locationGroup) => (
               <div className="crosspoint-location-group" key={locationGroup.key}>
-                <div className="crosspoint-location-name">{locationGroup.name}</div>
-                {locationGroup.devices.map((deviceGroup) => (
-                  <div className="crosspoint-device-group" key={deviceGroup.device.id}>
-                    <div className="crosspoint-device-name">
-                      {deviceGroup.device.kind === 'terminal_block' ? 'TB' : 'Device'}: {deviceGroup.device.name}
-                    </div>
-                    {deviceGroup.ports.map((candidate) => {
-                      const status = getConnectionTargetStatus(project, {
-                        fromPortId: portId,
-                        toPortId: candidate.port.id,
-                      });
-
-                      return (
-                        <DropdownMenuItem
-                          className="crosspoint-port-item"
-                          disabled={!status.ok}
-                          key={candidate.port.id}
-                          onSelect={() => {
-                            if (status.ok) {
-                              connectPorts({ fromPortId: portId, toPortId: candidate.port.id });
-                            }
-                          }}
+                <button
+                  className="crosspoint-tree-toggle crosspoint-location-name"
+                  type="button"
+                  onClick={() => toggleLocation(locationGroup.key)}
+                >
+                  <span className={isExpanded(expandedLocations, locationGroup.key, isSearching) ? 'expanded' : ''}>
+                    ▸
+                  </span>
+                  <strong>{locationGroup.name}</strong>
+                  <small>{countPorts(locationGroup.devices)}</small>
+                </button>
+                {isExpanded(expandedLocations, locationGroup.key, isSearching)
+                  ? locationGroup.devices.map((deviceGroup) => (
+                      <div className="crosspoint-device-group" key={deviceGroup.device.id}>
+                        <button
+                          className="crosspoint-tree-toggle crosspoint-device-name"
+                          type="button"
+                          onClick={() => toggleDevice(deviceGroup.device.id)}
                         >
-                          <span>{candidate.port.label}</span>
-                          <small>{status.ok ? candidate.port.direction : status.reason}</small>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </div>
-                ))}
+                          <span
+                            className={isExpanded(expandedDevices, deviceGroup.device.id, isSearching) ? 'expanded' : ''}
+                          >
+                            ▸
+                          </span>
+                          <strong>
+                            {deviceGroup.device.kind === 'terminal_block' ? 'TB' : 'Device'}: {deviceGroup.device.name}
+                          </strong>
+                          <small>{deviceGroup.ports.length}</small>
+                        </button>
+                        {isExpanded(expandedDevices, deviceGroup.device.id, isSearching)
+                          ? deviceGroup.ports.map((candidate) => (
+                              <DropdownMenuItem
+                                className="crosspoint-port-item"
+                                key={candidate.port.id}
+                                onSelect={() => {
+                                  connectPorts({ fromPortId: portId, toPortId: candidate.port.id });
+                                }}
+                              >
+                                <span>{candidate.port.label}</span>
+                                <small>{candidate.port.direction}</small>
+                              </DropdownMenuItem>
+                            ))
+                          : null}
+                      </div>
+                    ))
+                  : null}
               </div>
             ))
           )}
@@ -108,6 +135,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
 function buildCandidates(project: ProjectRoot, originPortId: string): PortCandidate[] {
   return project.ports
     .filter((port) => port.id !== originPortId)
+    .filter((port) => getConnectionTargetStatus(project, { fromPortId: originPortId, toPortId: port.id }).ok)
     .map((port) => {
       const device = project.devices.find((candidate) => candidate.id === port.deviceId);
 
@@ -177,4 +205,24 @@ function groupCandidates(candidates: PortCandidate[]) {
   }
 
   return locations;
+}
+
+function toggleSetValue(current: Set<string>, value: string) {
+  const next = new Set(current);
+
+  if (next.has(value)) {
+    next.delete(value);
+  } else {
+    next.add(value);
+  }
+
+  return next;
+}
+
+function isExpanded(expanded: Set<string>, key: string, forceOpen: boolean) {
+  return forceOpen || expanded.has(key);
+}
+
+function countPorts(devices: Array<{ device: Device; ports: PortCandidate[] }>) {
+  return devices.reduce((total, device) => total + device.ports.length, 0);
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.5.2
+
+Polished the crosspoint drawing and picker affordances.
+
+### Changed
+
+- Moved device crosspoint pickers from the device body to the cable ends while keeping body-side connector markers visible.
+- Reworked the picker menu into a collapsible Location -> Device/TB -> Port tree that only lists currently valid targets.
+- Rendered TB inline chain markers as part of the red cable path, with rear/front direction shown by the marker shape.
+- Moved TB view pickers outside the terminal-block panel border.
+- Kept project schema version `0.2.5.1` and bumped the app version to `0.2.5.2`.
+
 ## v0.2.5.1
 
 Added the first crosspoint connection system.
