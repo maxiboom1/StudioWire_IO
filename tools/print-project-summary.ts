@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { parseImportedProject } from '../src/state/projectReducer';
 import type { ProjectRoot } from '../src/domain/types';
 
 const filePath = process.argv[2];
@@ -9,7 +10,15 @@ if (!filePath) {
   process.exit(1);
 }
 
-const project = JSON.parse(readFileSync(resolve(filePath), 'utf8')) as ProjectRoot;
+const parsedProject = JSON.parse(readFileSync(resolve(filePath), 'utf8')) as ProjectRoot;
+const importResult = parseImportedProject(parsedProject);
+
+if (!importResult.ok) {
+  console.error(importResult.error);
+  process.exit(1);
+}
+
+const project = importResult.project;
 const plannedCables = project.cables.filter((cable) => cable.status === 'planned');
 
 console.log(`Project: ${project.project.name}`);

@@ -53,6 +53,7 @@ interface ProjectContextValue extends ProjectState {
   deleteRack: (id: string) => void;
   addDevice: (input: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] }) => string;
   addTerminalBlock: (input: TerminalBlockDraft) => string;
+  connectPorts: (input: { fromPortId: string; toPortId: string }) => void;
   moveMountedDevice: (input: { deviceId: string; targetRackId: string; targetBottomRu: number }) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
   retireDevice: (id: string) => void;
@@ -242,6 +243,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
+  const connectPorts = useCallback((input: { fromPortId: string; toPortId: string }) => {
+    dispatch({ type: 'CONNECT_PORTS', payload: input });
+  }, []);
+
   const updateDevice = useCallback((id: string, updates: DeviceUpdate) => {
     dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } });
   }, []);
@@ -280,6 +285,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       deleteRack,
       addDevice,
       addTerminalBlock,
+      connectPorts,
       moveMountedDevice,
       updateDevice,
       retireDevice,
@@ -306,6 +312,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       deleteRack,
       addDevice,
       addTerminalBlock,
+      connectPorts,
       moveMountedDevice,
       updateDevice,
       retireDevice,

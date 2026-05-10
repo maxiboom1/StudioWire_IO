@@ -1,4 +1,11 @@
 import { parseCableNumber } from './cableNumbers';
+import {
+  areStandardDirectionsCompatible,
+  endpointReferencesPort,
+  getCablePortIds,
+  getSegmentCompatibility,
+  isTerminalBlockPort,
+} from './connections';
 import { makeId } from './id';
 import type { Cable, Device, Port, ProjectRoot, ValidationIssue, ValidationSeverity } from './types';
 
@@ -234,7 +241,7 @@ function validateCables(
       );
     }
 
-    for (const endpoint of [cable.sourceEndpoint, cable.destinationEndpoint]) {
+    for (const endpoint of [cable.sideAEndpoint, cable.sideBEndpoint]) {
       if ((endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id && !ports.has(endpoint.id)) {
         issues.push(
           issue(
@@ -264,7 +271,7 @@ function validateCables(
 
         if (
           endpointPort &&
-          endpoint === cable.sourceEndpoint &&
+          endpoint === cable.sideAEndpoint &&
           endpointPort.direction !== 'input' &&
           endpointPort.direction !== 'rear' &&
           cable.labelTop !== endpoint.label
@@ -280,7 +287,7 @@ function validateCables(
           );
         }
 
-        if (endpointPort && endpoint === cable.destinationEndpoint && endpointPort.direction === 'input' && cable.labelBottom !== endpoint.label) {
+        if (endpointPort && endpoint === cable.sideBEndpoint && endpointPort.direction === 'input' && cable.labelBottom !== endpoint.label) {
           issues.push(
             issue(
               'error',
@@ -319,6 +326,8 @@ function validateCables(
     }
   }
 
+  issues.push(...validateConnectedCables(project, ports, issue));
+
   return issues;
 }
 
@@ -328,7 +337,7 @@ function validatePortPlannedCableLink(
   issue: ReturnType<typeof createIssueBuilder>,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-  const hasPortEndpoint = endpointReferencesPort(cable.sourceEndpoint, port.id) || endpointReferencesPort(cable.destinationEndpoint, port.id);
+  const hasPortEndpoint = endpointReferencesPort(cable.sideAEndpoint, port.id) || endpointReferencesPort(cable.sideBEndpoint, port.id);
 
   if (!hasPortEndpoint) {
     issues.push(
@@ -354,8 +363,12 @@ function validatePortPlannedCableLink(
     );
   }
 
+  if (cable.status !== 'planned') {
+    return issues;
+  }
+
   if (port.direction === 'input') {
-    if (!endpointReferencesPort(cable.destinationEndpoint, port.id)) {
+    if (!endpointReferencesPort(cable.sideBEndpoint, port.id)) {
       issues.push(
         issue(
           'error',
@@ -367,7 +380,7 @@ function validatePortPlannedCableLink(
       );
     }
 
-    if (cable.labelBottom !== cable.destinationEndpoint.label) {
+    if (cable.labelBottom !== cable.sideBEndpoint.label) {
       issues.push(
         issue(
           'error',
@@ -386,7 +399,7 @@ function validatePortPlannedCableLink(
           ? 'terminal-block-front-cable-source-mismatch'
           : 'planned-bidirectional-cable-source-mismatch';
 
-    if (!endpointReferencesPort(cable.sourceEndpoint, port.id)) {
+    if (!endpointReferencesPort(cable.sideAEndpoint, port.id)) {
       issues.push(
         issue(
           'error',
@@ -398,7 +411,7 @@ function validatePortPlannedCableLink(
       );
     }
 
-    if (cable.labelTop !== cable.sourceEndpoint.label) {
+    if (cable.labelTop !== cable.sideAEndpoint.label) {
       issues.push(
         issue(
           'error',
@@ -412,6 +425,213 @@ function validatePortPlannedCableLink(
   }
 
   return issues;
+}
+
+function validateConnectedCables(
+  project: ProjectRoot,
+  ports: Map<string, Port>,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const activeConnectionCounts = new Map<string, number>();
+
+  for (const cable of project.cables) {
+    if (cable.status !== 'connected') {
+      continue;
+    }
+
+    const portIds = getCablePortIds(cable);
+
+    if (portIds.length !== 2 || portIds[0] === portIds[1]) {
+      issues.push(
+        issue(
+          'error',
+          'connected-cable-endpoints-required',
+          `Connected cable ${cable.number} must reference two different project ports.`,
+          'cable',
+          cable.id,
+        ),
+      );
+      continue;
+    }
+
+    for (const portId of portIds) {
+      activeConnectionCounts.set(portId, (activeConnectionCounts.get(portId) ?? 0) + 1);
+    }
+
+    const [left, right] = portIds.map((portId) => ports.get(portId));
+
+    if (!left || !right) {
+      continue;
+    }
+
+    if (left.categoryId !== right.categoryId) {
+      issues.push(
+        issue(
+          'error',
+          'connection-category-mismatch',
+          `Connected cable ${cable.number} links ports with different categories.`,
+          'cable',
+          cable.id,
+        ),
+      );
+    }
+
+    if (left.connectorTypeId !== right.connectorTypeId) {
+      issues.push(
+        issue(
+          'error',
+          'connection-connector-mismatch',
+          `Connected cable ${cable.number} links ports with different connector types.`,
+          'cable',
+          cable.id,
+        ),
+      );
+    }
+
+    const segment = getSegmentCompatibility(project, left, right);
+
+    if (!segment.ok) {
+      issues.push(
+        issue(
+          'error',
+          'connection-segment-invalid',
+          `Connected cable ${cable.number} is invalid: ${segment.reason}`,
+          'cable',
+          cable.id,
+        ),
+      );
+    }
+  }
+
+  for (const [portId, count] of activeConnectionCounts) {
+    if (count > 1) {
+      const port = ports.get(portId);
+
+      issues.push(
+        issue(
+          'error',
+          'multiple-active-connections',
+          `Port ${port?.label ?? portId} has ${count} active connected cables.`,
+          'port',
+          portId,
+        ),
+      );
+    }
+  }
+
+  issues.push(...validateConnectionChains(project, ports, issue));
+
+  return issues;
+}
+
+function validateConnectionChains(
+  project: ProjectRoot,
+  ports: Map<string, Port>,
+  issue: ReturnType<typeof createIssueBuilder>,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const neighbors = buildConnectionNeighborMap(project);
+  const visited = new Set<string>();
+
+  for (const portId of neighbors.keys()) {
+    if (visited.has(portId)) {
+      continue;
+    }
+
+    const component: string[] = [];
+    const queue = [portId];
+    visited.add(portId);
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+
+      if (!current) {
+        continue;
+      }
+
+      component.push(current);
+
+      for (const next of neighbors.get(current) ?? []) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          queue.push(next);
+        }
+      }
+    }
+
+    const standardPorts = component
+      .map((id) => ports.get(id))
+      .filter((port): port is Port => {
+        if (!port) {
+          return false;
+        }
+
+        return !isTerminalBlockPort(project, port);
+      });
+
+    const [leftPort, rightPort] = standardPorts;
+
+    if (leftPort && rightPort && standardPorts.length === 2 && !areStandardDirectionsCompatible(leftPort, rightPort)) {
+      issues.push(
+        issue(
+          'error',
+          'connection-chain-direction-invalid',
+          `Connection chain links incompatible device ports ${leftPort.label} and ${rightPort.label}.`,
+          'port',
+          leftPort.id,
+        ),
+      );
+    }
+  }
+
+  return issues;
+}
+
+function buildConnectionNeighborMap(project: ProjectRoot): Map<string, Set<string>> {
+  const neighbors = new Map<string, Set<string>>();
+
+  function addEdge(left: string, right: string) {
+    if (!neighbors.has(left)) {
+      neighbors.set(left, new Set());
+    }
+    if (!neighbors.has(right)) {
+      neighbors.set(right, new Set());
+    }
+    neighbors.get(left)?.add(right);
+    neighbors.get(right)?.add(left);
+  }
+
+  for (const cable of project.cables) {
+    if (cable.status !== 'connected') {
+      continue;
+    }
+
+    const [left, right] = getCablePortIds(cable);
+
+    if (left && right) {
+      addEdge(left, right);
+    }
+  }
+
+  for (const device of project.devices) {
+    if (device.kind !== 'terminal_block') {
+      continue;
+    }
+
+    const rearPorts = project.ports.filter((port) => port.deviceId === device.id && port.direction === 'rear');
+    const frontPorts = project.ports.filter((port) => port.deviceId === device.id && port.direction === 'front');
+
+    for (const rearPort of rearPorts) {
+      const frontPort = frontPorts.find((candidate) => candidate.index === rearPort.index);
+
+      if (frontPort) {
+        addEdge(rearPort.id, frontPort.id);
+      }
+    }
+  }
+
+  return neighbors;
 }
 
 function validateReferences(
@@ -879,8 +1099,8 @@ function validatePortGroupPlannedCableMode(
     for (const cable of cables) {
       if (
         cable.status === 'planned' &&
-        (endpointIdInSet(cable.sourceEndpoint, groupPortIds) ||
-          endpointIdInSet(cable.destinationEndpoint, groupPortIds))
+        (endpointIdInSet(cable.sideAEndpoint, groupPortIds) ||
+          endpointIdInSet(cable.sideBEndpoint, groupPortIds))
       ) {
         issues.push(
           issue(
@@ -935,7 +1155,7 @@ function validatePortGroupPlannedCableMode(
 
   const linkedPlannedCables = generatedPorts
     .map((port) => (port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null))
-    .filter((cable): cable is Cable => cable !== null && cable.status === 'planned');
+    .filter((cable): cable is Cable => cable !== null);
 
   if (linkedPlannedCables.length !== portGroup.count) {
     issues.push(
@@ -1084,7 +1304,7 @@ function validateTerminalBlockPortGroups(
     if (port.direction === 'front' && port.plannedCableId) {
       const cable = project.cables.find((candidate) => candidate.id === port.plannedCableId);
 
-      if (cable && !endpointReferencesPort(cable.sourceEndpoint, port.id)) {
+      if (cable && cable.status === 'planned' && !endpointReferencesPort(cable.sideAEndpoint, port.id)) {
         issues.push(
           issue(
             'error',
@@ -1331,11 +1551,7 @@ function isRackPositionValid(device: Device): device is Device & { rackBottomRu:
   return isPositiveInteger(device.rackBottomRu) && isPositiveInteger(device.rackSizeRu);
 }
 
-function endpointReferencesPort(endpoint: Cable['sourceEndpoint'], portId: string): boolean {
-  return (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id === portId;
-}
-
-function endpointIdInSet(endpoint: Cable['sourceEndpoint'], ids: Set<string>): boolean {
+function endpointIdInSet(endpoint: Cable['sideAEndpoint'], ids: Set<string>): boolean {
   return (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id !== null && ids.has(endpoint.id);
 }
 

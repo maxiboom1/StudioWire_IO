@@ -126,7 +126,7 @@ Each device has:
 
 Device creation can generate port groups, ports, planned cables, and ledger allocations in one workflow.
 
-As of v0.2.4.1, terminal blocks are modeled as a device kind with fixed 1RU rack placement, rear/front port faces, and optional planned cable numbers on FRONT ports only. Complete physical connection chains remain outside the current scope.
+As of v0.2.5.1, terminal blocks are modeled as a device kind with fixed 1RU rack placement, rear/front port faces, optional planned cable numbers on FRONT ports only, and connection-chain drawing through rear/front connector pairs.
 
 ## Port Groups
 

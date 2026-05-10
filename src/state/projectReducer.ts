@@ -1,4 +1,5 @@
 import { allocateCableRange } from '../domain/cableNumbers';
+import { connectPorts } from '../domain/connections';
 import { makeId, makeIndexedId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject } from '../domain/projectFactory';
@@ -99,6 +100,7 @@ export type ProjectAction =
   | { type: 'UPDATE_RACK'; payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> } }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'ADD_TERMINAL_BLOCK'; payload: { terminalBlock: TerminalBlockDraft } }
+  | { type: 'CONNECT_PORTS'; payload: { fromPortId: string; toPortId: string } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
   | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
@@ -383,6 +385,25 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     }
 
+    case 'CONNECT_PORTS': {
+      const result = connectPorts(state.project, action.payload);
+
+      if (!result.ok) {
+        return {
+          ...state,
+          statusMessage: result.error,
+          importError: null,
+        };
+      }
+
+      return {
+        ...state,
+        project: stampProject(result.project, result.message),
+        statusMessage: result.message,
+        importError: null,
+      };
+    }
+
     case 'UPDATE_DEVICE': {
       return {
         project: stampProject(
@@ -526,8 +547,8 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
                 : device,
             ),
             cables: state.project.cables.map((cable) =>
-              (cable.sourceEndpoint.id && portIds.has(cable.sourceEndpoint.id)) ||
-              (cable.destinationEndpoint.id && portIds.has(cable.destinationEndpoint.id))
+              (cable.sideAEndpoint.id && portIds.has(cable.sideAEndpoint.id)) ||
+              (cable.sideBEndpoint.id && portIds.has(cable.sideBEndpoint.id))
                 ? { ...cable, status: 'retired' }
                 : cable,
             ),
@@ -903,10 +924,14 @@ export function parseImportedProject(payload: unknown):
     return { ok: false, error: 'Imported JSON must be an object.' };
   }
 
-  if (payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION && payload.schemaVersion !== '0.1.0') {
+  if (
+    payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION &&
+    payload.schemaVersion !== '0.2.4.1' &&
+    payload.schemaVersion !== '0.1.0'
+  ) {
     return {
       ok: false,
-      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION} or 0.1.0.`,
+      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION}, 0.2.4.1, or 0.1.0.`,
     };
   }
 
@@ -963,9 +988,32 @@ export function parseImportedProject(payload: unknown):
 }
 
 function normalizeImportedProject(project: ProjectRoot): ProjectRoot {
+  const unknownEndpoint = {
+    type: 'unknown' as const,
+    id: null,
+    label: 'Unknown',
+  };
+
   return {
     ...project,
     schemaVersion: STUDIOWIRE_SCHEMA_VERSION,
+    cables: project.cables.map((cable) => {
+      const legacyCable = cable as Cable & {
+        sourceEndpoint?: Cable['sideAEndpoint'];
+        destinationEndpoint?: Cable['sideBEndpoint'];
+      };
+      const {
+        sourceEndpoint: _sourceEndpoint,
+        destinationEndpoint: _destinationEndpoint,
+        ...normalizedCable
+      } = legacyCable;
+
+      return {
+        ...normalizedCable,
+        sideAEndpoint: legacyCable.sideAEndpoint ?? legacyCable.sourceEndpoint ?? unknownEndpoint,
+        sideBEndpoint: legacyCable.sideBEndpoint ?? legacyCable.destinationEndpoint ?? unknownEndpoint,
+      };
+    }),
     devices: project.devices.map((device) => {
       if (device.kind === 'terminal_block') {
         const { code: _code, manufacturer: _manufacturer, model: _model, role: _role, ...terminalBlock } = device;

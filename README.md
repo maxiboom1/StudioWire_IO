@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.4.3 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.5.1 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -76,14 +76,14 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Terminal block creation as fixed 1RU rack objects with rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
+- Crosspoint creation from Device and TB views, including direct device links, device/TB segments, and TB front-to-front patches.
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- Stable JSON import and export using schema version `0.2.4.1`, with import normalization for older `0.1.0` projects.
+- Stable JSON import and export using schema version `0.2.5.1`, with import normalization for older `0.1.0` and `0.2.4.1` projects.
 
 ## v0.1 Intentionally Does Not Support
 
-- Device-to-TB connections.
 - Prewire export.
 - Excel export.
 - Bartender export.
@@ -112,6 +112,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.5.1`: Added connection logic and crosspoint UI for direct device links, device/TB links, TB front-to-front patching, lower-number-wins cable selection, connection replacement, and inline chain drawing.
 - `v0.2.4.3`: Replaced the Cables placeholder with a shadcn-based project cable register, including endpoint-derived side labels, locations, connectors, statuses, and Excel-style multi-select column filters.
 - `v0.2.4.2`: Polished the terminal block panel labels, rack TB block typography, TB inspector fields, and fixed app-shell scrolling so the navbar, sidebars, and footer stay pinned while the workspace scrolls.
 - `v0.2.4.1`: Added terminal block creation as a schema-backed device kind, with fixed 1RU rack placement, rear/front ports, optional FRONT planned cable numbers, TB navigator/workspace/inspector UI, and import normalization from schema `0.1.0`.

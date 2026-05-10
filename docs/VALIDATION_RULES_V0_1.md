@@ -64,6 +64,12 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `planned-cable-label-middle-mismatch`: planned cable `labelMiddle` must equal `Cable.number`.
 - `planned-cable-label-top-mismatch`: planned output and bidirectional cable `labelTop` must equal the source endpoint label.
 - `planned-cable-label-bottom-mismatch`: planned input cable `labelBottom` must equal the destination endpoint label.
+- `connected-cable-endpoints-required`: connected cables must reference two different project ports.
+- `connection-category-mismatch`: connected cable endpoints must share a category.
+- `connection-connector-mismatch`: connected cable endpoints must share a connector type.
+- `connection-segment-invalid`: a connected cable segment must be valid for the selected endpoint directions/faces.
+- `multiple-active-connections`: one port must not have more than one active connected cable.
+- `connection-chain-direction-invalid`: a resolved chain through terminal blocks must not link incompatible standard device port directions.
 - `allocated-range-without-owner`: allocated numbering ranges must have owner type and owner ID.
 - `ledger-next-suggested-positive`: ledger `nextSuggested` must be a positive integer.
 - `ledger-next-suggested-after-ranges`: ledger `nextSuggested` must be greater than every range `to` value in that ledger.
@@ -82,7 +88,9 @@ When a port group has `createPlannedCables` set to `false`, v0.1 does not alloca
 
 Reserved gaps and retired ranges remain unavailable. v0.1 does not free cable numbers when a device is retired.
 
-Terminal blocks may create planned cable numbers for FRONT ports only. REAR ports remain unnumbered until connection logic exists. Terminal block front planned cables use `tb_port` source endpoints.
+Terminal blocks may create planned cable numbers for FRONT ports only. REAR ports remain unnumbered. Terminal block front planned cables use `tb_port` side A endpoints.
+
+When a connection is created, at least one selected endpoint must already have a planned cable slot. If both selected endpoints have planned cable numbers, the lower cable number becomes the active `connected` cable and the higher number is marked `retired`.
 
 ## UI Behavior
 

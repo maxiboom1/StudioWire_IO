@@ -28,8 +28,8 @@ export function createPlannedCableForPort(
     prefix,
     index,
     status,
-    sourceEndpoint: isInput ? UNKNOWN_ENDPOINT : portEndpoint,
-    destinationEndpoint: isInput ? portEndpoint : UNKNOWN_ENDPOINT,
+    sideAEndpoint: isInput ? UNKNOWN_ENDPOINT : portEndpoint,
+    sideBEndpoint: isInput ? portEndpoint : UNKNOWN_ENDPOINT,
     labelTop: isInput ? '' : port.label,
     labelMiddle: cableNumber,
     labelBottom: isInput ? port.label : '',
@@ -59,10 +59,10 @@ export function createLinkedPlannedCablesForPorts(
 
   for (const cable of cables) {
     const portId =
-      cable.sourceEndpoint.type === 'device_port' || cable.sourceEndpoint.type === 'tb_port'
-        ? cable.sourceEndpoint.id
-        : cable.destinationEndpoint.type === 'device_port' || cable.destinationEndpoint.type === 'tb_port'
-          ? cable.destinationEndpoint.id
+      cable.sideAEndpoint.type === 'device_port' || cable.sideAEndpoint.type === 'tb_port'
+        ? cable.sideAEndpoint.id
+        : cable.sideBEndpoint.type === 'device_port' || cable.sideBEndpoint.type === 'tb_port'
+          ? cable.sideBEndpoint.id
           : null;
 
     if (portId) {

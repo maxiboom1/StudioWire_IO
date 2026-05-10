@@ -1,11 +1,14 @@
-import type { Cable, Device, Port } from '../../domain/types';
+import { describePortConnection, type PortConnectionSummary } from '../../domain/connections';
+import type { Device, Port } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { CrosspointPicker } from '../connections/CrosspointPicker';
 
 interface TerminalBlockPortPair {
   index: number;
   rear: Port | null;
   front: Port | null;
-  frontCable: Cable | null;
+  rearConnection: PortConnectionSummary | null;
+  frontConnection: PortConnectionSummary | null;
 }
 
 export function TerminalBlockWorkspace({ device }: { device: Device }) {
@@ -19,7 +22,6 @@ export function TerminalBlockWorkspace({ device }: { device: Device }) {
   const frontPorts = project.ports
     .filter((port) => frontGroupIds.has(port.portGroupId))
     .sort((left, right) => left.index - right.index);
-  const cablesById = new Map(project.cables.map((cable) => [cable.id, cable]));
   const connectorCount = Math.max(rearPorts.length, frontPorts.length, 1);
   const pairs: TerminalBlockPortPair[] = Array.from({ length: connectorCount }, (_, offset) => {
     const rear = rearPorts[offset] ?? null;
@@ -29,7 +31,8 @@ export function TerminalBlockWorkspace({ device }: { device: Device }) {
       index: offset + 1,
       rear,
       front,
-      frontCable: front?.plannedCableId ? cablesById.get(front.plannedCableId) ?? null : null,
+      rearConnection: rear ? describePortConnection(project, rear.id) : null,
+      frontConnection: front ? describePortConnection(project, front.id) : null,
     };
   });
 
@@ -42,10 +45,31 @@ export function TerminalBlockWorkspace({ device }: { device: Device }) {
             {pairs.map((pair) => (
               <div className="terminal-block-port" key={pair.index}>
                 <span className="terminal-block-port-number">{String(pair.index).padStart(2, '0')}</span>
-                <span className="terminal-block-rear-label">N/C</span>
-                <span className="terminal-block-connector" aria-hidden="true" />
-                <span className="terminal-block-front-label">N/C</span>
-                <span className="terminal-block-cable-number">{pair.frontCable?.number ?? ''}</span>
+                <span className="terminal-block-rear-label">
+                  {pair.rearConnection?.chainLabel || 'N/C'}
+                </span>
+                <span className="terminal-block-cable-number">{pair.rearConnection?.cable?.number ?? ''}</span>
+                <span className="terminal-block-connector-wrap">
+                  {pair.rear ? (
+                    <CrosspointPicker
+                      ariaLabel={`Connect ${pair.rear.label}`}
+                      className="terminal-block-crosspoint terminal-block-crosspoint-rear"
+                      portId={pair.rear.id}
+                    />
+                  ) : null}
+                  <span className="terminal-block-connector" aria-hidden="true" />
+                  {pair.front ? (
+                    <CrosspointPicker
+                      ariaLabel={`Connect ${pair.front.label}`}
+                      className="terminal-block-crosspoint terminal-block-crosspoint-front"
+                      portId={pair.front.id}
+                    />
+                  ) : null}
+                </span>
+                <span className="terminal-block-front-label">
+                  {pair.frontConnection?.chainLabel || 'N/C'}
+                </span>
+                <span className="terminal-block-cable-number">{pair.frontConnection?.cable?.number ?? ''}</span>
               </div>
             ))}
           </div>

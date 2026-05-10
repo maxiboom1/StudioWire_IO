@@ -1259,6 +1259,13 @@ textarea:not([data-ui]) {
   border: 5px solid #050505;
   border-radius: 50%;
   background: #ffffff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.device-port-node:hover {
+  border-color: #0f6b70;
+  box-shadow: 0 0 0 3px rgba(15, 107, 112, 0.16);
 }
 
 .device-port-node::after {
@@ -1289,6 +1296,28 @@ textarea:not([data-ui]) {
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
+}
+
+.device-chain-label {
+  position: absolute;
+  top: calc(50% - 20px);
+  z-index: 1;
+  max-width: calc(100% - 34px);
+  overflow: hidden;
+  color: #0068bd;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-wire-row-input .device-chain-label {
+  right: 28px;
+}
+
+.device-wire-row-output .device-chain-label {
+  left: 28px;
 }
 
 .device-wire-row-input .device-cable-number {
@@ -1343,7 +1372,7 @@ textarea:not([data-ui]) {
 
 .terminal-block-port {
   display: grid;
-  grid-template-rows: 20px 30px 54px 22px 20px;
+  grid-template-rows: 20px 25px 17px 54px 25px 17px;
   justify-items: center;
   align-items: center;
   min-width: 0;
@@ -1377,9 +1406,17 @@ textarea:not([data-ui]) {
 .terminal-block-cable-number {
   min-height: 1em;
   color: #004b7a;
-  font-size: 0.82rem;
+  font-size: 0.68rem;
   font-weight: 800;
   line-height: 1;
+}
+
+.terminal-block-connector-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
 }
 
 .terminal-block-connector {
@@ -1410,6 +1447,108 @@ textarea:not([data-ui]) {
   background: #050505;
   content: "";
   transform: translate(-50%, -50%);
+}
+
+.terminal-block-crosspoint {
+  position: absolute;
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #050505;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.terminal-block-crosspoint:hover {
+  border-color: #0f6b70;
+  box-shadow: 0 0 0 3px rgba(15, 107, 112, 0.16);
+}
+
+.terminal-block-crosspoint-rear {
+  top: -1px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.terminal-block-crosspoint-front {
+  bottom: -1px;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
+.crosspoint-menu {
+  width: 360px;
+  max-height: min(620px, calc(100vh - 90px));
+}
+
+.crosspoint-menu [data-radix-dropdown-menu-label] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.crosspoint-menu [data-radix-dropdown-menu-label] span {
+  overflow: hidden;
+  color: #0f4f51;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crosspoint-search {
+  padding: 6px;
+}
+
+.crosspoint-candidates {
+  max-height: 420px;
+  overflow: auto;
+  padding: 2px 0;
+}
+
+.crosspoint-location-name {
+  padding: 7px 8px 4px;
+  color: #526269;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.crosspoint-device-name {
+  padding: 5px 10px;
+  color: #172126;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.crosspoint-port-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+.crosspoint-port-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crosspoint-port-item small {
+  max-width: 160px;
+  overflow: hidden;
+  color: #607177;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crosspoint-empty {
+  padding: 14px;
+  color: #607177;
+  font-size: 0.8rem;
 }
 
 .inspector {

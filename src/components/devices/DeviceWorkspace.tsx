@@ -1,25 +1,26 @@
 import type { CSSProperties } from 'react';
-import type { Cable, Device, Port, ProjectRoot } from '../../domain/types';
+import { describePortConnection, type PortConnectionSummary } from '../../domain/connections';
+import type { Device, Port, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { CrosspointPicker } from '../connections/CrosspointPicker';
 
 interface DevicePortRow {
   port: Port;
-  cable: Cable | null;
+  connection: PortConnectionSummary;
 }
 
 export function DeviceWorkspace({ device }: { device: Device }) {
   const { project } = useProject();
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const ports = project.ports.filter((port) => port.deviceId === device.id);
-  const cablesById = new Map(project.cables.map((cable) => [cable.id, cable]));
   const groupsByDirection = {
     input: portGroups.filter((group) => group.direction === 'input'),
     output: portGroups.filter((group) => group.direction === 'output'),
     bidirectional: portGroups.filter((group) => group.direction === 'bidirectional'),
   };
   const sideOutputGroups = [...groupsByDirection.output, ...groupsByDirection.bidirectional];
-  const inputRows = buildPortRows(groupsByDirection.input, ports, cablesById);
-  const outputRows = buildPortRows(sideOutputGroups, ports, cablesById);
+  const inputRows = buildPortRows(project, groupsByDirection.input, ports);
+  const outputRows = buildPortRows(project, sideOutputGroups, ports);
   const rowCount = Math.max(inputRows.length, outputRows.length, 1);
   const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
   const secondaryLabel = device.code || device.labelPrefix || device.model || '';
@@ -82,23 +83,33 @@ function CableLineRow({
       {side === 'input' ? (
         <>
           <span className="device-cable-line" aria-hidden="true" />
-          <span className="device-port-node" aria-hidden="true" />
+          {row.connection.chainLabel ? <span className="device-chain-label">{row.connection.chainLabel}</span> : null}
+          <CrosspointPicker
+            ariaLabel={`Connect ${row.port.label}`}
+            className="device-port-node"
+            portId={row.port.id}
+          />
         </>
       ) : (
         <>
-          <span className="device-port-node" aria-hidden="true" />
+          <CrosspointPicker
+            ariaLabel={`Connect ${row.port.label}`}
+            className="device-port-node"
+            portId={row.port.id}
+          />
           <span className="device-cable-line" aria-hidden="true" />
+          {row.connection.chainLabel ? <span className="device-chain-label">{row.connection.chainLabel}</span> : null}
         </>
       )}
-      {row.cable ? <span className="device-cable-number">{row.cable.number}</span> : null}
+      {row.connection.cable ? <span className="device-cable-number">{row.connection.cable.number}</span> : null}
     </div>
   );
 }
 
 function buildPortRows(
+  project: ProjectRoot,
   groups: ProjectRoot['portGroups'],
   ports: ProjectRoot['ports'],
-  cablesById: Map<string, ProjectRoot['cables'][number]>,
 ): DevicePortRow[] {
   return groups.flatMap((group) =>
     ports
@@ -106,7 +117,7 @@ function buildPortRows(
       .sort((left, right) => left.index - right.index)
       .map((port) => ({
         port,
-        cable: port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null,
+        connection: describePortConnection(project, port.id),
       })),
   );
 }

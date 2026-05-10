@@ -92,7 +92,7 @@ describe('buildCableTableRows', () => {
     const project = structuredClone(sampleProject);
     project.cables[0] = {
       ...project.cables[0],
-      sourceEndpoint: {
+      sideAEndpoint: {
         type: 'device_port',
         id: 'missing-port',
         label: 'Stale label',

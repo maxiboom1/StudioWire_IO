@@ -1,0 +1,379 @@
+import type { Cable, Endpoint, Port, ProjectRoot } from './types';
+
+const UNKNOWN_ENDPOINT: Endpoint = {
+  type: 'unknown',
+  id: null,
+  label: 'Unknown',
+};
+
+export interface ConnectPortsInput {
+  fromPortId: string;
+  toPortId: string;
+}
+
+export interface PortConnectionSummary {
+  cable: Cable | null;
+  isConnected: boolean;
+  chainLabel: string;
+}
+
+export function connectPorts(
+  project: ProjectRoot,
+  input: ConnectPortsInput,
+): { ok: true; project: ProjectRoot; message: string } | { ok: false; error: string } {
+  const targetStatus = getConnectionTargetStatus(project, input);
+
+  if (!targetStatus.ok) {
+    return { ok: false, error: targetStatus.reason };
+  }
+
+  const nextProject = structuredClone(project);
+  const portsById = new Map(nextProject.ports.map((port) => [port.id, port]));
+  const cablesById = new Map(nextProject.cables.map((cable) => [cable.id, cable]));
+  const fromPort = portsById.get(input.fromPortId);
+  const toPort = portsById.get(input.toPortId);
+
+  if (!fromPort || !toPort) {
+    return { ok: false, error: 'Connection blocked: selected port no longer exists.' };
+  }
+
+  const affectedPortIds = new Set([fromPort.id, toPort.id]);
+  const activeCables = nextProject.cables.filter(
+    (cable) =>
+      cable.status === 'connected' &&
+      (cableReferencesPort(cable, fromPort.id) || cableReferencesPort(cable, toPort.id)),
+  );
+
+  for (const cable of activeCables) {
+    for (const portId of getCablePortIds(cable)) {
+      affectedPortIds.add(portId);
+    }
+  }
+
+  for (const portId of affectedPortIds) {
+    const port = portsById.get(portId);
+    const cable = port?.plannedCableId ? cablesById.get(port.plannedCableId) : null;
+
+    if (port && cable) {
+      resetCableToPortSlot(cable, port, 'planned');
+    }
+  }
+
+  for (const cable of activeCables) {
+    const hasOwner = nextProject.ports.some(
+      (port) => affectedPortIds.has(port.id) && port.plannedCableId === cable.id,
+    );
+
+    if (!hasOwner) {
+      cable.status = 'retired';
+      cable.sideAEndpoint = UNKNOWN_ENDPOINT;
+      cable.sideBEndpoint = UNKNOWN_ENDPOINT;
+      cable.labelTop = '';
+      cable.labelMiddle = cable.number;
+      cable.labelBottom = '';
+    }
+  }
+
+  const slots = [fromPort, toPort]
+    .map((port) => (port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null))
+    .filter((cable): cable is Cable => cable !== null);
+
+  if (slots.length === 0) {
+    return { ok: false, error: 'Connection blocked: at least one selected port needs a planned cable number.' };
+  }
+
+  const sortedSlots = [...slots].sort(compareCableNumbers);
+  const winner = sortedSlots[0];
+  const loser = sortedSlots.find((candidate) => candidate.id !== winner.id) ?? null;
+  const loserOwner = loser ? nextProject.ports.find((port) => port.plannedCableId === loser.id) ?? null : null;
+
+  if (loser && loserOwner) {
+    resetCableToPortSlot(loser, loserOwner, 'retired');
+  }
+
+  winner.status = 'connected';
+  winner.sideAEndpoint = createPortEndpoint(nextProject, fromPort);
+  winner.sideBEndpoint = createPortEndpoint(nextProject, toPort);
+  winner.labelTop = fromPort.label;
+  winner.labelMiddle = winner.number;
+  winner.labelBottom = toPort.label;
+
+  return {
+    ok: true,
+    project: nextProject,
+    message: `${winner.number} connected ${fromPort.label} to ${toPort.label}`,
+  };
+}
+
+export function getConnectionTargetStatus(
+  project: ProjectRoot,
+  input: ConnectPortsInput,
+): { ok: true } | { ok: false; reason: string } {
+  if (input.fromPortId === input.toPortId) {
+    return { ok: false, reason: 'Cannot connect a port to itself.' };
+  }
+
+  const fromPort = project.ports.find((port) => port.id === input.fromPortId);
+  const toPort = project.ports.find((port) => port.id === input.toPortId);
+
+  if (!fromPort || !toPort) {
+    return { ok: false, reason: 'Port is missing.' };
+  }
+
+  if (fromPort.categoryId !== toPort.categoryId) {
+    return { ok: false, reason: 'Category does not match.' };
+  }
+
+  if (fromPort.connectorTypeId !== toPort.connectorTypeId) {
+    return { ok: false, reason: 'Connector does not match.' };
+  }
+
+  const segmentStatus = getSegmentCompatibility(project, fromPort, toPort);
+
+  if (!segmentStatus.ok) {
+    return segmentStatus;
+  }
+
+  const hasCableSlot = Boolean(
+    (fromPort.plannedCableId && project.cables.some((cable) => cable.id === fromPort.plannedCableId)) ||
+      (toPort.plannedCableId && project.cables.some((cable) => cable.id === toPort.plannedCableId)),
+  );
+
+  if (!hasCableSlot) {
+    return { ok: false, reason: 'No planned cable number is available for this pair.' };
+  }
+
+  return { ok: true };
+}
+
+export function getSegmentCompatibility(
+  project: ProjectRoot,
+  fromPort: Port,
+  toPort: Port,
+): { ok: true } | { ok: false; reason: string } {
+  const fromIsTb = isTerminalBlockPort(project, fromPort);
+  const toIsTb = isTerminalBlockPort(project, toPort);
+
+  if (!fromIsTb && !toIsTb) {
+    return areStandardDirectionsCompatible(fromPort, toPort)
+      ? { ok: true }
+      : { ok: false, reason: 'Standard device directions are not compatible.' };
+  }
+
+  if (fromIsTb && toIsTb) {
+    if (fromPort.direction === 'front' && toPort.direction === 'front') {
+      return { ok: true };
+    }
+
+    return { ok: false, reason: 'TB-to-TB connections are only allowed between front ports.' };
+  }
+
+  const tbPort = fromIsTb ? fromPort : toPort;
+
+  if (tbPort.direction === 'rear' || tbPort.direction === 'front') {
+    return { ok: true };
+  }
+
+  return { ok: false, reason: 'Invalid terminal block port direction.' };
+}
+
+export function describePortConnection(project: ProjectRoot, portId: string): PortConnectionSummary {
+  const connectedCable = project.cables.find(
+    (cable) => cable.status === 'connected' && cableReferencesPort(cable, portId),
+  );
+  const port = project.ports.find((candidate) => candidate.id === portId) ?? null;
+  const slotCable = port?.plannedCableId
+    ? project.cables.find((candidate) => candidate.id === port.plannedCableId) ?? null
+    : null;
+
+  return {
+    cable: connectedCable ?? slotCable,
+    isConnected: Boolean(connectedCable),
+    chainLabel: connectedCable ? buildChainLabel(project, portId) : '',
+  };
+}
+
+export function cableReferencesPort(cable: Cable, portId: string): boolean {
+  return endpointReferencesPort(cable.sideAEndpoint, portId) || endpointReferencesPort(cable.sideBEndpoint, portId);
+}
+
+export function endpointReferencesPort(endpoint: Endpoint, portId: string): boolean {
+  return (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id === portId;
+}
+
+export function getCablePortIds(cable: Cable): string[] {
+  return [cable.sideAEndpoint, cable.sideBEndpoint]
+    .map((endpoint) => ((endpoint.type === 'device_port' || endpoint.type === 'tb_port') ? endpoint.id : null))
+    .filter((id): id is string => Boolean(id));
+}
+
+export function createPortEndpoint(project: ProjectRoot, port: Port): Endpoint {
+  return {
+    type: isTerminalBlockPort(project, port) ? 'tb_port' : 'device_port',
+    id: port.id,
+    label: port.label,
+  };
+}
+
+export function isTerminalBlockPort(project: ProjectRoot, port: Port): boolean {
+  return project.devices.find((device) => device.id === port.deviceId)?.kind === 'terminal_block';
+}
+
+export function areStandardDirectionsCompatible(left: Port, right: Port): boolean {
+  const directions = new Set([left.direction, right.direction]);
+
+  if (directions.has('rear') || directions.has('front')) {
+    return true;
+  }
+
+  if (directions.has('bidirectional')) {
+    return true;
+  }
+
+  if (directions.has('input') && directions.has('output')) {
+    return true;
+  }
+
+  return false;
+}
+
+export function getTbInlineLabel(project: ProjectRoot, port: Port): string {
+  const device = project.devices.find((candidate) => candidate.id === port.deviceId);
+  const prefix = device?.labelPrefix || device?.name || 'TB';
+
+  return `${prefix}-${String(port.index).padStart(2, '0')}`;
+}
+
+function resetCableToPortSlot(cable: Cable, port: Port, status: Cable['status']) {
+  const endpoint: Endpoint = {
+    type: port.direction === 'rear' || port.direction === 'front' ? 'tb_port' : 'device_port',
+    id: port.id,
+    label: port.label,
+  };
+  const isInput = port.direction === 'input';
+
+  cable.status = status;
+  cable.sideAEndpoint = isInput ? UNKNOWN_ENDPOINT : endpoint;
+  cable.sideBEndpoint = isInput ? endpoint : UNKNOWN_ENDPOINT;
+  cable.labelTop = isInput ? '' : port.label;
+  cable.labelMiddle = cable.number;
+  cable.labelBottom = isInput ? port.label : '';
+}
+
+function compareCableNumbers(left: Cable, right: Cable): number {
+  if (left.prefix === right.prefix) {
+    return left.index - right.index;
+  }
+
+  return left.number.localeCompare(right.number, undefined, { numeric: true });
+}
+
+function buildChainLabel(project: ProjectRoot, originPortId: string): string {
+  const path = findDisplayPath(project, originPortId);
+
+  if (path.length <= 1) {
+    return '';
+  }
+
+  const labels: string[] = [];
+  let previousTbKey: string | null = null;
+
+  for (const portId of path.slice(1)) {
+      const port = project.ports.find((candidate) => candidate.id === portId);
+
+      if (!port) {
+        continue;
+      }
+
+      if (isTerminalBlockPort(project, port)) {
+        const tbKey = `${port.deviceId}:${port.index}`;
+
+        if (tbKey !== previousTbKey) {
+          labels.push(`| ${getTbInlineLabel(project, port)} >`);
+        }
+
+        previousTbKey = tbKey;
+        continue;
+      }
+
+      previousTbKey = null;
+      labels.push(port.label);
+  }
+
+  return labels.join(' ');
+}
+
+function findDisplayPath(project: ProjectRoot, originPortId: string): string[] {
+  const neighbors = buildConnectionNeighbors(project);
+  const queue: string[][] = [[originPortId]];
+  const visited = new Set([originPortId]);
+  let firstNonOriginPath: string[] = [originPortId];
+
+  while (queue.length > 0) {
+    const path = queue.shift() ?? [];
+    const current = path[path.length - 1];
+
+    if (current !== originPortId && firstNonOriginPath.length === 1) {
+      firstNonOriginPath = path;
+    }
+
+    const currentPort = project.ports.find((port) => port.id === current);
+
+    if (current !== originPortId && currentPort && !isTerminalBlockPort(project, currentPort)) {
+      return path;
+    }
+
+    for (const next of neighbors.get(current) ?? []) {
+      if (!visited.has(next) && path.length < 12) {
+        visited.add(next);
+        queue.push([...path, next]);
+      }
+    }
+  }
+
+  return firstNonOriginPath;
+}
+
+function buildConnectionNeighbors(project: ProjectRoot): Map<string, Set<string>> {
+  const neighbors = new Map<string, Set<string>>();
+
+  function addEdge(left: string, right: string) {
+    if (!neighbors.has(left)) {
+      neighbors.set(left, new Set());
+    }
+    if (!neighbors.has(right)) {
+      neighbors.set(right, new Set());
+    }
+    neighbors.get(left)?.add(right);
+    neighbors.get(right)?.add(left);
+  }
+
+  for (const cable of project.cables) {
+    if (cable.status !== 'connected') {
+      continue;
+    }
+
+    const [left, right] = getCablePortIds(cable);
+
+    if (left && right) {
+      addEdge(left, right);
+    }
+  }
+
+  const terminalBlocks = project.devices.filter((device) => device.kind === 'terminal_block');
+
+  for (const terminalBlock of terminalBlocks) {
+    const rearPorts = project.ports.filter((port) => port.deviceId === terminalBlock.id && port.direction === 'rear');
+    const frontPorts = project.ports.filter((port) => port.deviceId === terminalBlock.id && port.direction === 'front');
+
+    for (const rearPort of rearPorts) {
+      const frontPort = frontPorts.find((candidate) => candidate.index === rearPort.index);
+
+      if (frontPort) {
+        addEdge(rearPort.id, frontPort.id);
+      }
+    }
+  }
+
+  return neighbors;
+}

@@ -22,8 +22,8 @@ interface ResolvedEndpoint {
 
 export function buildCableTableRows(project: ProjectRoot): CableTableRow[] {
   return project.cables.map((cable) => {
-    const sideA = resolveEndpoint(project, cable.sourceEndpoint);
-    const sideB = resolveEndpoint(project, cable.destinationEndpoint);
+    const sideA = resolveEndpoint(project, cable.sideAEndpoint);
+    const sideB = resolveEndpoint(project, cable.sideBEndpoint);
 
     return {
       id: cable.id,

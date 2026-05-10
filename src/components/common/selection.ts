@@ -77,10 +77,10 @@ export function resolveIssueSelection(
   if (issue.objectType === 'cable') {
     const cable = project.cables.find((candidate) => candidate.id === issue.objectId);
     const endpointPortId =
-      cable?.sourceEndpoint.type === 'device_port' || cable?.sourceEndpoint.type === 'tb_port'
-        ? cable.sourceEndpoint.id
-        : cable?.destinationEndpoint.type === 'device_port' || cable?.destinationEndpoint.type === 'tb_port'
-          ? cable.destinationEndpoint.id
+      cable?.sideAEndpoint.type === 'device_port' || cable?.sideAEndpoint.type === 'tb_port'
+        ? cable.sideAEndpoint.id
+        : cable?.sideBEndpoint.type === 'device_port' || cable?.sideBEndpoint.type === 'tb_port'
+          ? cable.sideBEndpoint.id
           : null;
     const port = endpointPortId ? project.ports.find((candidate) => candidate.id === endpointPortId) : null;
 

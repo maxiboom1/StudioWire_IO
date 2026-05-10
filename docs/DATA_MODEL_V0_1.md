@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.4.1`. Older `0.1.0` projects are accepted on import and normalized to the current schema.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.5.1`. Older `0.1.0` and `0.2.4.1` projects are accepted on import and normalized to the current schema.
 
 IDs are stable strings. References use IDs, not display names. Dates use ISO 8601 strings.
 
@@ -8,7 +8,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.4.1`.
+- `schemaVersion`: current fixed string `0.2.5.1`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -193,24 +193,26 @@ Fields:
 - `prefix`
 - `index`
 - `status`: `planned`, `connected`, or `retired`
-- `sourceEndpoint`: `Endpoint`
-- `destinationEndpoint`: `Endpoint`
+- `sideAEndpoint`: `Endpoint`
+- `sideBEndpoint`: `Endpoint`
 - `labelTop`
 - `labelMiddle`
 - `labelBottom`
 - `notes`
 
-v0.1 records planned cable numbers. Complete connection modeling remains outside v0.1 scope.
+Cable records represent physical cable numbers. Direction is handled by connected port direction, not by cable side naming.
 
 Planned cable labels use this rule:
 
-- `labelTop`: source label.
+- `labelTop`: side A/source-side display label for generated planned cables.
 - `labelMiddle`: cable number.
-- `labelBottom`: destination label.
+- `labelBottom`: side B/destination-side display label for generated planned cables.
 
 Output and bidirectional planned cables use the device port as the source and unknown destination. Input planned cables use unknown source and the device port as the destination.
 
-Terminal block rear ports do not generate planned cables in `0.2.4.1`. Terminal block front ports may optionally generate planned cables; those planned cables use the front port as a `tb_port` source endpoint and an unknown destination.
+Terminal block rear ports do not generate planned cables. Terminal block front ports may optionally generate planned cables; those planned cables use the front port as a `tb_port` side A endpoint and an unknown side B endpoint.
+
+Connected cables use `sideAEndpoint` and `sideBEndpoint` as neutral physical ends. When two ports are connected, the selected/clicked port is written to side A and the chosen target is written to side B. If both ports have planned cable numbers, the lower cable number becomes `connected` and the higher cable becomes `retired`.
 
 ## NumberingLedger
 
@@ -248,7 +250,7 @@ Fields:
 - `id`
 - `label`
 
-`tb_port` identifies a terminal block port endpoint. In `0.2.4.1`, generated TB planned cables may reference FRONT ports as `tb_port` source endpoints. Full device-to-TB and front-to-front connection logic is still outside scope.
+`tb_port` identifies a terminal block port endpoint. Rear and front TB faces are distinct ports. Connection-chain validation follows matching rear/front ports by terminal block connector index.
 
 ## ValidationIssue
 

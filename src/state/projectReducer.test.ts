@@ -149,7 +149,7 @@ describe('projectReducer ADD_TERMINAL_BLOCK', () => {
     expect(frontPorts).toHaveLength(2);
     expect(rearPorts.every((port) => port.plannedCableId === null)).toBe(true);
     expect(frontCables.map((cable) => cable?.number)).toEqual(['V-0009', 'V-0010']);
-    expect(frontCables.every((cable) => cable?.sourceEndpoint.type === 'tb_port')).toBe(true);
+    expect(frontCables.every((cable) => cable?.sideAEndpoint.type === 'tb_port')).toBe(true);
     expect(result.project.numberingLedgers[0].ranges).toContainEqual(
       expect.objectContaining({
         from: 9,
@@ -355,10 +355,36 @@ describe('parseImportedProject schema compatibility', () => {
     if (!result.ok) {
       return;
     }
-    expect(result.project.schemaVersion).toBe('0.2.4.1');
+    expect(result.project.schemaVersion).toBe('0.2.5.1');
     expect(result.project.devices[0]).toMatchObject({
       kind: 'device',
       code: 'RTR1',
     });
+  });
+
+  it('migrates legacy cable endpoint fields to side A and side B', () => {
+    const oldProject = structuredClone(sampleProject) as any;
+
+    oldProject.schemaVersion = '0.2.4.1';
+    oldProject.cables = oldProject.cables.map((cable: any) => {
+      const { sideAEndpoint, sideBEndpoint, ...legacyCable } = cable;
+
+      return {
+        ...legacyCable,
+        sourceEndpoint: sideAEndpoint,
+        destinationEndpoint: sideBEndpoint,
+      };
+    });
+
+    const result = parseImportedProject(oldProject);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.project.cables[0].sideAEndpoint).toMatchObject({ type: 'device_port' });
+    expect(result.project.cables[0].sideBEndpoint).toMatchObject({ type: 'unknown' });
+    expect(result.project.cables[0]).not.toHaveProperty('sourceEndpoint');
+    expect(result.project.cables[0]).not.toHaveProperty('destinationEndpoint');
   });
 });

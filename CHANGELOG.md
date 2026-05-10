@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.5.1
+
+Added the first crosspoint connection system.
+
+### Changed
+
+- Renamed cable endpoints from source/destination to side A/side B and bumped project schema version to `0.2.5.1`.
+- Added connection domain logic for direct device links, device/TB links, TB front-to-front patches, lower-number-wins cable selection, retired loser cables, and replacement.
+- Added shared crosspoint pickers to Device and TB views and rendered connected chains inline on drawings.
+- Added validation for connected cable endpoints, connector/category mismatches, multiple active connections, and invalid resolved chains through terminal blocks.
+- Bumped the app version to `0.2.5.1`.
+
 ## v0.2.4.3
 
 Added the project-wide Cables register.
