@@ -7,6 +7,7 @@ import {
   useReducer,
   useRef,
   type ChangeEvent,
+  type Ref,
   type ReactNode,
 } from 'react';
 import { makeUniqueId } from '../domain/id';
@@ -342,10 +343,12 @@ export function useProject() {
 export function ProjectJsonInput({
   className,
   id,
+  inputRef,
   onImportComplete,
 }: {
   className?: string;
   id?: string;
+  inputRef?: Ref<HTMLInputElement>;
   onImportComplete?: () => void;
 }) {
   const { importProjectJson } = useProject();
@@ -363,8 +366,11 @@ export function ProjectJsonInput({
   return (
     <input
       aria-label="Import Project JSON"
+      aria-hidden="true"
       className={className}
       id={id}
+      ref={inputRef}
+      tabIndex={-1}
       type="file"
       accept=".json,.studiowire,application/json"
       onChange={handleChange}

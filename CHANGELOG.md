@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.5.6
+
+Fixed project JSON import from the app header actions menu.
+
+### Changed
+
+- Moved the hidden project JSON file input outside the Radix dropdown so it remains mounted while the native file picker resolves.
+- Kept the existing import parser, schema normalization, and export JSON shape unchanged.
+- Added a current-schema export/import round-trip test.
+- Kept project schema version `0.2.5.1` and bumped the app version to `0.2.5.6`.
+
 ## v0.2.5.5
 
 Fixed reviewed domain and UI bugs without changing project schema.

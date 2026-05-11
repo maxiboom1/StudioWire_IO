@@ -1,4 +1,5 @@
 import { Settings } from 'lucide-react';
+import { useRef } from 'react';
 import logoUrl from '../../assets/studiowire-logo.png';
 import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
 import {
@@ -23,6 +24,7 @@ export function TopBar({
   onSelectSettings: () => void;
   onViewChange: (view: AppView) => void;
 }) {
+  const importInputRef = useRef<HTMLInputElement>(null);
   const {
     project,
     createNewProject,
@@ -83,17 +85,8 @@ export function TopBar({
             <DropdownMenuLabel>Project actions</DropdownMenuLabel>
             <DropdownMenuItem onSelect={createNewAndSelectProject}>New Project</DropdownMenuItem>
             <DropdownMenuItem onSelect={loadSampleAndSelectProject}>Load Sample</DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <label className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100">
-                Import JSON
-                <ProjectJsonInput
-                  className="file-input"
-                  onImportComplete={() => {
-                    onSelectProject();
-                    showWorkspace();
-                  }}
-                />
-              </label>
+            <DropdownMenuItem onSelect={() => importInputRef.current?.click()}>
+              Import JSON
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={exportProjectJson}>Export JSON</DropdownMenuItem>
             <DropdownMenuItem onSelect={validateProject}>Validate</DropdownMenuItem>
@@ -101,6 +94,14 @@ export function TopBar({
             <DropdownMenuItem onSelect={openSettings}>Project Settings</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <ProjectJsonInput
+          className="file-input"
+          inputRef={importInputRef}
+          onImportComplete={() => {
+            onSelectProject();
+            showWorkspace();
+          }}
+        />
       </div>
 
       <nav className="app-section-tabs" aria-label="Primary workspace sections">

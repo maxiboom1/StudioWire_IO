@@ -343,6 +343,26 @@ describe('projectReducer MOVE_MOUNTED_DEVICE', () => {
 });
 
 describe('parseImportedProject schema compatibility', () => {
+  it('round-trips current schema exported project data', () => {
+    const firstImport = parseImportedProject(structuredClone(sampleProject));
+
+    expect(firstImport.ok).toBe(true);
+    if (!firstImport.ok) {
+      return;
+    }
+
+    const exportedJson = JSON.parse(JSON.stringify(firstImport.project));
+    const secondImport = parseImportedProject(exportedJson);
+
+    expect(secondImport.ok).toBe(true);
+    if (!secondImport.ok) {
+      return;
+    }
+    expect(secondImport.project.schemaVersion).toBe('0.2.5.1');
+    expect(secondImport.project.cables[0]).toHaveProperty('sideAEndpoint');
+    expect(secondImport.project.cables[0]).toHaveProperty('sideBEndpoint');
+  });
+
   it('normalizes old projects with devices missing kind', () => {
     const oldProject = structuredClone(sampleProject) as any;
 
