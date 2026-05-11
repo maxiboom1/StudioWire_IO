@@ -1,5 +1,5 @@
 import { createDefaultSettings } from './defaults';
-import { makeId, makeIndexedId, nowIso } from './id';
+import { makeId, makeIndexedId, makeUniqueId, nowIso } from './id';
 import { createLinkedPlannedCablesForPorts } from './plannedCables';
 import { STUDIOWIRE_SCHEMA_VERSION } from './types';
 import type {
@@ -10,6 +10,7 @@ import type {
   Location,
   NumberingLedger,
   NumberingRange,
+  ObjectStatus,
   Port,
   PortDirection,
   PortGroup,
@@ -36,7 +37,7 @@ export function createProjectInfo(input: ProjectInfoInput): ProjectInfo {
   const timestamp = nowIso();
 
   return {
-    id: input.id ?? makeId('project', input.name),
+    id: input.id ?? makeUniqueId('project', input.name),
     name: input.name,
     customer: input.customer ?? '',
     revision: input.revision ?? '0.1',
@@ -83,7 +84,7 @@ export interface LocationInput {
 
 export function createLocation(input: LocationInput): Location {
   return {
-    id: input.id ?? makeId('location', input.name),
+    id: input.id ?? makeUniqueId('location', input.name),
     name: input.name,
     type: input.type ?? '',
     description: input.description ?? '',
@@ -100,7 +101,7 @@ export interface RackInput {
 
 export function createRack(input: RackInput): Rack {
   return {
-    id: input.id ?? makeId('rack', input.name),
+    id: input.id ?? makeUniqueId('rack', input.name),
     locationId: input.locationId,
     name: input.name,
     heightRu: input.heightRu ?? 42,
@@ -122,7 +123,7 @@ export interface DeviceInput {
   rackId?: string | null;
   rackSizeRu?: number | null;
   rackBottomRu?: number | null;
-  status?: string;
+  status?: ObjectStatus;
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -132,7 +133,7 @@ export function createDevice(input: DeviceInput): Device {
   const timestamp = nowIso();
 
   return {
-    id: input.id ?? makeId('device', input.name),
+    id: input.id ?? makeUniqueId('device', input.name),
     kind: 'device',
     name: input.name,
     code: input.code ?? '',
@@ -161,7 +162,7 @@ export interface TerminalBlockInput {
   labelPrefix?: string;
   rackId: string;
   rackBottomRu: number;
-  status?: string;
+  status?: ObjectStatus;
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -171,7 +172,7 @@ export function createTerminalBlock(input: TerminalBlockInput): Device {
   const timestamp = nowIso();
 
   return {
-    id: input.id ?? makeId('terminal-block', input.name),
+    id: input.id ?? makeUniqueId('terminal-block', input.name),
     name: input.name,
     kind: 'terminal_block',
     categoryId: input.categoryId,

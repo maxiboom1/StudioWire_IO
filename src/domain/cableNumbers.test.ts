@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   allocateCableRange,
   formatCableNumber,
+  getLedgerForPrefix,
   parseCableNumber,
 } from './cableNumbers';
 import { createEmptyProject } from './projectFactory';
@@ -49,6 +50,27 @@ describe('formatCableNumber', () => {
 });
 
 describe('allocateCableRange', () => {
+  it('keeps getLedgerForPrefix pure and commits missing ledgers only during allocation', () => {
+    const project = createTestProject();
+    const ledger = getLedgerForPrefix(project, 'V');
+
+    expect(ledger).toMatchObject({ prefix: 'V', nextSuggested: 1, ranges: [] });
+    expect(project.numberingLedgers).toEqual([]);
+
+    const result = allocateCableRange(project, {
+      prefix: 'V',
+      firstCableNumber: 1,
+      count: 1,
+      ownerType: 'test',
+      ownerId: 'range-1',
+      reason: 'Initial video range',
+    });
+
+    expect(result.project.numberingLedgers).toHaveLength(1);
+    expect(result.project.numberingLedgers[0]).toMatchObject({ prefix: 'V', nextSuggested: 2 });
+    expect(project.numberingLedgers).toEqual([]);
+  });
+
   it('allocates V-0001 to V-0040', () => {
     const project = createTestProject();
     const result = allocateCableRange(project, {

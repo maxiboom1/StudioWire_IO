@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
-import { describePortConnection, getConnectionTargetStatus } from '../../domain/connections';
-import type { Device, Location, Port, ProjectRoot } from '../../domain/types';
+import {
+  createConnectionTargetLookup,
+  describePortConnection,
+  getConnectionTargetStatus,
+} from '../../domain/connections';
+import type { Device, Location, Port, ProjectRoot, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import {
   DropdownMenu,
@@ -148,20 +152,28 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
 }
 
 function buildCandidates(project: ProjectRoot, originPortId: string): PortCandidate[] {
+  const lookup = createConnectionTargetLookup(project);
+  const devicesById = lookup.devicesById;
+  const racksById = new Map(project.racks.map((rack) => [rack.id, rack]));
+  const locationsById = new Map(project.locations.map((location) => [location.id, location]));
+  const originPort = lookup.portsById.get(originPortId);
+
+  if (!originPort) {
+    return [];
+  }
+
   return project.ports
-    .filter((port) => port.id !== originPortId)
-    .filter((port) => getConnectionTargetStatus(project, { fromPortId: originPortId, toPortId: port.id }).ok)
+    .filter((port) => isPossibleCandidate(originPort, port))
+    .filter((port) => getConnectionTargetStatus(project, { fromPortId: originPortId, toPortId: port.id }, lookup).ok)
     .map((port) => {
-      const device = project.devices.find((candidate) => candidate.id === port.deviceId);
+      const device = devicesById.get(port.deviceId);
 
       if (!device) {
         return null;
       }
 
-      const locationId =
-        device.locationId ??
-        (device.rackId ? project.racks.find((rack) => rack.id === device.rackId)?.locationId ?? null : null);
-      const location = locationId ? project.locations.find((candidate) => candidate.id === locationId) ?? null : null;
+      const locationId = resolveDeviceLocationId(device, racksById);
+      const location = locationId ? locationsById.get(locationId) ?? null : null;
 
       return {
         location,
@@ -187,6 +199,18 @@ function buildCandidates(project: ProjectRoot, originPortId: string): PortCandid
 
       return left.port.index - right.port.index;
     });
+}
+
+function isPossibleCandidate(originPort: Port, candidatePort: Port): boolean {
+  return (
+    candidatePort.id !== originPort.id &&
+    candidatePort.categoryId === originPort.categoryId &&
+    candidatePort.connectorTypeId === originPort.connectorTypeId
+  );
+}
+
+function resolveDeviceLocationId(device: Device, racksById: ReadonlyMap<string, Rack>) {
+  return device.locationId ?? (device.rackId ? racksById.get(device.rackId)?.locationId ?? null : null);
 }
 
 function groupCandidates(candidates: PortCandidate[]) {

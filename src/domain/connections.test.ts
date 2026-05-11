@@ -296,6 +296,43 @@ describe('connectPorts', () => {
     expect(describePortConnection(disconnectResult.project, switcherIn.id).isConnected).toBe(false);
   });
 
+  it('restores bidirectional planned cable slots to side A by convention', () => {
+    let project = structuredClone(sampleProject);
+    project = addDevicePort(project, {
+      id: 'device-intercom',
+      labelPrefix: 'COM',
+      direction: 'bidirectional',
+      firstCableNumber: 20,
+    });
+    project = addDevicePort(project, {
+      id: 'device-switcher',
+      labelPrefix: 'SW',
+      direction: 'input',
+      firstCableNumber: 21,
+    });
+    const bidirectional = getPort(project, 'device-intercom', 'bidirectional');
+    const switcherIn = getPort(project, 'device-switcher', 'input');
+    const connectResult = connectPorts(project, { fromPortId: bidirectional.id, toPortId: switcherIn.id });
+
+    expect(connectResult.ok).toBe(true);
+    if (!connectResult.ok) {
+      return;
+    }
+
+    const disconnectResult = disconnectPort(connectResult.project, { portId: bidirectional.id });
+
+    expect(disconnectResult.ok).toBe(true);
+    if (!disconnectResult.ok) {
+      return;
+    }
+
+    const slot = getCableByNumber(disconnectResult.project, 'V-0020');
+
+    expect(slot.status).toBe('planned');
+    expect(slot.sideAEndpoint.id).toBe(bidirectional.id);
+    expect(slot.sideBEndpoint.type).toBe('unknown');
+  });
+
   it('blocks a pair with no planned cable slot on either side', () => {
     let project = structuredClone(sampleProject);
     project = addDevicePort(project, {

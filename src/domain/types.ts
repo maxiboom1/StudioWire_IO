@@ -8,6 +8,7 @@ export type DeviceKind = 'device' | 'terminal_block';
 export type DeviceMountType = 'rack' | 'non_rack' | 'virtual';
 export type PortDirection = 'input' | 'output' | 'bidirectional' | 'rear' | 'front';
 export type CableStatus = 'planned' | 'connected' | 'retired';
+export type ObjectStatus = 'planned' | 'connected' | 'retired';
 export type NumberingRangeStatus = 'allocated' | 'reserved_gap' | 'retired';
 export type EndpointType = 'device_port' | 'tb_port' | 'external' | 'unknown';
 export type ValidationSeverity = 'error' | 'warning' | 'info';
@@ -104,7 +105,7 @@ export interface Device {
   rackId: string | null;
   rackSizeRu: number | null;
   rackBottomRu: number | null;
-  status: string;
+  status: ObjectStatus;
   notes: string;
   createdAt: string;
   updatedAt: string;

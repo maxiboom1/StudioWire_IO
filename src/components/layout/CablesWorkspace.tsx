@@ -1,5 +1,6 @@
 import { Filter, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { filterCableRows, type CableColumnId, type CableFilters } from '../cables/cableFilters';
 import { buildCableTableRows, type CableTableRow } from '../cables/cableRows';
 import { useProject } from '../../state/ProjectContext';
 import { Badge } from '../ui/badge';
@@ -22,9 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
-
-type CableColumnId = keyof Omit<CableTableRow, 'id'>;
-type CableFilters = Partial<Record<CableColumnId, Set<string>>>;
 
 interface CableColumn {
   id: CableColumnId;
@@ -49,17 +47,7 @@ export function CablesWorkspace() {
   const rows = useMemo(() => buildCableTableRows(project), [project]);
   const [filters, setFilters] = useState<CableFilters>({});
   const activeFilterCount = Object.keys(filters).length;
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) =>
-        CABLE_COLUMNS.every((column) => {
-          const selectedValues = filters[column.id];
-
-          return !selectedValues || selectedValues.has(String(row[column.id]));
-        }),
-      ),
-    [filters, rows],
-  );
+  const filteredRows = useMemo(() => filterCableRows(rows, filters), [filters, rows]);
 
   function clearAllFilters() {
     setFilters({});
@@ -179,6 +167,13 @@ function CableColumnFilter({
     });
   }
 
+  function clearColumnFilterToNone() {
+    setFilters((current) => ({
+      ...current,
+      [column.id]: new Set<string>(),
+    }));
+  }
+
   function toggleValue(value: string) {
     setFilters((current) => {
       const currentSelected = current[column.id] ?? new Set(allValues);
@@ -241,7 +236,7 @@ function CableColumnFilter({
           <DropdownMenuItem
             onSelect={(event) => {
               event.preventDefault();
-              clearColumnFilter();
+              clearColumnFilterToNone();
             }}
           >
             Clear

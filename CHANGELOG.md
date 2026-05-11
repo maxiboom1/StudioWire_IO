@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.5.5
+
+Fixed reviewed domain and UI bugs without changing project schema.
+
+### Changed
+
+- Made cable numbering ledger lookup pure and committed new ledgers explicitly during allocation.
+- Tightened device status typing, added collision-resistant IDs for user-created objects, and kept deterministic IDs for generated artifacts.
+- Corrected Cables column filter `Clear` semantics to select no values instead of acting like `Select all`.
+- Optimized crosspoint picker candidate checks with indexed lookups and early category/connector filtering.
+- Made bidirectional planned-cable reset behavior explicit as a side-A convention.
+- Kept project schema version `0.2.5.1` and bumped the app version to `0.2.5.5`.
+
 ## v0.2.5.4
 
 Completed the inline TB segment drawing polish.

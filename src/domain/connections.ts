@@ -1,4 +1,4 @@
-import type { Cable, Endpoint, Port, ProjectRoot } from './types';
+import type { Cable, Device, Endpoint, Port, ProjectRoot } from './types';
 
 const UNKNOWN_ENDPOINT: Endpoint = {
   type: 'unknown',
@@ -13,6 +13,12 @@ export interface ConnectPortsInput {
 
 export interface DisconnectPortInput {
   portId: string;
+}
+
+export interface ConnectionTargetLookup {
+  portsById: ReadonlyMap<string, Port>;
+  devicesById: ReadonlyMap<string, Device>;
+  cablesById: ReadonlyMap<string, Cable>;
 }
 
 export interface PortConnectionSummary {
@@ -188,13 +194,15 @@ export function disconnectPort(
 export function getConnectionTargetStatus(
   project: ProjectRoot,
   input: ConnectPortsInput,
+  lookup?: ConnectionTargetLookup,
 ): { ok: true } | { ok: false; reason: string } {
   if (input.fromPortId === input.toPortId) {
     return { ok: false, reason: 'Cannot connect a port to itself.' };
   }
 
-  const fromPort = project.ports.find((port) => port.id === input.fromPortId);
-  const toPort = project.ports.find((port) => port.id === input.toPortId);
+  const effectiveLookup = lookup ?? createConnectionTargetLookup(project);
+  const fromPort = effectiveLookup.portsById.get(input.fromPortId);
+  const toPort = effectiveLookup.portsById.get(input.toPortId);
 
   if (!fromPort || !toPort) {
     return { ok: false, reason: 'Port is missing.' };
@@ -208,15 +216,15 @@ export function getConnectionTargetStatus(
     return { ok: false, reason: 'Connector does not match.' };
   }
 
-  const segmentStatus = getSegmentCompatibility(project, fromPort, toPort);
+  const segmentStatus = getSegmentCompatibility(project, fromPort, toPort, effectiveLookup);
 
   if (!segmentStatus.ok) {
     return segmentStatus;
   }
 
   const hasCableSlot = Boolean(
-    (fromPort.plannedCableId && project.cables.some((cable) => cable.id === fromPort.plannedCableId)) ||
-      (toPort.plannedCableId && project.cables.some((cable) => cable.id === toPort.plannedCableId)),
+    (fromPort.plannedCableId && effectiveLookup.cablesById.has(fromPort.plannedCableId)) ||
+      (toPort.plannedCableId && effectiveLookup.cablesById.has(toPort.plannedCableId)),
   );
 
   if (!hasCableSlot) {
@@ -230,9 +238,10 @@ export function getSegmentCompatibility(
   project: ProjectRoot,
   fromPort: Port,
   toPort: Port,
+  lookup?: Pick<ConnectionTargetLookup, 'devicesById'>,
 ): { ok: true } | { ok: false; reason: string } {
-  const fromIsTb = isTerminalBlockPort(project, fromPort);
-  const toIsTb = isTerminalBlockPort(project, toPort);
+  const fromIsTb = isTerminalBlockPort(project, fromPort, lookup);
+  const toIsTb = isTerminalBlockPort(project, toPort, lookup);
 
   if (!fromIsTb && !toIsTb) {
     return areStandardDirectionsCompatible(fromPort, toPort)
@@ -298,8 +307,21 @@ export function createPortEndpoint(project: ProjectRoot, port: Port): Endpoint {
   };
 }
 
-export function isTerminalBlockPort(project: ProjectRoot, port: Port): boolean {
-  return project.devices.find((device) => device.id === port.deviceId)?.kind === 'terminal_block';
+export function isTerminalBlockPort(
+  project: ProjectRoot,
+  port: Port,
+  lookup?: Pick<ConnectionTargetLookup, 'devicesById'>,
+): boolean {
+  return (lookup?.devicesById.get(port.deviceId) ?? project.devices.find((device) => device.id === port.deviceId))
+    ?.kind === 'terminal_block';
+}
+
+export function createConnectionTargetLookup(project: ProjectRoot): ConnectionTargetLookup {
+  return {
+    portsById: new Map(project.ports.map((port) => [port.id, port])),
+    devicesById: new Map(project.devices.map((device) => [device.id, device])),
+    cablesById: new Map(project.cables.map((cable) => [cable.id, cable])),
+  };
 }
 
 export function areStandardDirectionsCompatible(left: Port, right: Port): boolean {
@@ -333,14 +355,24 @@ function resetCableToPortSlot(cable: Cable, port: Port, status: Cable['status'])
     id: port.id,
     label: port.label,
   };
-  const isInput = port.direction === 'input';
 
   cable.status = status;
-  cable.sideAEndpoint = isInput ? UNKNOWN_ENDPOINT : endpoint;
-  cable.sideBEndpoint = isInput ? endpoint : UNKNOWN_ENDPOINT;
-  cable.labelTop = isInput ? '' : port.label;
   cable.labelMiddle = cable.number;
-  cable.labelBottom = isInput ? port.label : '';
+
+  if (port.direction === 'input') {
+    cable.sideAEndpoint = UNKNOWN_ENDPOINT;
+    cable.sideBEndpoint = endpoint;
+    cable.labelTop = '';
+    cable.labelBottom = port.label;
+    return;
+  }
+
+  // Planned cable slots for bidirectional ports use side A by convention until a real connection is made.
+  cable.sideAEndpoint = endpoint;
+  cable.sideBEndpoint = UNKNOWN_ENDPOINT;
+  cable.labelTop = port.label;
+  cable.labelMiddle = cable.number;
+  cable.labelBottom = '';
 }
 
 function resetCableToUnknownSlot(cable: Cable, status: Cable['status']) {

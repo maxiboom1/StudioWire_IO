@@ -87,8 +87,6 @@ export function getLedgerForPrefix(project: ProjectRoot, prefix: string): Number
     ranges: [],
   };
 
-  project.numberingLedgers.push(ledger);
-
   return ledger;
 }
 
@@ -175,6 +173,11 @@ export function allocateCableRange(
 
   const updatedProject: ProjectRoot = structuredClone(project);
   const ledger = getLedgerForPrefix(updatedProject, preview.prefix);
+
+  if (!updatedProject.numberingLedgers.some((item) => item.prefix === ledger.prefix)) {
+    updatedProject.numberingLedgers.push(ledger);
+  }
+
   const timestamp = nowIso();
   const reservedGapRange = preview.reservedGap
     ? createNumberingRange({

@@ -9,7 +9,7 @@ import {
   type ChangeEvent,
   type ReactNode,
 } from 'react';
-import { makeId, nowIso } from '../domain/id';
+import { makeUniqueId } from '../domain/id';
 import type {
   CablePrefix,
   Category,
@@ -112,7 +112,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const addCategory = useCallback((input: Pick<Category, 'name' | 'defaultCablePrefix'>) => {
-    const id = makeId('category', `${input.name}-${nowIso()}`);
+    const id = makeUniqueId('category', input.name);
 
     dispatch({
       type: 'ADD_CATEGORY',
@@ -134,7 +134,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const addConnectorType = useCallback((input: Pick<ConnectorType, 'name'>) => {
-    const id = makeId('connector', `${input.name}-${nowIso()}`);
+    const id = makeUniqueId('connector', input.name);
 
     dispatch({
       type: 'ADD_CONNECTOR_TYPE',
@@ -154,7 +154,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const addCablePrefix = useCallback(
     (input: Pick<CablePrefix, 'prefix' | 'name'>) => {
       const normalizedPrefix = input.prefix.trim().toUpperCase();
-      const id = makeId('prefix', `${normalizedPrefix}-${nowIso()}`);
+      const id = makeUniqueId('prefix', normalizedPrefix);
 
       dispatch({
         type: 'ADD_CABLE_PREFIX',
@@ -171,7 +171,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const addLocation = useCallback((input: Pick<Location, 'name' | 'type' | 'description'>) => {
-    const id = makeId('location', `${input.name}-${nowIso()}`);
+    const id = makeUniqueId('location', input.name);
 
     dispatch({
       type: 'ADD_LOCATION',
@@ -199,7 +199,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const addRack = useCallback(
     (input: Pick<Rack, 'locationId' | 'name' | 'heightRu' | 'numberingDirection'>) => {
-      const id = makeId('rack', `${input.locationId}-${input.name}-${nowIso()}`);
+      const id = makeUniqueId('rack', `${input.locationId}-${input.name}`);
 
       dispatch({
         type: 'ADD_RACK',
@@ -229,7 +229,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addDevice = useCallback((input: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] }) => {
-    const id = input.device.id ?? makeId('device', `${input.device.code || input.device.name}-${nowIso()}`);
+    const id = input.device.id ?? makeUniqueId('device', input.device.code || input.device.name);
 
     dispatch({ type: 'ADD_DEVICE', payload: { ...input, device: { ...input.device, id } } });
 
@@ -237,7 +237,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addTerminalBlock = useCallback((input: TerminalBlockDraft) => {
-    const id = input.id ?? makeId('terminal-block', `${input.labelPrefix || input.name}-${nowIso()}`);
+    const id = input.id ?? makeUniqueId('terminal-block', input.labelPrefix || input.name);
 
     dispatch({ type: 'ADD_TERMINAL_BLOCK', payload: { terminalBlock: { ...input, id } } });
 

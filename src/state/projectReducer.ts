@@ -1,6 +1,6 @@
 import { allocateCableRange } from '../domain/cableNumbers';
 import { connectPorts, disconnectPort } from '../domain/connections';
-import { makeId, makeIndexedId, nowIso } from '../domain/id';
+import { makeId, makeIndexedId, makeUniqueId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject } from '../domain/projectFactory';
 import { validateRackPlacement } from '../domain/rackPlacement';
@@ -621,7 +621,7 @@ function createDeviceInProject(
   payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] },
 ): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
   const timestamp = nowIso();
-  const deviceId = payload.device.id ?? makeId('device', `${payload.device.code || payload.device.name}-${timestamp}`);
+  const deviceId = payload.device.id ?? makeUniqueId('device', payload.device.code || payload.device.name);
   const labelPrefix = payload.device.labelPrefix || payload.device.code || payload.device.name;
   const device: Device = {
     id: deviceId,
@@ -759,7 +759,7 @@ function createTerminalBlockInProject(
   }
 
   const placementProbe: Device = {
-    id: draft.id ?? makeId('terminal-block', `${draft.labelPrefix || draft.name}-${timestamp}`),
+    id: draft.id ?? makeUniqueId('terminal-block', draft.labelPrefix || draft.name),
     name: draft.name.trim(),
     kind: 'terminal_block',
     categoryId: draft.categoryId,
@@ -1062,7 +1062,7 @@ function createNewProject(): ProjectRoot {
   const timestamp = nowIso();
 
   return createEmptyProject({
-    id: makeId('project', `untitled-${timestamp}`),
+    id: makeUniqueId('project', 'untitled'),
     name: 'Untitled Project',
     revision: '0.1',
     status: 'draft',
