@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.5.1",
+  "title": "StudioWire IO Project v0.2.6.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.5.1"
+      "const": "0.2.6.0"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -115,6 +115,7 @@
       "additionalProperties": false,
       "required": [
         "categories",
+        "connectorCompatibilityGroups",
         "connectorTypes",
         "cablePrefixes",
         "rackDefaults",
@@ -128,6 +129,10 @@
         "connectorTypes": {
           "type": "array",
           "items": { "$ref": "#/$defs/ConnectorType" }
+        },
+        "connectorCompatibilityGroups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConnectorCompatibilityGroup" }
         },
         "cablePrefixes": {
           "type": "array",
@@ -154,9 +159,21 @@
     "ConnectorType": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name"],
+      "required": ["id", "name", "categoryId", "compatibilityGroupId"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "categoryId": { "type": "string", "minLength": 1 },
+        "compatibilityGroupId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ConnectorCompatibilityGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "categoryId", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "categoryId": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 }
       }
     },

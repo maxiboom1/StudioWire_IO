@@ -1,6 +1,6 @@
-export const STUDIOWIRE_SCHEMA_VERSION = '0.2.5.1' as const;
+export const STUDIOWIRE_SCHEMA_VERSION = '0.2.6.0' as const;
 
-export type SchemaVersion = typeof STUDIOWIRE_SCHEMA_VERSION | '0.2.4.1' | '0.1.0';
+export type SchemaVersion = typeof STUDIOWIRE_SCHEMA_VERSION | '0.2.5.1' | '0.2.4.1' | '0.1.0';
 
 export type ProjectStatus = 'draft' | 'approved' | 'as_built';
 export type RackNumberingDirection = 'bottom_to_top' | 'top_to_bottom';
@@ -42,6 +42,7 @@ export interface ProjectInfo {
 
 export interface Settings {
   categories: Category[];
+  connectorCompatibilityGroups: ConnectorCompatibilityGroup[];
   connectorTypes: ConnectorType[];
   cablePrefixes: CablePrefix[];
   rackDefaults: RackDefaults;
@@ -56,6 +57,14 @@ export interface Category {
 
 export interface ConnectorType {
   id: string;
+  name: string;
+  categoryId: string;
+  compatibilityGroupId: string;
+}
+
+export interface ConnectorCompatibilityGroup {
+  id: string;
+  categoryId: string;
   name: string;
 }
 

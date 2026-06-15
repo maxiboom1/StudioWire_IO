@@ -36,8 +36,18 @@ describe('validateProject settings rules', () => {
       { id: 'category-video-copy', name: 'Video', defaultCablePrefix: 'MISSING' },
     );
     project.settings.connectorTypes.push(
-      { id: 'connector-empty', name: '' },
-      { id: 'connector-bnc-copy', name: 'BNC' },
+      {
+        id: 'connector-empty',
+        name: '',
+        categoryId: 'category-video',
+        compatibilityGroupId: 'group-video-sdi-coax',
+      },
+      {
+        id: 'connector-bnc-copy',
+        name: 'BNC',
+        categoryId: 'category-video',
+        compatibilityGroupId: 'group-video-sdi-coax',
+      },
     );
 
     const codes = validateProject(project).map((issue) => issue.code);
@@ -47,6 +57,43 @@ describe('validateProject settings rules', () => {
     expect(codes).toContain('category-default-prefix-missing');
     expect(codes).toContain('empty-connector-type-name');
     expect(codes).toContain('duplicate-connector-type-name');
+  });
+
+  it('reports connector group and category ownership issues', () => {
+    const project = createValidationTestProject();
+
+    project.settings.connectorCompatibilityGroups.push(
+      { id: 'group-missing-category', categoryId: 'category-missing', name: 'Missing' },
+      { id: 'group-video-sdi-copy', categoryId: 'category-video', name: 'SDI coax' },
+    );
+    project.settings.connectorTypes.push(
+      {
+        id: 'connector-missing-category',
+        name: 'Missing category',
+        categoryId: 'category-missing',
+        compatibilityGroupId: 'group-video-sdi-coax',
+      },
+      {
+        id: 'connector-missing-group',
+        name: 'Missing group',
+        categoryId: 'category-video',
+        compatibilityGroupId: 'group-missing',
+      },
+      {
+        id: 'connector-wrong-group-category',
+        name: 'Wrong group category',
+        categoryId: 'category-video',
+        compatibilityGroupId: 'group-audio-analog-xlr',
+      },
+    );
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('connector-group-category-missing');
+    expect(codes).toContain('duplicate-connector-group-name');
+    expect(codes).toContain('connector-type-category-missing');
+    expect(codes).toContain('connector-type-compatibility-group-missing');
+    expect(codes).toContain('connector-type-group-category-mismatch');
   });
 });
 
@@ -293,5 +340,51 @@ describe('validateProject terminal block rules', () => {
 
     expect(codes).toContain('terminal-block-face-mismatch');
     expect(codes).toContain('port-group-count-mismatch');
+  });
+});
+
+describe('validateProject connector compatibility rules', () => {
+  it('reports port group and port connector category mismatches', () => {
+    const project = structuredClone(sampleProject);
+
+    project.portGroups[0].connectorTypeId = 'connector-xlr';
+    project.ports[0].connectorTypeId = 'connector-xlr';
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('port-group-connector-category-mismatch');
+    expect(codes).toContain('port-connector-category-mismatch');
+  });
+
+  it('accepts connected cables with different connector types in the same group', () => {
+    const project = structuredClone(sampleProject);
+    const cable = project.cables[0];
+    const left = project.ports[0];
+    const right = project.ports[4];
+
+    right.connectorTypeId = 'connector-sdi-din';
+    cable.status = 'connected';
+    cable.sideAEndpoint = { type: 'device_port', id: left.id, label: left.label };
+    cable.sideBEndpoint = { type: 'device_port', id: right.id, label: right.label };
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).not.toContain('connection-connector-group-mismatch');
+  });
+
+  it('reports connected cables with incompatible connector groups', () => {
+    const project = structuredClone(sampleProject);
+    const cable = project.cables[0];
+    const left = project.ports[0];
+    const right = project.ports[4];
+
+    right.connectorTypeId = 'connector-hdmi';
+    cable.status = 'connected';
+    cable.sideAEndpoint = { type: 'device_port', id: left.id, label: left.label };
+    cable.sideBEndpoint = { type: 'device_port', id: right.id, label: right.label };
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('connection-connector-group-mismatch');
   });
 });

@@ -8,10 +8,15 @@ export function SettingsWorkspace() {
     updateProjectInfo,
     addCategory,
     updateCategory,
+    addConnectorGroup,
+    updateConnectorGroup,
     addConnectorType,
     updateConnectorType,
     addCablePrefix,
   } = useProject();
+  const firstCategoryId = project.settings.categories[0]?.id ?? '';
+  const firstGroupId =
+    project.settings.connectorCompatibilityGroups.find((group) => group.categoryId === firstCategoryId)?.id ?? '';
   const [projectInfo, setProjectInfo] = useState({
     name: project.project.name,
     customer: project.project.customer,
@@ -21,7 +26,15 @@ export function SettingsWorkspace() {
     name: '',
     defaultCablePrefix: project.settings.cablePrefixes[0]?.prefix ?? 'V',
   });
-  const [newConnectorType, setNewConnectorType] = useState('');
+  const [newConnectorGroup, setNewConnectorGroup] = useState({
+    categoryId: firstCategoryId,
+    name: '',
+  });
+  const [newConnectorType, setNewConnectorType] = useState({
+    name: '',
+    categoryId: firstCategoryId,
+    compatibilityGroupId: firstGroupId,
+  });
   const [newCablePrefix, setNewCablePrefix] = useState({ prefix: '', name: '' });
 
   useEffect(() => {
@@ -54,15 +67,39 @@ export function SettingsWorkspace() {
     });
   }
 
-  function handleAddConnectorType(event: FormEvent<HTMLFormElement>) {
+  function handleAddConnectorGroup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!newConnectorType.trim()) {
+    if (!newConnectorGroup.name.trim() || !newConnectorGroup.categoryId) {
       return;
     }
 
-    addConnectorType({ name: newConnectorType.trim() });
-    setNewConnectorType('');
+    addConnectorGroup({
+      categoryId: newConnectorGroup.categoryId,
+      name: newConnectorGroup.name.trim(),
+    });
+    setNewConnectorGroup({
+      categoryId: newConnectorGroup.categoryId,
+      name: '',
+    });
+  }
+
+  function handleAddConnectorType(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!newConnectorType.name.trim() || !newConnectorType.categoryId || !newConnectorType.compatibilityGroupId) {
+      return;
+    }
+
+    addConnectorType({
+      name: newConnectorType.name.trim(),
+      categoryId: newConnectorType.categoryId,
+      compatibilityGroupId: newConnectorType.compatibilityGroupId,
+    });
+    setNewConnectorType({
+      ...newConnectorType,
+      name: '',
+    });
   }
 
   function handleAddCablePrefix(event: FormEvent<HTMLFormElement>) {
@@ -81,7 +118,7 @@ export function SettingsWorkspace() {
 
   return (
     <section className="workspace" aria-label="Project settings">
-      <WorkspaceHeader eyebrow="Settings" title="Project Settings" badge="v0.2.5" />
+      <WorkspaceHeader eyebrow="Settings" title="Project Settings" badge="v0.2.6" />
 
       <form className="editor-form settings-project-form" onSubmit={handleProjectInfoSubmit}>
         <label>
@@ -173,32 +210,139 @@ export function SettingsWorkspace() {
 
       <section className="settings-section">
         <div className="section-heading">
+          <h2>Connector Groups</h2>
+          <span>{project.settings.connectorCompatibilityGroups.length}</span>
+        </div>
+        <div className="editable-list compact">
+          {project.settings.connectorCompatibilityGroups.map((group) => {
+            const category = project.settings.categories.find((item) => item.id === group.categoryId);
+
+            return (
+              <div className="editable-row" key={group.id}>
+                <span>{category?.name ?? group.categoryId}</span>
+                <input
+                  aria-label={`${group.name} connector group name`}
+                  defaultValue={group.name}
+                  onBlur={(event) => {
+                    const name = event.target.value.trim();
+
+                    if (name && name !== group.name) {
+                      updateConnectorGroup(group.id, { name });
+                    }
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <form className="inline-form" onSubmit={handleAddConnectorGroup}>
+          <select
+            value={newConnectorGroup.categoryId}
+            onChange={(event) =>
+              setNewConnectorGroup({ ...newConnectorGroup, categoryId: event.target.value })
+            }
+          >
+            {project.settings.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <input
+            placeholder="New connector group"
+            value={newConnectorGroup.name}
+            onChange={(event) => setNewConnectorGroup({ ...newConnectorGroup, name: event.target.value })}
+          />
+          <button type="submit">Add Group</button>
+        </form>
+      </section>
+
+      <section className="settings-section">
+        <div className="section-heading">
           <h2>Connector Types</h2>
           <span>{project.settings.connectorTypes.length}</span>
         </div>
         <div className="editable-list compact">
-          {project.settings.connectorTypes.map((connectorType) => (
-            <div className="editable-row" key={connectorType.id}>
-              <input
-                aria-label={`${connectorType.name} connector type name`}
-                defaultValue={connectorType.name}
-                onBlur={(event) => {
-                  const name = event.target.value.trim();
+          {project.settings.connectorTypes.map((connectorType) => {
+            const category = project.settings.categories.find((item) => item.id === connectorType.categoryId);
+            const groups = project.settings.connectorCompatibilityGroups.filter(
+              (group) => group.categoryId === connectorType.categoryId,
+            );
 
-                  if (name && name !== connectorType.name) {
-                    updateConnectorType(connectorType.id, { name });
+            return (
+              <div className="editable-row" key={connectorType.id}>
+                <span>{category?.name ?? connectorType.categoryId}</span>
+                <input
+                  aria-label={`${connectorType.name} connector type name`}
+                  defaultValue={connectorType.name}
+                  onBlur={(event) => {
+                    const name = event.target.value.trim();
+
+                    if (name && name !== connectorType.name) {
+                      updateConnectorType(connectorType.id, { name });
+                    }
+                  }}
+                />
+                <select
+                  aria-label={`${connectorType.name} compatibility group`}
+                  value={connectorType.compatibilityGroupId}
+                  onChange={(event) =>
+                    updateConnectorType(connectorType.id, {
+                      compatibilityGroupId: event.target.value,
+                    })
                   }
-                }}
-              />
-            </div>
-          ))}
+                >
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
         </div>
         <form className="inline-form" onSubmit={handleAddConnectorType}>
           <input
             placeholder="New connector type"
-            value={newConnectorType}
-            onChange={(event) => setNewConnectorType(event.target.value)}
+            value={newConnectorType.name}
+            onChange={(event) => setNewConnectorType({ ...newConnectorType, name: event.target.value })}
           />
+          <select
+            value={newConnectorType.categoryId}
+            onChange={(event) => {
+              const categoryId = event.target.value;
+              const compatibilityGroupId =
+                project.settings.connectorCompatibilityGroups.find((group) => group.categoryId === categoryId)?.id ??
+                '';
+
+              setNewConnectorType({
+                ...newConnectorType,
+                categoryId,
+                compatibilityGroupId,
+              });
+            }}
+          >
+            {project.settings.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={newConnectorType.compatibilityGroupId}
+            onChange={(event) =>
+              setNewConnectorType({ ...newConnectorType, compatibilityGroupId: event.target.value })
+            }
+          >
+            {project.settings.connectorCompatibilityGroups
+              .filter((group) => group.categoryId === newConnectorType.categoryId)
+              .map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+          </select>
           <button type="submit">Add Connector</button>
         </form>
       </section>

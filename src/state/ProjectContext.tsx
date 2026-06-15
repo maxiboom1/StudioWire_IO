@@ -14,6 +14,7 @@ import { makeUniqueId } from '../domain/id';
 import type {
   CablePrefix,
   Category,
+  ConnectorCompatibilityGroup,
   ConnectorType,
   Location,
   ProjectInfo,
@@ -31,8 +32,8 @@ import {
   type TerminalBlockDraft,
 } from './projectReducer';
 
-const STORAGE_KEY = 'studiowire.io.project.v0.2.5';
-const LEGACY_STORAGE_KEYS = ['studiowire.io.project.v0.1'];
+const STORAGE_KEY = 'studiowire.io.project.v0.2.6';
+const LEGACY_STORAGE_KEYS = ['studiowire.io.project.v0.2.5', 'studiowire.io.project.v0.1'];
 
 interface ProjectContextValue extends ProjectState {
   createNewProject: () => void;
@@ -44,8 +45,10 @@ interface ProjectContextValue extends ProjectState {
   updateProjectInfo: (updates: Pick<ProjectInfo, 'name' | 'customer' | 'revision'>) => void;
   addCategory: (input: Pick<Category, 'name' | 'defaultCablePrefix'>) => string;
   updateCategory: (id: string, updates: Pick<Category, 'name' | 'defaultCablePrefix'>) => void;
-  addConnectorType: (input: Pick<ConnectorType, 'name'>) => string;
-  updateConnectorType: (id: string, updates: Pick<ConnectorType, 'name'>) => void;
+  addConnectorGroup: (input: Pick<ConnectorCompatibilityGroup, 'categoryId' | 'name'>) => string;
+  updateConnectorGroup: (id: string, updates: Pick<ConnectorCompatibilityGroup, 'name'>) => void;
+  addConnectorType: (input: Pick<ConnectorType, 'name' | 'categoryId' | 'compatibilityGroupId'>) => string;
+  updateConnectorType: (id: string, updates: Partial<Pick<ConnectorType, 'name' | 'compatibilityGroupId'>>) => void;
   addCablePrefix: (input: Pick<CablePrefix, 'prefix' | 'name'>) => string;
   addLocation: (input: Pick<Location, 'name' | 'type' | 'description'>) => string;
   updateLocation: (id: string, updates: Pick<Location, 'name' | 'type' | 'description'>) => void;
@@ -135,13 +138,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const addConnectorType = useCallback((input: Pick<ConnectorType, 'name'>) => {
-    const id = makeUniqueId('connector', input.name);
+  const addConnectorGroup = useCallback((input: Pick<ConnectorCompatibilityGroup, 'categoryId' | 'name'>) => {
+    const id = makeUniqueId('group', `${input.categoryId}-${input.name}`);
 
     dispatch({
-      type: 'ADD_CONNECTOR_TYPE',
+      type: 'ADD_CONNECTOR_GROUP',
       payload: {
         id,
+        categoryId: input.categoryId,
         name: input.name,
       },
     });
@@ -149,9 +153,35 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
-  const updateConnectorType = useCallback((id: string, updates: Pick<ConnectorType, 'name'>) => {
-    dispatch({ type: 'UPDATE_CONNECTOR_TYPE', payload: { id, updates } });
+  const updateConnectorGroup = useCallback(
+    (id: string, updates: Pick<ConnectorCompatibilityGroup, 'name'>) => {
+      dispatch({ type: 'UPDATE_CONNECTOR_GROUP', payload: { id, updates } });
+    },
+    [],
+  );
+
+  const addConnectorType = useCallback((input: Pick<ConnectorType, 'name' | 'categoryId' | 'compatibilityGroupId'>) => {
+    const id = makeUniqueId('connector', `${input.categoryId}-${input.name}`);
+
+    dispatch({
+      type: 'ADD_CONNECTOR_TYPE',
+      payload: {
+        id,
+        name: input.name,
+        categoryId: input.categoryId,
+        compatibilityGroupId: input.compatibilityGroupId,
+      },
+    });
+
+    return id;
   }, []);
+
+  const updateConnectorType = useCallback(
+    (id: string, updates: Partial<Pick<ConnectorType, 'name' | 'compatibilityGroupId'>>) => {
+      dispatch({ type: 'UPDATE_CONNECTOR_TYPE', payload: { id, updates } });
+    },
+    [],
+  );
 
   const addCablePrefix = useCallback(
     (input: Pick<CablePrefix, 'prefix' | 'name'>) => {
@@ -281,6 +311,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateProjectInfo,
       addCategory,
       updateCategory,
+      addConnectorGroup,
+      updateConnectorGroup,
       addConnectorType,
       updateConnectorType,
       addCablePrefix,
@@ -309,6 +341,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateProjectInfo,
       addCategory,
       updateCategory,
+      addConnectorGroup,
+      updateConnectorGroup,
       addConnectorType,
       updateConnectorType,
       addCablePrefix,

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.6.0
+
+Added schema-backed connector compatibility.
+
+- Bumped app and project schema version to `0.2.6.0`.
+- Added category-owned connector types and category-scoped connector compatibility groups.
+- Updated connection creation, crosspoint filtering, and validation so direct connections require matching category and compatibility group, not exact connector type.
+- Updated Add Device, Add TB, and Settings UI for category-filtered connectors and editable compatibility groups.
+- Added legacy import normalization from global connector types to category-owned connector types.
+
 ## v0.2.5.7
 
 Aligned current documentation and metadata with the active release line.

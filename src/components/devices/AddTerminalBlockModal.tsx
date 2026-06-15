@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
+import { getConnectorsForCategory, getDefaultConnectorForCategory } from '../../domain/connectorCompatibility';
 import { makeId } from '../../domain/id';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot } from '../../domain/types';
@@ -40,6 +41,7 @@ export function AddTerminalBlockModal({
   const firstRack = racks[0];
   const firstCategory = project.settings.categories[0];
   const categoryPrefix = firstCategory?.defaultCablePrefix ?? project.settings.cablePrefixes[0]?.prefix ?? 'V';
+  const categoryConnector = firstCategory ? getDefaultConnectorForCategory(project.settings, firstCategory.id) : null;
   const [draft, setDraft] = useState<TerminalBlockDraft>({
     name: '',
     categoryId: firstCategory?.id ?? '',
@@ -47,7 +49,7 @@ export function AddTerminalBlockModal({
     labelPrefix: '',
     rackId: firstRack?.id ?? '',
     rackBottomRu: 1,
-    connectorTypeId: project.settings.connectorTypes[0]?.id ?? '',
+    connectorTypeId: categoryConnector?.id ?? '',
     count: 16,
     cablePrefix: categoryPrefix,
     firstCableNumber: project.numberingLedgers.find((ledger) => ledger.prefix === categoryPrefix)?.nextSuggested ?? 1,
@@ -56,6 +58,7 @@ export function AddTerminalBlockModal({
   });
   const effectiveLabelPrefix = normalizeDeviceToken(draft.labelPrefix || draft.name || 'TB');
   const validation = getAddTerminalBlockValidation(project, draft, effectiveLabelPrefix);
+  const connectorTypes = getConnectorsForCategory(project.settings, draft.categoryId);
 
   function updateDraft(updates: Partial<TerminalBlockDraft>) {
     setDraft((current) => {
@@ -63,6 +66,7 @@ export function AddTerminalBlockModal({
 
       if (updates.categoryId) {
         next.cablePrefix = getDefaultPrefixForCategory(project, updates.categoryId);
+        next.connectorTypeId = getDefaultConnectorForCategory(project.settings, updates.categoryId)?.id ?? '';
       }
 
       if (updates.rackId) {
@@ -161,7 +165,7 @@ export function AddTerminalBlockModal({
                   <SelectValue placeholder="Select connector" />
                 </SelectTrigger>
                 <SelectContent>
-                  {project.settings.connectorTypes.map((connectorType) => (
+                  {connectorTypes.map((connectorType) => (
                     <SelectItem key={connectorType.id} value={connectorType.id}>
                       {connectorType.name}
                     </SelectItem>
@@ -311,8 +315,12 @@ function getAddTerminalBlockValidation(
     errors.push('TB category is required.');
   }
 
-  if (!project.settings.connectorTypes.some((connectorType) => connectorType.id === draft.connectorTypeId)) {
+  const connectorType = project.settings.connectorTypes.find((connector) => connector.id === draft.connectorTypeId);
+
+  if (!connectorType) {
     errors.push('TB connector type is required.');
+  } else if (connectorType.categoryId !== draft.categoryId) {
+    errors.push('TB connector type must belong to the selected category.');
   }
 
   if (!Number.isSafeInteger(draft.count) || draft.count <= 0) {

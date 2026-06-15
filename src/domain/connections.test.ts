@@ -15,7 +15,13 @@ function createState(project: ProjectRoot = structuredClone(sampleProject)): Pro
 
 function addDevicePort(
   project: ProjectRoot,
-  input: { id: string; labelPrefix: string; direction: Port['direction']; firstCableNumber: number | null },
+  input: {
+    id: string;
+    labelPrefix: string;
+    direction: Port['direction'];
+    firstCableNumber: number | null;
+    connectorTypeId?: string;
+  },
 ) {
   return projectReducer(createState(project), {
     type: 'ADD_DEVICE',
@@ -41,7 +47,7 @@ function addDevicePort(
           name: input.direction === 'input' ? 'IN' : 'OUT',
           direction: input.direction,
           categoryId: 'category-video',
-          connectorTypeId: 'connector-bnc',
+          connectorTypeId: input.connectorTypeId ?? 'connector-bnc',
           count: 1,
           portLabelPattern: `{DEVICE}-${input.direction === 'input' ? 'IN' : 'OUT'}-{000}`,
           cablePrefix: 'V',
@@ -156,6 +162,38 @@ describe('connectPorts', () => {
     const left = getPort(project, 'device-switcher-a', 'input');
     const right = getPort(project, 'device-switcher-b', 'input');
     const result = connectPorts(project, { fromPortId: left.id, toPortId: right.id });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it('allows different connector types in the same compatibility group', () => {
+    let project = structuredClone(sampleProject);
+    project = addDevicePort(project, {
+      id: 'device-switcher-sdi-din',
+      labelPrefix: 'SWDIN',
+      direction: 'input',
+      firstCableNumber: 9,
+      connectorTypeId: 'connector-sdi-din',
+    });
+    const routerOut = getPort(project, 'device-router-1', 'output');
+    const switcherIn = getPort(project, 'device-switcher-sdi-din', 'input');
+    const result = connectPorts(project, { fromPortId: routerOut.id, toPortId: switcherIn.id });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it('blocks connector types in different compatibility groups', () => {
+    let project = structuredClone(sampleProject);
+    project = addDevicePort(project, {
+      id: 'device-monitor-hdmi',
+      labelPrefix: 'MON',
+      direction: 'input',
+      firstCableNumber: 9,
+      connectorTypeId: 'connector-hdmi',
+    });
+    const routerOut = getPort(project, 'device-router-1', 'output');
+    const monitorIn = getPort(project, 'device-monitor-hdmi', 'input');
+    const result = connectPorts(project, { fromPortId: routerOut.id, toPortId: monitorIn.id });
 
     expect(result.ok).toBe(false);
   });

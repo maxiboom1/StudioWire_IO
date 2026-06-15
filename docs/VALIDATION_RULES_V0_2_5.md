@@ -14,10 +14,18 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `category-default-prefix-missing`: category default cable prefixes must exist in settings.
 - `duplicate-category-name`: category names must be unique.
 - `empty-category-name`: category names are required.
-- `duplicate-connector-type-name`: connector type names must be unique.
+- `connector-group-category-missing`: connector groups must reference an existing category.
+- `duplicate-connector-group-name`: connector group names must be unique within a category.
+- `empty-connector-group-name`: connector group names are required.
+- `connector-type-category-missing`: connector types must reference an existing category.
+- `connector-type-compatibility-group-missing`: connector types must reference an existing compatibility group.
+- `connector-type-group-category-mismatch`: connector type compatibility groups must belong to the same category as the connector type.
+- `duplicate-connector-type-name`: connector type names must be unique within a category.
 - `empty-connector-type-name`: connector type names are required.
 - `unknown-category`: device, port group, and port category references must exist in settings.
 - `unknown-connector-type`: port group and port connector type references must exist in settings.
+- `port-group-connector-category-mismatch`: port group connector types must belong to the port group category.
+- `port-connector-category-mismatch`: port connector types must belong to the port category.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
 - `duplicate-location-name`: duplicate location names are reported as warnings.
 - `rack-without-location`: rack `locationId` must reference an existing location.
@@ -66,7 +74,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `planned-cable-label-bottom-mismatch`: planned input cable `labelBottom` must equal the destination endpoint label.
 - `connected-cable-endpoints-required`: connected cables must reference two different project ports.
 - `connection-category-mismatch`: connected cable endpoints must share a category.
-- `connection-connector-mismatch`: connected cable endpoints must share a connector type.
+- `connection-connector-group-mismatch`: connected cable endpoints must use connectors in the same compatibility group.
 - `connection-segment-invalid`: a connected cable segment must be valid for the selected endpoint directions/faces.
 - `multiple-active-connections`: one port must not have more than one active connected cable.
 - `connection-chain-direction-invalid`: a resolved chain through terminal blocks must not link incompatible standard device port directions.
@@ -91,6 +99,8 @@ Reserved gaps and retired ranges remain unavailable. StudioWire IO does not free
 Terminal blocks may create planned cable numbers for FRONT ports only. REAR ports remain unnumbered. Terminal block front planned cables use `tb_port` side A endpoints.
 
 When a connection is created, at least one selected endpoint must already have a planned cable slot. If both selected endpoints have planned cable numbers, the lower cable number becomes the active `connected` cable and the higher number is marked `retired`.
+
+Connection endpoints must share a category. Exact connector type equality is not required, but both connector types must belong to the endpoint category and the same category-scoped compatibility group.
 
 ## UI Behavior
 

@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.5.7 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.6.0 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -70,7 +70,7 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 ## Current Release Supports
 
 - Browser-only project editing with localStorage autosave.
-- Project settings for project info, categories, connector types, and cable prefixes.
+- Project settings for project info, categories, connector compatibility groups, connector types, and cable prefixes.
 - Location and rack creation, editing, and guarded deletion.
 - Device creation, simple device editing, and retirement.
 - Terminal block creation as fixed 1RU rack objects with rear/front port faces.
@@ -81,7 +81,7 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- Stable JSON import and export using schema version `0.2.5.1`, with import normalization for older `0.1.0` and `0.2.4.1` projects.
+- Stable JSON import and export using schema version `0.2.6.0`, with import normalization for older `0.1.0`, `0.2.4.1`, and `0.2.5.1` projects.
 
 ## Current Release Intentionally Does Not Support
 
@@ -113,6 +113,7 @@ See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
 
+- `v0.2.6.0`: Added category-owned connector compatibility groups, category-filtered connector UI, and legacy import normalization for connector settings.
 - `v0.2.5.7`: Aligned current docs, schema metadata, sample JSON, and visible app version labels with the active `0.2.5` release line.
 - `v0.2.5.6`: Fixed project JSON import from the gear menu by keeping the file input mounted outside the dropdown and added a current-schema round-trip import test.
 - `v0.2.5.5`: Fixed ledger getter purity, tightened device status typing, reduced user-created ID collision risk, corrected Cables filter clear behavior, optimized crosspoint candidate scans, and documented bidirectional reset behavior.

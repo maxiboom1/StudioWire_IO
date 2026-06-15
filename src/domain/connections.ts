@@ -1,3 +1,8 @@
+import {
+  arePortConnectorsCompatible,
+  createConnectorCompatibilityLookup,
+  type ConnectorCompatibilityLookup,
+} from './connectorCompatibility';
 import type { Cable, Device, Endpoint, Port, ProjectRoot } from './types';
 
 const UNKNOWN_ENDPOINT: Endpoint = {
@@ -19,6 +24,7 @@ export interface ConnectionTargetLookup {
   portsById: ReadonlyMap<string, Port>;
   devicesById: ReadonlyMap<string, Device>;
   cablesById: ReadonlyMap<string, Cable>;
+  connectorCompatibility: ConnectorCompatibilityLookup;
 }
 
 export interface PortConnectionSummary {
@@ -208,12 +214,15 @@ export function getConnectionTargetStatus(
     return { ok: false, reason: 'Port is missing.' };
   }
 
-  if (fromPort.categoryId !== toPort.categoryId) {
-    return { ok: false, reason: 'Category does not match.' };
-  }
+  const connectorStatus = arePortConnectorsCompatible(
+    project,
+    fromPort,
+    toPort,
+    effectiveLookup.connectorCompatibility,
+  );
 
-  if (fromPort.connectorTypeId !== toPort.connectorTypeId) {
-    return { ok: false, reason: 'Connector does not match.' };
+  if (!connectorStatus.ok) {
+    return connectorStatus;
   }
 
   const segmentStatus = getSegmentCompatibility(project, fromPort, toPort, effectiveLookup);
@@ -321,6 +330,7 @@ export function createConnectionTargetLookup(project: ProjectRoot): ConnectionTa
     portsById: new Map(project.ports.map((port) => [port.id, port])),
     devicesById: new Map(project.devices.map((device) => [device.id, device])),
     cablesById: new Map(project.cables.map((cable) => [cable.id, cable])),
+    connectorCompatibility: createConnectorCompatibilityLookup(project.settings),
   };
 }
 

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
+import { getConnectorsForCategory, getDefaultConnectorForCategory } from '../../domain/connectorCompatibility';
 import type { ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectReducer';
@@ -86,6 +87,7 @@ export function AddDeviceModal({
   function handlePortGroupCategoryChange(localId: string, categoryId: string) {
     updatePortGroup(localId, {
       categoryId,
+      connectorTypeId: getDefaultConnectorForCategory(project.settings, categoryId)?.id ?? '',
       cablePrefix: getDefaultPrefixForCategory(project, categoryId),
     });
   }
@@ -121,7 +123,7 @@ export function AddDeviceModal({
           name: 'PORTS',
           direction: 'bidirectional',
           categoryId: device.categoryId,
-          connectorTypeId: project.settings.connectorTypes[0]?.id ?? '',
+          connectorTypeId: getDefaultConnectorForCategory(project.settings, device.categoryId)?.id ?? '',
           count: 1,
           portLabelPattern: '{DEVICE}-{000}',
           cablePrefix: prefix,
@@ -324,6 +326,8 @@ function PortGroupEditor({
   onRemove: (localId: string) => void;
   onUpdate: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
 }) {
+  const connectorTypes = getConnectorsForCategory(project.settings, group.categoryId);
+
   return (
     <Card className="port-group-editor">
       <CardHeader className="port-group-editor-heading">
@@ -396,7 +400,7 @@ function PortGroupEditor({
                 <SelectValue placeholder="Select connector" />
               </SelectTrigger>
               <SelectContent>
-                {project.settings.connectorTypes.map((connectorType) => (
+                {connectorTypes.map((connectorType) => (
                   <SelectItem key={connectorType.id} value={connectorType.id}>
                     {connectorType.name}
                   </SelectItem>
@@ -505,7 +509,7 @@ function createQuickPortGroups(project: ProjectRoot, categoryId: string): Device
       name: input.name,
       direction: input.direction,
       categoryId,
-      connectorTypeId: findConnectorTypeId(project, input.connectorName),
+      connectorTypeId: findConnectorTypeId(project, categoryId, input.connectorName),
       count: input.count ?? 4,
       portLabelPattern: input.pattern,
       cablePrefix: input.prefix,
@@ -606,12 +610,12 @@ function rebalancePlannedCableRanges(
   });
 }
 
-function findConnectorTypeId(project: ProjectRoot, name: string): string {
+function findConnectorTypeId(project: ProjectRoot, categoryId: string, name: string): string {
   return (
-    project.settings.connectorTypes.find(
+    getConnectorsForCategory(project.settings, categoryId).find(
       (connectorType) => connectorType.name.toLowerCase() === name.toLowerCase(),
     )?.id ??
-    project.settings.connectorTypes[0]?.id ??
+    getDefaultConnectorForCategory(project.settings, categoryId)?.id ??
     ''
   );
 }
@@ -691,6 +695,14 @@ function getAddDeviceValidation(
 
     if (!project.settings.cablePrefixes.some((prefix) => prefix.prefix === group.cablePrefix)) {
       errors.push(`${group.name || 'Port group'} uses an unknown cable prefix.`);
+    }
+
+    const connectorType = project.settings.connectorTypes.find((connector) => connector.id === group.connectorTypeId);
+
+    if (!connectorType) {
+      errors.push(`${group.name || 'Port group'} uses an unknown connector.`);
+    } else if (connectorType.categoryId !== group.categoryId) {
+      errors.push(`${group.name || 'Port group'} connector must belong to the selected category.`);
     }
 
     if (group.createPlannedCables) {

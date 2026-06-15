@@ -202,11 +202,7 @@ function buildCandidates(project: ProjectRoot, originPortId: string): PortCandid
 }
 
 function isPossibleCandidate(originPort: Port, candidatePort: Port): boolean {
-  return (
-    candidatePort.id !== originPort.id &&
-    candidatePort.categoryId === originPort.categoryId &&
-    candidatePort.connectorTypeId === originPort.connectorTypeId
-  );
+  return candidatePort.id !== originPort.id && candidatePort.categoryId === originPort.categoryId;
 }
 
 function resolveDeviceLocationId(device: Device, racksById: ReadonlyMap<string, Rack>) {

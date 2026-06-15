@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.5
+# StudioWire IO Product Spec v0.2.6
 
-StudioWire IO v0.2.5 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.6 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future exports of the project data.
 
@@ -81,7 +81,7 @@ Project settings define global configuration used by the rest of the project:
 
 - Project info.
 - Categories.
-- Connector types.
+- Connector compatibility groups and category-owned connector types.
 - Cable prefixes.
 - Cable numbering ranges.
 - Numbering ledger behavior.
@@ -139,7 +139,7 @@ Each port group has:
 - Name.
 - Direction.
 - Category ID.
-- Connector type ID.
+- Category-owned connector type ID.
 - Count.
 - Naming pattern.
 - Cable prefix.

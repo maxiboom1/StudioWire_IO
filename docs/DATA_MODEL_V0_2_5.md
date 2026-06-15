@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.5.1`. Older `0.1.0` and `0.2.4.1` projects are accepted on import and normalized to the current schema.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.6.0`. Older `0.1.0`, `0.2.4.1`, and `0.2.5.1` projects are accepted on import and normalized to the current schema.
 
 IDs are stable strings. References use IDs, not display names. Dates use ISO 8601 strings.
 
@@ -8,7 +8,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.5.1`.
+- `schemaVersion`: current fixed string `0.2.6.0`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -40,6 +40,7 @@ Fields:
 Fields:
 
 - `categories`: `Category[]`
+- `connectorCompatibilityGroups`: `ConnectorCompatibilityGroup[]`
 - `connectorTypes`: `ConnectorType[]`
 - `cablePrefixes`: `CablePrefix[]`
 - `rackDefaults`: `RackDefaults`
@@ -47,7 +48,9 @@ Fields:
 
 Default categories are Video, Audio, Network, Reference, RF, and Control. Each category has a default cable prefix.
 
-Default connector types are BNC, XLR, RJ45, SFP, Fiber, HDMI, SDI DIN, DB25, MADI BNC, MADI Fiber, GPIO, and Other.
+Connector types are category-owned and assigned to a compatibility group. A connector can be selected only for ports in its own category. Direct connections are allowed only when both endpoint connectors are in the same category and compatibility group.
+
+Default connector compatibility groups are conservative: Video has SDI coax, HDMI, and Other; Audio has Analog XLR, DB25, MADI coax, MADI fiber, and Other; Network has RJ45 copper, SFP cage, Fiber, and Other; Reference has Reference coax and Other; RF has RF coax and Other; Control has GPIO and Other.
 
 Cable numbers use `PREFIX-0001` formatting, for example `V-0001`, `A-0021`, `N-0100`, and `RF-0001`.
 
@@ -65,6 +68,20 @@ Fields:
 
 - `id`
 - `name`
+- `categoryId`
+- `compatibilityGroupId`
+
+Connector type names must be unique within a category. The same display name may exist in multiple categories, for example Video BNC, Reference BNC, and RF BNC.
+
+## ConnectorCompatibilityGroup
+
+Fields:
+
+- `id`
+- `categoryId`
+- `name`
+
+Compatibility group names must be unique within a category. Connectors in the same category and group are directly compatible; connectors in different groups require conversion somewhere else in the design.
 
 ## CablePrefix
 
@@ -161,7 +178,7 @@ Fields:
 
 `portLabelPattern` supports `{DEVICE}`, `{00}`, and `{000}`. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits.
 
-Standard devices use `input`, `output`, or `bidirectional` groups. Terminal blocks use exactly one `rear` group and one `front` group with matching count, category, and connector type.
+Standard devices use `input`, `output`, or `bidirectional` groups. Terminal blocks use exactly one `rear` group and one `front` group with matching count, category, and exact connector type.
 
 PortGroup allocation semantics are mode-specific:
 
@@ -213,6 +230,8 @@ Output and bidirectional planned cables use the device port as the source and un
 Terminal block rear ports do not generate planned cables. Terminal block front ports may optionally generate planned cables; those planned cables use the front port as a `tb_port` side A endpoint and an unknown side B endpoint.
 
 Connected cables use `sideAEndpoint` and `sideBEndpoint` as neutral physical ends. When two ports are connected, the selected/clicked port is written to side A and the chosen target is written to side B. If both ports have planned cable numbers, the lower cable number becomes `connected` and the higher cable becomes `retired`.
+
+Connected cable endpoints must share a category, and each endpoint connector must belong to that category. The connector types do not need to be identical, but they must resolve to the same compatibility group.
 
 ## NumberingLedger
 

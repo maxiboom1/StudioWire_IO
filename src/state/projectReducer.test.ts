@@ -358,7 +358,7 @@ describe('parseImportedProject schema compatibility', () => {
     if (!secondImport.ok) {
       return;
     }
-    expect(secondImport.project.schemaVersion).toBe('0.2.5.1');
+    expect(secondImport.project.schemaVersion).toBe('0.2.6.0');
     expect(secondImport.project.cables[0]).toHaveProperty('sideAEndpoint');
     expect(secondImport.project.cables[0]).toHaveProperty('sideBEndpoint');
   });
@@ -375,7 +375,7 @@ describe('parseImportedProject schema compatibility', () => {
     if (!result.ok) {
       return;
     }
-    expect(result.project.schemaVersion).toBe('0.2.5.1');
+    expect(result.project.schemaVersion).toBe('0.2.6.0');
     expect(result.project.devices[0]).toMatchObject({
       kind: 'device',
       code: 'RTR1',
@@ -406,5 +406,57 @@ describe('parseImportedProject schema compatibility', () => {
     expect(result.project.cables[0].sideBEndpoint).toMatchObject({ type: 'unknown' });
     expect(result.project.cables[0]).not.toHaveProperty('sourceEndpoint');
     expect(result.project.cables[0]).not.toHaveProperty('destinationEndpoint');
+  });
+
+  it('normalizes legacy global connectors to category-owned connectors', () => {
+    const oldProject = structuredClone(sampleProject) as any;
+
+    oldProject.schemaVersion = '0.2.5.1';
+    delete oldProject.settings.connectorCompatibilityGroups;
+    oldProject.settings.connectorTypes = [
+      { id: 'connector-bnc', name: 'BNC' },
+      { id: 'connector-xlr', name: 'XLR' },
+    ];
+    oldProject.portGroups[0].connectorTypeId = 'connector-bnc';
+    oldProject.ports[0].connectorTypeId = 'connector-bnc';
+    oldProject.portGroups.push({
+      ...oldProject.portGroups[0],
+      id: 'port-group-audio-legacy',
+      categoryId: 'category-audio',
+      connectorTypeId: 'connector-xlr',
+      numberingRangeId: null,
+      createPlannedCables: false,
+      firstCableNumber: null,
+      lastCableNumber: null,
+    });
+    oldProject.ports.push({
+      ...oldProject.ports[0],
+      id: 'port-audio-legacy',
+      portGroupId: 'port-group-audio-legacy',
+      categoryId: 'category-audio',
+      connectorTypeId: 'connector-xlr',
+      plannedCableId: null,
+    });
+
+    const result = parseImportedProject(oldProject);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    const videoPort = result.project.ports.find((port) => port.id === oldProject.ports[0].id);
+    const audioPort = result.project.ports.find((port) => port.id === 'port-audio-legacy');
+    const videoConnector = result.project.settings.connectorTypes.find(
+      (connectorType) => connectorType.id === videoPort?.connectorTypeId,
+    );
+    const audioConnector = result.project.settings.connectorTypes.find(
+      (connectorType) => connectorType.id === audioPort?.connectorTypeId,
+    );
+
+    expect(result.project.schemaVersion).toBe('0.2.6.0');
+    expect(result.project.settings.connectorCompatibilityGroups.length).toBeGreaterThan(0);
+    expect(videoConnector).toMatchObject({ name: 'BNC', categoryId: 'category-video' });
+    expect(audioConnector).toMatchObject({ name: 'XLR', categoryId: 'category-audio' });
   });
 });
