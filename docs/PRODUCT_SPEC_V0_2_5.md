@@ -1,8 +1,8 @@
-# StudioWire IO Product Spec v0.1
+# StudioWire IO Product Spec v0.2.5
 
-StudioWire IO v0.1 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.5 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
-Drawings, spreadsheets, and CAD artifacts are not source documents in v0.1. They are future generated views of the project data.
+Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future exports of the project data.
 
 ## Application Layout
 
@@ -20,7 +20,7 @@ The top navbar provides project-level actions and status:
 - Settings.
 - Current status message.
 
-The navbar must not contain authentication, workspace switching, cloud sync, or multi-user controls in v0.1.
+The navbar must not contain authentication, cloud sync, or multi-user controls in the current local-only release line.
 
 ### Left Tree
 
@@ -44,13 +44,13 @@ The center workspace is the main editing area. It presents the currently selecte
 - Settings editor.
 - Location summary.
 - Rack layout summary.
-- DeviceCanvas placeholder with generated ports and planned cable numbers.
+- Canvas-first rack, device, terminal-block, cable, and project views over structured project data.
 
-The workspace should prefer structured tables and forms over freeform drawing surfaces in v0.1.
+The workspace should prefer structured tables, forms, and generated technical views over freeform drawing source documents.
 
 ### Right Inspector
 
-The right inspector edits properties for the selected object. It should show only fields that belong to the selected object type in the v0.1 data model.
+The right inspector edits properties for the selected object. It should show only fields that belong to the selected object type in the current data model.
 
 Examples:
 
@@ -62,7 +62,7 @@ Examples:
 
 The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Devices are retired instead of physically deleted so cable numbers are not freed.
 
-The inspector must not invent fields that are not documented in `DATA_MODEL_V0_1.md`.
+The inspector must not invent fields that are not documented in `DATA_MODEL_V0_2_5.md`.
 
 ### Bottom Validation Panel
 
@@ -163,8 +163,8 @@ The numbering model includes:
 
 Cable numbers must be unique per project. Skipped gaps are reserved and cannot be reused.
 
-StudioWire IO tracks planned cable numbers and validation, but does not model complete connection paths or export prewire documents yet.
+StudioWire IO tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, and validation, but does not export prewire documents yet.
 
 ## Explicit Exclusions
 
-The current app intentionally excludes device-to-TB connection logic, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage.
+The current app intentionally excludes prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage.

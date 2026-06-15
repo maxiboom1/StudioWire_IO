@@ -216,7 +216,7 @@ export function DeviceInspector({ device }: { device: Device }) {
                 ? 'Rack assignment and RU position are changed on the Rack Canvas.'
                 : 'Set a mount height, then drag this device from the navigator onto a rack canvas when it is ready to be mounted.'}
           </p>
-          <p>{isTerminalBlock ? 'Rear and front port groups are locked in this release.' : 'Port group cable allocation fields are locked in v0.1.'}</p>
+          <p>{isTerminalBlock ? 'Rear and front port groups are locked in this release.' : 'Port group cable allocation fields are locked in this release.'}</p>
         </CardContent>
       </Card>
       <Card className="inspector-card danger-zone">
@@ -224,7 +224,7 @@ export function DeviceInspector({ device }: { device: Device }) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-        <p>{isTerminalBlock ? 'TB retirement keeps front planned cable numbers unavailable for reuse.' : 'Device deletion retires allocations in v0.1 so cable numbers are never freed for reuse.'}</p>
+        <p>{isTerminalBlock ? 'TB retirement keeps front planned cable numbers unavailable for reuse.' : 'Device deletion retires allocations so cable numbers are never freed for reuse.'}</p>
         <Button variant="destructive" type="button" onClick={handleRetire}>
           {isTerminalBlock ? 'Retire TB' : 'Retire Device'}
         </Button>

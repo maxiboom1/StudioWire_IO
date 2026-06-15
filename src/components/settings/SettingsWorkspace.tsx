@@ -81,7 +81,7 @@ export function SettingsWorkspace() {
 
   return (
     <section className="workspace" aria-label="Project settings">
-      <WorkspaceHeader eyebrow="Settings" title="Project Settings" badge="v0.1" />
+      <WorkspaceHeader eyebrow="Settings" title="Project Settings" badge="v0.2.5" />
 
       <form className="editor-form settings-project-form" onSubmit={handleProjectInfoSubmit}>
         <label>

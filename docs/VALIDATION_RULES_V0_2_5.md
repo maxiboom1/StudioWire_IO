@@ -60,7 +60,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `planned-cable-missing-port-endpoint`: a port's planned cable must reference that port as source or destination.
 - `planned-output-cable-source-mismatch`: output planned cables must use the output port as source.
 - `planned-input-cable-destination-mismatch`: input planned cables must use the input port as destination.
-- `planned-bidirectional-cable-source-mismatch`: bidirectional planned cables use the bidirectional port as source in v0.1.
+- `planned-bidirectional-cable-source-mismatch`: bidirectional planned cables use the bidirectional port as side A.
 - `planned-cable-label-middle-mismatch`: planned cable `labelMiddle` must equal `Cable.number`.
 - `planned-cable-label-top-mismatch`: planned output and bidirectional cable `labelTop` must equal the source endpoint label.
 - `planned-cable-label-bottom-mismatch`: planned input cable `labelBottom` must equal the destination endpoint label.
@@ -84,9 +84,9 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 
 Cable numbers are unique project data. Allocating a later first number creates a `reserved_gap` range for skipped numbers, and the UI asks for confirmation before committing that reservation.
 
-When a port group has `createPlannedCables` set to `false`, v0.1 does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
+When a port group has `createPlannedCables` set to `false`, StudioWire IO does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
 
-Reserved gaps and retired ranges remain unavailable. v0.1 does not free cable numbers when a device is retired.
+Reserved gaps and retired ranges remain unavailable. StudioWire IO does not free cable numbers when a device is retired.
 
 Terminal blocks may create planned cable numbers for FRONT ports only. REAR ports remain unnumbered. Terminal block front planned cables use `tb_port` side A endpoints.
 

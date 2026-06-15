@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.4.1",
+  "schemaVersion": "0.2.5.1",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -347,12 +347,12 @@
       "prefix": "V",
       "index": 1,
       "status": "planned",
-      "sourceEndpoint": {
+      "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
         "label": "RTR1-OUT-001"
       },
-      "destinationEndpoint": {
+      "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
@@ -368,12 +368,12 @@
       "prefix": "V",
       "index": 2,
       "status": "planned",
-      "sourceEndpoint": {
+      "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0002",
         "label": "RTR1-OUT-002"
       },
-      "destinationEndpoint": {
+      "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
@@ -389,12 +389,12 @@
       "prefix": "V",
       "index": 3,
       "status": "planned",
-      "sourceEndpoint": {
+      "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0003",
         "label": "RTR1-OUT-003"
       },
-      "destinationEndpoint": {
+      "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
@@ -410,12 +410,12 @@
       "prefix": "V",
       "index": 4,
       "status": "planned",
-      "sourceEndpoint": {
+      "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0004",
         "label": "RTR1-OUT-004"
       },
-      "destinationEndpoint": {
+      "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"

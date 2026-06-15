@@ -31,7 +31,8 @@ import {
   type TerminalBlockDraft,
 } from './projectReducer';
 
-const STORAGE_KEY = 'studiowire.io.project.v0.1';
+const STORAGE_KEY = 'studiowire.io.project.v0.2.5';
+const LEGACY_STORAGE_KEYS = ['studiowire.io.project.v0.1'];
 
 interface ProjectContextValue extends ProjectState {
   createNewProject: () => void;
@@ -379,7 +380,9 @@ export function ProjectJsonInput({
 }
 
 function loadInitialState(): ProjectState {
-  const storedProject = localStorage.getItem(STORAGE_KEY);
+  const storageKeys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
+  const storageKey = storageKeys.find((key) => localStorage.getItem(key));
+  const storedProject = storageKey ? localStorage.getItem(storageKey) : null;
 
   if (!storedProject) {
     return createInitialProjectState();
@@ -397,7 +400,9 @@ function loadInitialState(): ProjectState {
       };
     }
   } catch {
-    localStorage.removeItem(STORAGE_KEY);
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
   }
 
   return createInitialProjectState();

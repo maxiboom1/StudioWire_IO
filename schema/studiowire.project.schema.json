@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.1.0",
+  "title": "StudioWire IO Project v0.2.5.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.1.0"
+      "const": "0.2.5.1"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -217,12 +217,9 @@
       "required": [
         "id",
         "name",
-        "code",
-        "manufacturer",
-        "model",
+        "kind",
         "categoryId",
         "locationId",
-        "role",
         "labelPrefix",
         "mountType",
         "rackId",
@@ -236,6 +233,7 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/DeviceKind" },
         "code": { "type": "string" },
         "manufacturer": { "type": "string" },
         "model": { "type": "string" },
@@ -253,6 +251,33 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": { "const": "device" }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["code", "manufacturer", "model", "role"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": { "const": "terminal_block" }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "mountType": { "const": "rack" },
+              "rackId": { "type": "string", "minLength": 1 },
+              "rackSizeRu": { "const": 1 },
+              "rackBottomRu": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
@@ -367,8 +392,8 @@
         "prefix",
         "index",
         "status",
-        "sourceEndpoint",
-        "destinationEndpoint",
+        "sideAEndpoint",
+        "sideBEndpoint",
         "labelTop",
         "labelMiddle",
         "labelBottom",
@@ -380,8 +405,8 @@
         "prefix": { "type": "string", "pattern": "^[A-Z]+$" },
         "index": { "type": "integer", "minimum": 1 },
         "status": { "enum": ["planned", "connected", "retired"] },
-        "sourceEndpoint": { "$ref": "#/$defs/Endpoint" },
-        "destinationEndpoint": { "$ref": "#/$defs/Endpoint" },
+        "sideAEndpoint": { "$ref": "#/$defs/Endpoint" },
+        "sideBEndpoint": { "$ref": "#/$defs/Endpoint" },
         "labelTop": { "type": "string" },
         "labelMiddle": { "type": "string" },
         "labelBottom": { "type": "string" },
@@ -467,8 +492,11 @@
     "DeviceMountType": {
       "enum": ["rack", "non_rack", "virtual"]
     },
+    "DeviceKind": {
+      "enum": ["device", "terminal_block"]
+    },
     "PortDirection": {
-      "enum": ["input", "output", "bidirectional"]
+      "enum": ["input", "output", "bidirectional", "rear", "front"]
     }
   }
 }

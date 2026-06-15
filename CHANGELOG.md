@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.5.7
+
+Aligned current documentation and metadata with the active release line.
+
+### Changed
+
+- Renamed the current product, data model, and validation docs from `V0_1` filenames to `V0_2_5` filenames.
+- Updated current docs and visible UI copy that still referred to v0.1 as the active release.
+- Updated the project JSON Schema metadata and sample JSON to the current schema shape.
+- Kept project schema version `0.2.5.1` and bumped the app version to `0.2.5.7`.
+
 ## v0.2.5.6
 
 Fixed project JSON import from the app header actions menu.
