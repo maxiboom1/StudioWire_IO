@@ -1,5 +1,5 @@
 import { parseCableNumber } from './cableNumbers';
-import { arePortConnectorsCompatible } from './connectorCompatibility';
+import { arePortConnectorsCompatible, createCategoryAssignmentKey } from './connectorCompatibility';
 import {
   areStandardDirectionsCompatible,
   endpointReferencesPort,
@@ -15,7 +15,11 @@ export function validateProject(project: ProjectRoot): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const categories = new Set(project.settings.categories.map((category) => category.id));
   const connectorTypes = new Set(project.settings.connectorTypes.map((connectorType) => connectorType.id));
-  const connectorTypesById = new Map(project.settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]));
+  const categoryConnectorAssignments = new Set(
+    project.settings.categoryConnectorAssignments.map((assignment) =>
+      createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId),
+    ),
+  );
   const cablePrefixes = new Set(project.settings.cablePrefixes.map((prefix) => prefix.prefix));
   const locations = new Set(project.locations.map((location) => location.id));
   const racks = new Map(project.racks.map((rack) => [rack.id, rack]));
@@ -26,7 +30,16 @@ export function validateProject(project: ProjectRoot): ValidationIssue[] {
   issues.push(...validateDuplicateIds(project, builder));
   issues.push(...validateSettings(project, builder));
   issues.push(...validateCables(project, ports, builder));
-  issues.push(...validateReferences(project, categories, connectorTypes, connectorTypesById, cablePrefixes, builder));
+  issues.push(
+    ...validateReferences(
+      project,
+      categories,
+      connectorTypes,
+      categoryConnectorAssignments,
+      cablePrefixes,
+      builder,
+    ),
+  );
   issues.push(...validateLocationsAndRacks(project, locations, builder));
   issues.push(...validateDevices(project, locations, racks, builder));
   issues.push(...validateRackOverlaps(project, builder));
@@ -46,14 +59,21 @@ function validateSettings(
   const cablePrefixCounts = countBy(project.settings.cablePrefixes, (prefix) => prefix.prefix);
   const categoryNameCounts = countBy(project.settings.categories, (category) => category.name.trim().toLowerCase());
   const categoryIds = new Set(project.settings.categories.map((category) => category.id));
+  const connectorTypeIds = new Set(project.settings.connectorTypes.map((connectorType) => connectorType.id));
   const connectorGroupsById = new Map(project.settings.connectorCompatibilityGroups.map((group) => [group.id, group]));
   const groupNameCounts = countBy(
     project.settings.connectorCompatibilityGroups,
     (group) => `${group.categoryId}:${group.name.trim().toLowerCase()}`,
   );
-  const connectorNameCounts = countBy(
-    project.settings.connectorTypes,
-    (connectorType) => `${connectorType.categoryId}:${connectorType.name.trim().toLowerCase()}`,
+  const connectorNameCounts = countBy(project.settings.connectorTypes, (connectorType) =>
+    connectorType.name.trim().toLowerCase(),
+  );
+  const assignmentCounts = countBy(project.settings.categoryConnectorAssignments, (assignment) =>
+    createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId),
+  );
+  const groupMemberCounts = countBy(
+    project.settings.connectorCompatibilityGroupMembers,
+    (member) => `${member.groupId}:${member.connectorTypeId}`,
   );
 
   for (const prefix of project.settings.cablePrefixes) {
@@ -112,6 +132,64 @@ function validateSettings(
     }
   }
 
+  for (const connectorType of project.settings.connectorTypes) {
+    if (!connectorType.name.trim()) {
+      issues.push(
+        issue('error', 'empty-connector-type-name', 'Connector type name is required.', 'connectorType', connectorType.id),
+      );
+    }
+
+    if ((connectorNameCounts.get(connectorType.name.trim().toLowerCase()) ?? 0) > 1) {
+      issues.push(
+        issue(
+          'error',
+          'duplicate-connector-type-name',
+          `Connector type name "${connectorType.name}" is used more than once.`,
+          'connectorType',
+          connectorType.id,
+        ),
+      );
+    }
+  }
+
+  for (const assignment of project.settings.categoryConnectorAssignments) {
+    if (!categoryIds.has(assignment.categoryId)) {
+      issues.push(
+        issue(
+          'error',
+          'category-connector-assignment-category-missing',
+          `Connector assignment ${assignment.id} references missing category ${assignment.categoryId}.`,
+          'categoryConnectorAssignment',
+          assignment.id,
+        ),
+      );
+    }
+
+    if (!connectorTypeIds.has(assignment.connectorTypeId)) {
+      issues.push(
+        issue(
+          'error',
+          'category-connector-assignment-connector-missing',
+          `Connector assignment ${assignment.id} references missing connector ${assignment.connectorTypeId}.`,
+          'categoryConnectorAssignment',
+          assignment.id,
+        ),
+      );
+    }
+
+    if ((assignmentCounts.get(createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId)) ?? 0) > 1) {
+      issues.push(
+        issue(
+          'error',
+          'duplicate-category-connector-assignment',
+          `Connector ${assignment.connectorTypeId} is assigned more than once to category ${assignment.categoryId}.`,
+          'categoryConnectorAssignment',
+          assignment.id,
+        ),
+      );
+    }
+  }
+
   for (const group of project.settings.connectorCompatibilityGroups) {
     if (!group.name.trim()) {
       issues.push(
@@ -144,57 +222,51 @@ function validateSettings(
     }
   }
 
-  for (const connectorType of project.settings.connectorTypes) {
-    if (!connectorType.name.trim()) {
-      issues.push(
-        issue('error', 'empty-connector-type-name', 'Connector type name is required.', 'connectorType', connectorType.id),
-      );
-    }
-
-    if (!categoryIds.has(connectorType.categoryId)) {
-      issues.push(
-        issue(
-          'error',
-          'connector-type-category-missing',
-          `Connector type ${connectorType.name || connectorType.id} references missing category ${connectorType.categoryId}.`,
-          'connectorType',
-          connectorType.id,
-        ),
-      );
-    }
-
-    const group = connectorGroupsById.get(connectorType.compatibilityGroupId);
+  for (const member of project.settings.connectorCompatibilityGroupMembers) {
+    const group = connectorGroupsById.get(member.groupId);
 
     if (!group) {
       issues.push(
         issue(
           'error',
-          'connector-type-compatibility-group-missing',
-          `Connector type ${connectorType.name || connectorType.id} references missing compatibility group ${connectorType.compatibilityGroupId}.`,
-          'connectorType',
-          connectorType.id,
+          'connector-group-member-group-missing',
+          `Connector group member ${member.id} references missing group ${member.groupId}.`,
+          'connectorGroupMember',
+          member.id,
         ),
       );
-    } else if (group.categoryId !== connectorType.categoryId) {
+    } else if (!assignmentCounts.has(createCategoryAssignmentKey(group.categoryId, member.connectorTypeId))) {
       issues.push(
         issue(
           'error',
-          'connector-type-group-category-mismatch',
-          `Connector type ${connectorType.name || connectorType.id} references a compatibility group from another category.`,
-          'connectorType',
-          connectorType.id,
+          'connector-group-member-unassigned-connector',
+          `Connector group member ${member.id} uses a connector that is not assigned to ${group.categoryId}.`,
+          'connectorGroupMember',
+          member.id,
         ),
       );
     }
 
-    if ((connectorNameCounts.get(`${connectorType.categoryId}:${connectorType.name.trim().toLowerCase()}`) ?? 0) > 1) {
+    if (!connectorTypeIds.has(member.connectorTypeId)) {
       issues.push(
         issue(
           'error',
-          'duplicate-connector-type-name',
-          `Connector type name "${connectorType.name}" is used more than once in one category.`,
-          'connectorType',
-          connectorType.id,
+          'connector-group-member-connector-missing',
+          `Connector group member ${member.id} references missing connector ${member.connectorTypeId}.`,
+          'connectorGroupMember',
+          member.id,
+        ),
+      );
+    }
+
+    if ((groupMemberCounts.get(`${member.groupId}:${member.connectorTypeId}`) ?? 0) > 1) {
+      issues.push(
+        issue(
+          'error',
+          'duplicate-connector-group-member',
+          `Connector ${member.connectorTypeId} is listed more than once in group ${member.groupId}.`,
+          'connectorGroupMember',
+          member.id,
         ),
       );
     }
@@ -212,8 +284,16 @@ function validateDuplicateIds(
   const ids: Array<{ objectType: string; objectId: string }> = [
     { objectType: 'project', objectId: project.project.id },
     ...project.settings.categories.map((item) => ({ objectType: 'category', objectId: item.id })),
-    ...project.settings.connectorCompatibilityGroups.map((item) => ({ objectType: 'connectorGroup', objectId: item.id })),
     ...project.settings.connectorTypes.map((item) => ({ objectType: 'connectorType', objectId: item.id })),
+    ...project.settings.categoryConnectorAssignments.map((item) => ({
+      objectType: 'categoryConnectorAssignment',
+      objectId: item.id,
+    })),
+    ...project.settings.connectorCompatibilityGroups.map((item) => ({ objectType: 'connectorGroup', objectId: item.id })),
+    ...project.settings.connectorCompatibilityGroupMembers.map((item) => ({
+      objectType: 'connectorGroupMember',
+      objectId: item.id,
+    })),
     ...project.settings.cablePrefixes.map((item) => ({ objectType: 'cablePrefix', objectId: item.id })),
     ...project.locations.map((item) => ({ objectType: 'location', objectId: item.id })),
     ...project.racks.map((item) => ({ objectType: 'rack', objectId: item.id })),
@@ -511,6 +591,7 @@ function validateConnectedCables(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const activeConnectionCounts = new Map<string, number>();
+  const devices = new Map(project.devices.map((device) => [device.id, device]));
 
   for (const cable of project.cables) {
     if (cable.status !== 'connected') {
@@ -540,6 +621,20 @@ function validateConnectedCables(
 
     if (!left || !right) {
       continue;
+    }
+
+    const retiredEndpoint = [left, right].find((port) => devices.get(port.deviceId)?.status === 'retired');
+
+    if (retiredEndpoint) {
+      issues.push(
+        issue(
+          'error',
+          'connected-cable-retired-endpoint',
+          `Connected cable ${cable.number} references retired endpoint ${retiredEndpoint.label}.`,
+          'cable',
+          cable.id,
+        ),
+      );
     }
 
     if (left.categoryId !== right.categoryId) {
@@ -717,7 +812,7 @@ function validateReferences(
   project: ProjectRoot,
   categories: Set<string>,
   connectorTypes: Set<string>,
-  connectorTypesById: Map<string, ProjectRoot['settings']['connectorTypes'][number]>,
+  categoryConnectorAssignments: Set<string>,
   cablePrefixes: Set<string>,
   issue: ReturnType<typeof createIssueBuilder>,
 ): ValidationIssue[] {
@@ -744,8 +839,6 @@ function validateReferences(
       );
     }
 
-    const connectorType = connectorTypesById.get(portGroup.connectorTypeId);
-
     if (!connectorTypes.has(portGroup.connectorTypeId)) {
       issues.push(
         issue(
@@ -756,12 +849,12 @@ function validateReferences(
           portGroup.id,
         ),
       );
-    } else if (connectorType && connectorType.categoryId !== portGroup.categoryId) {
+    } else if (!categoryConnectorAssignments.has(createCategoryAssignmentKey(portGroup.categoryId, portGroup.connectorTypeId))) {
       issues.push(
         issue(
           'error',
-          'port-group-connector-category-mismatch',
-          `Port group ${portGroup.name} uses a connector from another category.`,
+          'port-group-connector-not-assigned-to-category',
+          `Port group ${portGroup.name} uses a connector that is not assigned to its category.`,
           'portGroup',
           portGroup.id,
         ),
@@ -786,8 +879,6 @@ function validateReferences(
       issues.push(issue('error', 'unknown-category', `Port ${port.label} uses unknown category.`, 'port', port.id));
     }
 
-    const connectorType = connectorTypesById.get(port.connectorTypeId);
-
     if (!connectorTypes.has(port.connectorTypeId)) {
       issues.push(
         issue(
@@ -798,12 +889,12 @@ function validateReferences(
           port.id,
         ),
       );
-    } else if (connectorType && connectorType.categoryId !== port.categoryId) {
+    } else if (!categoryConnectorAssignments.has(createCategoryAssignmentKey(port.categoryId, port.connectorTypeId))) {
       issues.push(
         issue(
           'error',
-          'port-connector-category-mismatch',
-          `Port ${port.label} uses a connector from another category.`,
+          'port-connector-not-assigned-to-category',
+          `Port ${port.label} uses a connector that is not assigned to its category.`,
           'port',
           port.id,
         ),

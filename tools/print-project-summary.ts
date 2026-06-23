@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseImportedProject } from '../src/state/projectReducer';
-import type { ProjectRoot } from '../src/domain/types';
+import { importProjectJsonText } from '../src/domain/projectImport';
 
 const filePath = process.argv[2];
 
@@ -10,8 +9,7 @@ if (!filePath) {
   process.exit(1);
 }
 
-const parsedProject = JSON.parse(readFileSync(resolve(filePath), 'utf8')) as ProjectRoot;
-const importResult = parseImportedProject(parsedProject);
+const importResult = importProjectJsonText(readFileSync(resolve(filePath), 'utf8'));
 
 if (!importResult.ok) {
   console.error(importResult.error);

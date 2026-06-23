@@ -1,9 +1,13 @@
 import {
+  DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS,
+  DEFAULT_CONNECTOR_COMPATIBILITY_GROUP_MEMBERS,
   DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS,
   DEFAULT_CONNECTOR_TYPES,
 } from './defaults';
 import type {
+  CategoryConnectorAssignment,
   ConnectorCompatibilityGroup,
+  ConnectorCompatibilityGroupMember,
   ConnectorType,
   Port,
   ProjectRoot,
@@ -12,18 +16,41 @@ import type {
 
 export interface ConnectorCompatibilityLookup {
   connectorTypesById: ReadonlyMap<string, ConnectorType>;
+  categoryAssignmentsByKey: ReadonlyMap<string, CategoryConnectorAssignment>;
   groupsById: ReadonlyMap<string, ConnectorCompatibilityGroup>;
+  groupMembersByGroupId: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function createConnectorCompatibilityLookup(settings: Settings): ConnectorCompatibilityLookup {
+  const groupMembersByGroupId = new Map<string, Set<string>>();
+
+  for (const member of settings.connectorCompatibilityGroupMembers) {
+    const connectorIds = groupMembersByGroupId.get(member.groupId) ?? new Set<string>();
+    connectorIds.add(member.connectorTypeId);
+    groupMembersByGroupId.set(member.groupId, connectorIds);
+  }
+
   return {
     connectorTypesById: new Map(settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType])),
+    categoryAssignmentsByKey: new Map(
+      settings.categoryConnectorAssignments.map((assignment) => [
+        createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId),
+        assignment,
+      ]),
+    ),
     groupsById: new Map(settings.connectorCompatibilityGroups.map((group) => [group.id, group])),
+    groupMembersByGroupId,
   };
 }
 
 export function getConnectorsForCategory(settings: Settings, categoryId: string): ConnectorType[] {
-  return settings.connectorTypes.filter((connectorType) => connectorType.categoryId === categoryId);
+  const connectorTypesById = new Map(settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]));
+
+  return settings.categoryConnectorAssignments
+    .filter((assignment) => assignment.categoryId === categoryId)
+    .map((assignment) => connectorTypesById.get(assignment.connectorTypeId) ?? null)
+    .filter((connectorType): connectorType is ConnectorType => connectorType !== null)
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function getConnectorGroupsForCategory(
@@ -35,6 +62,16 @@ export function getConnectorGroupsForCategory(
 
 export function getDefaultConnectorForCategory(settings: Settings, categoryId: string): ConnectorType | null {
   return getConnectorsForCategory(settings, categoryId)[0] ?? null;
+}
+
+export function isConnectorAssignedToCategory(
+  settings: Settings,
+  categoryId: string,
+  connectorTypeId: string,
+): boolean {
+  return settings.categoryConnectorAssignments.some(
+    (assignment) => assignment.categoryId === categoryId && assignment.connectorTypeId === connectorTypeId,
+  );
 }
 
 export function arePortConnectorsCompatible(
@@ -54,193 +91,265 @@ export function arePortConnectorsCompatible(
     return { ok: false, reason: 'Connector type is missing.' };
   }
 
-  if (leftConnector.categoryId !== left.categoryId || rightConnector.categoryId !== right.categoryId) {
-    return { ok: false, reason: 'Connector category does not match the port category.' };
+  if (!lookup.categoryAssignmentsByKey.has(createCategoryAssignmentKey(left.categoryId, left.connectorTypeId))) {
+    return { ok: false, reason: 'Origin connector is not assigned to the port category.' };
   }
 
-  if (leftConnector.compatibilityGroupId !== rightConnector.compatibilityGroupId) {
-    return { ok: false, reason: 'Connector compatibility group does not match.' };
+  if (!lookup.categoryAssignmentsByKey.has(createCategoryAssignmentKey(right.categoryId, right.connectorTypeId))) {
+    return { ok: false, reason: 'Target connector is not assigned to the port category.' };
   }
 
-  const group = lookup.groupsById.get(leftConnector.compatibilityGroupId);
-
-  if (!group || group.categoryId !== left.categoryId) {
-    return { ok: false, reason: 'Connector compatibility group is missing.' };
+  if (left.connectorTypeId === right.connectorTypeId) {
+    return { ok: true };
   }
 
-  return { ok: true };
+  for (const group of lookup.groupsById.values()) {
+    if (group.categoryId !== left.categoryId) {
+      continue;
+    }
+
+    const members = lookup.groupMembersByGroupId.get(group.id);
+
+    if (members?.has(left.connectorTypeId) && members.has(right.connectorTypeId)) {
+      return { ok: true };
+    }
+  }
+
+  return { ok: false, reason: 'Connector compatibility group does not include both connector types.' };
 }
 
 export function normalizeConnectorCompatibility(project: ProjectRoot): ProjectRoot {
-  const settings = project.settings as Settings & {
-    connectorCompatibilityGroups?: ConnectorCompatibilityGroup[];
-    connectorTypes: Array<ConnectorType | LegacyConnectorType>;
-  };
+  const settings = project.settings as LegacySettings;
+  const connectorTypesHaveSafePrimitiveShape = settings.connectorTypes.every(
+    (connectorType) => typeof connectorType.id === 'string' && typeof connectorType.name === 'string',
+  );
+
+  if (!connectorTypesHaveSafePrimitiveShape) {
+    return project;
+  }
+
   const hasCurrentConnectorShape =
+    Array.isArray(settings.categoryConnectorAssignments) &&
     Array.isArray(settings.connectorCompatibilityGroups) &&
+    Array.isArray(settings.connectorCompatibilityGroupMembers) &&
     settings.connectorTypes.every(
       (connectorType) =>
-        typeof connectorType.categoryId === 'string' &&
-        typeof connectorType.compatibilityGroupId === 'string',
+        typeof connectorType.id === 'string' &&
+        typeof connectorType.name === 'string' &&
+        !('categoryId' in connectorType) &&
+        !('compatibilityGroupId' in connectorType),
     );
 
   if (hasCurrentConnectorShape) {
     return project;
   }
 
-  const legacyConnectorNames = new Map(
-    settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType.name]),
-  );
-  const nextSettings = createNormalizedSettings(project.settings, project);
-  const connectorIdByCategoryAndLegacyId = new Map<string, string>();
+  const normalizedSettings = createNormalizedSettings(settings, project);
+  const legacyToGlobalConnectorId = createLegacyConnectorIdMap(settings, normalizedSettings);
 
-  function resolveConnectorId(categoryId: string, legacyConnectorTypeId: string): string {
-    const key = `${categoryId}:${legacyConnectorTypeId}`;
-    const cached = connectorIdByCategoryAndLegacyId.get(key);
-
-    if (cached) {
-      return cached;
-    }
-
-    const legacyName = legacyConnectorNames.get(legacyConnectorTypeId) ?? 'Other';
-    const connector = findOrCreateConnector(nextSettings, categoryId, legacyName);
-    connectorIdByCategoryAndLegacyId.set(key, connector.id);
-
-    return connector.id;
+  function resolveConnectorId(legacyConnectorTypeId: string): string {
+    return legacyToGlobalConnectorId.get(legacyConnectorTypeId) ?? 'connector-other';
   }
 
   return {
     ...project,
-    settings: nextSettings,
+    settings: normalizedSettings,
     portGroups: project.portGroups.map((portGroup) => ({
       ...portGroup,
-      connectorTypeId: resolveConnectorId(portGroup.categoryId, portGroup.connectorTypeId),
+      connectorTypeId: resolveConnectorId(portGroup.connectorTypeId),
     })),
     ports: project.ports.map((port) => ({
       ...port,
-      connectorTypeId: resolveConnectorId(port.categoryId, port.connectorTypeId),
+      connectorTypeId: resolveConnectorId(port.connectorTypeId),
     })),
   };
 }
 
-function createNormalizedSettings(settings: Settings, project: ProjectRoot): Settings {
-  const categoryIds = new Set(settings.categories.map((category) => category.id));
-  const groups = DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS.filter((group) => categoryIds.has(group.categoryId));
-  const connectors = DEFAULT_CONNECTOR_TYPES.filter((connectorType) => categoryIds.has(connectorType.categoryId));
-  const nextSettings: Settings = {
-    ...settings,
-    connectorCompatibilityGroups: [...groups],
-    connectorTypes: [...connectors],
-  };
+export function createCategoryAssignmentKey(categoryId: string, connectorTypeId: string): string {
+  return `${categoryId}:${connectorTypeId}`;
+}
 
-  for (const category of settings.categories) {
-    ensureOtherGroup(nextSettings, category.id);
-    ensureOtherConnector(nextSettings, category.id);
+function createNormalizedSettings(settings: LegacySettings, project: ProjectRoot): Settings {
+  const connectorTypes = normalizeConnectorTypes(settings);
+  const legacyToGlobalConnectorId = createLegacyConnectorIdMap(settings, { ...settings, connectorTypes } as Settings);
+  const connectorTypeIds = new Set(connectorTypes.map((connectorType) => connectorType.id));
+  const categories = settings.categories;
+  const categoryIds = new Set(categories.map((category) => category.id));
+  const categoryConnectorAssignments = new Map<string, CategoryConnectorAssignment>();
+
+  for (const assignment of DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS) {
+    if (categoryIds.has(assignment.categoryId) && connectorTypeIds.has(assignment.connectorTypeId)) {
+      categoryConnectorAssignments.set(
+        createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId),
+        assignment,
+      );
+    }
+  }
+
+  for (const connectorType of settings.connectorTypes) {
+    if (connectorType.categoryId) {
+      const connectorTypeId = legacyToGlobalConnectorId.get(connectorType.id) ?? 'connector-other';
+      categoryConnectorAssignments.set(createCategoryAssignmentKey(connectorType.categoryId, connectorTypeId), {
+        id: makeUniqueAssignmentId(categoryConnectorAssignments, connectorType.categoryId, connectorTypeId),
+        categoryId: connectorType.categoryId,
+        connectorTypeId,
+      });
+    }
   }
 
   for (const portGroup of project.portGroups) {
-    const legacyConnector = (settings.connectorTypes as LegacyConnectorType[]).find(
-      (connectorType) => connectorType.id === portGroup.connectorTypeId,
-    );
-
-    if (legacyConnector) {
-      findOrCreateConnector(nextSettings, portGroup.categoryId, legacyConnector.name);
-    }
+    const connectorTypeId = legacyToGlobalConnectorId.get(portGroup.connectorTypeId) ?? portGroup.connectorTypeId;
+    categoryConnectorAssignments.set(createCategoryAssignmentKey(portGroup.categoryId, connectorTypeId), {
+      id: makeUniqueAssignmentId(categoryConnectorAssignments, portGroup.categoryId, connectorTypeId),
+      categoryId: portGroup.categoryId,
+      connectorTypeId,
+    });
   }
 
   for (const port of project.ports) {
-    const legacyConnector = (settings.connectorTypes as LegacyConnectorType[]).find(
-      (connectorType) => connectorType.id === port.connectorTypeId,
-    );
+    const connectorTypeId = legacyToGlobalConnectorId.get(port.connectorTypeId) ?? port.connectorTypeId;
+    categoryConnectorAssignments.set(createCategoryAssignmentKey(port.categoryId, connectorTypeId), {
+      id: makeUniqueAssignmentId(categoryConnectorAssignments, port.categoryId, connectorTypeId),
+      categoryId: port.categoryId,
+      connectorTypeId,
+    });
+  }
 
-    if (legacyConnector) {
-      findOrCreateConnector(nextSettings, port.categoryId, legacyConnector.name);
+  const { groups, members } = normalizeConnectorGroups(settings, legacyToGlobalConnectorId, categoryConnectorAssignments);
+
+  return {
+    ...settings,
+    connectorTypes,
+    categoryConnectorAssignments: Array.from(categoryConnectorAssignments.values()),
+    connectorCompatibilityGroups: groups,
+    connectorCompatibilityGroupMembers: members,
+  };
+}
+
+function normalizeConnectorTypes(settings: LegacySettings): ConnectorType[] {
+  const connectorTypesByName = new Map<string, ConnectorType>();
+
+  for (const connectorType of DEFAULT_CONNECTOR_TYPES) {
+    connectorTypesByName.set(connectorType.name.trim().toLowerCase(), connectorType);
+  }
+
+  for (const connectorType of settings.connectorTypes) {
+    const name = connectorType.name.trim() || 'Other';
+    const key = name.toLowerCase();
+
+    if (!connectorTypesByName.has(key)) {
+      connectorTypesByName.set(key, {
+        id: makeUniqueConnectorId(connectorTypesByName, name),
+        name,
+      });
     }
   }
 
-  return nextSettings;
+  return Array.from(connectorTypesByName.values());
 }
 
-function findOrCreateConnector(settings: Settings, categoryId: string, name: string): ConnectorType {
-  const normalizedName = name.trim() || 'Other';
-  const existing = settings.connectorTypes.find(
-    (connectorType) =>
-      connectorType.categoryId === categoryId &&
-      connectorType.name.trim().toLowerCase() === normalizedName.toLowerCase(),
-  );
+function createLegacyConnectorIdMap(
+  settings: LegacySettings,
+  normalizedSettings: Pick<Settings, 'connectorTypes'>,
+): Map<string, string> {
+  const byName = new Map(normalizedSettings.connectorTypes.map((connectorType) => [
+    connectorType.name.trim().toLowerCase(),
+    connectorType.id,
+  ]));
+  const result = new Map<string, string>();
 
-  if (existing) {
-    return existing;
+  for (const connectorType of settings.connectorTypes) {
+    result.set(connectorType.id, byName.get((connectorType.name.trim() || 'Other').toLowerCase()) ?? 'connector-other');
   }
 
-  const group = findDefaultGroupForConnector(settings, categoryId, normalizedName) ?? ensureOtherGroup(settings, categoryId);
-  const connector: ConnectorType = {
-    id: makeUniqueConnectorId(settings, categoryId, normalizedName),
-    name: normalizedName,
-    categoryId,
-    compatibilityGroupId: group.id,
-  };
-
-  settings.connectorTypes.push(connector);
-
-  return connector;
+  return result;
 }
 
-function findDefaultGroupForConnector(
-  settings: Settings,
+function normalizeConnectorGroups(
+  settings: LegacySettings,
+  legacyToGlobalConnectorId: ReadonlyMap<string, string>,
+  categoryConnectorAssignments: ReadonlyMap<string, CategoryConnectorAssignment>,
+): { groups: ConnectorCompatibilityGroup[]; members: ConnectorCompatibilityGroupMember[] } {
+  const groups = new Map<string, ConnectorCompatibilityGroup>();
+  const members = new Map<string, ConnectorCompatibilityGroupMember>();
+
+  for (const group of settings.connectorCompatibilityGroups ?? DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS) {
+    groups.set(group.id, {
+      id: group.id,
+      categoryId: group.categoryId,
+      name: group.name,
+    });
+  }
+
+  for (const member of settings.connectorCompatibilityGroupMembers ?? []) {
+    const connectorTypeId = legacyToGlobalConnectorId.get(member.connectorTypeId) ?? member.connectorTypeId;
+    const group = groups.get(member.groupId);
+
+    if (!group || !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, connectorTypeId))) {
+      continue;
+    }
+
+    members.set(`${member.groupId}:${connectorTypeId}`, {
+      id: member.id,
+      groupId: member.groupId,
+      connectorTypeId,
+    });
+  }
+
+  for (const legacyConnector of settings.connectorTypes) {
+    if (!legacyConnector.categoryId || !legacyConnector.compatibilityGroupId) {
+      continue;
+    }
+
+    const group = groups.get(legacyConnector.compatibilityGroupId);
+    const connectorTypeId = legacyToGlobalConnectorId.get(legacyConnector.id) ?? legacyConnector.id;
+
+    if (!group || !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, connectorTypeId))) {
+      continue;
+    }
+
+    members.set(`${group.id}:${connectorTypeId}`, {
+      id: makeGroupMemberId(group.id, connectorTypeId),
+      groupId: group.id,
+      connectorTypeId,
+    });
+  }
+
+  for (const member of DEFAULT_CONNECTOR_COMPATIBILITY_GROUP_MEMBERS) {
+    const group = groups.get(member.groupId);
+
+    if (!group || !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, member.connectorTypeId))) {
+      continue;
+    }
+
+    members.set(`${member.groupId}:${member.connectorTypeId}`, member);
+  }
+
+  return {
+    groups: Array.from(groups.values()),
+    members: Array.from(members.values()),
+  };
+}
+
+function makeUniqueConnectorId(connectorTypesByName: ReadonlyMap<string, ConnectorType>, name: string): string {
+  const existingIds = new Set(Array.from(connectorTypesByName.values()).map((connectorType) => connectorType.id));
+  const base = `connector-${slug(name)}`;
+
+  return makeUniqueId(base, existingIds);
+}
+
+function makeUniqueAssignmentId(
+  assignments: ReadonlyMap<string, CategoryConnectorAssignment>,
   categoryId: string,
-  connectorName: string,
-): ConnectorCompatibilityGroup | null {
-  const defaultConnector = DEFAULT_CONNECTOR_TYPES.find(
-    (connectorType) =>
-      connectorType.categoryId === categoryId &&
-      connectorType.name.trim().toLowerCase() === connectorName.trim().toLowerCase(),
-  );
+  connectorTypeId: string,
+): string {
+  const existingIds = new Set(Array.from(assignments.values()).map((assignment) => assignment.id));
 
-  if (!defaultConnector) {
-    return null;
-  }
-
-  return settings.connectorCompatibilityGroups.find((group) => group.id === defaultConnector.compatibilityGroupId) ?? null;
+  return makeUniqueId(`assignment-${categoryId.replace(/^category-/, '')}-${connectorTypeId.replace(/^connector-/, '')}`, existingIds);
 }
 
-function ensureOtherConnector(settings: Settings, categoryId: string): ConnectorType {
-  return findOrCreateConnector(settings, categoryId, 'Other');
-}
-
-function ensureOtherGroup(settings: Settings, categoryId: string): ConnectorCompatibilityGroup {
-  const existing =
-    settings.connectorCompatibilityGroups.find(
-      (group) => group.categoryId === categoryId && group.name.trim().toLowerCase() === 'other',
-    ) ?? null;
-
-  if (existing) {
-    return existing;
-  }
-
-  const group: ConnectorCompatibilityGroup = {
-    id: makeUniqueGroupId(settings, categoryId, 'Other'),
-    categoryId,
-    name: 'Other',
-  };
-
-  settings.connectorCompatibilityGroups.push(group);
-
-  return group;
-}
-
-function makeUniqueConnectorId(settings: Settings, categoryId: string, name: string): string {
-  const base = `connector-${slug(categoryId.replace(/^category-/, ''))}-${slug(name)}`;
-  const used = new Set(settings.connectorTypes.map((connectorType) => connectorType.id));
-
-  return makeUniqueId(base, used);
-}
-
-function makeUniqueGroupId(settings: Settings, categoryId: string, name: string): string {
-  const base = `group-${slug(categoryId.replace(/^category-/, ''))}-${slug(name)}`;
-  const used = new Set(settings.connectorCompatibilityGroups.map((group) => group.id));
-
-  return makeUniqueId(base, used);
+function makeGroupMemberId(groupId: string, connectorTypeId: string): string {
+  return `member-${groupId.replace(/^group-/, '')}-${connectorTypeId.replace(/^connector-/, '')}`;
 }
 
 function makeUniqueId(base: string, used: ReadonlySet<string>): string {
@@ -267,9 +376,9 @@ function slug(value: string): string {
   );
 }
 
-interface LegacyConnectorType {
-  id: string;
-  name: string;
-  categoryId?: string;
-  compatibilityGroupId?: string;
-}
+type LegacySettings = Settings & {
+  categoryConnectorAssignments?: CategoryConnectorAssignment[];
+  connectorCompatibilityGroups?: ConnectorCompatibilityGroup[];
+  connectorCompatibilityGroupMembers?: ConnectorCompatibilityGroupMember[];
+  connectorTypes: Array<ConnectorType & { categoryId?: string; compatibilityGroupId?: string }>;
+};

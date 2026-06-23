@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.6.0",
+  "title": "StudioWire IO Project v0.2.7.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.6.0"
+      "const": "0.2.7.1"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -115,8 +115,10 @@
       "additionalProperties": false,
       "required": [
         "categories",
-        "connectorCompatibilityGroups",
         "connectorTypes",
+        "categoryConnectorAssignments",
+        "connectorCompatibilityGroups",
+        "connectorCompatibilityGroupMembers",
         "cablePrefixes",
         "rackDefaults",
         "labelRules"
@@ -130,9 +132,17 @@
           "type": "array",
           "items": { "$ref": "#/$defs/ConnectorType" }
         },
+        "categoryConnectorAssignments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CategoryConnectorAssignment" }
+        },
         "connectorCompatibilityGroups": {
           "type": "array",
           "items": { "$ref": "#/$defs/ConnectorCompatibilityGroup" }
+        },
+        "connectorCompatibilityGroupMembers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConnectorCompatibilityGroupMember" }
         },
         "cablePrefixes": {
           "type": "array",
@@ -159,12 +169,20 @@
     "ConnectorType": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "categoryId", "compatibilityGroupId"],
+      "required": ["id", "name"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "CategoryConnectorAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "categoryId", "connectorTypeId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "categoryId": { "type": "string", "minLength": 1 },
-        "compatibilityGroupId": { "type": "string", "minLength": 1 }
+        "connectorTypeId": { "type": "string", "minLength": 1 }
       }
     },
     "ConnectorCompatibilityGroup": {
@@ -175,6 +193,16 @@
         "id": { "type": "string", "minLength": 1 },
         "categoryId": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ConnectorCompatibilityGroupMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "groupId", "connectorTypeId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "groupId": { "type": "string", "minLength": 1 },
+        "connectorTypeId": { "type": "string", "minLength": 1 }
       }
     },
     "CablePrefix": {
@@ -262,7 +290,7 @@
         "rackId": { "type": ["string", "null"] },
         "rackSizeRu": { "type": ["integer", "null"], "minimum": 1 },
         "rackBottomRu": { "type": ["integer", "null"], "minimum": 1 },
-        "status": { "type": "string" },
+        "status": { "enum": ["planned", "connected", "retired"] },
         "notes": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }

@@ -1,19 +1,20 @@
 import { allocateCableRange } from '../domain/cableNumbers';
-import { normalizeConnectorCompatibility } from '../domain/connectorCompatibility';
 import { connectPorts, disconnectPort } from '../domain/connections';
 import { makeId, makeIndexedId, makeUniqueId, nowIso } from '../domain/id';
+import { importProjectValue, type ProjectImportResult } from '../domain/projectImport';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { createEmptyProject } from '../domain/projectFactory';
 import { validateRackPlacement } from '../domain/rackPlacement';
 import { sampleProject } from '../domain/sampleProject';
-import { STUDIOWIRE_SCHEMA_VERSION } from '../domain/types';
 import { validateProject } from '../domain/validators';
 import type {
   CablePrefix,
+  CategoryConnectorAssignment,
   Category,
   Cable,
   ChangeLogEntry,
   ConnectorCompatibilityGroup,
+  ConnectorCompatibilityGroupMember,
   ConnectorType,
   Device,
   Location,
@@ -29,6 +30,7 @@ export interface ProjectState {
   project: ProjectRoot;
   statusMessage: string;
   importError: string | null;
+  persistenceState?: 'saving' | 'saved' | 'unsaved' | 'failed';
 }
 
 export interface DeviceDraft {
@@ -89,17 +91,20 @@ export interface DeviceUpdate {
 export type ProjectAction =
   | { type: 'NEW_PROJECT' }
   | { type: 'LOAD_SAMPLE_PROJECT' }
-  | { type: 'IMPORT_PROJECT_JSON'; payload: unknown }
+  | { type: 'IMPORT_PROJECT_JSON'; payload: { project: ProjectRoot; validationIssues: ProjectRoot['validationIssues'] } }
+  | { type: 'IMPORT_PROJECT_FAILED'; payload: { message: string } }
+  | { type: 'SET_PERSISTENCE_STATE'; payload: { persistenceState: ProjectState['persistenceState']; message?: string } }
   | { type: 'UPDATE_PROJECT_INFO'; payload: Pick<ProjectInfo, 'name' | 'customer' | 'revision'> }
   | { type: 'ADD_CATEGORY'; payload: Category }
   | { type: 'UPDATE_CATEGORY'; payload: { id: string; updates: Pick<Category, 'name' | 'defaultCablePrefix'> } }
+  | { type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT'; payload: CategoryConnectorAssignment }
+  | { type: 'REMOVE_CATEGORY_CONNECTOR_ASSIGNMENT'; payload: { categoryId: string; connectorTypeId: string } }
   | { type: 'ADD_CONNECTOR_GROUP'; payload: ConnectorCompatibilityGroup }
   | { type: 'UPDATE_CONNECTOR_GROUP'; payload: { id: string; updates: Pick<ConnectorCompatibilityGroup, 'name'> } }
+  | { type: 'ADD_CONNECTOR_GROUP_MEMBER'; payload: ConnectorCompatibilityGroupMember }
+  | { type: 'REMOVE_CONNECTOR_GROUP_MEMBER'; payload: { groupId: string; connectorTypeId: string } }
   | { type: 'ADD_CONNECTOR_TYPE'; payload: ConnectorType }
-  | {
-      type: 'UPDATE_CONNECTOR_TYPE';
-      payload: { id: string; updates: Partial<Pick<ConnectorType, 'name' | 'compatibilityGroupId'>> };
-    }
+  | { type: 'UPDATE_CONNECTOR_TYPE'; payload: { id: string; updates: Pick<ConnectorType, 'name'> } }
   | { type: 'ADD_CABLE_PREFIX'; payload: CablePrefix }
   | { type: 'ADD_LOCATION'; payload: Location }
   | { type: 'UPDATE_LOCATION'; payload: { id: string; updates: Pick<Location, 'name' | 'type' | 'description'> } }
@@ -117,23 +122,12 @@ export type ProjectAction =
   | { type: 'VALIDATE_PROJECT' }
   | { type: 'DISMISS_IMPORT_ERROR' };
 
-const REQUIRED_ARRAY_FIELDS = [
-  'locations',
-  'racks',
-  'devices',
-  'portGroups',
-  'ports',
-  'cables',
-  'numberingLedgers',
-  'validationIssues',
-  'changeLog',
-] as const;
-
 export function createInitialProjectState(): ProjectState {
   return {
     project: createNewProject(),
     statusMessage: 'New project ready',
     importError: null,
+    persistenceState: 'unsaved',
   };
 }
 
@@ -144,6 +138,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
         project: createNewProject(),
         statusMessage: 'New project created',
         importError: null,
+        persistenceState: 'unsaved',
       };
     }
 
@@ -152,32 +147,38 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
         project: stampProject(structuredClone(sampleProject), 'Sample project loaded'),
         statusMessage: 'Sample project loaded',
         importError: null,
+        persistenceState: 'unsaved',
       };
     }
 
     case 'IMPORT_PROJECT_JSON': {
-      const result = parseImportedProject(action.payload);
-
-      if (!result.ok) {
-        return {
-          ...state,
-          statusMessage: 'Import failed',
-          importError: result.error,
-        };
-      }
-
-      const validationIssues = validateProject(result.project);
-
       return {
         project: stampProject(
           {
-            ...result.project,
-            validationIssues,
+            ...action.payload.project,
+            validationIssues: action.payload.validationIssues,
           },
-          `Project imported from JSON with ${validationIssues.length} validation issue(s)`,
+          `Project imported from JSON with ${action.payload.validationIssues.length} validation issue(s)`,
         ),
-        statusMessage: `Project imported; ${validationIssues.length} validation issue(s) found`,
+        statusMessage: `Project imported; ${action.payload.validationIssues.length} validation issue(s) found`,
         importError: null,
+        persistenceState: 'unsaved',
+      };
+    }
+
+    case 'IMPORT_PROJECT_FAILED': {
+      return {
+        ...state,
+        statusMessage: 'Import failed',
+        importError: action.payload.message,
+      };
+    }
+
+    case 'SET_PERSISTENCE_STATE': {
+      return {
+        ...state,
+        persistenceState: action.payload.persistenceState,
+        statusMessage: action.payload.message ?? state.statusMessage,
       };
     }
 
@@ -199,18 +200,6 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     }
 
     case 'ADD_CATEGORY': {
-      const connectorGroup: ConnectorCompatibilityGroup = {
-        id: makeId('group', `${action.payload.id}-other`),
-        categoryId: action.payload.id,
-        name: 'Other',
-      };
-      const connectorType: ConnectorType = {
-        id: makeId('connector', `${action.payload.id}-other`),
-        name: 'Other',
-        categoryId: action.payload.id,
-        compatibilityGroupId: connectorGroup.id,
-      };
-
       return {
         project: stampProject(
           {
@@ -218,11 +207,6 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
             settings: {
               ...state.project.settings,
               categories: [...state.project.settings.categories, action.payload],
-              connectorCompatibilityGroups: [
-                ...state.project.settings.connectorCompatibilityGroups,
-                connectorGroup,
-              ],
-              connectorTypes: [...state.project.settings.connectorTypes, connectorType],
             },
           },
           `Category added: ${action.payload.name}`,
@@ -247,6 +231,73 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
           `Category updated: ${action.payload.id}`,
         ),
         statusMessage: 'Category updated',
+        importError: null,
+      };
+    }
+
+    case 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT': {
+      const alreadyAssigned = state.project.settings.categoryConnectorAssignments.some(
+        (assignment) =>
+          assignment.categoryId === action.payload.categoryId &&
+          assignment.connectorTypeId === action.payload.connectorTypeId,
+      );
+
+      if (alreadyAssigned) {
+        return {
+          ...state,
+          statusMessage: 'Connector already assigned to category',
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(
+          {
+            ...state.project,
+            settings: {
+              ...state.project.settings,
+              categoryConnectorAssignments: [
+                ...state.project.settings.categoryConnectorAssignments,
+                action.payload,
+              ],
+            },
+          },
+          `Connector assigned to category: ${action.payload.connectorTypeId}`,
+        ),
+        statusMessage: 'Connector assigned to category',
+        importError: null,
+      };
+    }
+
+    case 'REMOVE_CATEGORY_CONNECTOR_ASSIGNMENT': {
+      const groupsInCategory = new Set(
+        state.project.settings.connectorCompatibilityGroups
+          .filter((group) => group.categoryId === action.payload.categoryId)
+          .map((group) => group.id),
+      );
+
+      return {
+        project: stampProject(
+          {
+            ...state.project,
+            settings: {
+              ...state.project.settings,
+              categoryConnectorAssignments: state.project.settings.categoryConnectorAssignments.filter(
+                (assignment) =>
+                  assignment.categoryId !== action.payload.categoryId ||
+                  assignment.connectorTypeId !== action.payload.connectorTypeId,
+              ),
+              connectorCompatibilityGroupMembers:
+                state.project.settings.connectorCompatibilityGroupMembers.filter(
+                  (member) =>
+                    member.connectorTypeId !== action.payload.connectorTypeId ||
+                    !groupsInCategory.has(member.groupId),
+                ),
+            },
+          },
+          `Connector removed from category: ${action.payload.connectorTypeId}`,
+        ),
+        statusMessage: 'Connector removed from category',
         importError: null,
       };
     }
@@ -286,6 +337,62 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
           `Connector group updated: ${action.payload.id}`,
         ),
         statusMessage: 'Connector group updated',
+        importError: null,
+      };
+    }
+
+    case 'ADD_CONNECTOR_GROUP_MEMBER': {
+      const alreadyMember = state.project.settings.connectorCompatibilityGroupMembers.some(
+        (member) =>
+          member.groupId === action.payload.groupId &&
+          member.connectorTypeId === action.payload.connectorTypeId,
+      );
+
+      if (alreadyMember) {
+        return {
+          ...state,
+          statusMessage: 'Connector already belongs to group',
+          importError: null,
+        };
+      }
+
+      return {
+        project: stampProject(
+          {
+            ...state.project,
+            settings: {
+              ...state.project.settings,
+              connectorCompatibilityGroupMembers: [
+                ...state.project.settings.connectorCompatibilityGroupMembers,
+                action.payload,
+              ],
+            },
+          },
+          `Connector added to group: ${action.payload.connectorTypeId}`,
+        ),
+        statusMessage: 'Connector added to group',
+        importError: null,
+      };
+    }
+
+    case 'REMOVE_CONNECTOR_GROUP_MEMBER': {
+      return {
+        project: stampProject(
+          {
+            ...state.project,
+            settings: {
+              ...state.project.settings,
+              connectorCompatibilityGroupMembers:
+                state.project.settings.connectorCompatibilityGroupMembers.filter(
+                  (member) =>
+                    member.groupId !== action.payload.groupId ||
+                    member.connectorTypeId !== action.payload.connectorTypeId,
+                ),
+            },
+          },
+          `Connector removed from group: ${action.payload.connectorTypeId}`,
+        ),
+        statusMessage: 'Connector removed from group',
         importError: null,
       };
     }
@@ -488,6 +595,16 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     }
 
     case 'UPDATE_DEVICE': {
+      const currentDevice = state.project.devices.find((device) => device.id === action.payload.id);
+
+      if (currentDevice?.status === 'retired') {
+        return {
+          ...state,
+          statusMessage: 'Device update blocked: retired objects are immutable',
+          importError: null,
+        };
+      }
+
       return {
         project: stampProject(
           {
@@ -530,6 +647,16 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     }
 
     case 'MOVE_MOUNTED_DEVICE': {
+      const currentDevice = state.project.devices.find((device) => device.id === action.payload.deviceId);
+
+      if (currentDevice?.status === 'retired') {
+        return {
+          ...state,
+          statusMessage: 'Device move blocked: retired objects are immutable',
+          importError: null,
+        };
+      }
+
       const placement = validateRackPlacement(state.project, action.payload);
 
       if (!placement.ok) {
@@ -1001,127 +1128,15 @@ function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: numb
 }
 
 export function parseImportedProject(payload: unknown):
-  | { ok: true; project: ProjectRoot }
+  | { ok: true; project: ProjectRoot; validationIssues: ProjectRoot['validationIssues'] }
   | { ok: false; error: string } {
-  if (!isRecord(payload)) {
-    return { ok: false, error: 'Imported JSON must be an object.' };
+  const result: ProjectImportResult = importProjectValue(payload);
+
+  if (!result.ok) {
+    return { ok: false, error: result.error };
   }
 
-  if (
-    payload.schemaVersion !== STUDIOWIRE_SCHEMA_VERSION &&
-    payload.schemaVersion !== '0.2.5.1' &&
-    payload.schemaVersion !== '0.2.4.1' &&
-    payload.schemaVersion !== '0.1.0'
-  ) {
-    return {
-      ok: false,
-      error: `Unsupported schemaVersion. Expected ${STUDIOWIRE_SCHEMA_VERSION}, 0.2.5.1, 0.2.4.1, or 0.1.0.`,
-    };
-  }
-
-  if (!isRecord(payload.project)) {
-    return { ok: false, error: 'Imported JSON is missing project metadata.' };
-  }
-
-  if (!isRecord(payload.settings)) {
-    return { ok: false, error: 'Imported JSON is missing settings.' };
-  }
-
-  for (const field of REQUIRED_ARRAY_FIELDS) {
-    if (!Array.isArray(payload[field])) {
-      return { ok: false, error: `Imported JSON field "${field}" must be an array.` };
-    }
-  }
-
-  const project = payload.project;
-
-  if (
-    typeof project.id !== 'string' ||
-    typeof project.name !== 'string' ||
-    typeof project.customer !== 'string' ||
-    typeof project.revision !== 'string' ||
-    typeof project.status !== 'string' ||
-    typeof project.createdAt !== 'string' ||
-    typeof project.updatedAt !== 'string' ||
-    typeof project.createdBy !== 'string' ||
-    typeof project.updatedBy !== 'string'
-  ) {
-    return { ok: false, error: 'Imported project metadata has invalid required fields.' };
-  }
-
-  if (!Array.isArray(payload.settings.categories) || !Array.isArray(payload.settings.connectorTypes)) {
-    return { ok: false, error: 'Imported settings must include categories and connectorTypes arrays.' };
-  }
-
-  if (!Array.isArray(payload.settings.cablePrefixes) || !isRecord(payload.settings.rackDefaults)) {
-    return { ok: false, error: 'Imported settings must include cablePrefixes and rackDefaults.' };
-  }
-
-  for (const field of REQUIRED_ARRAY_FIELDS) {
-    const entries = payload[field];
-
-    if (!Array.isArray(entries) || entries.some((item: unknown) => !isRecord(item))) {
-      return { ok: false, error: `Imported JSON field "${field}" contains malformed entries.` };
-    }
-  }
-
-  return {
-    ok: true,
-    project: normalizeImportedProject(payload as unknown as ProjectRoot),
-  };
-}
-
-function normalizeImportedProject(project: ProjectRoot): ProjectRoot {
-  const unknownEndpoint = {
-    type: 'unknown' as const,
-    id: null,
-    label: 'Unknown',
-  };
-
-  const normalizedProject = {
-    ...project,
-    schemaVersion: STUDIOWIRE_SCHEMA_VERSION,
-    cables: project.cables.map((cable) => {
-      const legacyCable = cable as Cable & {
-        sourceEndpoint?: Cable['sideAEndpoint'];
-        destinationEndpoint?: Cable['sideBEndpoint'];
-      };
-      const {
-        sourceEndpoint: _sourceEndpoint,
-        destinationEndpoint: _destinationEndpoint,
-        ...normalizedCable
-      } = legacyCable;
-
-      return {
-        ...normalizedCable,
-        sideAEndpoint: legacyCable.sideAEndpoint ?? legacyCable.sourceEndpoint ?? unknownEndpoint,
-        sideBEndpoint: legacyCable.sideBEndpoint ?? legacyCable.destinationEndpoint ?? unknownEndpoint,
-      };
-    }),
-    devices: project.devices.map((device): Device => {
-      if (device.kind === 'terminal_block') {
-        const { code: _code, manufacturer: _manufacturer, model: _model, role: _role, ...terminalBlock } = device;
-
-        return {
-          ...terminalBlock,
-          kind: 'terminal_block',
-          mountType: 'rack',
-          rackSizeRu: 1,
-        };
-      }
-
-      return {
-        ...device,
-        kind: 'device',
-        code: device.code ?? '',
-        manufacturer: device.manufacturer ?? '',
-        model: device.model ?? '',
-        role: device.role ?? '',
-      };
-    }),
-  };
-
-  return normalizeConnectorCompatibility(normalizedProject);
+  return result;
 }
 
 function createNewProject(): ProjectRoot {
@@ -1160,8 +1175,4 @@ function createChangeLogEntry(message: string, timestamp: string): ChangeLogEntr
     message,
     author: 'local',
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

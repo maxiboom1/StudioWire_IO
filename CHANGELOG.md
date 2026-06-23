@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.7.1
+
+Stabilized import, persistence, recovery, and retired-object behavior.
+
+- Bumped app and project schema version to `0.2.7.1`.
+- Added one canonical current-version constant and updated active schema/sample/package metadata.
+- Moved project import through a staged, schema-backed boundary with controlled syntax, structural, migration, and relational-validation results.
+- Added `0.2.7.0` as a supported previous schema that migrates/restamps to `0.2.7.1`.
+- Hardened local autosave and startup recovery against corrupt records, unavailable storage, quota failures, and thrown storage operations.
+- Added explicit save-state UI with export access after autosave failure and an app-level error boundary.
+- Enforced retired device/TB immutability for new connections, editing, moving, UI candidates, and validation.
+
+## v0.2.7.0
+
+Reworked project Settings around the simpler connector model.
+
+- Bumped app and project schema version to `0.2.7.0`.
+- Replaced category-owned connector types with a global connector catalog plus category connector assignments.
+- Added connector group membership rows so groups can allow direct cross-connector connections inside one category.
+- Rebuilt Settings as tabs for Project, Connectors, Categories, and Connector Groups.
+- Updated validation, import normalization, JSON Schema, and tests for the new settings shape.
+
 ## v0.2.6.0
 
 Added schema-backed connector compatibility.

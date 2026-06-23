@@ -19,4 +19,5 @@ These instructions apply to future Codex sessions working in this repository.
 - Store project state as structured data and keep UI components as views over that data.
 - Put reusable domain rules, validation, numbering, import, and export code outside React components.
 - Update `docs/DATA_MODEL_V0_2_5.md` and `docs/VALIDATION_RULES_V0_2_5.md` before changing the current data shape or validation behavior.
+- Active StudioWire IO versions use four numeric components, and the app version and current project schema version must always be identical.
 - Preserve JSON import/export compatibility once a format is released.

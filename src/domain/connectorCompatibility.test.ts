@@ -24,6 +24,14 @@ describe('connector compatibility', () => {
     }
   });
 
+  it('allows exact connector matches even without a compatibility group', () => {
+    const project = structuredClone(sampleProject);
+    const left = { ...project.ports[0], connectorTypeId: 'connector-hdmi' };
+    const right = { ...project.ports[4], connectorTypeId: 'connector-hdmi' };
+
+    expect(arePortConnectorsCompatible(project, left, right).ok).toBe(true);
+  });
+
   it('blocks connectors across categories', () => {
     const project = structuredClone(sampleProject);
     const left = project.ports[0];

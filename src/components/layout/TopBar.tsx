@@ -27,6 +27,7 @@ export function TopBar({
   const importInputRef = useRef<HTMLInputElement>(null);
   const {
     project,
+    persistenceState,
     createNewProject,
     loadSampleProject,
     exportProjectJson,
@@ -126,6 +127,14 @@ export function TopBar({
       </nav>
 
       <div className="app-logo-zone">
+        <span className="app-persistence-state" data-state={persistenceState ?? 'unsaved'}>
+          {persistenceState ?? 'unsaved'}
+        </span>
+        {persistenceState === 'failed' ? (
+          <button className="app-export-now" type="button" onClick={exportProjectJson}>
+            Export JSON
+          </button>
+        ) : null}
         <img alt="StudioWire IO logo" className="app-topbar-logo" src={logoUrl} />
       </div>
     </header>

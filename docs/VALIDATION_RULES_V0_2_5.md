@@ -17,15 +17,19 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `connector-group-category-missing`: connector groups must reference an existing category.
 - `duplicate-connector-group-name`: connector group names must be unique within a category.
 - `empty-connector-group-name`: connector group names are required.
-- `connector-type-category-missing`: connector types must reference an existing category.
-- `connector-type-compatibility-group-missing`: connector types must reference an existing compatibility group.
-- `connector-type-group-category-mismatch`: connector type compatibility groups must belong to the same category as the connector type.
-- `duplicate-connector-type-name`: connector type names must be unique within a category.
+- `category-connector-assignment-category-missing`: category connector assignments must reference an existing category.
+- `category-connector-assignment-connector-missing`: category connector assignments must reference an existing connector type.
+- `duplicate-category-connector-assignment`: a connector type can be assigned only once to one category.
+- `connector-group-member-group-missing`: connector group members must reference an existing connector group.
+- `connector-group-member-connector-missing`: connector group members must reference an existing connector type.
+- `connector-group-member-unassigned-connector`: connector group members must use connectors assigned to the group's category.
+- `duplicate-connector-group-member`: a connector type can be listed only once in one compatibility group.
+- `duplicate-connector-type-name`: connector type names must be unique in the global connector catalog.
 - `empty-connector-type-name`: connector type names are required.
 - `unknown-category`: device, port group, and port category references must exist in settings.
 - `unknown-connector-type`: port group and port connector type references must exist in settings.
-- `port-group-connector-category-mismatch`: port group connector types must belong to the port group category.
-- `port-connector-category-mismatch`: port connector types must belong to the port category.
+- `port-group-connector-not-assigned-to-category`: port group connector types must be assigned to the port group category.
+- `port-connector-not-assigned-to-category`: port connector types must be assigned to the port category.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
 - `duplicate-location-name`: duplicate location names are reported as warnings.
 - `rack-without-location`: rack `locationId` must reference an existing location.
@@ -73,8 +77,9 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `planned-cable-label-top-mismatch`: planned output and bidirectional cable `labelTop` must equal the source endpoint label.
 - `planned-cable-label-bottom-mismatch`: planned input cable `labelBottom` must equal the destination endpoint label.
 - `connected-cable-endpoints-required`: connected cables must reference two different project ports.
+- `connected-cable-retired-endpoint`: active connected cables must not reference ports owned by retired devices or terminal blocks.
 - `connection-category-mismatch`: connected cable endpoints must share a category.
-- `connection-connector-group-mismatch`: connected cable endpoints must use connectors in the same compatibility group.
+- `connection-connector-group-mismatch`: connected cable endpoints with different connector types must use connectors in the same compatibility group.
 - `connection-segment-invalid`: a connected cable segment must be valid for the selected endpoint directions/faces.
 - `multiple-active-connections`: one port must not have more than one active connected cable.
 - `connection-chain-direction-invalid`: a resolved chain through terminal blocks must not link incompatible standard device port directions.
@@ -100,7 +105,9 @@ Terminal blocks may create planned cable numbers for FRONT ports only. REAR port
 
 When a connection is created, at least one selected endpoint must already have a planned cable slot. If both selected endpoints have planned cable numbers, the lower cable number becomes the active `connected` cable and the higher number is marked `retired`.
 
-Connection endpoints must share a category. Exact connector type equality is not required, but both connector types must belong to the endpoint category and the same category-scoped compatibility group.
+Connection endpoints must share a category. Exact connector type equality is directly compatible when both connectors are assigned to the endpoint category. Different connector types must belong to the endpoint category and the same category-scoped compatibility group.
+
+Retired devices and terminal blocks are immutable historical objects. Their ports are not valid new connection endpoints, and an active connected cable that references a retired object is reported as `connected-cable-retired-endpoint`.
 
 ## UI Behavior
 

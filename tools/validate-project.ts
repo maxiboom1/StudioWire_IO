@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { validateProject } from '../src/domain/validators';
-import { parseImportedProject } from '../src/state/projectReducer';
-import type { ProjectRoot, ValidationIssue } from '../src/domain/types';
+import { importProjectJsonText } from '../src/domain/projectImport';
+import type { ValidationIssue } from '../src/domain/types';
 
 const filePath = process.argv[2];
 
@@ -11,16 +10,14 @@ if (!filePath) {
   process.exit(1);
 }
 
-const parsedProject = JSON.parse(readFileSync(resolve(filePath), 'utf8')) as ProjectRoot;
-const importResult = parseImportedProject(parsedProject);
+const importResult = importProjectJsonText(readFileSync(resolve(filePath), 'utf8'));
 
 if (!importResult.ok) {
   console.error(importResult.error);
   process.exit(1);
 }
 
-const project = importResult.project;
-const issues = validateProject(project);
+const issues = importResult.validationIssues;
 const errors = issues.filter((issue) => issue.severity === 'error');
 const warnings = issues.filter((issue) => issue.severity === 'warning');
 

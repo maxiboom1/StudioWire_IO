@@ -11,10 +11,13 @@ import {
   type ReactNode,
 } from 'react';
 import { makeUniqueId } from '../domain/id';
+import { importProjectJsonText } from '../domain/projectImport';
 import type {
   CablePrefix,
+  CategoryConnectorAssignment,
   Category,
   ConnectorCompatibilityGroup,
+  ConnectorCompatibilityGroupMember,
   ConnectorType,
   Location,
   ProjectInfo,
@@ -23,7 +26,6 @@ import type {
 } from '../domain/types';
 import {
   createInitialProjectState,
-  parseImportedProject,
   projectReducer,
   type DeviceDraft,
   type DevicePortGroupDraft,
@@ -31,24 +33,37 @@ import {
   type ProjectState,
   type TerminalBlockDraft,
 } from './projectReducer';
-
-const STORAGE_KEY = 'studiowire.io.project.v0.2.6';
-const LEGACY_STORAGE_KEYS = ['studiowire.io.project.v0.2.5', 'studiowire.io.project.v0.1'];
+import {
+  getBrowserStorage,
+  restoreStoredProject,
+  saveStoredProject,
+  type BrowserStorageLike,
+} from './projectStorage';
 
 interface ProjectContextValue extends ProjectState {
   createNewProject: () => void;
   loadSampleProject: () => void;
-  importProjectJson: (file: File) => Promise<void>;
+  importProjectJson: (file: File) => Promise<boolean>;
   exportProjectJson: () => void;
   validateProject: () => void;
   dismissImportError: () => void;
   updateProjectInfo: (updates: Pick<ProjectInfo, 'name' | 'customer' | 'revision'>) => void;
   addCategory: (input: Pick<Category, 'name' | 'defaultCablePrefix'>) => string;
   updateCategory: (id: string, updates: Pick<Category, 'name' | 'defaultCablePrefix'>) => void;
+  addCategoryConnectorAssignment: (
+    input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>,
+  ) => string;
+  removeCategoryConnectorAssignment: (input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>) => void;
   addConnectorGroup: (input: Pick<ConnectorCompatibilityGroup, 'categoryId' | 'name'>) => string;
   updateConnectorGroup: (id: string, updates: Pick<ConnectorCompatibilityGroup, 'name'>) => void;
-  addConnectorType: (input: Pick<ConnectorType, 'name' | 'categoryId' | 'compatibilityGroupId'>) => string;
-  updateConnectorType: (id: string, updates: Partial<Pick<ConnectorType, 'name' | 'compatibilityGroupId'>>) => void;
+  addConnectorGroupMember: (
+    input: Pick<ConnectorCompatibilityGroupMember, 'groupId' | 'connectorTypeId'>,
+  ) => string;
+  removeConnectorGroupMember: (
+    input: Pick<ConnectorCompatibilityGroupMember, 'groupId' | 'connectorTypeId'>,
+  ) => void;
+  addConnectorType: (input: Pick<ConnectorType, 'name'>) => string;
+  updateConnectorType: (id: string, updates: Pick<ConnectorType, 'name'>) => void;
   addCablePrefix: (input: Pick<CablePrefix, 'prefix' | 'name'>) => string;
   addLocation: (input: Pick<Location, 'name' | 'type' | 'description'>) => string;
   updateLocation: (id: string, updates: Pick<Location, 'name' | 'type' | 'description'>) => void;
@@ -70,10 +85,45 @@ const ProjectContext = createContext<ProjectContextValue | null>(null);
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(projectReducer, undefined, loadInitialState);
   const projectRef = useRef(state.project);
+  const storageRef = useRef<BrowserStorageLike | null>(null);
 
   useEffect(() => {
     projectRef.current = state.project;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.project, null, 2));
+  }, [state.project]);
+
+  useEffect(() => {
+    const storageResult = getBrowserStorage();
+
+    if (storageResult.ok) {
+      storageRef.current = storageResult.storage;
+    } else {
+      dispatch({
+        type: 'SET_PERSISTENCE_STATE',
+        payload: { persistenceState: 'failed', message: `Autosave unavailable: ${storageResult.message}` },
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const storage = storageRef.current;
+
+    if (!storage) {
+      return;
+    }
+
+    dispatch({ type: 'SET_PERSISTENCE_STATE', payload: { persistenceState: 'saving' } });
+    const timer = window.setTimeout(() => {
+      const result = saveStoredProject(storage, projectRef.current);
+
+      dispatch({
+        type: 'SET_PERSISTENCE_STATE',
+        payload: result.ok
+          ? { persistenceState: 'saved', message: 'Project autosaved' }
+          : { persistenceState: 'failed', message: `Autosave failed: ${result.message}` },
+      });
+    }, 350);
+
+    return () => window.clearTimeout(timer);
   }, [state.project]);
 
   const createNewProject = useCallback(() => {
@@ -86,15 +136,18 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const importProjectJson = useCallback(async (file: File) => {
     const text = await file.text();
+    const result = importProjectJsonText(text);
 
-    try {
-      dispatch({ type: 'IMPORT_PROJECT_JSON', payload: JSON.parse(text) });
-    } catch {
-      dispatch({
-        type: 'IMPORT_PROJECT_JSON',
-        payload: 'invalid-json',
-      });
+    if (!result.ok) {
+      dispatch({ type: 'IMPORT_PROJECT_FAILED', payload: { message: result.error } });
+      return false;
     }
+
+    dispatch({
+      type: 'IMPORT_PROJECT_JSON',
+      payload: { project: result.project, validationIssues: result.validationIssues },
+    });
+    return true;
   }, []);
 
   const exportProjectJson = useCallback(() => {
@@ -138,6 +191,31 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const addCategoryConnectorAssignment = useCallback(
+    (input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>) => {
+      const id = makeUniqueId('assignment', `${input.categoryId}-${input.connectorTypeId}`);
+
+      dispatch({
+        type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT',
+        payload: {
+          id,
+          categoryId: input.categoryId,
+          connectorTypeId: input.connectorTypeId,
+        },
+      });
+
+      return id;
+    },
+    [],
+  );
+
+  const removeCategoryConnectorAssignment = useCallback(
+    (input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>) => {
+      dispatch({ type: 'REMOVE_CATEGORY_CONNECTOR_ASSIGNMENT', payload: input });
+    },
+    [],
+  );
+
   const addConnectorGroup = useCallback((input: Pick<ConnectorCompatibilityGroup, 'categoryId' | 'name'>) => {
     const id = makeUniqueId('group', `${input.categoryId}-${input.name}`);
 
@@ -160,16 +238,39 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const addConnectorType = useCallback((input: Pick<ConnectorType, 'name' | 'categoryId' | 'compatibilityGroupId'>) => {
-    const id = makeUniqueId('connector', `${input.categoryId}-${input.name}`);
+  const addConnectorGroupMember = useCallback(
+    (input: Pick<ConnectorCompatibilityGroupMember, 'groupId' | 'connectorTypeId'>) => {
+      const id = makeUniqueId('member', `${input.groupId}-${input.connectorTypeId}`);
+
+      dispatch({
+        type: 'ADD_CONNECTOR_GROUP_MEMBER',
+        payload: {
+          id,
+          groupId: input.groupId,
+          connectorTypeId: input.connectorTypeId,
+        },
+      });
+
+      return id;
+    },
+    [],
+  );
+
+  const removeConnectorGroupMember = useCallback(
+    (input: Pick<ConnectorCompatibilityGroupMember, 'groupId' | 'connectorTypeId'>) => {
+      dispatch({ type: 'REMOVE_CONNECTOR_GROUP_MEMBER', payload: input });
+    },
+    [],
+  );
+
+  const addConnectorType = useCallback((input: Pick<ConnectorType, 'name'>) => {
+    const id = makeUniqueId('connector', input.name);
 
     dispatch({
       type: 'ADD_CONNECTOR_TYPE',
       payload: {
         id,
         name: input.name,
-        categoryId: input.categoryId,
-        compatibilityGroupId: input.compatibilityGroupId,
       },
     });
 
@@ -177,7 +278,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateConnectorType = useCallback(
-    (id: string, updates: Partial<Pick<ConnectorType, 'name' | 'compatibilityGroupId'>>) => {
+    (id: string, updates: Pick<ConnectorType, 'name'>) => {
       dispatch({ type: 'UPDATE_CONNECTOR_TYPE', payload: { id, updates } });
     },
     [],
@@ -302,6 +403,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ProjectContextValue>(
     () => ({
       ...state,
+      persistenceState: state.persistenceState ?? 'unsaved',
       createNewProject,
       loadSampleProject,
       importProjectJson,
@@ -311,8 +413,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateProjectInfo,
       addCategory,
       updateCategory,
+      addCategoryConnectorAssignment,
+      removeCategoryConnectorAssignment,
       addConnectorGroup,
       updateConnectorGroup,
+      addConnectorGroupMember,
+      removeConnectorGroupMember,
       addConnectorType,
       updateConnectorType,
       addCablePrefix,
@@ -341,8 +447,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       updateProjectInfo,
       addCategory,
       updateCategory,
+      addCategoryConnectorAssignment,
+      removeCategoryConnectorAssignment,
       addConnectorGroup,
       updateConnectorGroup,
+      addConnectorGroupMember,
+      removeConnectorGroupMember,
       addConnectorType,
       updateConnectorType,
       addCablePrefix,
@@ -392,8 +502,11 @@ export function ProjectJsonInput({
     const file = event.target.files?.[0];
 
     if (file) {
-      await importProjectJson(file);
-      onImportComplete?.();
+      const imported = await importProjectJson(file);
+
+      if (imported) {
+        onImportComplete?.();
+      }
       event.target.value = '';
     }
   }
@@ -414,29 +527,21 @@ export function ProjectJsonInput({
 }
 
 function loadInitialState(): ProjectState {
-  const storageKeys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
-  const storageKey = storageKeys.find((key) => localStorage.getItem(key));
-  const storedProject = storageKey ? localStorage.getItem(storageKey) : null;
+  const storageResult = getBrowserStorage();
 
-  if (!storedProject) {
+  if (!storageResult.ok) {
     return createInitialProjectState();
   }
 
-  try {
-    const parsedProject = JSON.parse(storedProject);
-    const result = parseImportedProject(parsedProject);
+  const result = restoreStoredProject(storageResult.storage);
 
-    if (result.ok) {
-      return {
-        project: result.project,
-        statusMessage: 'Project restored from local storage',
-        importError: null,
-      };
-    }
-  } catch {
-    if (storageKey) {
-      localStorage.removeItem(storageKey);
-    }
+  if (result.project) {
+    return {
+      project: result.project,
+      statusMessage: `Project restored from ${result.key}`,
+      importError: null,
+      persistenceState: 'saved',
+    };
   }
 
   return createInitialProjectState();

@@ -39,14 +39,10 @@ describe('validateProject settings rules', () => {
       {
         id: 'connector-empty',
         name: '',
-        categoryId: 'category-video',
-        compatibilityGroupId: 'group-video-sdi-coax',
       },
       {
         id: 'connector-bnc-copy',
         name: 'BNC',
-        categoryId: 'category-video',
-        compatibilityGroupId: 'group-video-sdi-coax',
       },
     );
 
@@ -59,41 +55,64 @@ describe('validateProject settings rules', () => {
     expect(codes).toContain('duplicate-connector-type-name');
   });
 
-  it('reports connector group and category ownership issues', () => {
+  it('reports connector assignment and connector group issues', () => {
     const project = createValidationTestProject();
 
+    project.settings.categoryConnectorAssignments.push(
+      {
+        id: 'assignment-missing-category',
+        categoryId: 'category-missing',
+        connectorTypeId: 'connector-bnc',
+      },
+      {
+        id: 'assignment-missing-connector',
+        categoryId: 'category-video',
+        connectorTypeId: 'connector-missing',
+      },
+      {
+        id: 'assignment-video-bnc-copy',
+        categoryId: 'category-video',
+        connectorTypeId: 'connector-bnc',
+      },
+    );
     project.settings.connectorCompatibilityGroups.push(
       { id: 'group-missing-category', categoryId: 'category-missing', name: 'Missing' },
-      { id: 'group-video-sdi-copy', categoryId: 'category-video', name: 'SDI coax' },
+      { id: 'group-video-sdi-copy', categoryId: 'category-video', name: 'Video connector group' },
     );
-    project.settings.connectorTypes.push(
+    project.settings.connectorCompatibilityGroupMembers.push(
       {
-        id: 'connector-missing-category',
-        name: 'Missing category',
-        categoryId: 'category-missing',
-        compatibilityGroupId: 'group-video-sdi-coax',
+        id: 'member-missing-group',
+        groupId: 'group-missing',
+        connectorTypeId: 'connector-bnc',
       },
       {
-        id: 'connector-missing-group',
-        name: 'Missing group',
-        categoryId: 'category-video',
-        compatibilityGroupId: 'group-missing',
+        id: 'member-missing-connector',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-missing',
       },
       {
-        id: 'connector-wrong-group-category',
-        name: 'Wrong group category',
-        categoryId: 'category-video',
-        compatibilityGroupId: 'group-audio-analog-xlr',
+        id: 'member-unassigned-connector',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-rj45',
+      },
+      {
+        id: 'member-video-bnc-copy',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-bnc',
       },
     );
 
     const codes = validateProject(project).map((issue) => issue.code);
 
+    expect(codes).toContain('category-connector-assignment-category-missing');
+    expect(codes).toContain('category-connector-assignment-connector-missing');
+    expect(codes).toContain('duplicate-category-connector-assignment');
     expect(codes).toContain('connector-group-category-missing');
     expect(codes).toContain('duplicate-connector-group-name');
-    expect(codes).toContain('connector-type-category-missing');
-    expect(codes).toContain('connector-type-compatibility-group-missing');
-    expect(codes).toContain('connector-type-group-category-mismatch');
+    expect(codes).toContain('connector-group-member-group-missing');
+    expect(codes).toContain('connector-group-member-connector-missing');
+    expect(codes).toContain('connector-group-member-unassigned-connector');
+    expect(codes).toContain('duplicate-connector-group-member');
   });
 });
 
@@ -352,8 +371,8 @@ describe('validateProject connector compatibility rules', () => {
 
     const codes = validateProject(project).map((issue) => issue.code);
 
-    expect(codes).toContain('port-group-connector-category-mismatch');
-    expect(codes).toContain('port-connector-category-mismatch');
+    expect(codes).toContain('port-group-connector-not-assigned-to-category');
+    expect(codes).toContain('port-connector-not-assigned-to-category');
   });
 
   it('accepts connected cables with different connector types in the same group', () => {

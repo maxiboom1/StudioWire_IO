@@ -1,6 +1,8 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.6.0`. Older `0.1.0`, `0.2.4.1`, and `0.2.5.1` projects are accepted on import and normalized to the current schema.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.7.1`. Older `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, and `0.2.7.0` projects are accepted on import and normalized to the current schema.
+
+Active StudioWire IO app and project schema versions always match and use four numeric components.
 
 IDs are stable strings. References use IDs, not display names. Dates use ISO 8601 strings.
 
@@ -8,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.6.0`.
+- `schemaVersion`: current fixed string `0.2.7.1`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -40,17 +42,21 @@ Fields:
 Fields:
 
 - `categories`: `Category[]`
-- `connectorCompatibilityGroups`: `ConnectorCompatibilityGroup[]`
 - `connectorTypes`: `ConnectorType[]`
+- `categoryConnectorAssignments`: `CategoryConnectorAssignment[]`
+- `connectorCompatibilityGroups`: `ConnectorCompatibilityGroup[]`
+- `connectorCompatibilityGroupMembers`: `ConnectorCompatibilityGroupMember[]`
 - `cablePrefixes`: `CablePrefix[]`
 - `rackDefaults`: `RackDefaults`
 - `labelRules`: `LabelRules`
 
 Default categories are Video, Audio, Network, Reference, RF, and Control. Each category has a default cable prefix.
 
-Connector types are category-owned and assigned to a compatibility group. A connector can be selected only for ports in its own category. Direct connections are allowed only when both endpoint connectors are in the same category and compatibility group.
+Connector types are a global catalog, for example BNC, XLR, PL, RJ45, and HDMI. Categories assign the connector types that are valid for that category. A port can select only connector types assigned to its category.
 
-Default connector compatibility groups are conservative: Video has SDI coax, HDMI, and Other; Audio has Analog XLR, DB25, MADI coax, MADI fiber, and Other; Network has RJ45 copper, SFP cage, Fiber, and Other; Reference has Reference coax and Other; RF has RF coax and Other; Control has GPIO and Other.
+Direct connections are strict by default: endpoints must share a category and the same connector type. Connector compatibility groups are the advanced override for direct cross-connector connections inside one category. If two different connector types are members of the same category-scoped group, they can be connected directly. Connectors in different categories or different groups require conversion somewhere else in the design.
+
+Default connector assignments include common broadcast options. For example, Video includes BNC, Micro BNC, MiniDIN, SDI DIN, and HDMI; Audio includes BNC, XLR, PL, RCA, RJ45, DB25, MADI BNC, and MADI Fiber. Default connector groups are intentionally small: Video has a Video connector group for SDI-style connectors, and Audio has an Audio connector group for XLR/PL/RCA.
 
 Cable numbers use `PREFIX-0001` formatting, for example `V-0001`, `A-0021`, `N-0100`, and `RF-0001`.
 
@@ -68,10 +74,18 @@ Fields:
 
 - `id`
 - `name`
-- `categoryId`
-- `compatibilityGroupId`
 
-Connector type names must be unique within a category. The same display name may exist in multiple categories, for example Video BNC, Reference BNC, and RF BNC.
+Connector type names must be unique in the global connector catalog.
+
+## CategoryConnectorAssignment
+
+Fields:
+
+- `id`
+- `categoryId`
+- `connectorTypeId`
+
+A category connector assignment makes one global connector type selectable for ports in one category. The same connector type can be assigned to multiple categories, for example BNC can be assigned to Video, Audio, Reference, and RF.
 
 ## ConnectorCompatibilityGroup
 
@@ -82,6 +96,16 @@ Fields:
 - `name`
 
 Compatibility group names must be unique within a category. Connectors in the same category and group are directly compatible; connectors in different groups require conversion somewhere else in the design.
+
+## ConnectorCompatibilityGroupMember
+
+Fields:
+
+- `id`
+- `groupId`
+- `connectorTypeId`
+
+Group members must reference connectors assigned to the group's category.
 
 ## CablePrefix
 
@@ -149,7 +173,7 @@ Fields:
 - `createdAt`
 - `updatedAt`
 
-Current UI-created devices use `planned` or `retired` status. Retiring a device marks its related planned cables and ledger allocations as `retired`; it does not free cable numbers for reuse.
+Current UI-created devices use `planned` or `retired` status. Retired devices and terminal blocks are immutable historical objects. Their ports are excluded from connection candidates, domain connection commands reject them, and editing or moving them is blocked. Existing historical cable references may remain for audit, but active connected cables referencing retired objects are validation errors. Retiring a device marks its related planned cables and ledger allocations as `retired`; it does not free cable numbers for reuse.
 
 `locationId` may be `null` for virtual devices and for unassigned handling. Rack and non-rack devices must reference an existing location.
 
@@ -231,7 +255,7 @@ Terminal block rear ports do not generate planned cables. Terminal block front p
 
 Connected cables use `sideAEndpoint` and `sideBEndpoint` as neutral physical ends. When two ports are connected, the selected/clicked port is written to side A and the chosen target is written to side B. If both ports have planned cable numbers, the lower cable number becomes `connected` and the higher cable becomes `retired`.
 
-Connected cable endpoints must share a category, and each endpoint connector must belong to that category. The connector types do not need to be identical, but they must resolve to the same compatibility group.
+Connected cable endpoints must share a category, and each endpoint connector must be assigned to that category. Exact connector type matches are directly compatible. Different connector types must be members of the same category-scoped compatibility group.
 
 ## NumberingLedger
 
@@ -290,3 +314,9 @@ Fields:
 - `timestamp`
 - `message`
 - `author`
+
+## Import And Persistence
+
+Browser import, startup recovery, CLI validation, and project summaries use the same staged import pipeline: JSON syntax parsing, safe schema-version inspection, structural preflight, one-step legacy migration to the current version, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid.
+
+Autosave stores compact JSON under `studiowire.io.project.current`. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

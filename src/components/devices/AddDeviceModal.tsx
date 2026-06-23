@@ -1,7 +1,11 @@
 import { X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
-import { getConnectorsForCategory, getDefaultConnectorForCategory } from '../../domain/connectorCompatibility';
+import {
+  getConnectorsForCategory,
+  getDefaultConnectorForCategory,
+  isConnectorAssignedToCategory,
+} from '../../domain/connectorCompatibility';
 import type { ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectReducer';
@@ -697,12 +701,10 @@ function getAddDeviceValidation(
       errors.push(`${group.name || 'Port group'} uses an unknown cable prefix.`);
     }
 
-    const connectorType = project.settings.connectorTypes.find((connector) => connector.id === group.connectorTypeId);
-
-    if (!connectorType) {
+    if (!project.settings.connectorTypes.some((connector) => connector.id === group.connectorTypeId)) {
       errors.push(`${group.name || 'Port group'} uses an unknown connector.`);
-    } else if (connectorType.categoryId !== group.categoryId) {
-      errors.push(`${group.name || 'Port group'} connector must belong to the selected category.`);
+    } else if (!isConnectorAssignedToCategory(project.settings, group.categoryId, group.connectorTypeId)) {
+      errors.push(`${group.name || 'Port group'} connector must be assigned to the selected category.`);
     }
 
     if (group.createPlannedCables) {

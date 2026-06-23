@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronRight, Cable, Folder, HardDrive, MapPin, Server } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
+import { STUDIOWIRE_CURRENT_VERSION } from '../../domain/version';
 import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
@@ -36,7 +37,7 @@ type ContextAction = {
   onSelect: () => void;
 };
 
-const APP_VERSION = '0.2.6.0';
+const APP_VERSION = STUDIOWIRE_CURRENT_VERSION;
 const UNASSIGNED_KEY = 'unassigned-devices';
 
 export function LeftTree({

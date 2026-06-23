@@ -1,6 +1,10 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
-import { getConnectorsForCategory, getDefaultConnectorForCategory } from '../../domain/connectorCompatibility';
+import {
+  getConnectorsForCategory,
+  getDefaultConnectorForCategory,
+  isConnectorAssignedToCategory,
+} from '../../domain/connectorCompatibility';
 import { makeId } from '../../domain/id';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot } from '../../domain/types';
@@ -315,12 +319,10 @@ function getAddTerminalBlockValidation(
     errors.push('TB category is required.');
   }
 
-  const connectorType = project.settings.connectorTypes.find((connector) => connector.id === draft.connectorTypeId);
-
-  if (!connectorType) {
+  if (!project.settings.connectorTypes.some((connector) => connector.id === draft.connectorTypeId)) {
     errors.push('TB connector type is required.');
-  } else if (connectorType.categoryId !== draft.categoryId) {
-    errors.push('TB connector type must belong to the selected category.');
+  } else if (!isConnectorAssignedToCategory(project.settings, draft.categoryId, draft.connectorTypeId)) {
+    errors.push('TB connector type must be assigned to the selected category.');
   }
 
   if (!Number.isSafeInteger(draft.count) || draft.count <= 0) {

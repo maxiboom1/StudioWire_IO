@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.6
+# StudioWire IO Product Spec v0.2.7
 
-StudioWire IO v0.2.6 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.7 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future exports of the project data.
 
@@ -60,7 +60,7 @@ Examples:
 - Device name, code, manufacturer, model, role, notes, location, rack placement, and rack units.
 - Locked cable range note for device port groups.
 
-The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Devices are retired instead of physically deleted so cable numbers are not freed.
+The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Devices are retired instead of physically deleted so cable numbers are not freed. Retired devices and terminal blocks are immutable historical objects: they cannot be edited, moved, or used as endpoints for new active connections.
 
 The inspector must not invent fields that are not documented in `DATA_MODEL_V0_2_5.md`.
 
@@ -81,12 +81,14 @@ Project settings define global configuration used by the rest of the project:
 
 - Project info.
 - Categories.
-- Connector compatibility groups and category-owned connector types.
+- Global connector catalog.
+- Category connector assignments.
+- Category-scoped connector compatibility groups.
 - Cable prefixes.
 - Cable numbering ranges.
 - Numbering ledger behavior.
 
-Settings are part of project data and must be included in JSON import/export.
+Settings are part of project data and must be included in JSON import/export. Imports use staged syntax, schema-version, structural, migration, and relational validation; failed structural imports preserve the open project.
 
 ## Locations
 
@@ -139,7 +141,7 @@ Each port group has:
 - Name.
 - Direction.
 - Category ID.
-- Category-owned connector type ID.
+- Connector type ID assigned to the port group category.
 - Count.
 - Naming pattern.
 - Cable prefix.
@@ -167,4 +169,4 @@ StudioWire IO tracks planned cable numbers, direct device links, device/TB links
 
 ## Explicit Exclusions
 
-The current app intentionally excludes prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage.
+The current app intentionally excludes prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, and autosave failure leaves the in-memory project exportable.
