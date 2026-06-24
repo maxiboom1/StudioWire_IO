@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "0.2.7.3",
+  "schemaVersion": "0.2.7.2",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
     "customer": "Example Broadcast",
     "revision": "0.1",
-    "status": "invalid_status",
+    "status": "draft",
     "createdAt": "2026-05-06T00:00:00.000Z",
     "updatedAt": "2026-05-06T00:00:00.000Z",
     "createdBy": "StudioWire IO",

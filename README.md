@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.7.2 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.7.3 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -96,7 +96,7 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export compatibility guarantee: current exports use schema version `0.2.7.2`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, and `0.2.7.1`, then migrate to the current runtime/schema contract before state commit.
+- JSON import/export compatibility guarantee: current exports use schema version `0.2.7.3`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, and `0.2.7.2`, then migrate to the current runtime/schema contract before state commit.
 - Startup recovery tries the active autosave key and known legacy keys in order; corrupt storage records do not block fallback recovery, and autosave failures leave the in-memory project exportable.
 - Retired devices and terminal blocks are immutable historical objects. Their ports are excluded from new connection candidates, and domain connection commands reject retired endpoints.
 
@@ -129,6 +129,16 @@ Open the Vite URL, usually `http://localhost:5173/`, load the sample project, an
 See `docs/ROADMAP.md` for planned version boundaries.
 
 ## Version Changelog
+
+### v0.2.7.3
+
+Behavior-preserving refactor and source-cleanup release.
+
+- Bumped app and project schema version to `0.2.7.3`.
+- Added an explicit identity migration from `0.2.7.2` and retained all documented legacy imports.
+- Split validation into aggregate modules with a shared validation context and direct module tests.
+- Split import parsing, version detection, preflight shape checks, migrations, structural validation, and error formatting into dedicated domain modules.
+- Moved device/terminal-block reducer construction commands, autosave scheduling, project export serialization, and connection-picker candidate building into focused modules.
 
 ### v0.2.7.2
 

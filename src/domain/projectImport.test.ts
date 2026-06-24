@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { importProjectJsonText, importProjectValue } from './projectImport';
+import { MIGRATION_STEPS } from './import/migrations';
+import { importProjectJsonText, importProjectValue, parseImportedProject } from './projectImport';
 import { sampleProject } from './sampleProject';
-import { SUPPORTED_SCHEMA_VERSIONS } from './version';
+import { STUDIOWIRE_CURRENT_VERSION, SUPPORTED_SCHEMA_VERSIONS } from './version';
 
 function currentProject() {
   return structuredClone(sampleProject) as any;
@@ -142,9 +143,18 @@ describe('importProjectValue structural safety', () => {
 
       expect(result.ok).toBe(true);
       if (result.ok) {
-        expect(result.project.schemaVersion).toBe('0.2.7.2');
+        expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
       }
     }
+  });
+
+  it('declares the previous release migration step explicitly', () => {
+    expect(MIGRATION_STEPS).toContainEqual(
+      expect.objectContaining({
+        from: '0.2.7.2',
+        to: STUDIOWIRE_CURRENT_VERSION,
+      }),
+    );
   });
 
   it('returns controlled syntax errors for invalid JSON text', () => {
@@ -153,6 +163,30 @@ describe('importProjectValue structural safety', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.errors[0].code).toBe('json-syntax');
+    }
+  });
+
+  it('rejects non-object imports before structural validation', () => {
+    const result = importProjectValue(null);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors[0]).toMatchObject({
+        code: 'project-root-not-object',
+        path: '$',
+      });
+    }
+  });
+
+  it('formats unsupported schema versions through the legacy parse helper', () => {
+    const project = currentProject();
+    project.schemaVersion = '9.9.9';
+
+    const result = parseImportedProject(project);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('Unsupported schemaVersion');
     }
   });
 });

@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.7.2
+# StudioWire IO Product Spec v0.2.7.3
 
-StudioWire IO v0.2.7.2 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.7.3 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future exports of the project data.
 

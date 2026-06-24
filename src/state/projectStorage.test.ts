@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sampleProject } from '../domain/sampleProject';
+import { STUDIOWIRE_CURRENT_VERSION } from '../domain/version';
 import {
   ACTIVE_STORAGE_KEY,
   restoreStoredProject,
@@ -46,7 +47,7 @@ describe('projectStorage recovery', () => {
 
     const result = restoreStoredProject(storage);
 
-    expect(result.project?.schemaVersion).toBe('0.2.7.2');
+    expect(result.project?.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(result.key).toBe('studiowire.io.project.v0.2.7');
   });
 

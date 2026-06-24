@@ -1,10 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  createConnectionTargetLookup,
-  describePortConnection,
-  getConnectionTargetStatus,
-} from '../../domain/connections';
-import type { Device, Location, Port, ProjectRoot, Rack } from '../../domain/types';
+import { describePortConnection } from '../../domain/connections';
 import { useProject } from '../../state/ProjectContext';
 import {
   DropdownMenu,
@@ -15,18 +10,16 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
+import {
+  buildConnectionCandidates,
+  countCandidatePorts,
+  groupConnectionCandidates,
+} from './connectionCandidates';
 
 interface CrosspointPickerProps {
   portId: string;
   className: string;
   ariaLabel: string;
-}
-
-interface PortCandidate {
-  location: Location | null;
-  device: Device;
-  port: Port;
-  searchText: string;
 }
 
 export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPickerProps) {
@@ -35,7 +28,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
   const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
   const [expandedDevices, setExpandedDevices] = useState<Set<string>>(new Set());
   const originPort = project.ports.find((port) => port.id === portId) ?? null;
-  const candidates = useMemo(() => buildCandidates(project, portId), [project, portId]);
+  const candidates = useMemo(() => buildConnectionCandidates(project, portId), [project, portId]);
   const visibleCandidates = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -45,7 +38,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
 
     return candidates.filter((candidate) => candidate.searchText.includes(normalizedSearch));
   }, [candidates, search]);
-  const groupedCandidates = useMemo(() => groupCandidates(visibleCandidates), [visibleCandidates]);
+  const groupedCandidates = useMemo(() => groupConnectionCandidates(visibleCandidates), [visibleCandidates]);
   const isSearching = search.trim().length > 0;
   const originConnection = useMemo(() => describePortConnection(project, portId), [project, portId]);
 
@@ -109,7 +102,7 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
                     {'>'}
                   </span>
                   <strong>{locationGroup.name}</strong>
-                  <small>{countPorts(locationGroup.devices)}</small>
+                  <small>{countCandidatePorts(locationGroup.devices)}</small>
                 </button>
                 {isExpanded(expandedLocations, locationGroup.key, isSearching)
                   ? locationGroup.devices.map((deviceGroup) => (
@@ -160,100 +153,6 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
   );
 }
 
-function buildCandidates(project: ProjectRoot, originPortId: string): PortCandidate[] {
-  const lookup = createConnectionTargetLookup(project);
-  const devicesById = lookup.devicesById;
-  const racksById = new Map(project.racks.map((rack) => [rack.id, rack]));
-  const locationsById = new Map(project.locations.map((location) => [location.id, location]));
-  const originPort = lookup.portsById.get(originPortId);
-
-  if (!originPort) {
-    return [];
-  }
-
-  return project.ports
-    .filter((port) => isPossibleCandidate(originPort, port))
-    .filter(
-      (port) =>
-        getConnectionTargetStatus(project, { fromPortId: originPortId, toPortId: port.id }, lookup).ok,
-    )
-    .map((port) => {
-      const device = devicesById.get(port.deviceId);
-
-      if (!device) {
-        return null;
-      }
-
-      const locationId = resolveDeviceLocationId(device, racksById);
-      const location = locationId ? (locationsById.get(locationId) ?? null) : null;
-
-      return {
-        location,
-        device,
-        port,
-        searchText:
-          `${location?.name ?? ''} ${device.name} ${device.labelPrefix} ${port.label} ${port.direction}`.toLowerCase(),
-      };
-    })
-    .filter((candidate): candidate is PortCandidate => candidate !== null)
-    .sort((left, right) => {
-      const locationSort = (left.location?.name ?? '').localeCompare(right.location?.name ?? '');
-
-      if (locationSort !== 0) {
-        return locationSort;
-      }
-
-      const deviceSort = left.device.name.localeCompare(right.device.name);
-
-      if (deviceSort !== 0) {
-        return deviceSort;
-      }
-
-      return left.port.index - right.port.index;
-    });
-}
-
-function isPossibleCandidate(originPort: Port, candidatePort: Port): boolean {
-  return candidatePort.id !== originPort.id && candidatePort.categoryId === originPort.categoryId;
-}
-
-function resolveDeviceLocationId(device: Device, racksById: ReadonlyMap<string, Rack>) {
-  return device.locationId ?? (device.rackId ? (racksById.get(device.rackId)?.locationId ?? null) : null);
-}
-
-function groupCandidates(candidates: PortCandidate[]) {
-  const locations: Array<{
-    key: string;
-    name: string;
-    devices: Array<{ device: Device; ports: PortCandidate[] }>;
-  }> = [];
-
-  for (const candidate of candidates) {
-    const locationKey = candidate.location?.id ?? 'unassigned';
-    let locationGroup = locations.find((group) => group.key === locationKey);
-
-    if (!locationGroup) {
-      locationGroup = {
-        key: locationKey,
-        name: candidate.location?.name ?? 'Unassigned',
-        devices: [],
-      };
-      locations.push(locationGroup);
-    }
-
-    let deviceGroup = locationGroup.devices.find((group) => group.device.id === candidate.device.id);
-
-    if (!deviceGroup) {
-      deviceGroup = { device: candidate.device, ports: [] };
-      locationGroup.devices.push(deviceGroup);
-    }
-
-    deviceGroup.ports.push(candidate);
-  }
-
-  return locations;
-}
-
 function toggleSetValue(current: Set<string>, value: string) {
   const next = new Set(current);
 
@@ -268,8 +167,4 @@ function toggleSetValue(current: Set<string>, value: string) {
 
 function isExpanded(expanded: Set<string>, key: string, forceOpen: boolean) {
   return forceOpen || expanded.has(key);
-}
-
-function countPorts(devices: Array<{ device: Device; ports: PortCandidate[] }>) {
-  return devices.reduce((total, device) => total + device.ports.length, 0);
 }

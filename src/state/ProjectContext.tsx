@@ -21,9 +21,10 @@ import type {
   ConnectorType,
   Location,
   ProjectInfo,
-  ProjectRoot,
   Rack,
 } from '../domain/types';
+import { createWindowTimerApi, scheduleProjectAutosave } from './projectAutosave';
+import { downloadProjectJson } from './projectExport';
 import {
   createInitialProjectState,
   projectReducer,
@@ -33,12 +34,7 @@ import {
   type ProjectState,
   type TerminalBlockDraft,
 } from './projectReducer';
-import {
-  getBrowserStorage,
-  restoreStoredProject,
-  saveStoredProject,
-  type BrowserStorageLike,
-} from './projectStorage';
+import { getBrowserStorage, restoreStoredProject, type BrowserStorageLike } from './projectStorage';
 
 interface ProjectContextValue extends ProjectState {
   createNewProject: () => void;
@@ -114,18 +110,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
 
     dispatch({ type: 'SET_PERSISTENCE_STATE', payload: { persistenceState: 'saving' } });
-    const timer = window.setTimeout(() => {
-      const result = saveStoredProject(storage, projectRef.current);
-
-      dispatch({
-        type: 'SET_PERSISTENCE_STATE',
-        payload: result.ok
-          ? { persistenceState: 'saved', message: 'Project autosaved' }
-          : { persistenceState: 'failed', message: `Autosave failed: ${result.message}` },
-      });
-    }, 350);
-
-    return () => window.clearTimeout(timer);
+    return scheduleProjectAutosave({
+      storage,
+      project: projectRef.current,
+      timers: createWindowTimerApi(),
+      onComplete: (result) => {
+        dispatch({
+          type: 'SET_PERSISTENCE_STATE',
+          payload: result.ok
+            ? { persistenceState: 'saved', message: 'Project autosaved' }
+            : { persistenceState: 'failed', message: `Autosave failed: ${result.message}` },
+        });
+      },
+    });
   }, [state.project]);
 
   const createNewProject = useCallback(() => {
@@ -535,19 +532,4 @@ function loadInitialState(): ProjectState {
   }
 
   return createInitialProjectState();
-}
-
-function downloadProjectJson(project: ProjectRoot): void {
-  const blob = new Blob([JSON.stringify(project, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-
-  anchor.href = url;
-  anchor.download = 'project.studiowire.json';
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
 }

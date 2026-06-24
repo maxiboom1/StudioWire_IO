@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { parseImportedProject } from '../domain/projectImport';
 import { sampleProject } from '../domain/sampleProject';
-import { parseImportedProject, projectReducer, type ProjectState } from './projectReducer';
+import { STUDIOWIRE_CURRENT_VERSION } from '../domain/version';
+import { createInitialProjectState, projectReducer, type ProjectState } from './projectReducer';
 
 function createState(): ProjectState {
   return {
@@ -9,6 +11,224 @@ function createState(): ProjectState {
     importError: null,
   };
 }
+
+describe('projectReducer core project actions', () => {
+  it('creates a new unsaved local project state', () => {
+    const state = createInitialProjectState();
+
+    expect(state.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+    expect(state.project.project.name).toBe('Untitled Project');
+    expect(state.persistenceState).toBe('unsaved');
+    expect(state.importError).toBeNull();
+  });
+
+  it('updates project info and imports validation issues without preserving stale import errors', () => {
+    const state = {
+      ...createState(),
+      importError: 'previous failure',
+    };
+    const updated = projectReducer(state, {
+      type: 'UPDATE_PROJECT_INFO',
+      payload: {
+        name: 'Updated Project',
+        customer: 'Updated Customer',
+        revision: 'B',
+      },
+    });
+    const imported = projectReducer(updated, {
+      type: 'IMPORT_PROJECT_JSON',
+      payload: {
+        project: structuredClone(sampleProject),
+        validationIssues: [
+          {
+            id: 'validation-test',
+            severity: 'warning',
+            code: 'test-warning',
+            message: 'Test warning',
+            objectType: 'project',
+            objectId: sampleProject.project.id,
+          },
+        ],
+      },
+    });
+
+    expect(updated.project.project).toMatchObject({
+      name: 'Updated Project',
+      customer: 'Updated Customer',
+      revision: 'B',
+    });
+    expect(updated.importError).toBeNull();
+    expect(imported.project.validationIssues).toHaveLength(1);
+    expect(imported.statusMessage).toBe('Project imported; 1 validation issue(s) found');
+    expect(imported.importError).toBeNull();
+  });
+
+  it('handles settings reference edits and duplicate connector safeguards', () => {
+    let state = createState();
+
+    state = projectReducer(state, {
+      type: 'ADD_CATEGORY',
+      payload: { id: 'category-test', name: 'Test', defaultCablePrefix: 'T' },
+    });
+    state = projectReducer(state, {
+      type: 'UPDATE_CATEGORY',
+      payload: { id: 'category-test', updates: { name: 'Test Updated', defaultCablePrefix: 'TX' } },
+    });
+    state = projectReducer(state, {
+      type: 'ADD_CONNECTOR_TYPE',
+      payload: { id: 'connector-test', name: 'Test Connector' },
+    });
+    state = projectReducer(state, {
+      type: 'UPDATE_CONNECTOR_TYPE',
+      payload: { id: 'connector-test', updates: { name: 'Test Connector Updated' } },
+    });
+    state = projectReducer(state, {
+      type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT',
+      payload: { id: 'assignment-test', categoryId: 'category-test', connectorTypeId: 'connector-test' },
+    });
+    const duplicateAssignment = projectReducer(state, {
+      type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT',
+      payload: {
+        id: 'assignment-test-duplicate',
+        categoryId: 'category-test',
+        connectorTypeId: 'connector-test',
+      },
+    });
+    state = projectReducer(state, {
+      type: 'ADD_CONNECTOR_GROUP',
+      payload: { id: 'connector-group-test', categoryId: 'category-test', name: 'Test Group' },
+    });
+    state = projectReducer(state, {
+      type: 'UPDATE_CONNECTOR_GROUP',
+      payload: { id: 'connector-group-test', updates: { name: 'Test Group Updated' } },
+    });
+    state = projectReducer(state, {
+      type: 'ADD_CONNECTOR_GROUP_MEMBER',
+      payload: {
+        id: 'group-member-test',
+        groupId: 'connector-group-test',
+        connectorTypeId: 'connector-test',
+      },
+    });
+    const duplicateMember = projectReducer(state, {
+      type: 'ADD_CONNECTOR_GROUP_MEMBER',
+      payload: {
+        id: 'group-member-test-duplicate',
+        groupId: 'connector-group-test',
+        connectorTypeId: 'connector-test',
+      },
+    });
+    state = projectReducer(state, {
+      type: 'REMOVE_CATEGORY_CONNECTOR_ASSIGNMENT',
+      payload: { categoryId: 'category-test', connectorTypeId: 'connector-test' },
+    });
+
+    expect(
+      state.project.settings.categories.find((category) => category.id === 'category-test'),
+    ).toMatchObject({
+      name: 'Test Updated',
+      defaultCablePrefix: 'TX',
+    });
+    expect(
+      state.project.settings.connectorTypes.find((connectorType) => connectorType.id === 'connector-test'),
+    ).toMatchObject({ name: 'Test Connector Updated' });
+    expect(duplicateAssignment.statusMessage).toBe('Connector already assigned to category');
+    expect(duplicateMember.statusMessage).toBe('Connector already belongs to group');
+    expect(
+      state.project.settings.categoryConnectorAssignments.some(
+        (assignment) => assignment.id === 'assignment-test',
+      ),
+    ).toBe(false);
+    expect(
+      state.project.settings.connectorCompatibilityGroupMembers.some(
+        (member) => member.id === 'group-member-test',
+      ),
+    ).toBe(false);
+  });
+
+  it('adds cable prefixes, locations, and racks, then blocks unsafe deletes', () => {
+    let state = createState();
+
+    state = projectReducer(state, {
+      type: 'ADD_CABLE_PREFIX',
+      payload: { id: 'prefix-test', prefix: 'T', name: 'Test prefix' },
+    });
+    state = projectReducer(state, {
+      type: 'ADD_LOCATION',
+      payload: {
+        id: 'location-test',
+        name: 'Test Location',
+        type: 'room',
+        description: 'Temporary test location',
+      },
+    });
+    state = projectReducer(state, {
+      type: 'UPDATE_LOCATION',
+      payload: {
+        id: 'location-test',
+        updates: { name: 'Test Location Updated', type: 'room', description: 'Updated' },
+      },
+    });
+    state = projectReducer(state, {
+      type: 'ADD_RACK',
+      payload: {
+        id: 'rack-test',
+        locationId: 'location-test',
+        name: 'Test Rack',
+        heightRu: 12,
+        numberingDirection: 'bottom_to_top',
+      },
+    });
+    state = projectReducer(state, {
+      type: 'UPDATE_RACK',
+      payload: {
+        id: 'rack-test',
+        updates: { name: 'Test Rack Updated', heightRu: 14, numberingDirection: 'top_to_bottom' },
+      },
+    });
+    const blockedLocationDelete = projectReducer(state, {
+      type: 'DELETE_LOCATION',
+      payload: { id: 'location-test' },
+    });
+    state = projectReducer(state, {
+      type: 'DELETE_RACK',
+      payload: { id: 'rack-test' },
+    });
+    state = projectReducer(state, {
+      type: 'DELETE_LOCATION',
+      payload: { id: 'location-test' },
+    });
+
+    expect(state.project.settings.cablePrefixes).toContainEqual({
+      id: 'prefix-test',
+      prefix: 'T',
+      name: 'Test prefix',
+    });
+    expect(state.project.numberingLedgers).toContainEqual({ prefix: 'T', nextSuggested: 1, ranges: [] });
+    expect(blockedLocationDelete.statusMessage).toBe(
+      'Location deletion blocked: remove racks and devices first',
+    );
+    expect(state.project.racks.some((rack) => rack.id === 'rack-test')).toBe(false);
+    expect(state.project.locations.some((location) => location.id === 'location-test')).toBe(false);
+  });
+
+  it('retains status text when persistence is updated without a message and dismisses import errors', () => {
+    const state = {
+      ...createState(),
+      statusMessage: 'existing status',
+      importError: 'import failed',
+    };
+    const saving = projectReducer(state, {
+      type: 'SET_PERSISTENCE_STATE',
+      payload: { persistenceState: 'saving' },
+    });
+    const dismissed = projectReducer(saving, { type: 'DISMISS_IMPORT_ERROR' });
+
+    expect(saving.persistenceState).toBe('saving');
+    expect(saving.statusMessage).toBe('existing status');
+    expect(dismissed.importError).toBeNull();
+  });
+});
 
 describe('projectReducer ADD_DEVICE safety', () => {
   it('leaves state unchanged when planned cable allocation fails', () => {
@@ -375,7 +595,7 @@ describe('parseImportedProject schema compatibility', () => {
     if (!secondImport.ok) {
       return;
     }
-    expect(secondImport.project.schemaVersion).toBe('0.2.7.2');
+    expect(secondImport.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(secondImport.project.cables[0]).toHaveProperty('sideAEndpoint');
     expect(secondImport.project.cables[0]).toHaveProperty('sideBEndpoint');
   });
@@ -392,7 +612,7 @@ describe('parseImportedProject schema compatibility', () => {
     if (!result.ok) {
       return;
     }
-    expect(result.project.schemaVersion).toBe('0.2.7.2');
+    expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(result.project.devices[0]).toMatchObject({
       kind: 'device',
       code: 'RTR1',
@@ -481,7 +701,7 @@ describe('parseImportedProject schema compatibility', () => {
       (connectorType) => connectorType.id === audioPort?.connectorTypeId,
     );
 
-    expect(result.project.schemaVersion).toBe('0.2.7.2');
+    expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(result.project.settings.connectorCompatibilityGroups.length).toBeGreaterThan(0);
     expect(videoConnector).toMatchObject({ name: 'BNC' });
     expect(audioConnector).toMatchObject({ name: 'XLR' });

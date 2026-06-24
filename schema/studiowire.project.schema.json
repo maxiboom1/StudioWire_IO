@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.7.2",
+  "title": "StudioWire IO Project v0.2.7.3",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.7.2"
+      "const": "0.2.7.3"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -99,15 +99,37 @@
         "updatedBy"
       ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "customer": { "type": "string" },
-        "revision": { "type": "string" },
-        "status": { "enum": ["draft", "approved", "as_built"] },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" },
-        "createdBy": { "type": "string" },
-        "updatedBy": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "customer": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "status": {
+          "enum": ["draft", "approved", "as_built"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "updatedBy": {
+          "type": "string"
+        }
       }
     },
     "Settings": {
@@ -126,27 +148,39 @@
       "properties": {
         "categories": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Category" }
+          "items": {
+            "$ref": "#/$defs/Category"
+          }
         },
         "connectorTypes": {
           "type": "array",
-          "items": { "$ref": "#/$defs/ConnectorType" }
+          "items": {
+            "$ref": "#/$defs/ConnectorType"
+          }
         },
         "categoryConnectorAssignments": {
           "type": "array",
-          "items": { "$ref": "#/$defs/CategoryConnectorAssignment" }
+          "items": {
+            "$ref": "#/$defs/CategoryConnectorAssignment"
+          }
         },
         "connectorCompatibilityGroups": {
           "type": "array",
-          "items": { "$ref": "#/$defs/ConnectorCompatibilityGroup" }
+          "items": {
+            "$ref": "#/$defs/ConnectorCompatibilityGroup"
+          }
         },
         "connectorCompatibilityGroupMembers": {
           "type": "array",
-          "items": { "$ref": "#/$defs/ConnectorCompatibilityGroupMember" }
+          "items": {
+            "$ref": "#/$defs/ConnectorCompatibilityGroupMember"
+          }
         },
         "cablePrefixes": {
           "type": "array",
-          "items": { "$ref": "#/$defs/CablePrefix" }
+          "items": {
+            "$ref": "#/$defs/CablePrefix"
+          }
         },
         "rackDefaults": {
           "$ref": "#/$defs/RackDefaults"
@@ -161,9 +195,18 @@
       "additionalProperties": false,
       "required": ["id", "name", "defaultCablePrefix"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "defaultCablePrefix": { "type": "string", "pattern": "^[A-Z]+$" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "defaultCablePrefix": {
+          "type": "string",
+          "pattern": "^[A-Z]+$"
+        }
       }
     },
     "ConnectorType": {
@@ -171,8 +214,14 @@
       "additionalProperties": false,
       "required": ["id", "name"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "CategoryConnectorAssignment": {
@@ -180,9 +229,18 @@
       "additionalProperties": false,
       "required": ["id", "categoryId", "connectorTypeId"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "connectorTypeId": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "connectorTypeId": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "ConnectorCompatibilityGroup": {
@@ -190,9 +248,18 @@
       "additionalProperties": false,
       "required": ["id", "categoryId", "name"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "ConnectorCompatibilityGroupMember": {
@@ -200,9 +267,18 @@
       "additionalProperties": false,
       "required": ["id", "groupId", "connectorTypeId"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "groupId": { "type": "string", "minLength": 1 },
-        "connectorTypeId": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "groupId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "connectorTypeId": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "CablePrefix": {
@@ -210,9 +286,18 @@
       "additionalProperties": false,
       "required": ["id", "prefix", "name"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "prefix": { "type": "string", "pattern": "^[A-Z]+$" },
-        "name": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[A-Z]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "RackDefaults": {
@@ -220,8 +305,13 @@
       "additionalProperties": false,
       "required": ["heightRu", "numberingDirection"],
       "properties": {
-        "heightRu": { "type": "integer", "minimum": 1 },
-        "numberingDirection": { "$ref": "#/$defs/RackNumberingDirection" }
+        "heightRu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "numberingDirection": {
+          "$ref": "#/$defs/RackNumberingDirection"
+        }
       }
     },
     "LabelRules": {
@@ -229,8 +319,13 @@
       "additionalProperties": false,
       "required": ["cableNumberFormat", "cableNumberPadding"],
       "properties": {
-        "cableNumberFormat": { "const": "PREFIX-0001" },
-        "cableNumberPadding": { "type": "integer", "minimum": 1 }
+        "cableNumberFormat": {
+          "const": "PREFIX-0001"
+        },
+        "cableNumberPadding": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "Location": {
@@ -238,10 +333,20 @@
       "additionalProperties": false,
       "required": ["id", "name", "type", "description"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "type": { "type": "string" },
-        "description": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "Rack": {
@@ -249,11 +354,25 @@
       "additionalProperties": false,
       "required": ["id", "locationId", "name", "heightRu", "numberingDirection"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "locationId": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "heightRu": { "type": "integer", "minimum": 1 },
-        "numberingDirection": { "$ref": "#/$defs/RackNumberingDirection" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locationId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "heightRu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "numberingDirection": {
+          "$ref": "#/$defs/RackNumberingDirection"
+        }
       }
     },
     "Device": {
@@ -276,30 +395,75 @@
         "updatedAt"
       ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "kind": { "$ref": "#/$defs/DeviceKind" },
-        "code": { "type": "string" },
-        "manufacturer": { "type": "string" },
-        "model": { "type": "string" },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "locationId": { "type": ["string", "null"] },
-        "role": { "type": "string" },
-        "labelPrefix": { "type": "string" },
-        "mountType": { "$ref": "#/$defs/DeviceMountType" },
-        "rackId": { "type": ["string", "null"] },
-        "rackSizeRu": { "type": ["integer", "null"], "minimum": 1 },
-        "rackBottomRu": { "type": ["integer", "null"], "minimum": 1 },
-        "status": { "enum": ["planned", "connected", "retired"] },
-        "notes": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/DeviceKind"
+        },
+        "code": {
+          "type": "string"
+        },
+        "manufacturer": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locationId": {
+          "type": ["string", "null"]
+        },
+        "role": {
+          "type": "string"
+        },
+        "labelPrefix": {
+          "type": "string"
+        },
+        "mountType": {
+          "$ref": "#/$defs/DeviceMountType"
+        },
+        "rackId": {
+          "type": ["string", "null"]
+        },
+        "rackSizeRu": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "rackBottomRu": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "status": {
+          "enum": ["planned", "connected", "retired"]
+        },
+        "notes": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
       },
       "allOf": [
         {
           "if": {
             "properties": {
-              "kind": { "const": "device" }
+              "kind": {
+                "const": "device"
+              }
             },
             "required": ["kind"]
           },
@@ -310,29 +474,46 @@
         {
           "if": {
             "properties": {
-              "kind": { "const": "terminal_block" }
+              "kind": {
+                "const": "terminal_block"
+              }
             },
             "required": ["kind"]
           },
           "then": {
             "properties": {
-              "mountType": { "const": "rack" },
-              "rackId": { "type": "string", "minLength": 1 },
-              "rackSizeRu": { "const": 1 },
-              "rackBottomRu": { "type": "integer", "minimum": 1 }
+              "mountType": {
+                "const": "rack"
+              },
+              "rackId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rackSizeRu": {
+                "const": 1
+              },
+              "rackBottomRu": {
+                "type": "integer",
+                "minimum": 1
+              }
             }
           }
         },
         {
           "if": {
             "properties": {
-              "mountType": { "enum": ["rack", "non_rack"] }
+              "mountType": {
+                "enum": ["rack", "non_rack"]
+              }
             },
             "required": ["mountType"]
           },
           "then": {
             "properties": {
-              "locationId": { "type": "string", "minLength": 1 }
+              "locationId": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }
@@ -358,41 +539,96 @@
         "locked"
       ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "deviceId": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "direction": { "$ref": "#/$defs/PortDirection" },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "connectorTypeId": { "type": "string", "minLength": 1 },
-        "count": { "type": "integer", "minimum": 1 },
-        "portLabelPattern": { "type": "string", "minLength": 1 },
-        "cablePrefix": { "type": "string", "pattern": "^[A-Z]+$" },
-        "firstCableNumber": { "type": ["integer", "null"], "minimum": 1 },
-        "lastCableNumber": { "type": ["integer", "null"], "minimum": 1 },
-        "numberingRangeId": { "type": ["string", "null"] },
-        "createPlannedCables": { "type": "boolean" },
-        "locked": { "type": "boolean" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deviceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "$ref": "#/$defs/PortDirection"
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "connectorTypeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "portLabelPattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cablePrefix": {
+          "type": "string",
+          "pattern": "^[A-Z]+$"
+        },
+        "firstCableNumber": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "lastCableNumber": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "numberingRangeId": {
+          "type": ["string", "null"]
+        },
+        "createPlannedCables": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
       },
       "allOf": [
         {
           "if": {
             "properties": {
-              "createPlannedCables": { "const": true }
+              "createPlannedCables": {
+                "const": true
+              }
             },
             "required": ["createPlannedCables"]
           },
           "then": {
             "properties": {
-              "firstCableNumber": { "type": "integer", "minimum": 1 },
-              "lastCableNumber": { "type": "integer", "minimum": 1 },
-              "numberingRangeId": { "type": "string", "minLength": 1 }
+              "firstCableNumber": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "lastCableNumber": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "numberingRangeId": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           },
           "else": {
             "properties": {
-              "firstCableNumber": { "const": null },
-              "lastCableNumber": { "const": null },
-              "numberingRangeId": { "const": null }
+              "firstCableNumber": {
+                "const": null
+              },
+              "lastCableNumber": {
+                "const": null
+              },
+              "numberingRangeId": {
+                "const": null
+              }
             }
           }
         }
@@ -415,17 +651,46 @@
         "notes"
       ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "deviceId": { "type": "string", "minLength": 1 },
-        "portGroupId": { "type": "string", "minLength": 1 },
-        "index": { "type": "integer", "minimum": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "label": { "type": "string" },
-        "direction": { "$ref": "#/$defs/PortDirection" },
-        "categoryId": { "type": "string", "minLength": 1 },
-        "connectorTypeId": { "type": "string", "minLength": 1 },
-        "plannedCableId": { "type": ["string", "null"] },
-        "notes": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deviceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "portGroupId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/PortDirection"
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "connectorTypeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "plannedCableId": {
+          "type": ["string", "null"]
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "Cable": {
@@ -445,17 +710,43 @@
         "notes"
       ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "number": { "type": "string", "pattern": "^[A-Z]+-[0-9]{4,}$" },
-        "prefix": { "type": "string", "pattern": "^[A-Z]+$" },
-        "index": { "type": "integer", "minimum": 1 },
-        "status": { "enum": ["planned", "connected", "retired"] },
-        "sideAEndpoint": { "$ref": "#/$defs/Endpoint" },
-        "sideBEndpoint": { "$ref": "#/$defs/Endpoint" },
-        "labelTop": { "type": "string" },
-        "labelMiddle": { "type": "string" },
-        "labelBottom": { "type": "string" },
-        "notes": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "number": {
+          "type": "string",
+          "pattern": "^[A-Z]+-[0-9]{4,}$"
+        },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[A-Z]+$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": ["planned", "connected", "retired"]
+        },
+        "sideAEndpoint": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "sideBEndpoint": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "labelTop": {
+          "type": "string"
+        },
+        "labelMiddle": {
+          "type": "string"
+        },
+        "labelBottom": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "NumberingLedger": {
@@ -463,11 +754,19 @@
       "additionalProperties": false,
       "required": ["prefix", "nextSuggested", "ranges"],
       "properties": {
-        "prefix": { "type": "string", "pattern": "^[A-Z]+$" },
-        "nextSuggested": { "type": "integer", "minimum": 1 },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[A-Z]+$"
+        },
+        "nextSuggested": {
+          "type": "integer",
+          "minimum": 1
+        },
         "ranges": {
           "type": "array",
-          "items": { "$ref": "#/$defs/NumberingRange" }
+          "items": {
+            "$ref": "#/$defs/NumberingRange"
+          }
         }
       }
     },
@@ -476,15 +775,38 @@
       "additionalProperties": false,
       "required": ["id", "prefix", "from", "to", "status", "ownerType", "ownerId", "reason", "createdAt"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "prefix": { "type": "string", "pattern": "^[A-Z]+$" },
-        "from": { "type": "integer", "minimum": 1 },
-        "to": { "type": "integer", "minimum": 1 },
-        "status": { "enum": ["allocated", "reserved_gap", "retired"] },
-        "ownerType": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "reason": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[A-Z]+$"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": ["allocated", "reserved_gap", "retired"]
+        },
+        "ownerType": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
     "Endpoint": {
@@ -492,9 +814,15 @@
       "additionalProperties": false,
       "required": ["type", "id", "label"],
       "properties": {
-        "type": { "enum": ["device_port", "tb_port", "external", "unknown"] },
-        "id": { "type": ["string", "null"] },
-        "label": { "type": "string" }
+        "type": {
+          "enum": ["device_port", "tb_port", "external", "unknown"]
+        },
+        "id": {
+          "type": ["string", "null"]
+        },
+        "label": {
+          "type": "string"
+        }
       }
     },
     "ValidationIssue": {
@@ -502,12 +830,26 @@
       "additionalProperties": false,
       "required": ["id", "severity", "code", "message", "objectType", "objectId"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "severity": { "enum": ["error", "warning", "info"] },
-        "code": { "type": "string", "minLength": 1 },
-        "message": { "type": "string" },
-        "objectType": { "type": "string" },
-        "objectId": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "enum": ["error", "warning", "info"]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        },
+        "objectType": {
+          "type": "string"
+        },
+        "objectId": {
+          "type": "string"
+        }
       }
     },
     "ChangeLogEntry": {
@@ -515,10 +857,20 @@
       "additionalProperties": false,
       "required": ["id", "timestamp", "message", "author"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "timestamp": { "type": "string", "format": "date-time" },
-        "message": { "type": "string" },
-        "author": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "message": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
       }
     },
     "RackNumberingDirection": {
