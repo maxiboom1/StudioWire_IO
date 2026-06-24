@@ -118,10 +118,9 @@ export function previewCableRange(
     });
   }
 
-  const overlappingRange =
-    hasValidRange
-      ? ledger?.ranges.find((range) => rangesOverlap(from, to, range.from, range.to)) ?? null
-      : null;
+  const overlappingRange = hasValidRange
+    ? (ledger?.ranges.find((range) => rangesOverlap(from, to, range.from, range.to)) ?? null)
+    : null;
 
   if (overlappingRange) {
     errors.push({
@@ -246,11 +245,7 @@ function assertPositiveInteger(value: number, label: string): void {
   }
 }
 
-function validatePositiveInteger(
-  value: number,
-  label: string,
-  errors: CableNumberError[],
-): void {
+function validatePositiveInteger(value: number, label: string, errors: CableNumberError[]): void {
   if (!Number.isSafeInteger(value) || value < 1) {
     errors.push({
       code: 'invalid-positive-integer',

@@ -1,0 +1,635 @@
+{
+  "schemaVersion": "0.2.7.2",
+  "project": {
+    "id": "project-demo-studio",
+    "name": "Demo Studio",
+    "customer": "Example Broadcast",
+    "revision": "0.1",
+    "status": "invalid_status",
+    "createdAt": "2026-05-06T00:00:00.000Z",
+    "updatedAt": "2026-05-06T00:00:00.000Z",
+    "createdBy": "StudioWire IO",
+    "updatedBy": "StudioWire IO"
+  },
+  "settings": {
+    "categories": [
+      {
+        "id": "category-video",
+        "name": "Video",
+        "defaultCablePrefix": "V"
+      },
+      {
+        "id": "category-audio",
+        "name": "Audio",
+        "defaultCablePrefix": "A"
+      },
+      {
+        "id": "category-network",
+        "name": "Network",
+        "defaultCablePrefix": "N"
+      },
+      {
+        "id": "category-reference",
+        "name": "Reference",
+        "defaultCablePrefix": "R"
+      },
+      {
+        "id": "category-rf",
+        "name": "RF",
+        "defaultCablePrefix": "RF"
+      },
+      {
+        "id": "category-control",
+        "name": "Control",
+        "defaultCablePrefix": "C"
+      }
+    ],
+    "connectorTypes": [
+      {
+        "id": "connector-bnc",
+        "name": "BNC"
+      },
+      {
+        "id": "connector-micro-bnc",
+        "name": "Micro BNC"
+      },
+      {
+        "id": "connector-minidin",
+        "name": "MiniDIN"
+      },
+      {
+        "id": "connector-sdi-din",
+        "name": "SDI DIN"
+      },
+      {
+        "id": "connector-hdmi",
+        "name": "HDMI"
+      },
+      {
+        "id": "connector-xlr",
+        "name": "XLR"
+      },
+      {
+        "id": "connector-pl",
+        "name": "PL"
+      },
+      {
+        "id": "connector-rca",
+        "name": "RCA"
+      },
+      {
+        "id": "connector-rj45",
+        "name": "RJ45"
+      },
+      {
+        "id": "connector-db25",
+        "name": "DB25"
+      },
+      {
+        "id": "connector-madi-bnc",
+        "name": "MADI BNC"
+      },
+      {
+        "id": "connector-madi-fiber",
+        "name": "MADI Fiber"
+      },
+      {
+        "id": "connector-sfp",
+        "name": "SFP"
+      },
+      {
+        "id": "connector-fiber",
+        "name": "Fiber"
+      },
+      {
+        "id": "connector-gpio",
+        "name": "GPIO"
+      },
+      {
+        "id": "connector-other",
+        "name": "Other"
+      }
+    ],
+    "categoryConnectorAssignments": [
+      {
+        "id": "assignment-video-bnc",
+        "categoryId": "category-video",
+        "connectorTypeId": "connector-bnc"
+      },
+      {
+        "id": "assignment-video-micro-bnc",
+        "categoryId": "category-video",
+        "connectorTypeId": "connector-micro-bnc"
+      },
+      {
+        "id": "assignment-video-minidin",
+        "categoryId": "category-video",
+        "connectorTypeId": "connector-minidin"
+      },
+      {
+        "id": "assignment-video-sdi-din",
+        "categoryId": "category-video",
+        "connectorTypeId": "connector-sdi-din"
+      },
+      {
+        "id": "assignment-video-hdmi",
+        "categoryId": "category-video",
+        "connectorTypeId": "connector-hdmi"
+      },
+      {
+        "id": "assignment-audio-bnc",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-bnc"
+      },
+      {
+        "id": "assignment-audio-xlr",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-xlr"
+      },
+      {
+        "id": "assignment-audio-pl",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-pl"
+      },
+      {
+        "id": "assignment-audio-rca",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-rca"
+      },
+      {
+        "id": "assignment-audio-rj45",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-rj45"
+      },
+      {
+        "id": "assignment-audio-db25",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-db25"
+      },
+      {
+        "id": "assignment-audio-madi-bnc",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-madi-bnc"
+      },
+      {
+        "id": "assignment-audio-madi-fiber",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-madi-fiber"
+      },
+      {
+        "id": "assignment-network-rj45",
+        "categoryId": "category-network",
+        "connectorTypeId": "connector-rj45"
+      },
+      {
+        "id": "assignment-network-sfp",
+        "categoryId": "category-network",
+        "connectorTypeId": "connector-sfp"
+      },
+      {
+        "id": "assignment-network-fiber",
+        "categoryId": "category-network",
+        "connectorTypeId": "connector-fiber"
+      },
+      {
+        "id": "assignment-reference-bnc",
+        "categoryId": "category-reference",
+        "connectorTypeId": "connector-bnc"
+      },
+      {
+        "id": "assignment-rf-bnc",
+        "categoryId": "category-rf",
+        "connectorTypeId": "connector-bnc"
+      },
+      {
+        "id": "assignment-control-gpio",
+        "categoryId": "category-control",
+        "connectorTypeId": "connector-gpio"
+      },
+      {
+        "id": "assignment-control-rj45",
+        "categoryId": "category-control",
+        "connectorTypeId": "connector-rj45"
+      }
+    ],
+    "connectorCompatibilityGroups": [
+      {
+        "id": "group-video-sdi-coax",
+        "categoryId": "category-video",
+        "name": "Video connector group"
+      },
+      {
+        "id": "group-audio-analog",
+        "categoryId": "category-audio",
+        "name": "Audio connector group"
+      }
+    ],
+    "connectorCompatibilityGroupMembers": [
+      {
+        "id": "member-video-sdi-bnc",
+        "groupId": "group-video-sdi-coax",
+        "connectorTypeId": "connector-bnc"
+      },
+      {
+        "id": "member-video-sdi-micro-bnc",
+        "groupId": "group-video-sdi-coax",
+        "connectorTypeId": "connector-micro-bnc"
+      },
+      {
+        "id": "member-video-sdi-minidin",
+        "groupId": "group-video-sdi-coax",
+        "connectorTypeId": "connector-minidin"
+      },
+      {
+        "id": "member-video-sdi-din",
+        "groupId": "group-video-sdi-coax",
+        "connectorTypeId": "connector-sdi-din"
+      },
+      {
+        "id": "member-audio-xlr",
+        "groupId": "group-audio-analog",
+        "connectorTypeId": "connector-xlr"
+      },
+      {
+        "id": "member-audio-pl",
+        "groupId": "group-audio-analog",
+        "connectorTypeId": "connector-pl"
+      },
+      {
+        "id": "member-audio-rca",
+        "groupId": "group-audio-analog",
+        "connectorTypeId": "connector-rca"
+      }
+    ],
+    "cablePrefixes": [
+      {
+        "id": "prefix-video",
+        "prefix": "V",
+        "name": "Video"
+      },
+      {
+        "id": "prefix-audio",
+        "prefix": "A",
+        "name": "Audio"
+      },
+      {
+        "id": "prefix-network",
+        "prefix": "N",
+        "name": "Network"
+      },
+      {
+        "id": "prefix-reference",
+        "prefix": "R",
+        "name": "Reference"
+      },
+      {
+        "id": "prefix-rf",
+        "prefix": "RF",
+        "name": "RF"
+      },
+      {
+        "id": "prefix-control",
+        "prefix": "C",
+        "name": "Control"
+      }
+    ],
+    "rackDefaults": {
+      "heightRu": 42,
+      "numberingDirection": "bottom_to_top"
+    },
+    "labelRules": {
+      "cableNumberFormat": "PREFIX-0001",
+      "cableNumberPadding": 4
+    }
+  },
+  "locations": [
+    {
+      "id": "location-control-room",
+      "name": "Control Room",
+      "type": "control_room",
+      "description": "Primary production control room."
+    },
+    {
+      "id": "location-machine-room",
+      "name": "Machine Room",
+      "type": "machine_room",
+      "description": "Central equipment rack area."
+    }
+  ],
+  "racks": [
+    {
+      "id": "rack-mcr-a",
+      "locationId": "location-machine-room",
+      "name": "MCR Rack A",
+      "heightRu": 42,
+      "numberingDirection": "bottom_to_top"
+    }
+  ],
+  "devices": [
+    {
+      "id": "device-router-1",
+      "kind": "device",
+      "name": "Router 1",
+      "code": "RTR1",
+      "manufacturer": "Example Systems",
+      "model": "XR-16",
+      "categoryId": "category-video",
+      "locationId": "location-machine-room",
+      "role": "Video router",
+      "labelPrefix": "RTR1",
+      "mountType": "rack",
+      "rackId": "rack-mcr-a",
+      "rackSizeRu": 2,
+      "rackBottomRu": 20,
+      "status": "planned",
+      "notes": "",
+      "createdAt": "2026-05-06T00:00:00.000Z",
+      "updatedAt": "2026-05-06T00:00:00.000Z"
+    },
+    {
+      "id": "device-multiviewer-1",
+      "kind": "device",
+      "name": "Multiviewer 1",
+      "code": "MV1",
+      "manufacturer": "Example Vision",
+      "model": "MV-4",
+      "categoryId": "category-video",
+      "locationId": "location-control-room",
+      "role": "Monitoring",
+      "labelPrefix": "MV1",
+      "mountType": "non_rack",
+      "rackId": null,
+      "rackSizeRu": null,
+      "rackBottomRu": null,
+      "status": "planned",
+      "notes": "",
+      "createdAt": "2026-05-06T00:00:00.000Z",
+      "updatedAt": "2026-05-06T00:00:00.000Z"
+    }
+  ],
+  "portGroups": [
+    {
+      "id": "port-group-router-outputs",
+      "deviceId": "device-router-1",
+      "name": "OUT",
+      "direction": "output",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "count": 4,
+      "portLabelPattern": "{DEVICE}-OUT-{000}",
+      "cablePrefix": "V",
+      "firstCableNumber": 1,
+      "lastCableNumber": 4,
+      "numberingRangeId": "range-v-router-outputs",
+      "createPlannedCables": true,
+      "locked": false
+    },
+    {
+      "id": "port-group-multiviewer-inputs",
+      "deviceId": "device-multiviewer-1",
+      "name": "IN",
+      "direction": "input",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "count": 4,
+      "portLabelPattern": "{DEVICE}-IN-{000}",
+      "cablePrefix": "V",
+      "firstCableNumber": null,
+      "lastCableNumber": null,
+      "numberingRangeId": null,
+      "createPlannedCables": false,
+      "locked": false
+    }
+  ],
+  "ports": [
+    {
+      "id": "port-group-router-outputs-port-0001",
+      "deviceId": "device-router-1",
+      "portGroupId": "port-group-router-outputs",
+      "index": 1,
+      "name": "OUT 1",
+      "label": "RTR1-OUT-001",
+      "direction": "output",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": "cable-v-0001",
+      "notes": ""
+    },
+    {
+      "id": "port-group-router-outputs-port-0002",
+      "deviceId": "device-router-1",
+      "portGroupId": "port-group-router-outputs",
+      "index": 2,
+      "name": "OUT 2",
+      "label": "RTR1-OUT-002",
+      "direction": "output",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": "cable-v-0002",
+      "notes": ""
+    },
+    {
+      "id": "port-group-router-outputs-port-0003",
+      "deviceId": "device-router-1",
+      "portGroupId": "port-group-router-outputs",
+      "index": 3,
+      "name": "OUT 3",
+      "label": "RTR1-OUT-003",
+      "direction": "output",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": "cable-v-0003",
+      "notes": ""
+    },
+    {
+      "id": "port-group-router-outputs-port-0004",
+      "deviceId": "device-router-1",
+      "portGroupId": "port-group-router-outputs",
+      "index": 4,
+      "name": "OUT 4",
+      "label": "RTR1-OUT-004",
+      "direction": "output",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": "cable-v-0004",
+      "notes": ""
+    },
+    {
+      "id": "port-group-multiviewer-inputs-port-0001",
+      "deviceId": "device-multiviewer-1",
+      "portGroupId": "port-group-multiviewer-inputs",
+      "index": 1,
+      "name": "IN 1",
+      "label": "MV1-IN-001",
+      "direction": "input",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": null,
+      "notes": ""
+    },
+    {
+      "id": "port-group-multiviewer-inputs-port-0002",
+      "deviceId": "device-multiviewer-1",
+      "portGroupId": "port-group-multiviewer-inputs",
+      "index": 2,
+      "name": "IN 2",
+      "label": "MV1-IN-002",
+      "direction": "input",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": null,
+      "notes": ""
+    },
+    {
+      "id": "port-group-multiviewer-inputs-port-0003",
+      "deviceId": "device-multiviewer-1",
+      "portGroupId": "port-group-multiviewer-inputs",
+      "index": 3,
+      "name": "IN 3",
+      "label": "MV1-IN-003",
+      "direction": "input",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": null,
+      "notes": ""
+    },
+    {
+      "id": "port-group-multiviewer-inputs-port-0004",
+      "deviceId": "device-multiviewer-1",
+      "portGroupId": "port-group-multiviewer-inputs",
+      "index": 4,
+      "name": "IN 4",
+      "label": "MV1-IN-004",
+      "direction": "input",
+      "categoryId": "category-video",
+      "connectorTypeId": "connector-bnc",
+      "plannedCableId": null,
+      "notes": ""
+    }
+  ],
+  "cables": [
+    {
+      "id": "cable-v-0001",
+      "number": "V-0001",
+      "prefix": "V",
+      "index": 1,
+      "status": "planned",
+      "sideAEndpoint": {
+        "type": "device_port",
+        "id": "port-group-router-outputs-port-0001",
+        "label": "RTR1-OUT-001"
+      },
+      "sideBEndpoint": {
+        "type": "unknown",
+        "id": null,
+        "label": "Unknown"
+      },
+      "labelTop": "RTR1-OUT-001",
+      "labelMiddle": "V-0001",
+      "labelBottom": "",
+      "notes": ""
+    },
+    {
+      "id": "cable-v-0002",
+      "number": "V-0002",
+      "prefix": "V",
+      "index": 2,
+      "status": "planned",
+      "sideAEndpoint": {
+        "type": "device_port",
+        "id": "port-group-router-outputs-port-0002",
+        "label": "RTR1-OUT-002"
+      },
+      "sideBEndpoint": {
+        "type": "unknown",
+        "id": null,
+        "label": "Unknown"
+      },
+      "labelTop": "RTR1-OUT-002",
+      "labelMiddle": "V-0002",
+      "labelBottom": "",
+      "notes": ""
+    },
+    {
+      "id": "cable-v-0003",
+      "number": "V-0003",
+      "prefix": "V",
+      "index": 3,
+      "status": "planned",
+      "sideAEndpoint": {
+        "type": "device_port",
+        "id": "port-group-router-outputs-port-0003",
+        "label": "RTR1-OUT-003"
+      },
+      "sideBEndpoint": {
+        "type": "unknown",
+        "id": null,
+        "label": "Unknown"
+      },
+      "labelTop": "RTR1-OUT-003",
+      "labelMiddle": "V-0003",
+      "labelBottom": "",
+      "notes": ""
+    },
+    {
+      "id": "cable-v-0004",
+      "number": "V-0004",
+      "prefix": "V",
+      "index": 4,
+      "status": "planned",
+      "sideAEndpoint": {
+        "type": "device_port",
+        "id": "port-group-router-outputs-port-0004",
+        "label": "RTR1-OUT-004"
+      },
+      "sideBEndpoint": {
+        "type": "unknown",
+        "id": null,
+        "label": "Unknown"
+      },
+      "labelTop": "RTR1-OUT-004",
+      "labelMiddle": "V-0004",
+      "labelBottom": "",
+      "notes": ""
+    }
+  ],
+  "numberingLedgers": [
+    {
+      "prefix": "V",
+      "nextSuggested": 9,
+      "ranges": [
+        {
+          "id": "range-v-router-outputs",
+          "prefix": "V",
+          "from": 1,
+          "to": 4,
+          "status": "allocated",
+          "ownerType": "portGroup",
+          "ownerId": "port-group-router-outputs",
+          "reason": "Planned router output cables",
+          "createdAt": "2026-05-06T00:00:00.000Z"
+        },
+        {
+          "id": "range-v-reserved-gap-0005-0008",
+          "prefix": "V",
+          "from": 5,
+          "to": 8,
+          "status": "reserved_gap",
+          "ownerType": "project",
+          "ownerId": "project-demo-studio",
+          "reason": "Reserved for future router expansion",
+          "createdAt": "2026-05-06T00:00:00.000Z"
+        }
+      ]
+    }
+  ],
+  "validationIssues": [],
+  "changeLog": [
+    {
+      "id": "change-project-demo-studio-created",
+      "timestamp": "2026-05-06T00:00:00.000Z",
+      "message": "Project created",
+      "author": "StudioWire IO"
+    }
+  ]
+}

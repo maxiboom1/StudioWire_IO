@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.7.1`. Older `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, and `0.2.7.0` projects are accepted on import and normalized to the current schema.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.7.2`. Older `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, and `0.2.7.1` projects are accepted on import and normalized to the current schema.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.7.1`.
+- `schemaVersion`: current fixed string `0.2.7.2`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -317,6 +317,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, and project summaries use the same staged import pipeline: JSON syntax parsing, safe schema-version inspection, structural preflight, one-step legacy migration to the current version, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, structural preflight, one-step legacy migration to the current version, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid.
 
 Autosave stores compact JSON under `studiowire.io.project.current`. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

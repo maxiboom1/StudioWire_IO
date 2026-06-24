@@ -16,13 +16,7 @@ import { Button } from '../ui/button';
 import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 
 export function AddTerminalBlockModal({
@@ -44,8 +38,11 @@ export function AddTerminalBlockModal({
   );
   const firstRack = racks[0];
   const firstCategory = project.settings.categories[0];
-  const categoryPrefix = firstCategory?.defaultCablePrefix ?? project.settings.cablePrefixes[0]?.prefix ?? 'V';
-  const categoryConnector = firstCategory ? getDefaultConnectorForCategory(project.settings, firstCategory.id) : null;
+  const categoryPrefix =
+    firstCategory?.defaultCablePrefix ?? project.settings.cablePrefixes[0]?.prefix ?? 'V';
+  const categoryConnector = firstCategory
+    ? getDefaultConnectorForCategory(project.settings, firstCategory.id)
+    : null;
   const [draft, setDraft] = useState<TerminalBlockDraft>({
     name: '',
     categoryId: firstCategory?.id ?? '',
@@ -56,7 +53,8 @@ export function AddTerminalBlockModal({
     connectorTypeId: categoryConnector?.id ?? '',
     count: 16,
     cablePrefix: categoryPrefix,
-    firstCableNumber: project.numberingLedgers.find((ledger) => ledger.prefix === categoryPrefix)?.nextSuggested ?? 1,
+    firstCableNumber:
+      project.numberingLedgers.find((ledger) => ledger.prefix === categoryPrefix)?.nextSuggested ?? 1,
     createPlannedCables: true,
     notes: '',
   });
@@ -236,7 +234,10 @@ export function AddTerminalBlockModal({
             </div>
             <div className="form-field">
               <Label htmlFor="tb-cable-prefix">Cable Prefix</Label>
-              <Select value={draft.cablePrefix} onValueChange={(value) => updateDraft({ cablePrefix: value })}>
+              <Select
+                value={draft.cablePrefix}
+                onValueChange={(value) => updateDraft({ cablePrefix: value })}
+              >
                 <SelectTrigger id="tb-cable-prefix">
                   <SelectValue placeholder="Select prefix" />
                 </SelectTrigger>
@@ -266,11 +267,16 @@ export function AddTerminalBlockModal({
             </div>
           </div>
           <p className="form-help">
-            Planned numbers are assigned to FRONT ports only. REAR ports stay unnumbered until connection logic exists.
+            Planned numbers are assigned to FRONT ports only. REAR ports stay unnumbered until connection
+            logic exists.
           </p>
           <div className="form-field">
             <Label htmlFor="tb-notes">Notes</Label>
-            <Textarea id="tb-notes" value={draft.notes} onChange={(event) => updateDraft({ notes: event.target.value })} />
+            <Textarea
+              id="tb-notes"
+              value={draft.notes}
+              onChange={(event) => updateDraft({ notes: event.target.value })}
+            />
           </div>
           <div className="form-messages">
             {validation.warnings.map((warning) => (

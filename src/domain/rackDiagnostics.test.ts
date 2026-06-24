@@ -121,7 +121,9 @@ describe('analyzeRackPlacements', () => {
     ]);
     const diagnostics = analyzeRackPlacements(project);
 
-    expect(diagnostics.some((diagnostic) => diagnostic.code === 'rack-location-device-location-mismatch')).toBe(true);
+    expect(
+      diagnostics.some((diagnostic) => diagnostic.code === 'rack-location-device-location-mismatch'),
+    ).toBe(true);
     expect(diagnostics.filter((diagnostic) => diagnostic.code === 'rack-ru-overlap')).toHaveLength(2);
   });
 });

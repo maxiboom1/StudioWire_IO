@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  allocateCableRange,
-  formatCableNumber,
-  getLedgerForPrefix,
-  parseCableNumber,
-} from './cableNumbers';
+import { allocateCableRange, formatCableNumber, getLedgerForPrefix, parseCableNumber } from './cableNumbers';
 import { createEmptyProject } from './projectFactory';
 
 function createTestProject() {
@@ -155,9 +150,7 @@ describe('allocateCableRange', () => {
       reason: 'Reserved gap reuse',
     });
 
-    expect(rejected.preview.errors.map((error) => error.code)).toContain(
-      'allocation-before-next-suggested',
-    );
+    expect(rejected.preview.errors.map((error) => error.code)).toContain('allocation-before-next-suggested');
     expect(rejected.allocatedRange).toBeNull();
   });
 
@@ -179,9 +172,7 @@ describe('allocateCableRange', () => {
       reason: 'Backfill allocation',
     });
 
-    expect(rejected.preview.errors.map((error) => error.code)).toContain(
-      'allocation-before-next-suggested',
-    );
+    expect(rejected.preview.errors.map((error) => error.code)).toContain('allocation-before-next-suggested');
     expect(rejected.project).toBe(first.project);
   });
 

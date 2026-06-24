@@ -16,7 +16,11 @@ export function ProjectWorkspace() {
 
   return (
     <section className="workspace" aria-label="Project summary">
-      <WorkspaceHeader eyebrow="Project" title={project.project.name} badge={`Schema ${project.schemaVersion}`} />
+      <WorkspaceHeader
+        eyebrow="Project"
+        title={project.project.name}
+        badge={`Schema ${project.schemaVersion}`}
+      />
       <SummaryGrid
         items={[
           ['Customer', project.project.customer || 'Not set'],

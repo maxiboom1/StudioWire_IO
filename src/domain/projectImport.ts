@@ -238,7 +238,13 @@ function migrateProjectToCurrent(project: ProjectRoot, version: SchemaVersion): 
     }),
     devices: project.devices.map((device): Device => {
       if (device.kind === 'terminal_block') {
-        const { code: _code, manufacturer: _manufacturer, model: _model, role: _role, ...terminalBlock } = device;
+        const {
+          code: _code,
+          manufacturer: _manufacturer,
+          model: _model,
+          role: _role,
+          ...terminalBlock
+        } = device;
 
         return {
           ...terminalBlock,
@@ -248,7 +254,7 @@ function migrateProjectToCurrent(project: ProjectRoot, version: SchemaVersion): 
         };
       }
 
-      if (version === STUDIOWIRE_CURRENT_VERSION || version === '0.2.7.0') {
+      if (version === STUDIOWIRE_CURRENT_VERSION || version === '0.2.7.1' || version === '0.2.7.0') {
         return device;
       }
 
@@ -285,7 +291,9 @@ function schemaErrorToImportError(error: ErrorObject): ProjectImportError {
     return {
       code: 'schema-additional-property',
       path: property ? `${path}.${property}` : path,
-      message: property ? `Additional property "${property}" is not allowed.` : 'Additional property is not allowed.',
+      message: property
+        ? `Additional property "${property}" is not allowed.`
+        : 'Additional property is not allowed.',
     };
   }
 

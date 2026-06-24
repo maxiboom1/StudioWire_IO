@@ -17,13 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface DevicePortGroupForm extends DevicePortGroupDraft {
   localId: string;
@@ -107,7 +101,8 @@ export function AddDeviceModal({
                 createPlannedCables: checked,
                 firstCableNumber:
                   group.firstCableNumber ??
-                  project.numberingLedgers.find((ledger) => ledger.prefix === group.cablePrefix)?.nextSuggested ??
+                  project.numberingLedgers.find((ledger) => ledger.prefix === group.cablePrefix)
+                    ?.nextSuggested ??
                   1,
               }
             : group,
@@ -241,7 +236,9 @@ export function AddDeviceModal({
               <Label htmlFor="device-location">Location</Label>
               <Select
                 value={device.locationId ?? NONE_VALUE}
-                onValueChange={(value) => setDevice({ ...device, locationId: value === NONE_VALUE ? null : value })}
+                onValueChange={(value) =>
+                  setDevice({ ...device, locationId: value === NONE_VALUE ? null : value })
+                }
               >
                 <SelectTrigger id="device-location">
                   <SelectValue placeholder="Select location" />
@@ -361,7 +358,10 @@ function PortGroupEditor({
           </div>
           <div className="form-field">
             <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
-            <Select value={group.categoryId} onValueChange={(value) => onCategoryChange(group.localId, value)}>
+            <Select
+              value={group.categoryId}
+              onValueChange={(value) => onCategoryChange(group.localId, value)}
+            >
               <SelectTrigger id={`port-group-category-${group.localId}`}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -587,7 +587,9 @@ function rebalancePlannedCableRanges(
   project: ProjectRoot,
   groups: DevicePortGroupForm[],
 ): DevicePortGroupForm[] {
-  const nextByPrefix = new Map(project.numberingLedgers.map((ledger) => [ledger.prefix, ledger.nextSuggested]));
+  const nextByPrefix = new Map(
+    project.numberingLedgers.map((ledger) => [ledger.prefix, ledger.nextSuggested]),
+  );
 
   return groups.map((group) => {
     const count = Number(group.count);
@@ -713,7 +715,12 @@ function getAddDeviceValidation(
         continue;
       }
 
-      const preview = previewCableRange(previewProject, group.cablePrefix, group.firstCableNumber, group.count);
+      const preview = previewCableRange(
+        previewProject,
+        group.cablePrefix,
+        group.firstCableNumber,
+        group.count,
+      );
 
       for (const error of preview.errors) {
         errors.push(`${group.name}: ${error.message}`);

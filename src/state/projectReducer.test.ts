@@ -89,7 +89,9 @@ describe('projectReducer ADD_DEVICE safety', () => {
       },
     });
 
-    const portGroup = result.project.portGroups.find((group) => group.deviceId === 'device-no-planned-cables-test');
+    const portGroup = result.project.portGroups.find(
+      (group) => group.deviceId === 'device-no-planned-cables-test',
+    );
     const ports = result.project.ports.filter((port) => port.deviceId === 'device-no-planned-cables-test');
 
     expect(portGroup).toMatchObject({
@@ -130,8 +132,12 @@ describe('projectReducer ADD_TERMINAL_BLOCK', () => {
     });
     const terminalBlock = result.project.devices.find((device) => device.id === 'device-tb-a');
     const portGroups = result.project.portGroups.filter((group) => group.deviceId === 'device-tb-a');
-    const rearPorts = result.project.ports.filter((port) => port.deviceId === 'device-tb-a' && port.direction === 'rear');
-    const frontPorts = result.project.ports.filter((port) => port.deviceId === 'device-tb-a' && port.direction === 'front');
+    const rearPorts = result.project.ports.filter(
+      (port) => port.deviceId === 'device-tb-a' && port.direction === 'rear',
+    );
+    const frontPorts = result.project.ports.filter(
+      (port) => port.deviceId === 'device-tb-a' && port.direction === 'front',
+    );
     const frontCables = frontPorts.map((port) =>
       port.plannedCableId ? result.project.cables.find((cable) => cable.id === port.plannedCableId) : null,
     );
@@ -369,7 +375,7 @@ describe('parseImportedProject schema compatibility', () => {
     if (!secondImport.ok) {
       return;
     }
-    expect(secondImport.project.schemaVersion).toBe('0.2.7.1');
+    expect(secondImport.project.schemaVersion).toBe('0.2.7.2');
     expect(secondImport.project.cables[0]).toHaveProperty('sideAEndpoint');
     expect(secondImport.project.cables[0]).toHaveProperty('sideBEndpoint');
   });
@@ -386,7 +392,7 @@ describe('parseImportedProject schema compatibility', () => {
     if (!result.ok) {
       return;
     }
-    expect(result.project.schemaVersion).toBe('0.2.7.1');
+    expect(result.project.schemaVersion).toBe('0.2.7.2');
     expect(result.project.devices[0]).toMatchObject({
       kind: 'device',
       code: 'RTR1',
@@ -460,11 +466,13 @@ describe('parseImportedProject schema compatibility', () => {
     const audioPort = result.project.ports.find((port) => port.id === 'port-audio-legacy');
     const videoAssignment = result.project.settings.categoryConnectorAssignments.find(
       (assignment) =>
-        assignment.categoryId === videoPort?.categoryId && assignment.connectorTypeId === videoPort?.connectorTypeId,
+        assignment.categoryId === videoPort?.categoryId &&
+        assignment.connectorTypeId === videoPort?.connectorTypeId,
     );
     const audioAssignment = result.project.settings.categoryConnectorAssignments.find(
       (assignment) =>
-        assignment.categoryId === audioPort?.categoryId && assignment.connectorTypeId === audioPort?.connectorTypeId,
+        assignment.categoryId === audioPort?.categoryId &&
+        assignment.connectorTypeId === audioPort?.connectorTypeId,
     );
     const videoConnector = result.project.settings.connectorTypes.find(
       (connectorType) => connectorType.id === videoPort?.connectorTypeId,
@@ -473,7 +481,7 @@ describe('parseImportedProject schema compatibility', () => {
       (connectorType) => connectorType.id === audioPort?.connectorTypeId,
     );
 
-    expect(result.project.schemaVersion).toBe('0.2.7.1');
+    expect(result.project.schemaVersion).toBe('0.2.7.2');
     expect(result.project.settings.connectorCompatibilityGroups.length).toBeGreaterThan(0);
     expect(videoConnector).toMatchObject({ name: 'BNC' });
     expect(audioConnector).toMatchObject({ name: 'XLR' });

@@ -15,14 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
 interface CableColumn {
   id: CableColumnId;
@@ -114,7 +107,9 @@ export function CablesWorkspace() {
                       <TableCell>{row.connectorA}</TableCell>
                       <TableCell>{row.connectorB}</TableCell>
                       <TableCell>
-                        <Badge className={`cables-status-badge cables-status-${row.status}`}>{row.status}</Badge>
+                        <Badge className={`cables-status-badge cables-status-${row.status}`}>
+                          {row.status}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))

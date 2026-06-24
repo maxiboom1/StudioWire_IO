@@ -45,7 +45,9 @@ export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: Vali
         ) : null}
       </div>
       <div className="validation-panel-right">
-        <p className="status-message" aria-live="polite">{statusMessage}</p>
+        <p className="status-message" aria-live="polite">
+          {statusMessage}
+        </p>
       </div>
     </footer>
   );

@@ -17,9 +17,7 @@ export interface BrowserStorageLike {
   removeItem(key: string): void;
 }
 
-export type StorageAccessResult =
-  | { ok: true; storage: BrowserStorageLike }
-  | { ok: false; message: string };
+export type StorageAccessResult = { ok: true; storage: BrowserStorageLike } | { ok: false; message: string };
 
 export interface StorageRecoveryResult {
   project: ProjectRoot | null;
@@ -70,15 +68,23 @@ export function restoreStoredProject(storage: BrowserStorageLike): StorageRecove
   return { project: null, key: null, errors };
 }
 
-export function saveStoredProject(storage: BrowserStorageLike, project: ProjectRoot): { ok: true } | { ok: false; message: string } {
+export function saveStoredProject(
+  storage: BrowserStorageLike,
+  project: ProjectRoot,
+): { ok: true } | { ok: false; message: string } {
   return safeSetItem(storage, ACTIVE_STORAGE_KEY, JSON.stringify(project));
 }
 
-export function removeStoredProject(storage: BrowserStorageLike, key: string): { ok: true } | { ok: false; message: string } {
+export function removeStoredProject(
+  storage: BrowserStorageLike,
+  key: string,
+): { ok: true } | { ok: false; message: string } {
   return safeRemoveItem(storage, key);
 }
 
-export function isSuccessfulImport(result: ProjectImportResult): result is Extract<ProjectImportResult, { ok: true }> {
+export function isSuccessfulImport(
+  result: ProjectImportResult,
+): result is Extract<ProjectImportResult, { ok: true }> {
   return result.ok;
 }
 
@@ -117,4 +123,3 @@ function safeRemoveItem(
     return { ok: false, message: error instanceof Error ? error.message : 'Storage cleanup failed.' };
   }
 }
-

@@ -57,10 +57,14 @@ function validateSettings(
   const issues: ValidationIssue[] = [];
   const cablePrefixValues = new Set(project.settings.cablePrefixes.map((prefix) => prefix.prefix));
   const cablePrefixCounts = countBy(project.settings.cablePrefixes, (prefix) => prefix.prefix);
-  const categoryNameCounts = countBy(project.settings.categories, (category) => category.name.trim().toLowerCase());
+  const categoryNameCounts = countBy(project.settings.categories, (category) =>
+    category.name.trim().toLowerCase(),
+  );
   const categoryIds = new Set(project.settings.categories.map((category) => category.id));
   const connectorTypeIds = new Set(project.settings.connectorTypes.map((connectorType) => connectorType.id));
-  const connectorGroupsById = new Map(project.settings.connectorCompatibilityGroups.map((group) => [group.id, group]));
+  const connectorGroupsById = new Map(
+    project.settings.connectorCompatibilityGroups.map((group) => [group.id, group]),
+  );
   const groupNameCounts = countBy(
     project.settings.connectorCompatibilityGroups,
     (group) => `${group.categoryId}:${group.name.trim().toLowerCase()}`,
@@ -104,7 +108,9 @@ function validateSettings(
 
   for (const category of project.settings.categories) {
     if (!category.name.trim()) {
-      issues.push(issue('error', 'empty-category-name', 'Category name is required.', 'category', category.id));
+      issues.push(
+        issue('error', 'empty-category-name', 'Category name is required.', 'category', category.id),
+      );
     }
 
     if ((categoryNameCounts.get(category.name.trim().toLowerCase()) ?? 0) > 1) {
@@ -135,7 +141,13 @@ function validateSettings(
   for (const connectorType of project.settings.connectorTypes) {
     if (!connectorType.name.trim()) {
       issues.push(
-        issue('error', 'empty-connector-type-name', 'Connector type name is required.', 'connectorType', connectorType.id),
+        issue(
+          'error',
+          'empty-connector-type-name',
+          'Connector type name is required.',
+          'connectorType',
+          connectorType.id,
+        ),
       );
     }
 
@@ -177,7 +189,10 @@ function validateSettings(
       );
     }
 
-    if ((assignmentCounts.get(createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId)) ?? 0) > 1) {
+    if (
+      (assignmentCounts.get(createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId)) ??
+        0) > 1
+    ) {
       issues.push(
         issue(
           'error',
@@ -193,7 +208,13 @@ function validateSettings(
   for (const group of project.settings.connectorCompatibilityGroups) {
     if (!group.name.trim()) {
       issues.push(
-        issue('error', 'empty-connector-group-name', 'Connector group name is required.', 'connectorGroup', group.id),
+        issue(
+          'error',
+          'empty-connector-group-name',
+          'Connector group name is required.',
+          'connectorGroup',
+          group.id,
+        ),
       );
     }
 
@@ -289,7 +310,10 @@ function validateDuplicateIds(
       objectType: 'categoryConnectorAssignment',
       objectId: item.id,
     })),
-    ...project.settings.connectorCompatibilityGroups.map((item) => ({ objectType: 'connectorGroup', objectId: item.id })),
+    ...project.settings.connectorCompatibilityGroups.map((item) => ({
+      objectType: 'connectorGroup',
+      objectId: item.id,
+    })),
     ...project.settings.connectorCompatibilityGroupMembers.map((item) => ({
       objectType: 'connectorGroupMember',
       objectId: item.id,
@@ -394,12 +418,22 @@ function validateCables(
       }
     } catch {
       issues.push(
-        issue('error', 'cable-number-format-invalid', `Invalid cable number: ${cable.number}.`, 'cable', cable.id),
+        issue(
+          'error',
+          'cable-number-format-invalid',
+          `Invalid cable number: ${cable.number}.`,
+          'cable',
+          cable.id,
+        ),
       );
     }
 
     for (const endpoint of [cable.sideAEndpoint, cable.sideBEndpoint]) {
-      if ((endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id && !ports.has(endpoint.id)) {
+      if (
+        (endpoint.type === 'device_port' || endpoint.type === 'tb_port') &&
+        endpoint.id &&
+        !ports.has(endpoint.id)
+      ) {
         issues.push(
           issue(
             'error',
@@ -411,7 +445,11 @@ function validateCables(
         );
       }
 
-      if (cable.status === 'planned' && (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id) {
+      if (
+        cable.status === 'planned' &&
+        (endpoint.type === 'device_port' || endpoint.type === 'tb_port') &&
+        endpoint.id
+      ) {
         const endpointPort = ports.get(endpoint.id);
 
         if (endpointPort && endpointPort.plannedCableId !== cable.id) {
@@ -444,7 +482,12 @@ function validateCables(
           );
         }
 
-        if (endpointPort && endpoint === cable.sideBEndpoint && endpointPort.direction === 'input' && cable.labelBottom !== endpoint.label) {
+        if (
+          endpointPort &&
+          endpoint === cable.sideBEndpoint &&
+          endpointPort.direction === 'input' &&
+          cable.labelBottom !== endpoint.label
+        ) {
           issues.push(
             issue(
               'error',
@@ -494,7 +537,9 @@ function validatePortPlannedCableLink(
   issue: ReturnType<typeof createIssueBuilder>,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-  const hasPortEndpoint = endpointReferencesPort(cable.sideAEndpoint, port.id) || endpointReferencesPort(cable.sideBEndpoint, port.id);
+  const hasPortEndpoint =
+    endpointReferencesPort(cable.sideAEndpoint, port.id) ||
+    endpointReferencesPort(cable.sideBEndpoint, port.id);
 
   if (!hasPortEndpoint) {
     issues.push(
@@ -746,7 +791,12 @@ function validateConnectionChains(
 
     const [leftPort, rightPort] = standardPorts;
 
-    if (leftPort && rightPort && standardPorts.length === 2 && !areStandardDirectionsCompatible(leftPort, rightPort)) {
+    if (
+      leftPort &&
+      rightPort &&
+      standardPorts.length === 2 &&
+      !areStandardDirectionsCompatible(leftPort, rightPort)
+    ) {
       issues.push(
         issue(
           'error',
@@ -793,8 +843,12 @@ function buildConnectionNeighborMap(project: ProjectRoot): Map<string, Set<strin
       continue;
     }
 
-    const rearPorts = project.ports.filter((port) => port.deviceId === device.id && port.direction === 'rear');
-    const frontPorts = project.ports.filter((port) => port.deviceId === device.id && port.direction === 'front');
+    const rearPorts = project.ports.filter(
+      (port) => port.deviceId === device.id && port.direction === 'rear',
+    );
+    const frontPorts = project.ports.filter(
+      (port) => port.deviceId === device.id && port.direction === 'front',
+    );
 
     for (const rearPort of rearPorts) {
       const frontPort = frontPorts.find((candidate) => candidate.index === rearPort.index);
@@ -821,7 +875,13 @@ function validateReferences(
   for (const device of project.devices) {
     if (!categories.has(device.categoryId)) {
       issues.push(
-        issue('error', 'unknown-category', `Device ${device.name} uses unknown category.`, 'device', device.id),
+        issue(
+          'error',
+          'unknown-category',
+          `Device ${device.name} uses unknown category.`,
+          'device',
+          device.id,
+        ),
       );
     }
   }
@@ -849,7 +909,11 @@ function validateReferences(
           portGroup.id,
         ),
       );
-    } else if (!categoryConnectorAssignments.has(createCategoryAssignmentKey(portGroup.categoryId, portGroup.connectorTypeId))) {
+    } else if (
+      !categoryConnectorAssignments.has(
+        createCategoryAssignmentKey(portGroup.categoryId, portGroup.connectorTypeId),
+      )
+    ) {
       issues.push(
         issue(
           'error',
@@ -876,7 +940,9 @@ function validateReferences(
 
   for (const port of project.ports) {
     if (!categories.has(port.categoryId)) {
-      issues.push(issue('error', 'unknown-category', `Port ${port.label} uses unknown category.`, 'port', port.id));
+      issues.push(
+        issue('error', 'unknown-category', `Port ${port.label} uses unknown category.`, 'port', port.id),
+      );
     }
 
     if (!connectorTypes.has(port.connectorTypeId)) {
@@ -889,7 +955,9 @@ function validateReferences(
           port.id,
         ),
       );
-    } else if (!categoryConnectorAssignments.has(createCategoryAssignmentKey(port.categoryId, port.connectorTypeId))) {
+    } else if (
+      !categoryConnectorAssignments.has(createCategoryAssignmentKey(port.categoryId, port.connectorTypeId))
+    ) {
       issues.push(
         issue(
           'error',
@@ -961,7 +1029,9 @@ function validateLocationsAndRacks(
     }
 
     if (!locations.has(rack.locationId)) {
-      issues.push(issue('error', 'rack-without-location', 'Rack must reference an existing location.', 'rack', rack.id));
+      issues.push(
+        issue('error', 'rack-without-location', 'Rack must reference an existing location.', 'rack', rack.id),
+      );
     }
 
     if (!isPositiveInteger(rack.heightRu)) {
@@ -992,13 +1062,25 @@ function validateDevices(
     if (device.kind === 'terminal_block') {
       if (device.mountType !== 'rack') {
         issues.push(
-          issue('error', 'terminal-block-rack-mounted', 'Terminal block must be rack-mounted.', 'device', device.id),
+          issue(
+            'error',
+            'terminal-block-rack-mounted',
+            'Terminal block must be rack-mounted.',
+            'device',
+            device.id,
+          ),
         );
       }
 
       if (device.rackSizeRu !== 1) {
         issues.push(
-          issue('error', 'terminal-block-size-fixed', 'Terminal block rack size must be 1 RU.', 'device', device.id),
+          issue(
+            'error',
+            'terminal-block-size-fixed',
+            'Terminal block rack size must be 1 RU.',
+            'device',
+            device.id,
+          ),
         );
       }
     }
@@ -1036,7 +1118,13 @@ function validateDevices(
 
     if (!rack) {
       issues.push(
-        issue('error', 'rack-mounted-device-without-rack', 'Rack-mounted device requires a rack.', 'device', device.id),
+        issue(
+          'error',
+          'rack-mounted-device-without-rack',
+          'Rack-mounted device requires a rack.',
+          'device',
+          device.id,
+        ),
       );
       continue;
     }
@@ -1102,7 +1190,9 @@ function validateRackOverlaps(
   const issues: ValidationIssue[] = [];
 
   for (const rack of project.racks) {
-    const rackDevices = project.devices.filter((device) => device.rackId === rack.id && device.mountType === 'rack');
+    const rackDevices = project.devices.filter(
+      (device) => device.rackId === rack.id && device.mountType === 'rack',
+    );
 
     for (let leftIndex = 0; leftIndex < rackDevices.length; leftIndex += 1) {
       const left = rackDevices[leftIndex];
@@ -1224,7 +1314,14 @@ function validatePortsAndGroups(
     }
 
     issues.push(
-      ...validatePortGroupPlannedCableMode(portGroup, generatedPorts, project.cables, cablesById, numberingRange, issue),
+      ...validatePortGroupPlannedCableMode(
+        portGroup,
+        generatedPorts,
+        project.cables,
+        cablesById,
+        numberingRange,
+        issue,
+      ),
     );
   }
 
@@ -1235,13 +1332,25 @@ function validatePortsAndGroups(
   for (const port of project.ports) {
     if (!devices.has(port.deviceId)) {
       issues.push(
-        issue('error', 'port-without-parent-device', `Port ${port.label} has no parent device.`, 'port', port.id),
+        issue(
+          'error',
+          'port-without-parent-device',
+          `Port ${port.label} has no parent device.`,
+          'port',
+          port.id,
+        ),
       );
     }
 
     if (!portGroups.has(port.portGroupId)) {
       issues.push(
-        issue('error', 'port-without-parent-port-group', `Port ${port.label} has no parent port group.`, 'port', port.id),
+        issue(
+          'error',
+          'port-without-parent-port-group',
+          `Port ${port.label} has no parent port group.`,
+          'port',
+          port.id,
+        ),
       );
     }
   }
@@ -1349,7 +1458,7 @@ function validatePortGroupPlannedCableMode(
   }
 
   const linkedPlannedCables = generatedPorts
-    .map((port) => (port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null))
+    .map((port) => (port.plannedCableId ? (cablesById.get(port.plannedCableId) ?? null) : null))
     .filter((cable): cable is Cable => cable !== null);
 
   if (linkedPlannedCables.length !== portGroup.count) {
@@ -1605,7 +1714,9 @@ function validateLedgerRanges(
       }
     }
 
-    for (const cable of project.cables.filter((item) => item.status === 'planned' && item.prefix === ledger.prefix)) {
+    for (const cable of project.cables.filter(
+      (item) => item.status === 'planned' && item.prefix === ledger.prefix,
+    )) {
       const owningRange = ledger.ranges.find(
         (range) =>
           (range.status === 'allocated' || range.status === 'retired') &&
@@ -1689,7 +1800,9 @@ function validateReservedGapReuse(
     }
 
     for (const allocated of ledger.ranges.filter((range) => range.status === 'allocated')) {
-      const reservedGap = reservedGaps.find((range) => rangesOverlap(allocated.from, allocated.to, range.from, range.to));
+      const reservedGap = reservedGaps.find((range) =>
+        rangesOverlap(allocated.from, allocated.to, range.from, range.to),
+      );
 
       if (reservedGap) {
         issues.push(
@@ -1742,12 +1855,18 @@ function countBy<T>(items: T[], getKey: (item: T) => string): Map<string, number
   return counts;
 }
 
-function isRackPositionValid(device: Device): device is Device & { rackBottomRu: number; rackSizeRu: number } {
+function isRackPositionValid(
+  device: Device,
+): device is Device & { rackBottomRu: number; rackSizeRu: number } {
   return isPositiveInteger(device.rackBottomRu) && isPositiveInteger(device.rackSizeRu);
 }
 
 function endpointIdInSet(endpoint: Cable['sideAEndpoint'], ids: Set<string>): boolean {
-  return (endpoint.type === 'device_port' || endpoint.type === 'tb_port') && endpoint.id !== null && ids.has(endpoint.id);
+  return (
+    (endpoint.type === 'device_port' || endpoint.type === 'tb_port') &&
+    endpoint.id !== null &&
+    ids.has(endpoint.id)
+  );
 }
 
 function isPositiveInteger(value: unknown): value is number {

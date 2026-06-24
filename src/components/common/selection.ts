@@ -50,7 +50,10 @@ export function resolveIssueSelection(
     return { selectedObjectType: 'project', selectedObjectId: project.project.id };
   }
 
-  if (issue.objectType === 'location' && project.locations.some((location) => location.id === issue.objectId)) {
+  if (
+    issue.objectType === 'location' &&
+    project.locations.some((location) => location.id === issue.objectId)
+  ) {
     return { selectedObjectType: 'location', selectedObjectId: issue.objectId };
   }
 
@@ -90,10 +93,7 @@ export function resolveIssueSelection(
   return null;
 }
 
-export function getInspectorRows(
-  project: ProjectRoot,
-  selected: ResolvedSelection,
-): Array<[string, string]> {
+export function getInspectorRows(project: ProjectRoot, selected: ResolvedSelection): Array<[string, string]> {
   switch (selected.type) {
     case 'project':
       return [

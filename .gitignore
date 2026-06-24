@@ -8,7 +8,10 @@ test-results/
 playwright-report/
 blob-report/
 output/
+.source-package/
 *.tsbuildinfo
+*.tgz
+*.trace.zip
 .env
 .env.local
 npm-debug.log*

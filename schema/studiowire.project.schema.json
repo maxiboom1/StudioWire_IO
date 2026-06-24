@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.7.1",
+  "title": "StudioWire IO Project v0.2.7.2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.7.1"
+      "const": "0.2.7.2"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -474,17 +474,7 @@
     "NumberingRange": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "prefix",
-        "from",
-        "to",
-        "status",
-        "ownerType",
-        "ownerId",
-        "reason",
-        "createdAt"
-      ],
+      "required": ["id", "prefix", "from", "to", "status", "ownerType", "ownerId", "reason", "createdAt"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "prefix": { "type": "string", "pattern": "^[A-Z]+$" },

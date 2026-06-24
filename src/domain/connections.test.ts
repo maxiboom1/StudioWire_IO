@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { connectPorts, describePortConnection, disconnectPort, getConnectionTargetStatus } from './connections';
+import {
+  connectPorts,
+  describePortConnection,
+  disconnectPort,
+  getConnectionTargetStatus,
+} from './connections';
 import { sampleProject } from './sampleProject';
 import { validateProject } from './validators';
 import { projectReducer, type ProjectState } from '../state/projectReducer';
@@ -59,7 +64,10 @@ function addDevicePort(
   }).project;
 }
 
-function addTerminalBlock(project: ProjectRoot, input: { id: string; labelPrefix: string; firstCableNumber: number; ru: number }) {
+function addTerminalBlock(
+  project: ProjectRoot,
+  input: { id: string; labelPrefix: string; firstCableNumber: number; ru: number },
+) {
   return projectReducer(createState(project), {
     type: 'ADD_TERMINAL_BLOCK',
     payload: {
@@ -83,7 +91,9 @@ function addTerminalBlock(project: ProjectRoot, input: { id: string; labelPrefix
 }
 
 function getPort(project: ProjectRoot, deviceId: string, direction: Port['direction']) {
-  const port = project.ports.find((candidate) => candidate.deviceId === deviceId && candidate.direction === direction);
+  const port = project.ports.find(
+    (candidate) => candidate.deviceId === deviceId && candidate.direction === direction,
+  );
 
   if (!port) {
     throw new Error(`Missing ${deviceId} ${direction} port`);
@@ -200,7 +210,12 @@ describe('connectPorts', () => {
 
   it('validates and describes a device to TB to device chain', () => {
     let project = structuredClone(sampleProject);
-    project = addTerminalBlock(project, { id: 'device-tb-a', labelPrefix: 'TB-A', firstCableNumber: 9, ru: 1 });
+    project = addTerminalBlock(project, {
+      id: 'device-tb-a',
+      labelPrefix: 'TB-A',
+      firstCableNumber: 9,
+      ru: 1,
+    });
     project = addDevicePort(project, {
       id: 'device-switcher',
       labelPrefix: 'SW',
@@ -253,8 +268,18 @@ describe('connectPorts', () => {
 
   it('supports TB front to TB front patching with lower-number-wins', () => {
     let project = structuredClone(sampleProject);
-    project = addTerminalBlock(project, { id: 'device-tb-a', labelPrefix: 'TB-A', firstCableNumber: 9, ru: 1 });
-    project = addTerminalBlock(project, { id: 'device-tb-b', labelPrefix: 'TB-B', firstCableNumber: 10, ru: 2 });
+    project = addTerminalBlock(project, {
+      id: 'device-tb-a',
+      labelPrefix: 'TB-A',
+      firstCableNumber: 9,
+      ru: 1,
+    });
+    project = addTerminalBlock(project, {
+      id: 'device-tb-b',
+      labelPrefix: 'TB-B',
+      firstCableNumber: 10,
+      ru: 2,
+    });
     const tbAFront = getPort(project, 'device-tb-a', 'front');
     const tbBFront = getPort(project, 'device-tb-b', 'front');
     const result = connectPorts(project, { fromPortId: tbAFront.id, toPortId: tbBFront.id });
@@ -292,7 +317,10 @@ describe('connectPorts', () => {
       return;
     }
 
-    const secondResult = connectPorts(firstResult.project, { fromPortId: switcherIn.id, toPortId: cameraOut.id });
+    const secondResult = connectPorts(firstResult.project, {
+      fromPortId: switcherIn.id,
+      toPortId: cameraOut.id,
+    });
 
     expect(secondResult.ok).toBe(true);
     if (!secondResult.ok) {
@@ -403,7 +431,9 @@ describe('connectPorts', () => {
     const routerOut = getPort(project, 'device-router-1', 'output');
     const retiredIn = getPort(project, 'device-switcher-retired-target', 'input');
 
-    expect(getConnectionTargetStatus(project, { fromPortId: routerOut.id, toPortId: retiredIn.id }).ok).toBe(false);
+    expect(getConnectionTargetStatus(project, { fromPortId: routerOut.id, toPortId: retiredIn.id }).ok).toBe(
+      false,
+    );
     expect(connectPorts(project, { fromPortId: routerOut.id, toPortId: retiredIn.id }).ok).toBe(false);
   });
 

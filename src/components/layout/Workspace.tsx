@@ -24,10 +24,7 @@ export function Workspace({
       <section className="workspace welcome-workspace" aria-label="Center workspace">
         <p className="eyebrow">StudioWire IO</p>
         <h1>Open a project object from the tree.</h1>
-        <p>
-          Select the project root, a location, a rack, or a device to inspect the current project
-          data.
-        </p>
+        <p>Select the project root, a location, a rack, or a device to inspect the current project data.</p>
       </section>
     );
   }

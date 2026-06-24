@@ -78,13 +78,7 @@ export function WorkspaceCard({
   );
 }
 
-export function EmptyState({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Alert className="empty-state workspace-section border-dashed bg-white/80">
       <AlertTitle>{title}</AlertTitle>

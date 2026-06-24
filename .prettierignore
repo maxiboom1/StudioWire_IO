@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.playwright-cli/
+test-results/
+playwright-report/
+blob-report/
+output/
+.source-package/
+*.tsbuildinfo
+*.tgz
+

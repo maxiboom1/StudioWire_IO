@@ -15,7 +15,12 @@
   color: #172126;
   background: #edf1f3;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -180,7 +185,7 @@ textarea:not([data-ui]) {
   color: var(--studio-text);
 }
 
-.app-section-tab[data-active="true"] {
+.app-section-tab[data-active='true'] {
   background: #172126;
   color: #ffffff;
 }
@@ -268,8 +273,8 @@ textarea:not([data-ui]) {
   grid-template-columns: minmax(0, 1fr) 300px;
   grid-template-rows: minmax(0, 1fr) var(--app-footer-height);
   grid-template-areas:
-    "workspace inspector"
-    "validation validation";
+    'workspace inspector'
+    'validation validation';
 }
 
 .workspace,
@@ -450,8 +455,7 @@ textarea:not([data-ui]) {
   border-radius: 0;
   background:
     linear-gradient(rgba(15, 79, 81, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 79, 81, 0.035) 1px, transparent 1px),
-    #f7fbfc;
+    linear-gradient(90deg, rgba(15, 79, 81, 0.035) 1px, transparent 1px), #f7fbfc;
   background-size: 24px 24px;
   padding: 18px;
 }
@@ -1112,28 +1116,28 @@ textarea:not([data-ui]) {
   width: 260px;
 }
 
-.cables-filter-menu [role="menuitemcheckbox"] {
+.cables-filter-menu [role='menuitemcheckbox'] {
   min-width: 0;
 }
 
-.cables-filter-menu [role="menuitemcheckbox"] > span:last-child {
+.cables-filter-menu [role='menuitemcheckbox'] > span:last-child {
   min-width: 0;
 }
 
-.cables-filter-menu [role="menuitem"] {
+.cables-filter-menu [role='menuitem'] {
   cursor: pointer;
 }
 
-.cables-filter-menu [role="menuitem"],
-.cables-filter-menu [role="menuitemcheckbox"] {
+.cables-filter-menu [role='menuitem'],
+.cables-filter-menu [role='menuitemcheckbox'] {
   font-size: 0.78rem;
 }
 
-.cables-filter-menu [role="menuitemcheckbox"][data-state="unchecked"] {
+.cables-filter-menu [role='menuitemcheckbox'][data-state='unchecked'] {
   color: #6c7c83;
 }
 
-.cables-filter-menu [role="menuitemcheckbox"][data-state="checked"] {
+.cables-filter-menu [role='menuitemcheckbox'][data-state='checked'] {
   color: #122227;
 }
 
@@ -1142,7 +1146,7 @@ textarea:not([data-ui]) {
 }
 
 .cables-filter-menu [data-radix-dropdown-menu-label],
-.cables-filter-menu [role="menuitem"] {
+.cables-filter-menu [role='menuitem'] {
   min-width: 0;
 }
 
@@ -1252,7 +1256,9 @@ textarea:not([data-ui]) {
   --device-side-width: 310px;
   display: grid;
   grid-template-columns: var(--device-side-width) var(--device-body-width) var(--device-side-width);
-  grid-template-rows: calc(var(--device-header-height) + (var(--device-port-rows) * var(--device-row-height)));
+  grid-template-rows: calc(
+    var(--device-header-height) + (var(--device-port-rows) * var(--device-row-height))
+  );
   width: max-content;
   min-width: calc((var(--device-side-width) * 2) + var(--device-body-width));
   color: #101418;
@@ -1378,7 +1384,7 @@ textarea:not([data-ui]) {
   height: 5px;
   border-radius: 50%;
   background: #050505;
-  content: "";
+  content: '';
   transform: translate(-50%, -50%);
 }
 
@@ -1416,7 +1422,7 @@ textarea:not([data-ui]) {
   height: 4px;
   border-radius: 50%;
   background: #0d1114;
-  content: "";
+  content: '';
   transform: translate(-50%, -50%);
 }
 
@@ -1515,7 +1521,7 @@ textarea:not([data-ui]) {
   width: 20px;
   height: 3px;
   background: #cf0505;
-  content: "";
+  content: '';
 }
 
 .device-inline-tb-arrow-right::before {
@@ -1650,7 +1656,7 @@ textarea:not([data-ui]) {
   border: 3px solid #050505;
   border-radius: 50%;
   background: #ffffff;
-  content: "";
+  content: '';
 }
 
 .terminal-block-connector::after {
@@ -1661,7 +1667,7 @@ textarea:not([data-ui]) {
   height: 7px;
   border-radius: 50%;
   background: #050505;
-  content: "";
+  content: '';
   transform: translate(-50%, -50%);
 }
 
@@ -2045,9 +2051,9 @@ textarea:not([data-ui]) {
   .app-grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "workspace"
-      "inspector"
-      "validation";
+      'workspace'
+      'inspector'
+      'validation';
   }
 
   .validation-panel {
@@ -2132,9 +2138,9 @@ textarea:not([data-ui]) {
   .app-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "workspace"
-      "inspector"
-      "validation";
+      'workspace'
+      'inspector'
+      'validation';
   }
 
   .workspace {
@@ -2165,7 +2171,7 @@ textarea:not([data-ui]) {
   text-transform: capitalize;
 }
 
-.app-persistence-state[data-state="failed"] {
+.app-persistence-state[data-state='failed'] {
   border-color: hsl(var(--destructive));
   color: hsl(var(--destructive));
 }

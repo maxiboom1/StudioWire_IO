@@ -26,14 +26,26 @@ describe('importProjectValue structural safety', () => {
   it('reports path-specific errors for wrong primitive fields across project collections', () => {
     const cases: Array<[string, (project: any) => void, string]> = [
       ['category', (project) => (project.settings.categories[0].name = 1), '$.settings.categories.0.name'],
-      ['connector', (project) => (project.settings.connectorTypes[0].name = 1), '$.settings.connectorTypes.0.name'],
+      [
+        'connector',
+        (project) => (project.settings.connectorTypes[0].name = 1),
+        '$.settings.connectorTypes.0.name',
+      ],
       ['location', (project) => (project.locations[0].name = 1), '$.locations.0.name'],
       ['rack', (project) => (project.racks[0].heightRu = '42'), '$.racks.0.heightRu'],
       ['device', (project) => (project.devices[0].status = 1), '$.devices.0.status'],
       ['port', (project) => (project.ports[0].index = '1'), '$.ports.0.index'],
       ['cable', (project) => (project.cables[0].status = 1), '$.cables.0.status'],
-      ['numbering ledger', (project) => (project.numberingLedgers[0].nextSuggested = '1'), '$.numberingLedgers.0.nextSuggested'],
-      ['validation issue', (project) => (project.validationIssues[0] = { ...project.validationIssues[0], severity: 1 }), '$.validationIssues.0.severity'],
+      [
+        'numbering ledger',
+        (project) => (project.numberingLedgers[0].nextSuggested = '1'),
+        '$.numberingLedgers.0.nextSuggested',
+      ],
+      [
+        'validation issue',
+        (project) => (project.validationIssues[0] = { ...project.validationIssues[0], severity: 1 }),
+        '$.validationIssues.0.severity',
+      ],
       ['change log', (project) => (project.changeLog[0].message = 1), '$.changeLog.0.message'],
     ];
 
@@ -73,10 +85,29 @@ describe('importProjectValue structural safety', () => {
       ['port direction', (project) => (project.ports[0].direction = 'sideways'), '$.ports.0.direction'],
       ['device kind', (project) => (project.devices[0].kind = 'rack'), '$.devices.0.kind'],
       ['mount type', (project) => (project.devices[0].mountType = 'wall'), '$.devices.0.mountType'],
-      ['rack direction', (project) => (project.racks[0].numberingDirection = 'left_to_right'), '$.racks.0.numberingDirection'],
-      ['endpoint type', (project) => (project.cables[0].sideAEndpoint.type = 'port'), '$.cables.0.sideAEndpoint.type'],
-      ['range status', (project) => (project.numberingLedgers[0].ranges[0].status = 'used'), '$.numberingLedgers.0.ranges.0.status'],
-      ['severity', (project) => (project.validationIssues = [{ id: 'v', severity: 'fatal', code: 'x', message: '', objectType: '', objectId: '' }]), '$.validationIssues.0.severity'],
+      [
+        'rack direction',
+        (project) => (project.racks[0].numberingDirection = 'left_to_right'),
+        '$.racks.0.numberingDirection',
+      ],
+      [
+        'endpoint type',
+        (project) => (project.cables[0].sideAEndpoint.type = 'port'),
+        '$.cables.0.sideAEndpoint.type',
+      ],
+      [
+        'range status',
+        (project) => (project.numberingLedgers[0].ranges[0].status = 'used'),
+        '$.numberingLedgers.0.ranges.0.status',
+      ],
+      [
+        'severity',
+        (project) =>
+          (project.validationIssues = [
+            { id: 'v', severity: 'fatal', code: 'x', message: '', objectType: '', objectId: '' },
+          ]),
+        '$.validationIssues.0.severity',
+      ],
     ];
 
     for (const [, mutate, expectedPath] of cases) {
@@ -111,7 +142,7 @@ describe('importProjectValue structural safety', () => {
 
       expect(result.ok).toBe(true);
       if (result.ok) {
-        expect(result.project.schemaVersion).toBe('0.2.7.1');
+        expect(result.project.schemaVersion).toBe('0.2.7.2');
       }
     }
   });
@@ -125,4 +156,3 @@ describe('importProjectValue structural safety', () => {
     }
   });
 });
-

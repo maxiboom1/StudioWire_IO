@@ -4,16 +4,27 @@ export const STUDIOWIRE_SCHEMA_VERSION = STUDIOWIRE_CURRENT_VERSION;
 
 export type SchemaVersion = StudioWireSchemaVersion;
 
-export type ProjectStatus = 'draft' | 'approved' | 'as_built';
-export type RackNumberingDirection = 'bottom_to_top' | 'top_to_bottom';
-export type DeviceKind = 'device' | 'terminal_block';
-export type DeviceMountType = 'rack' | 'non_rack' | 'virtual';
-export type PortDirection = 'input' | 'output' | 'bidirectional' | 'rear' | 'front';
-export type CableStatus = 'planned' | 'connected' | 'retired';
-export type ObjectStatus = 'planned' | 'connected' | 'retired';
-export type NumberingRangeStatus = 'allocated' | 'reserved_gap' | 'retired';
-export type EndpointType = 'device_port' | 'tb_port' | 'external' | 'unknown';
-export type ValidationSeverity = 'error' | 'warning' | 'info';
+export const PROJECT_STATUS_VALUES = ['draft', 'approved', 'as_built'] as const;
+export const RACK_NUMBERING_DIRECTION_VALUES = ['bottom_to_top', 'top_to_bottom'] as const;
+export const DEVICE_KIND_VALUES = ['device', 'terminal_block'] as const;
+export const DEVICE_MOUNT_TYPE_VALUES = ['rack', 'non_rack', 'virtual'] as const;
+export const PORT_DIRECTION_VALUES = ['input', 'output', 'bidirectional', 'rear', 'front'] as const;
+export const CABLE_STATUS_VALUES = ['planned', 'connected', 'retired'] as const;
+export const OBJECT_STATUS_VALUES = ['planned', 'connected', 'retired'] as const;
+export const NUMBERING_RANGE_STATUS_VALUES = ['allocated', 'reserved_gap', 'retired'] as const;
+export const ENDPOINT_TYPE_VALUES = ['device_port', 'tb_port', 'external', 'unknown'] as const;
+export const VALIDATION_SEVERITY_VALUES = ['error', 'warning', 'info'] as const;
+
+export type ProjectStatus = (typeof PROJECT_STATUS_VALUES)[number];
+export type RackNumberingDirection = (typeof RACK_NUMBERING_DIRECTION_VALUES)[number];
+export type DeviceKind = (typeof DEVICE_KIND_VALUES)[number];
+export type DeviceMountType = (typeof DEVICE_MOUNT_TYPE_VALUES)[number];
+export type PortDirection = (typeof PORT_DIRECTION_VALUES)[number];
+export type CableStatus = (typeof CABLE_STATUS_VALUES)[number];
+export type ObjectStatus = (typeof OBJECT_STATUS_VALUES)[number];
+export type NumberingRangeStatus = (typeof NUMBERING_RANGE_STATUS_VALUES)[number];
+export type EndpointType = (typeof ENDPOINT_TYPE_VALUES)[number];
+export type ValidationSeverity = (typeof VALIDATION_SEVERITY_VALUES)[number];
 
 export interface ProjectRoot {
   schemaVersion: SchemaVersion;

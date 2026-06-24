@@ -53,7 +53,9 @@ interface ProjectContextValue extends ProjectState {
   addCategoryConnectorAssignment: (
     input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>,
   ) => string;
-  removeCategoryConnectorAssignment: (input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>) => void;
+  removeCategoryConnectorAssignment: (
+    input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>,
+  ) => void;
   addConnectorGroup: (input: Pick<ConnectorCompatibilityGroup, 'categoryId' | 'name'>) => string;
   updateConnectorGroup: (id: string, updates: Pick<ConnectorCompatibilityGroup, 'name'>) => void;
   addConnectorGroupMember: (
@@ -162,12 +164,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'DISMISS_IMPORT_ERROR' });
   }, []);
 
-  const updateProjectInfo = useCallback(
-    (updates: Pick<ProjectInfo, 'name' | 'customer' | 'revision'>) => {
-      dispatch({ type: 'UPDATE_PROJECT_INFO', payload: updates });
-    },
-    [],
-  );
+  const updateProjectInfo = useCallback((updates: Pick<ProjectInfo, 'name' | 'customer' | 'revision'>) => {
+    dispatch({ type: 'UPDATE_PROJECT_INFO', payload: updates });
+  }, []);
 
   const addCategory = useCallback((input: Pick<Category, 'name' | 'defaultCablePrefix'>) => {
     const id = makeUniqueId('category', input.name);
@@ -184,12 +183,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
-  const updateCategory = useCallback(
-    (id: string, updates: Pick<Category, 'name' | 'defaultCablePrefix'>) => {
-      dispatch({ type: 'UPDATE_CATEGORY', payload: { id, updates } });
-    },
-    [],
-  );
+  const updateCategory = useCallback((id: string, updates: Pick<Category, 'name' | 'defaultCablePrefix'>) => {
+    dispatch({ type: 'UPDATE_CATEGORY', payload: { id, updates } });
+  }, []);
 
   const addCategoryConnectorAssignment = useCallback(
     (input: Pick<CategoryConnectorAssignment, 'categoryId' | 'connectorTypeId'>) => {
@@ -277,31 +273,25 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
-  const updateConnectorType = useCallback(
-    (id: string, updates: Pick<ConnectorType, 'name'>) => {
-      dispatch({ type: 'UPDATE_CONNECTOR_TYPE', payload: { id, updates } });
-    },
-    [],
-  );
+  const updateConnectorType = useCallback((id: string, updates: Pick<ConnectorType, 'name'>) => {
+    dispatch({ type: 'UPDATE_CONNECTOR_TYPE', payload: { id, updates } });
+  }, []);
 
-  const addCablePrefix = useCallback(
-    (input: Pick<CablePrefix, 'prefix' | 'name'>) => {
-      const normalizedPrefix = input.prefix.trim().toUpperCase();
-      const id = makeUniqueId('prefix', normalizedPrefix);
+  const addCablePrefix = useCallback((input: Pick<CablePrefix, 'prefix' | 'name'>) => {
+    const normalizedPrefix = input.prefix.trim().toUpperCase();
+    const id = makeUniqueId('prefix', normalizedPrefix);
 
-      dispatch({
-        type: 'ADD_CABLE_PREFIX',
-        payload: {
-          id,
-          prefix: normalizedPrefix,
-          name: input.name,
-        },
-      });
+    dispatch({
+      type: 'ADD_CABLE_PREFIX',
+      payload: {
+        id,
+        prefix: normalizedPrefix,
+        name: input.name,
+      },
+    });
 
-      return id;
-    },
-    [],
-  );
+    return id;
+  }, []);
 
   const addLocation = useCallback((input: Pick<Location, 'name' | 'type' | 'description'>) => {
     const id = makeUniqueId('location', input.name);

@@ -8,13 +8,7 @@ import { useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, readDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { CanvasViewport } from '../common/CanvasViewport';
 import { Button } from '../ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface MountedDevice {
   device: Device;
@@ -176,9 +170,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
 
   return (
     <section className="workspace rack-workspace" aria-label="Rack canvas">
-      {viewedRacks.length === 0 ? (
-        null
-      ) : (
+      {viewedRacks.length === 0 ? null : (
         <CanvasViewport
           ariaLabel="Rack canvas zoom and pan viewport"
           className="rack-canvas-viewport"
@@ -236,7 +228,11 @@ function RackViewSelector({
   onAddRack: (rackId: string) => void;
 }) {
   return (
-    <Select disabled={hasReachedRackLimit || addableRacks.length === 0} value={ADD_RACK_PLACEHOLDER} onValueChange={onAddRack}>
+    <Select
+      disabled={hasReachedRackLimit || addableRacks.length === 0}
+      value={ADD_RACK_PLACEHOLDER}
+      onValueChange={onAddRack}
+    >
       <SelectTrigger className="rack-view-select" aria-label="Add rack to canvas">
         <SelectValue placeholder="Add rack" />
       </SelectTrigger>
@@ -275,17 +271,29 @@ function RackElevationCanvas({
   onRackDrop: (event: DragEvent<HTMLDivElement>) => void;
   onRemove?: () => void;
 }) {
-  const previewRows = dropPreview ? getPreviewRows(model.displayRus, dropPreview.bottomRu, dropPreview.topRu) : null;
+  const previewRows = dropPreview
+    ? getPreviewRows(model.displayRus, dropPreview.bottomRu, dropPreview.topRu)
+    : null;
 
   return (
     <div className="rack-canvas-card">
       <div className="rack-name-label">{rack.name}</div>
       {canRemove ? (
-        <Button aria-label={`Remove ${rack.name} from rack view`} className="rack-remove-button" size="icon" type="button" variant="ghost" onClick={onRemove}>
+        <Button
+          aria-label={`Remove ${rack.name} from rack view`}
+          className="rack-remove-button"
+          size="icon"
+          type="button"
+          variant="ghost"
+          onClick={onRemove}
+        >
           <X className="h-4 w-4" />
         </Button>
       ) : null}
-      <div className="rack-elevation" style={{ '--rack-row-count': model.displayRus.length } as CSSProperties}>
+      <div
+        className="rack-elevation"
+        style={{ '--rack-row-count': model.displayRus.length } as CSSProperties}
+      >
         <div className="rack-ru-labels" aria-label="Rack unit labels">
           {model.displayRus.map((ru) => (
             <div className="rack-ru-label" data-ru={ru} key={ru}>
@@ -451,9 +459,7 @@ function buildRackCanvasModel(
     }
 
     const occupied = Array.from({ length: device.rackSizeRu }, (_, index) => bottomRu + index);
-    const rowIndexes = occupied
-      .map((ru) => displayRus.indexOf(ru) + 1)
-      .filter((rowIndex) => rowIndex > 0);
+    const rowIndexes = occupied.map((ru) => displayRus.indexOf(ru) + 1).filter((rowIndex) => rowIndex > 0);
 
     if (rowIndexes.length === 0) {
       continue;

@@ -86,9 +86,7 @@ export function TopBar({
             <DropdownMenuLabel>Project actions</DropdownMenuLabel>
             <DropdownMenuItem onSelect={createNewAndSelectProject}>New Project</DropdownMenuItem>
             <DropdownMenuItem onSelect={loadSampleAndSelectProject}>Load Sample</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => importInputRef.current?.click()}>
-              Import JSON
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => importInputRef.current?.click()}>Import JSON</DropdownMenuItem>
             <DropdownMenuItem onSelect={exportProjectJson}>Export JSON</DropdownMenuItem>
             <DropdownMenuItem onSelect={validateProject}>Validate</DropdownMenuItem>
             <DropdownMenuSeparator />

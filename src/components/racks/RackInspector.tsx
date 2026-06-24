@@ -6,18 +6,14 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 export function RackInspector({ rack }: { rack: Rack }) {
   const { project, updateRack, deleteRack } = useProject();
   const devices = project.devices.filter((device) => device.rackId === rack.id);
-  const placementDiagnostics = analyzeRackPlacements(project).filter((diagnostic) => diagnostic.rackId === rack.id);
+  const placementDiagnostics = analyzeRackPlacements(project).filter(
+    (diagnostic) => diagnostic.rackId === rack.id,
+  );
   const [form, setForm] = useState({
     name: rack.name,
     heightRu: String(rack.heightRu),
@@ -108,15 +104,15 @@ export function RackInspector({ rack }: { rack: Rack }) {
           <CardTitle>Assigned Devices</CardTitle>
         </CardHeader>
         <CardContent>
-        {devices.length === 0 ? (
-          <p>No devices assigned to this rack.</p>
-        ) : (
-          <ul className="compact-list">
-            {devices.map((device) => (
-              <li key={device.id}>{device.name}</li>
-            ))}
-          </ul>
-        )}
+          {devices.length === 0 ? (
+            <p>No devices assigned to this rack.</p>
+          ) : (
+            <ul className="compact-list">
+              {devices.map((device) => (
+                <li key={device.id}>{device.name}</li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
       {placementDiagnostics.length > 0 ? (
@@ -140,10 +136,10 @@ export function RackInspector({ rack }: { rack: Rack }) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-        <p>Deleting a rack is allowed only when no devices are assigned to it.</p>
-        <Button variant="destructive" type="button" onClick={handleDelete}>
-          Delete Rack
-        </Button>
+          <p>Deleting a rack is allowed only when no devices are assigned to it.</p>
+          <Button variant="destructive" type="button" onClick={handleDelete}>
+            Delete Rack
+          </Button>
         </CardContent>
       </Card>
     </aside>

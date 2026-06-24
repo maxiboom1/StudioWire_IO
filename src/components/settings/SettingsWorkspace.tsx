@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import {
-  getConnectorGroupsForCategory,
-  getConnectorsForCategory,
-} from '../../domain/connectorCompatibility';
+import { getConnectorGroupsForCategory, getConnectorsForCategory } from '../../domain/connectorCompatibility';
+import { STUDIOWIRE_CURRENT_VERSION } from '../../domain/version';
 import type { ConnectorCompatibilityGroup, ConnectorType, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { WorkspaceHeader } from '../common/WorkspaceBits';
@@ -58,10 +56,12 @@ export function SettingsWorkspace() {
     [project, selectedCategoryId],
   );
   const groupsForCategory = useMemo(
-    () => (selectedGroupCategoryId ? getConnectorGroupsForCategory(project.settings, selectedGroupCategoryId) : []),
+    () =>
+      selectedGroupCategoryId ? getConnectorGroupsForCategory(project.settings, selectedGroupCategoryId) : [],
     [project.settings, selectedGroupCategoryId],
   );
-  const selectedGroup = groupsForCategory.find((group) => group.id === activeGroupId) ?? groupsForCategory[0] ?? null;
+  const selectedGroup =
+    groupsForCategory.find((group) => group.id === activeGroupId) ?? groupsForCategory[0] ?? null;
   const groupConnectors = selectedGroup ? getGroupConnectors(project, selectedGroup.id) : [];
   const groupConnectorOptions = selectedGroup
     ? getAvailableGroupConnectors(project, selectedGroupCategoryId, selectedGroup.id)
@@ -187,10 +187,14 @@ export function SettingsWorkspace() {
 
   return (
     <section className="workspace" aria-label="Project settings">
-      <WorkspaceHeader eyebrow="Settings" title="Project Settings" badge="v0.2.7" />
+      <WorkspaceHeader eyebrow="Settings" title="Project Settings" badge={`v${STUDIOWIRE_CURRENT_VERSION}`} />
 
       <div className="settings-tabs" role="tablist" aria-label="Settings sections">
-        <SettingsTabButton active={activeTab === 'project'} label="Project" onClick={() => setActiveTab('project')} />
+        <SettingsTabButton
+          active={activeTab === 'project'}
+          label="Project"
+          onClick={() => setActiveTab('project')}
+        />
         <SettingsTabButton
           active={activeTab === 'connectors'}
           label="Connectors"
@@ -287,7 +291,13 @@ function SettingsTabButton({
   onClick: () => void;
 }) {
   return (
-    <button aria-selected={active} className={active ? 'active' : ''} role="tab" type="button" onClick={onClick}>
+    <button
+      aria-selected={active}
+      className={active ? 'active' : ''}
+      role="tab"
+      type="button"
+      onClick={onClick}
+    >
       {label}
     </button>
   );
@@ -494,7 +504,9 @@ function CategoriesPanel({
           />
           <select
             value={newCategory.defaultCablePrefix}
-            onChange={(event) => onNewCategoryChange({ ...newCategory, defaultCablePrefix: event.target.value })}
+            onChange={(event) =>
+              onNewCategoryChange({ ...newCategory, defaultCablePrefix: event.target.value })
+            }
           >
             {project.settings.cablePrefixes.map((prefix) => (
               <option key={prefix.id} value={prefix.prefix}>
@@ -666,7 +678,9 @@ function ConnectorGroupsPanel({
 
       <section className="settings-section">
         <div className="settings-inner-tabs" role="tablist" aria-label="Connector groups">
-          {groupsForCategory.length === 0 ? <span className="settings-empty-inline">No groups yet.</span> : null}
+          {groupsForCategory.length === 0 ? (
+            <span className="settings-empty-inline">No groups yet.</span>
+          ) : null}
           {groupsForCategory.map((group) => (
             <button
               aria-selected={group.id === activeGroupId}
@@ -725,7 +739,9 @@ function ConnectorGroupsPanel({
                 value={connectorToGroup || groupConnectorOptions[0]?.id || ''}
                 onChange={(event) => onConnectorToGroupChange(event.target.value)}
               >
-                {groupConnectorOptions.length === 0 ? <option value="">No available connectors</option> : null}
+                {groupConnectorOptions.length === 0 ? (
+                  <option value="">No available connectors</option>
+                ) : null}
                 {groupConnectorOptions.map((connectorType) => (
                   <option key={connectorType.id} value={connectorType.id}>
                     {connectorType.name}
@@ -760,7 +776,9 @@ function getUnassignedConnectors(project: ProjectRoot, categoryId: string): Conn
 }
 
 function getGroupConnectors(project: ProjectRoot, groupId: string): ConnectorType[] {
-  const connectorTypesById = new Map(project.settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]));
+  const connectorTypesById = new Map(
+    project.settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]),
+  );
 
   return project.settings.connectorCompatibilityGroupMembers
     .filter((member) => member.groupId === groupId)
@@ -769,12 +787,18 @@ function getGroupConnectors(project: ProjectRoot, groupId: string): ConnectorTyp
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-function getAvailableGroupConnectors(project: ProjectRoot, categoryId: string, groupId: string): ConnectorType[] {
+function getAvailableGroupConnectors(
+  project: ProjectRoot,
+  categoryId: string,
+  groupId: string,
+): ConnectorType[] {
   const members = new Set(
     project.settings.connectorCompatibilityGroupMembers
       .filter((member) => member.groupId === groupId)
       .map((member) => member.connectorTypeId),
   );
 
-  return getConnectorsForCategory(project.settings, categoryId).filter((connectorType) => !members.has(connectorType.id));
+  return getConnectorsForCategory(project.settings, categoryId).filter(
+    (connectorType) => !members.has(connectorType.id),
+  );
 }

@@ -82,13 +82,13 @@ export function LocationInspector({ location }: { location: Location }) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-        <p>
-          This location references {rackCount} rack(s) and {deviceCount} device(s). Deletion is allowed
-          only when both counts are zero.
-        </p>
-        <Button variant="destructive" type="button" onClick={handleDelete}>
-          Delete Location
-        </Button>
+          <p>
+            This location references {rackCount} rack(s) and {deviceCount} device(s). Deletion is allowed only
+            when both counts are zero.
+          </p>
+          <Button variant="destructive" type="button" onClick={handleDelete}>
+            Delete Location
+          </Button>
         </CardContent>
       </Card>
     </aside>

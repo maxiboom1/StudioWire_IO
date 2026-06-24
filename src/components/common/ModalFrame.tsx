@@ -1,11 +1,5 @@
 import type { ReactNode } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 
 export function ModalFrame({
   title,
@@ -19,11 +13,14 @@ export function ModalFrame({
   onClose: () => void;
 }) {
   return (
-    <Dialog open onOpenChange={(open) => {
-      if (!open) {
-        onClose();
-      }
-    }}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

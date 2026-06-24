@@ -71,13 +71,7 @@ export function DeviceWorkspace({ device }: { device: Device }) {
   );
 }
 
-function CableLineRow({
-  row,
-  side,
-}: {
-  row: DevicePortRow | undefined;
-  side: 'input' | 'output';
-}) {
+function CableLineRow({ row, side }: { row: DevicePortRow | undefined; side: 'input' | 'output' }) {
   if (!row) {
     return <div className="device-wire-row" />;
   }
@@ -166,7 +160,9 @@ function InlineTbMarker({ part }: { part: Extract<PortConnectionChainPart, { typ
 
   return (
     <span className={`device-inline-tb-marker device-inline-tb-marker-${part.orientation}`}>
-      {isFrontFirst ? <span className="device-inline-tb-arrow device-inline-tb-arrow-left" aria-hidden="true" /> : null}
+      {isFrontFirst ? (
+        <span className="device-inline-tb-arrow device-inline-tb-arrow-left" aria-hidden="true" />
+      ) : null}
       {isRearFirst ? <span className="device-inline-tb-rear-bar" aria-hidden="true" /> : null}
       <span className="device-inline-tb-label">{part.label}</span>
       {isRearFirst || part.orientation === 'front-to-front' ? (

@@ -101,7 +101,11 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
                   type="button"
                   onClick={() => toggleLocation(locationGroup.key)}
                 >
-                  <span className={isExpanded(expandedLocations, locationGroup.key, isSearching) ? 'expanded' : ''}>
+                  <span
+                    className={
+                      isExpanded(expandedLocations, locationGroup.key, isSearching) ? 'expanded' : ''
+                    }
+                  >
                     {'>'}
                   </span>
                   <strong>{locationGroup.name}</strong>
@@ -116,12 +120,17 @@ export function CrosspointPicker({ portId, className, ariaLabel }: CrosspointPic
                           onClick={() => toggleDevice(deviceGroup.device.id)}
                         >
                           <span
-                            className={isExpanded(expandedDevices, deviceGroup.device.id, isSearching) ? 'expanded' : ''}
+                            className={
+                              isExpanded(expandedDevices, deviceGroup.device.id, isSearching)
+                                ? 'expanded'
+                                : ''
+                            }
                           >
                             {'>'}
                           </span>
                           <strong>
-                            {deviceGroup.device.kind === 'terminal_block' ? 'TB' : 'Device'}: {deviceGroup.device.name}
+                            {deviceGroup.device.kind === 'terminal_block' ? 'TB' : 'Device'}:{' '}
+                            {deviceGroup.device.name}
                           </strong>
                           <small>{deviceGroup.ports.length}</small>
                         </button>
@@ -164,7 +173,10 @@ function buildCandidates(project: ProjectRoot, originPortId: string): PortCandid
 
   return project.ports
     .filter((port) => isPossibleCandidate(originPort, port))
-    .filter((port) => getConnectionTargetStatus(project, { fromPortId: originPortId, toPortId: port.id }, lookup).ok)
+    .filter(
+      (port) =>
+        getConnectionTargetStatus(project, { fromPortId: originPortId, toPortId: port.id }, lookup).ok,
+    )
     .map((port) => {
       const device = devicesById.get(port.deviceId);
 
@@ -173,14 +185,14 @@ function buildCandidates(project: ProjectRoot, originPortId: string): PortCandid
       }
 
       const locationId = resolveDeviceLocationId(device, racksById);
-      const location = locationId ? locationsById.get(locationId) ?? null : null;
+      const location = locationId ? (locationsById.get(locationId) ?? null) : null;
 
       return {
         location,
         device,
         port,
-        searchText: `${location?.name ?? ''} ${device.name} ${device.labelPrefix} ${port.label} ${port.direction}`
-          .toLowerCase(),
+        searchText:
+          `${location?.name ?? ''} ${device.name} ${device.labelPrefix} ${port.label} ${port.direction}`.toLowerCase(),
       };
     })
     .filter((candidate): candidate is PortCandidate => candidate !== null)
@@ -206,7 +218,7 @@ function isPossibleCandidate(originPort: Port, candidatePort: Port): boolean {
 }
 
 function resolveDeviceLocationId(device: Device, racksById: ReadonlyMap<string, Rack>) {
-  return device.locationId ?? (device.rackId ? racksById.get(device.rackId)?.locationId ?? null : null);
+  return device.locationId ?? (device.rackId ? (racksById.get(device.rackId)?.locationId ?? null) : null);
 }
 
 function groupCandidates(candidates: PortCandidate[]) {

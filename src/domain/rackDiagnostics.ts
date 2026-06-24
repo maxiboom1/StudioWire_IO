@@ -40,7 +40,14 @@ export function analyzeRackPlacements(project: ProjectRoot): RackPlacementDiagno
     const rack = device.rackId ? racks.get(device.rackId) : null;
 
     if (!device.rackId && device.mountType === 'rack') {
-      diagnostics.push(createDiagnostic(device, null, 'rack-mounted-device-without-rack', 'Rack-mounted device requires a rack.'));
+      diagnostics.push(
+        createDiagnostic(
+          device,
+          null,
+          'rack-mounted-device-without-rack',
+          'Rack-mounted device requires a rack.',
+        ),
+      );
       continue;
     }
 
@@ -139,7 +146,10 @@ export function analyzeRackPlacements(project: ProjectRoot): RackPlacementDiagno
     for (let rightIndex = leftIndex + 1; rightIndex < validPlacements.length; rightIndex += 1) {
       const right = validPlacements[rightIndex];
 
-      if (left.rack.id !== right.rack.id || !rangesOverlap(left.bottomRu, left.topRu, right.bottomRu, right.topRu)) {
+      if (
+        left.rack.id !== right.rack.id ||
+        !rangesOverlap(left.bottomRu, left.topRu, right.bottomRu, right.topRu)
+      ) {
         continue;
       }
 

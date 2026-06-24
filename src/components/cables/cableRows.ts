@@ -53,7 +53,7 @@ function resolveEndpoint(project: ProjectRoot, endpoint: Endpoint): ResolvedEndp
   const device = project.devices.find((candidate) => candidate.id === port.deviceId);
   const locationId =
     device?.locationId ??
-    (device?.rackId ? project.racks.find((rack) => rack.id === device.rackId)?.locationId ?? null : null);
+    (device?.rackId ? (project.racks.find((rack) => rack.id === device.rackId)?.locationId ?? null) : null);
   const location = locationId ? project.locations.find((candidate) => candidate.id === locationId) : null;
   const connector = project.settings.connectorTypes.find(
     (connectorType) => connectorType.id === port.connectorTypeId,

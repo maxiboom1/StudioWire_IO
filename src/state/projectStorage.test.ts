@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { sampleProject } from '../domain/sampleProject';
-import { ACTIVE_STORAGE_KEY, restoreStoredProject, saveStoredProject, type BrowserStorageLike } from './projectStorage';
+import {
+  ACTIVE_STORAGE_KEY,
+  restoreStoredProject,
+  saveStoredProject,
+  type BrowserStorageLike,
+} from './projectStorage';
 
 class MemoryStorage implements BrowserStorageLike {
   values = new Map<string, string>();
@@ -41,7 +46,7 @@ describe('projectStorage recovery', () => {
 
     const result = restoreStoredProject(storage);
 
-    expect(result.project?.schemaVersion).toBe('0.2.7.1');
+    expect(result.project?.schemaVersion).toBe('0.2.7.2');
     expect(result.key).toBe('studiowire.io.project.v0.2.7');
   });
 
@@ -64,4 +69,3 @@ describe('projectStorage recovery', () => {
     expect(project.project.name).toBe(sampleProject.project.name);
   });
 });
-

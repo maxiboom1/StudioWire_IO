@@ -5,17 +5,8 @@ import type { Device, Location, Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
 import { isSelected, type SelectedObjectType, type SelectionState } from '../common/selection';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../ui/collapsible';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from '../ui/context-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '../ui/context-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -115,7 +106,9 @@ export function LeftTree({
                       data-ui="empty-project-prompt"
                       type="button"
                     >
-                      <span className="text-sm font-semibold text-studio-text">Create location or device</span>
+                      <span className="text-sm font-semibold text-studio-text">
+                        Create location or device
+                      </span>
                       <span className="text-xs leading-5 text-studio-muted">
                         Right-click here to start the project tree.
                       </span>
@@ -173,7 +166,9 @@ export function LeftTree({
       </SidebarContent>
 
       <SidebarFooter className="app-sidebar-footer">
-        <p className="sidebar-version-line">App {APP_VERSION}, Schema {project.schemaVersion}</p>
+        <p className="sidebar-version-line">
+          App {APP_VERSION}, Schema {project.schemaVersion}
+        </p>
       </SidebarFooter>
     </Sidebar>
   );
@@ -211,7 +206,9 @@ function LocationBranch({
   const isDevicesOpen = !collapsedKeys.has(devicesKey);
   const isTerminalBlocksOpen = !collapsedKeys.has(terminalBlocksKey);
   const racks = projectRacks.filter((rack) => rack.locationId === location.id);
-  const devices = projectDevices.filter((device) => device.locationId === location.id && device.kind !== 'terminal_block');
+  const devices = projectDevices.filter(
+    (device) => device.locationId === location.id && device.kind !== 'terminal_block',
+  );
   const terminalBlocks = projectDevices.filter(
     (device) => device.locationId === location.id && device.kind === 'terminal_block',
   );
@@ -353,7 +350,9 @@ function FolderBranch({
             <SidebarMenuSubButton onClick={onToggle}>
               {icon}
               <span className="min-w-0 flex-1 truncate">{label}</span>
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.66rem] font-semibold">{count}</span>
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.66rem] font-semibold">
+                {count}
+              </span>
             </SidebarMenuSubButton>
           </div>
         </ActionContextMenu>
@@ -462,7 +461,11 @@ function DeviceTreeItem({
         data-canvas-draggable="true"
         draggable
         isActive={active}
-        title={hasRackSize ? 'Drag to a visible rack to assign or move' : 'Set rack size before assigning to a rack'}
+        title={
+          hasRackSize
+            ? 'Drag to a visible rack to assign or move'
+            : 'Set rack size before assigning to a rack'
+        }
         onClick={onSelect}
         onDragEnd={clearDeviceDragData}
         onDragStart={(event) => writeDeviceDragData(event, device.id)}
@@ -476,13 +479,7 @@ function DeviceTreeItem({
   );
 }
 
-function ActionContextMenu({
-  actions,
-  children,
-}: {
-  actions: ContextAction[];
-  children: ReactNode;
-}) {
+function ActionContextMenu({ actions, children }: { actions: ContextAction[]; children: ReactNode }) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>

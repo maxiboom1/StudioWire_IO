@@ -257,7 +257,10 @@ export function createPlannedCablesForPorts(input: PlannedCablesInput): Cable[] 
   return createLinkedPlannedCablesForPortGroup(input).cables;
 }
 
-export function createLinkedPlannedCablesForPortGroup(input: PlannedCablesInput): { ports: Port[]; cables: Cable[] } {
+export function createLinkedPlannedCablesForPortGroup(input: PlannedCablesInput): {
+  ports: Port[];
+  cables: Cable[];
+} {
   const { portGroup, ports } = input;
 
   if (!portGroup.createPlannedCables || portGroup.firstCableNumber === null) {

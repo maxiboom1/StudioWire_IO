@@ -108,17 +108,22 @@ export function connectPorts(
   }
 
   const slots = [fromPort, toPort]
-    .map((port) => (port.plannedCableId ? cablesById.get(port.plannedCableId) ?? null : null))
+    .map((port) => (port.plannedCableId ? (cablesById.get(port.plannedCableId) ?? null) : null))
     .filter((cable): cable is Cable => cable !== null);
 
   if (slots.length === 0) {
-    return { ok: false, error: 'Connection blocked: at least one selected port needs a planned cable number.' };
+    return {
+      ok: false,
+      error: 'Connection blocked: at least one selected port needs a planned cable number.',
+    };
   }
 
   const sortedSlots = [...slots].sort(compareCableNumbers);
   const winner = sortedSlots[0];
   const loser = sortedSlots.find((candidate) => candidate.id !== winner.id) ?? null;
-  const loserOwner = loser ? nextProject.ports.find((port) => port.plannedCableId === loser.id) ?? null : null;
+  const loserOwner = loser
+    ? (nextProject.ports.find((port) => port.plannedCableId === loser.id) ?? null)
+    : null;
 
   if (loser && loserOwner) {
     resetCableToPortSlot(loser, loserOwner, 'retired');
@@ -292,7 +297,7 @@ export function describePortConnection(project: ProjectRoot, portId: string): Po
   );
   const port = project.ports.find((candidate) => candidate.id === portId) ?? null;
   const slotCable = port?.plannedCableId
-    ? project.cables.find((candidate) => candidate.id === port.plannedCableId) ?? null
+    ? (project.cables.find((candidate) => candidate.id === port.plannedCableId) ?? null)
     : null;
 
   const chainParts = connectedCable ? buildChainParts(project, portId) : [];
@@ -300,13 +305,17 @@ export function describePortConnection(project: ProjectRoot, portId: string): Po
   return {
     cable: connectedCable ?? slotCable,
     isConnected: Boolean(connectedCable),
-    chainLabel: chainParts.map((part) => (part.type === 'terminal_block' ? part.marker : part.label)).join(' '),
+    chainLabel: chainParts
+      .map((part) => (part.type === 'terminal_block' ? part.marker : part.label))
+      .join(' '),
     chainParts,
   };
 }
 
 export function cableReferencesPort(cable: Cable, portId: string): boolean {
-  return endpointReferencesPort(cable.sideAEndpoint, portId) || endpointReferencesPort(cable.sideBEndpoint, portId);
+  return (
+    endpointReferencesPort(cable.sideAEndpoint, portId) || endpointReferencesPort(cable.sideBEndpoint, portId)
+  );
 }
 
 export function endpointReferencesPort(endpoint: Endpoint, portId: string): boolean {
@@ -315,7 +324,7 @@ export function endpointReferencesPort(endpoint: Endpoint, portId: string): bool
 
 export function getCablePortIds(cable: Cable): string[] {
   return [cable.sideAEndpoint, cable.sideBEndpoint]
-    .map((endpoint) => ((endpoint.type === 'device_port' || endpoint.type === 'tb_port') ? endpoint.id : null))
+    .map((endpoint) => (endpoint.type === 'device_port' || endpoint.type === 'tb_port' ? endpoint.id : null))
     .filter((id): id is string => Boolean(id));
 }
 
@@ -332,8 +341,10 @@ export function isTerminalBlockPort(
   port: Port,
   lookup?: Pick<ConnectionTargetLookup, 'devicesById'>,
 ): boolean {
-  return (lookup?.devicesById.get(port.deviceId) ?? project.devices.find((device) => device.id === port.deviceId))
-    ?.kind === 'terminal_block';
+  return (
+    (lookup?.devicesById.get(port.deviceId) ?? project.devices.find((device) => device.id === port.deviceId))
+      ?.kind === 'terminal_block'
+  );
 }
 
 export function createConnectionTargetLookup(project: ProjectRoot): ConnectionTargetLookup {
@@ -436,7 +447,7 @@ function buildChainParts(project: ProjectRoot, originPortId: string): PortConnec
 
       if (tbKey !== previousTbKey) {
         const nextPort = path[index + 1]
-          ? project.ports.find((candidate) => candidate.id === path[index + 1]) ?? null
+          ? (project.ports.find((candidate) => candidate.id === path[index + 1]) ?? null)
           : null;
         const followingPortId = path[index + 2] ?? null;
         const orientation = getTbMarkerOrientation(project, port, nextPort);
@@ -451,7 +462,9 @@ function buildChainParts(project: ProjectRoot, originPortId: string): PortConnec
           entryPortId: port.id,
           exitPortId: exitPort?.id ?? null,
           continuationCable:
-            exitPort && followingPortId ? findConnectedCableBetween(project, exitPort.id, followingPortId) : null,
+            exitPort && followingPortId
+              ? findConnectedCableBetween(project, exitPort.id, followingPortId)
+              : null,
         });
       }
 
@@ -516,7 +529,11 @@ function isMatchingTbSibling(project: ProjectRoot, port: Port, nextPort: Port | 
   );
 }
 
-function findConnectedCableBetween(project: ProjectRoot, leftPortId: string, rightPortId: string): Cable | null {
+function findConnectedCableBetween(
+  project: ProjectRoot,
+  leftPortId: string,
+  rightPortId: string,
+): Cable | null {
   return (
     project.cables.find(
       (cable) =>
@@ -591,8 +608,12 @@ function buildConnectionNeighbors(project: ProjectRoot): Map<string, Set<string>
   const terminalBlocks = project.devices.filter((device) => device.kind === 'terminal_block');
 
   for (const terminalBlock of terminalBlocks) {
-    const rearPorts = project.ports.filter((port) => port.deviceId === terminalBlock.id && port.direction === 'rear');
-    const frontPorts = project.ports.filter((port) => port.deviceId === terminalBlock.id && port.direction === 'front');
+    const rearPorts = project.ports.filter(
+      (port) => port.deviceId === terminalBlock.id && port.direction === 'rear',
+    );
+    const frontPorts = project.ports.filter(
+      (port) => port.deviceId === terminalBlock.id && port.direction === 'front',
+    );
 
     for (const rearPort of rearPorts) {
       const frontPort = frontPorts.find((candidate) => candidate.index === rearPort.index);

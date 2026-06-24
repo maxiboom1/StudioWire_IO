@@ -91,31 +91,52 @@ export interface DeviceUpdate {
 export type ProjectAction =
   | { type: 'NEW_PROJECT' }
   | { type: 'LOAD_SAMPLE_PROJECT' }
-  | { type: 'IMPORT_PROJECT_JSON'; payload: { project: ProjectRoot; validationIssues: ProjectRoot['validationIssues'] } }
+  | {
+      type: 'IMPORT_PROJECT_JSON';
+      payload: { project: ProjectRoot; validationIssues: ProjectRoot['validationIssues'] };
+    }
   | { type: 'IMPORT_PROJECT_FAILED'; payload: { message: string } }
-  | { type: 'SET_PERSISTENCE_STATE'; payload: { persistenceState: ProjectState['persistenceState']; message?: string } }
+  | {
+      type: 'SET_PERSISTENCE_STATE';
+      payload: { persistenceState: ProjectState['persistenceState']; message?: string };
+    }
   | { type: 'UPDATE_PROJECT_INFO'; payload: Pick<ProjectInfo, 'name' | 'customer' | 'revision'> }
   | { type: 'ADD_CATEGORY'; payload: Category }
-  | { type: 'UPDATE_CATEGORY'; payload: { id: string; updates: Pick<Category, 'name' | 'defaultCablePrefix'> } }
+  | {
+      type: 'UPDATE_CATEGORY';
+      payload: { id: string; updates: Pick<Category, 'name' | 'defaultCablePrefix'> };
+    }
   | { type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT'; payload: CategoryConnectorAssignment }
   | { type: 'REMOVE_CATEGORY_CONNECTOR_ASSIGNMENT'; payload: { categoryId: string; connectorTypeId: string } }
   | { type: 'ADD_CONNECTOR_GROUP'; payload: ConnectorCompatibilityGroup }
-  | { type: 'UPDATE_CONNECTOR_GROUP'; payload: { id: string; updates: Pick<ConnectorCompatibilityGroup, 'name'> } }
+  | {
+      type: 'UPDATE_CONNECTOR_GROUP';
+      payload: { id: string; updates: Pick<ConnectorCompatibilityGroup, 'name'> };
+    }
   | { type: 'ADD_CONNECTOR_GROUP_MEMBER'; payload: ConnectorCompatibilityGroupMember }
   | { type: 'REMOVE_CONNECTOR_GROUP_MEMBER'; payload: { groupId: string; connectorTypeId: string } }
   | { type: 'ADD_CONNECTOR_TYPE'; payload: ConnectorType }
   | { type: 'UPDATE_CONNECTOR_TYPE'; payload: { id: string; updates: Pick<ConnectorType, 'name'> } }
   | { type: 'ADD_CABLE_PREFIX'; payload: CablePrefix }
   | { type: 'ADD_LOCATION'; payload: Location }
-  | { type: 'UPDATE_LOCATION'; payload: { id: string; updates: Pick<Location, 'name' | 'type' | 'description'> } }
+  | {
+      type: 'UPDATE_LOCATION';
+      payload: { id: string; updates: Pick<Location, 'name' | 'type' | 'description'> };
+    }
   | { type: 'ADD_RACK'; payload: Rack }
-  | { type: 'UPDATE_RACK'; payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> } }
+  | {
+      type: 'UPDATE_RACK';
+      payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> };
+    }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'ADD_TERMINAL_BLOCK'; payload: { terminalBlock: TerminalBlockDraft } }
   | { type: 'CONNECT_PORTS'; payload: { fromPortId: string; toPortId: string } }
   | { type: 'DISCONNECT_PORT'; payload: { portId: string } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
-  | { type: 'MOVE_MOUNTED_DEVICE'; payload: { deviceId: string; targetRackId: string; targetBottomRu: number } }
+  | {
+      type: 'MOVE_MOUNTED_DEVICE';
+      payload: { deviceId: string; targetRackId: string; targetBottomRu: number };
+    }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
   | { type: 'RETIRE_DEVICE'; payload: { id: string } }
@@ -329,8 +350,8 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
             ...state.project,
             settings: {
               ...state.project.settings,
-              connectorCompatibilityGroups: state.project.settings.connectorCompatibilityGroups.map((group) =>
-                group.id === action.payload.id ? { ...group, ...action.payload.updates } : group,
+              connectorCompatibilityGroups: state.project.settings.connectorCompatibilityGroups.map(
+                (group) => (group.id === action.payload.id ? { ...group, ...action.payload.updates } : group),
               ),
             },
           },
@@ -619,7 +640,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
                 : null;
               const locationId =
                 device.mountType === 'rack'
-                  ? assignedRack?.locationId ?? device.locationId
+                  ? (assignedRack?.locationId ?? device.locationId)
                   : action.payload.updates.locationId;
 
               return {
@@ -634,7 +655,8 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
                     }),
                 notes: action.payload.updates.notes,
                 locationId,
-                rackSizeRu: device.kind === 'terminal_block' ? 1 : action.payload.updates.rackSizeRu ?? null,
+                rackSizeRu:
+                  device.kind === 'terminal_block' ? 1 : (action.payload.updates.rackSizeRu ?? null),
                 updatedAt: nowIso(),
               };
             }),
@@ -742,7 +764,9 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       const devicePortGroups = state.project.portGroups.filter(
         (portGroup) => portGroup.deviceId === action.payload.id,
       );
-      const rangeIds = new Set(devicePortGroups.map((portGroup) => portGroup.numberingRangeId).filter(Boolean));
+      const rangeIds = new Set(
+        devicePortGroups.map((portGroup) => portGroup.numberingRangeId).filter(Boolean),
+      );
       const portIds = new Set(
         state.project.ports.filter((port) => port.deviceId === action.payload.id).map((port) => port.id),
       );
@@ -1053,7 +1077,8 @@ function createTerminalBlockInProject(
 
   if (
     draft.createPlannedCables &&
-    (linkedFront.cables.length !== frontPorts.length || linkedFront.ports.some((port) => !port.plannedCableId))
+    (linkedFront.cables.length !== frontPorts.length ||
+      linkedFront.ports.some((port) => !port.plannedCableId))
   ) {
     return { ok: false, error: 'Terminal block creation blocked: front planned cable creation failed.' };
   }
@@ -1071,7 +1096,9 @@ function createTerminalBlockInProject(
     deviceId,
     ...frontDraft,
     lastCableNumber:
-      draft.createPlannedCables && frontFirstCableNumber !== null ? frontFirstCableNumber + draft.count - 1 : null,
+      draft.createPlannedCables && frontFirstCableNumber !== null
+        ? frontFirstCableNumber + draft.count - 1
+        : null,
     numberingRangeId,
     locked: true,
   };
@@ -1127,7 +1154,9 @@ function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: numb
     .join(String(index).padStart(3, '0'));
 }
 
-export function parseImportedProject(payload: unknown):
+export function parseImportedProject(
+  payload: unknown,
+):
   | { ok: true; project: ProjectRoot; validationIssues: ProjectRoot['validationIssues'] }
   | { ok: false; error: string } {
   const result: ProjectImportResult = importProjectValue(payload);

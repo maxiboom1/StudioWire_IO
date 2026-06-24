@@ -40,6 +40,7 @@ Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and o
 - `terminal-block-rack-mounted`: terminal blocks must be rack-mounted.
 - `terminal-block-size-fixed`: terminal blocks must be fixed at 1 RU.
 - `device-without-location`: non-virtual devices must reference an existing location.
+- `device-references-missing-rack`: a device with a rack reference must point at an existing rack.
 - `rack-mounted-device-without-rack`: rack-mounted devices must reference a rack.
 - `rack-location-device-location-mismatch`: rack-mounted devices must be in the same location as their rack.
 - `rack-mounted-device-invalid-bottom-ru`: rack-mounted devices require a positive bottom RU.

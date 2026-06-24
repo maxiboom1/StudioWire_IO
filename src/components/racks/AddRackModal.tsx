@@ -6,13 +6,7 @@ import { Button } from '../ui/button';
 import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 export function AddRackModal({
   locationId,
@@ -47,11 +41,7 @@ export function AddRackModal({
   }
 
   return (
-    <ModalFrame
-      title="Add Rack"
-      description="Create a rack inside the selected location."
-      onClose={onClose}
-    >
+    <ModalFrame title="Add Rack" description="Create a rack inside the selected location." onClose={onClose}>
       <form className="editor-form" onSubmit={handleSubmit}>
         <div className="form-field">
           <Label htmlFor="rack-name">Name</Label>

@@ -31,7 +31,9 @@ export function createConnectorCompatibilityLookup(settings: Settings): Connecto
   }
 
   return {
-    connectorTypesById: new Map(settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType])),
+    connectorTypesById: new Map(
+      settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]),
+    ),
     categoryAssignmentsByKey: new Map(
       settings.categoryConnectorAssignments.map((assignment) => [
         createCategoryAssignmentKey(assignment.categoryId, assignment.connectorTypeId),
@@ -44,7 +46,9 @@ export function createConnectorCompatibilityLookup(settings: Settings): Connecto
 }
 
 export function getConnectorsForCategory(settings: Settings, categoryId: string): ConnectorType[] {
-  const connectorTypesById = new Map(settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]));
+  const connectorTypesById = new Map(
+    settings.connectorTypes.map((connectorType) => [connectorType.id, connectorType]),
+  );
 
   return settings.categoryConnectorAssignments
     .filter((assignment) => assignment.categoryId === categoryId)
@@ -91,11 +95,15 @@ export function arePortConnectorsCompatible(
     return { ok: false, reason: 'Connector type is missing.' };
   }
 
-  if (!lookup.categoryAssignmentsByKey.has(createCategoryAssignmentKey(left.categoryId, left.connectorTypeId))) {
+  if (
+    !lookup.categoryAssignmentsByKey.has(createCategoryAssignmentKey(left.categoryId, left.connectorTypeId))
+  ) {
     return { ok: false, reason: 'Origin connector is not assigned to the port category.' };
   }
 
-  if (!lookup.categoryAssignmentsByKey.has(createCategoryAssignmentKey(right.categoryId, right.connectorTypeId))) {
+  if (
+    !lookup.categoryAssignmentsByKey.has(createCategoryAssignmentKey(right.categoryId, right.connectorTypeId))
+  ) {
     return { ok: false, reason: 'Target connector is not assigned to the port category.' };
   }
 
@@ -171,7 +179,10 @@ export function createCategoryAssignmentKey(categoryId: string, connectorTypeId:
 
 function createNormalizedSettings(settings: LegacySettings, project: ProjectRoot): Settings {
   const connectorTypes = normalizeConnectorTypes(settings);
-  const legacyToGlobalConnectorId = createLegacyConnectorIdMap(settings, { ...settings, connectorTypes } as Settings);
+  const legacyToGlobalConnectorId = createLegacyConnectorIdMap(settings, {
+    ...settings,
+    connectorTypes,
+  } as Settings);
   const connectorTypeIds = new Set(connectorTypes.map((connectorType) => connectorType.id));
   const categories = settings.categories;
   const categoryIds = new Set(categories.map((category) => category.id));
@@ -189,16 +200,20 @@ function createNormalizedSettings(settings: LegacySettings, project: ProjectRoot
   for (const connectorType of settings.connectorTypes) {
     if (connectorType.categoryId) {
       const connectorTypeId = legacyToGlobalConnectorId.get(connectorType.id) ?? 'connector-other';
-      categoryConnectorAssignments.set(createCategoryAssignmentKey(connectorType.categoryId, connectorTypeId), {
-        id: makeUniqueAssignmentId(categoryConnectorAssignments, connectorType.categoryId, connectorTypeId),
-        categoryId: connectorType.categoryId,
-        connectorTypeId,
-      });
+      categoryConnectorAssignments.set(
+        createCategoryAssignmentKey(connectorType.categoryId, connectorTypeId),
+        {
+          id: makeUniqueAssignmentId(categoryConnectorAssignments, connectorType.categoryId, connectorTypeId),
+          categoryId: connectorType.categoryId,
+          connectorTypeId,
+        },
+      );
     }
   }
 
   for (const portGroup of project.portGroups) {
-    const connectorTypeId = legacyToGlobalConnectorId.get(portGroup.connectorTypeId) ?? portGroup.connectorTypeId;
+    const connectorTypeId =
+      legacyToGlobalConnectorId.get(portGroup.connectorTypeId) ?? portGroup.connectorTypeId;
     categoryConnectorAssignments.set(createCategoryAssignmentKey(portGroup.categoryId, connectorTypeId), {
       id: makeUniqueAssignmentId(categoryConnectorAssignments, portGroup.categoryId, connectorTypeId),
       categoryId: portGroup.categoryId,
@@ -215,7 +230,11 @@ function createNormalizedSettings(settings: LegacySettings, project: ProjectRoot
     });
   }
 
-  const { groups, members } = normalizeConnectorGroups(settings, legacyToGlobalConnectorId, categoryConnectorAssignments);
+  const { groups, members } = normalizeConnectorGroups(
+    settings,
+    legacyToGlobalConnectorId,
+    categoryConnectorAssignments,
+  );
 
   return {
     ...settings,
@@ -252,14 +271,19 @@ function createLegacyConnectorIdMap(
   settings: LegacySettings,
   normalizedSettings: Pick<Settings, 'connectorTypes'>,
 ): Map<string, string> {
-  const byName = new Map(normalizedSettings.connectorTypes.map((connectorType) => [
-    connectorType.name.trim().toLowerCase(),
-    connectorType.id,
-  ]));
+  const byName = new Map(
+    normalizedSettings.connectorTypes.map((connectorType) => [
+      connectorType.name.trim().toLowerCase(),
+      connectorType.id,
+    ]),
+  );
   const result = new Map<string, string>();
 
   for (const connectorType of settings.connectorTypes) {
-    result.set(connectorType.id, byName.get((connectorType.name.trim() || 'Other').toLowerCase()) ?? 'connector-other');
+    result.set(
+      connectorType.id,
+      byName.get((connectorType.name.trim() || 'Other').toLowerCase()) ?? 'connector-other',
+    );
   }
 
   return result;
@@ -285,7 +309,10 @@ function normalizeConnectorGroups(
     const connectorTypeId = legacyToGlobalConnectorId.get(member.connectorTypeId) ?? member.connectorTypeId;
     const group = groups.get(member.groupId);
 
-    if (!group || !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, connectorTypeId))) {
+    if (
+      !group ||
+      !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, connectorTypeId))
+    ) {
       continue;
     }
 
@@ -304,7 +331,10 @@ function normalizeConnectorGroups(
     const group = groups.get(legacyConnector.compatibilityGroupId);
     const connectorTypeId = legacyToGlobalConnectorId.get(legacyConnector.id) ?? legacyConnector.id;
 
-    if (!group || !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, connectorTypeId))) {
+    if (
+      !group ||
+      !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, connectorTypeId))
+    ) {
       continue;
     }
 
@@ -318,7 +348,10 @@ function normalizeConnectorGroups(
   for (const member of DEFAULT_CONNECTOR_COMPATIBILITY_GROUP_MEMBERS) {
     const group = groups.get(member.groupId);
 
-    if (!group || !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, member.connectorTypeId))) {
+    if (
+      !group ||
+      !categoryConnectorAssignments.has(createCategoryAssignmentKey(group.categoryId, member.connectorTypeId))
+    ) {
       continue;
     }
 
@@ -331,8 +364,13 @@ function normalizeConnectorGroups(
   };
 }
 
-function makeUniqueConnectorId(connectorTypesByName: ReadonlyMap<string, ConnectorType>, name: string): string {
-  const existingIds = new Set(Array.from(connectorTypesByName.values()).map((connectorType) => connectorType.id));
+function makeUniqueConnectorId(
+  connectorTypesByName: ReadonlyMap<string, ConnectorType>,
+  name: string,
+): string {
+  const existingIds = new Set(
+    Array.from(connectorTypesByName.values()).map((connectorType) => connectorType.id),
+  );
   const base = `connector-${slug(name)}`;
 
   return makeUniqueId(base, existingIds);
@@ -345,7 +383,10 @@ function makeUniqueAssignmentId(
 ): string {
   const existingIds = new Set(Array.from(assignments.values()).map((assignment) => assignment.id));
 
-  return makeUniqueId(`assignment-${categoryId.replace(/^category-/, '')}-${connectorTypeId.replace(/^connector-/, '')}`, existingIds);
+  return makeUniqueId(
+    `assignment-${categoryId.replace(/^category-/, '')}-${connectorTypeId.replace(/^connector-/, '')}`,
+    existingIds,
+  );
 }
 
 function makeGroupMemberId(groupId: string, connectorTypeId: string): string {

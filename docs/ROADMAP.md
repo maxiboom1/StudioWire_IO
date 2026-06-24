@@ -1,6 +1,6 @@
 # StudioWire IO Roadmap
 
-## v0.1
+## v0.1.0.0
 
 Project/settings/location/rack/device/port groups/cable ledger/import-export/validation.
 
@@ -18,34 +18,36 @@ Scope:
 - Validation.
 - Guarded delete/retire behavior.
 
-## v0.2
+Historical schema identifier `0.1.0` remains supported for import compatibility.
 
-Terminal blocks, rear/front TB, connections, prewire export.
+## v0.2.0.0
+
+Terminal blocks, rear/front TB faces, connection modeling, and stabilization only.
 
 Scope:
 
 - Terminal block data model.
 - Rear and front terminal block faces.
-- Device-to-TB connection modeling.
+- Device-to-TB and TB front-to-front connection modeling.
 - Terminal block port validation.
-- Prewire export.
+- Import, storage, recovery, documentation, and quality-gate stabilization.
 
-v0.2 should start by extending the data model and validators before adding drawing or export features.
+Prewire export is not a `0.2.0.0` deliverable. The current app continues to state that prewire export is unsupported.
 
-## v0.3
+## v0.3.0.0
 
-Codex package export, drawing tools, Visio/SVG/PDF generation.
+Future export and drawing-document work.
 
 Scope:
 
-- Export packages for Codex-driven workflows.
+- Prewire/export package design.
 - Drawing generation tools.
 - Visio generation.
 - SVG generation.
 - PDF generation.
 - Excel and Bartender exports after the connection model is stable.
 
-## v0.4
+## v0.4.0.0
 
 Auth, database, multi-user.
 

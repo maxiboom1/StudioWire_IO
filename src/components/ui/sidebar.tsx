@@ -80,9 +80,7 @@ const Sidebar = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>
 Sidebar.displayName = 'Sidebar';
 
 const SidebarInset = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
-  ({ className, ...props }, ref) => (
-    <main ref={ref} className={cn('min-w-0 flex-1', className)} {...props} />
-  ),
+  ({ className, ...props }, ref) => <main ref={ref} className={cn('min-w-0 flex-1', className)} {...props} />,
 );
 SidebarInset.displayName = 'SidebarInset';
 
@@ -134,7 +132,10 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttri
       <button
         ref={ref}
         aria-label="Toggle sidebar"
-        className={cn('inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100', className)}
+        className={cn(
+          'inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100',
+          className,
+        )}
         data-ui="sidebar-trigger"
         onClick={() => setOpen(!open)}
         type="button"
@@ -156,7 +157,10 @@ const SidebarGroupLabel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-studio-muted', className)}
+      className={cn(
+        'px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-studio-muted',
+        className,
+      )}
       {...props}
     />
   ),
@@ -246,7 +250,10 @@ const SidebarMenuBadge = React.forwardRef<HTMLDivElement, React.HTMLAttributes<H
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('ml-auto rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.66rem] font-semibold text-studio-muted', className)}
+      className={cn(
+        'ml-auto rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.66rem] font-semibold text-studio-muted',
+        className,
+      )}
       {...props}
     />
   ),

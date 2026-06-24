@@ -49,8 +49,10 @@ Public history is not rewritten. If review finds a problem, the fix is made as t
 ```bash
 npm test -- --run
 npm run build
-npm run validate:project -- samples/sample-project.studiowire.json
-npm run summary -- samples/sample-project.studiowire.json
+npm run validate:project -- docs/samples/sample-project.studiowire.json
+npm run summary -- docs/samples/sample-project.studiowire.json
+npm run check
+npm run check:full
 ```
 
 ## Versioning Rules
@@ -60,13 +62,12 @@ StudioWire IO uses versioned Codex changes.
 1. Every Codex implementation/change prompt must specify a new app version.
 2. Every Codex implementation/change must bump the app version and current project schema version together.
 3. Every Codex implementation/change must bump the app/package version.
-4. Milestone versions may use normal forms such as `0.2.0`, `0.2.1`, or `0.3.0`.
-5. Within an active UI-polish or milestone substage, internal app/product versions may use forms such as `0.2.1.1`, `0.2.1.2`, or `0.2.1.3`.
-6. These are internal app/product versions for this local project; StudioWire IO is not being published to npm as a package.
-7. Active StudioWire IO versions use four numeric components, and the app version and current `schemaVersion` must always be identical, even for UI-only or documentation releases.
-8. Every version bump must update `package.json`, `package-lock.json` when present or affected, the TypeScript current-version constant, JSON Schema metadata, generated/sample project data, `CHANGELOG.md`, and the root `README.md` Version Changelog section.
-9. Each prompt normally corresponds to one final user-published version.
-10. GPT-5.5 Pro reviews only after the user says `version published`.
+4. Active and future versions use exactly four numeric components, such as `0.2.7.2` or `0.3.0.0`.
+5. These are internal app/product versions for this local project; StudioWire IO is not being published to npm as a package.
+6. Active StudioWire IO versions use four numeric components, and the app version and current `schemaVersion` must always be identical, even for UI-only or documentation releases.
+7. Every version bump must update `package.json`, `package-lock.json` when present or affected, the TypeScript current-version constant, JSON Schema metadata, generated/sample project data, and the root `README.md` Version Changelog section.
+8. Each prompt normally corresponds to one final user-published version.
+9. GPT-5.5 Pro reviews only after the user says `version published`.
 
 ## Not Used For Normal Workflow
 

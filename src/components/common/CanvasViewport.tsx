@@ -69,11 +69,7 @@ export function CanvasViewport({ ariaLabel, children, className = '', toolbarCon
 
   return (
     <section className={`canvas-viewport-shell ${className}`} aria-label={ariaLabel}>
-      <div
-        className="canvas-viewport"
-        ref={viewportRef}
-        tabIndex={0}
-      >
+      <div className="canvas-viewport" ref={viewportRef} tabIndex={0}>
         <div className="canvas-viewport-toolbar" aria-label="Canvas controls">
           {toolbarContent ? <div className="canvas-toolbar-extra">{toolbarContent}</div> : null}
           <div className="canvas-zoom-controls">
@@ -105,15 +101,8 @@ export function CanvasViewport({ ariaLabel, children, className = '', toolbarCon
             </Button>
           </div>
         </div>
-        <div
-          className="canvas-viewport-surface"
-          style={{ width: scaledWidth, height: scaledHeight }}
-        >
-          <div
-            className="canvas-viewport-content"
-            ref={contentRef}
-            style={{ transform: `scale(${zoom})` }}
-          >
+        <div className="canvas-viewport-surface" style={{ width: scaledWidth, height: scaledHeight }}>
+          <div className="canvas-viewport-content" ref={contentRef} style={{ transform: `scale(${zoom})` }}>
             {children}
           </div>
         </div>

@@ -36,7 +36,9 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('Reset local StudioWire IO autosave data? Export first if you need a copy.')) {
+              if (
+                window.confirm('Reset local StudioWire IO autosave data? Export first if you need a copy.')
+              ) {
                 const storage = getBrowserStorage();
 
                 if (storage.ok) {

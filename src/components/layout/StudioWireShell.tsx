@@ -4,7 +4,12 @@ import { AddDeviceModal } from '../devices/AddDeviceModal';
 import { AddTerminalBlockModal } from '../devices/AddTerminalBlockModal';
 import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
-import { resolveIssueSelection, resolveSelection, type SelectedObjectType, type SelectionState } from '../common/selection';
+import {
+  resolveIssueSelection,
+  resolveSelection,
+  type SelectedObjectType,
+  type SelectionState,
+} from '../common/selection';
 import { SidebarInset, SidebarProvider } from '../ui/sidebar';
 import { CablesWorkspace } from './CablesWorkspace';
 import { Inspector } from './Inspector';
@@ -34,10 +39,7 @@ export function StudioWireShell() {
       return;
     }
 
-    if (
-      selection.selectedObjectType === 'project' &&
-      selection.selectedObjectId !== project.project.id
-    ) {
+    if (selection.selectedObjectType === 'project' && selection.selectedObjectId !== project.project.id) {
       setSelection({ selectedObjectType: 'project', selectedObjectId: project.project.id });
       return;
     }

@@ -6,13 +6,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 
 const NONE_VALUE = '__none__';
@@ -28,10 +22,7 @@ export function DeviceInspector({ device }: { device: Device }) {
     ? project.locations.find((candidate) => candidate.id === assignedRack.locationId)
     : project.locations.find((candidate) => candidate.id === device.locationId);
   const canEditLocation = device.mountType !== 'rack';
-  const topRu =
-    device.rackBottomRu && device.rackSizeRu
-      ? device.rackBottomRu + device.rackSizeRu - 1
-      : null;
+  const topRu = device.rackBottomRu && device.rackSizeRu ? device.rackBottomRu + device.rackSizeRu - 1 : null;
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const portCount = project.ports.filter((port) => port.deviceId === device.id).length;
   const [form, setForm] = useState({
@@ -90,7 +81,11 @@ export function DeviceInspector({ device }: { device: Device }) {
           <form className="editor-form inspector-form" onSubmit={handleSubmit}>
             <div className="form-field">
               <Label htmlFor="inspector-device-name">Name</Label>
-              <Input id="inspector-device-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              <Input
+                id="inspector-device-name"
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
             </div>
             {!isTerminalBlock ? (
               <>
@@ -104,11 +99,19 @@ export function DeviceInspector({ device }: { device: Device }) {
                 </div>
                 <div className="form-field">
                   <Label htmlFor="inspector-device-model">Model</Label>
-                  <Input id="inspector-device-model" value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} />
+                  <Input
+                    id="inspector-device-model"
+                    value={form.model}
+                    onChange={(event) => setForm({ ...form, model: event.target.value })}
+                  />
                 </div>
                 <div className="form-field">
                   <Label htmlFor="inspector-device-role">Role</Label>
-                  <Input id="inspector-device-role" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })} />
+                  <Input
+                    id="inspector-device-role"
+                    value={form.role}
+                    onChange={(event) => setForm({ ...form, role: event.target.value })}
+                  />
                 </div>
               </>
             ) : null}
@@ -150,7 +153,11 @@ export function DeviceInspector({ device }: { device: Device }) {
             ) : null}
             <div className="form-field">
               <Label htmlFor="inspector-device-notes">Notes</Label>
-              <Textarea id="inspector-device-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+              <Textarea
+                id="inspector-device-notes"
+                value={form.notes}
+                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+              />
             </div>
             <Button type="submit">{isTerminalBlock ? 'Save TB' : 'Save Device'}</Button>
           </form>
@@ -190,11 +197,7 @@ export function DeviceInspector({ device }: { device: Device }) {
             </div>
             <div>
               <dt>Rack position</dt>
-              <dd>
-                {device.rackBottomRu && topRu
-                  ? `RU ${device.rackBottomRu}-${topRu}`
-                  : 'Not placed'}
-              </dd>
+              <dd>{device.rackBottomRu && topRu ? `RU ${device.rackBottomRu}-${topRu}` : 'Not placed'}</dd>
             </div>
             {!isTerminalBlock ? (
               <div>
@@ -216,7 +219,11 @@ export function DeviceInspector({ device }: { device: Device }) {
                 ? 'Rack assignment and RU position are changed on the Rack Canvas.'
                 : 'Set a mount height, then drag this device from the navigator onto a rack canvas when it is ready to be mounted.'}
           </p>
-          <p>{isTerminalBlock ? 'Rear and front port groups are locked in this release.' : 'Port group cable allocation fields are locked in this release.'}</p>
+          <p>
+            {isTerminalBlock
+              ? 'Rear and front port groups are locked in this release.'
+              : 'Port group cable allocation fields are locked in this release.'}
+          </p>
         </CardContent>
       </Card>
       <Card className="inspector-card danger-zone">
@@ -224,10 +231,14 @@ export function DeviceInspector({ device }: { device: Device }) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-        <p>{isTerminalBlock ? 'TB retirement keeps front planned cable numbers unavailable for reuse.' : 'Device deletion retires allocations so cable numbers are never freed for reuse.'}</p>
-        <Button variant="destructive" type="button" onClick={handleRetire}>
-          {isTerminalBlock ? 'Retire TB' : 'Retire Device'}
-        </Button>
+          <p>
+            {isTerminalBlock
+              ? 'TB retirement keeps front planned cable numbers unavailable for reuse.'
+              : 'Device deletion retires allocations so cable numbers are never freed for reuse.'}
+          </p>
+          <Button variant="destructive" type="button" onClick={handleRetire}>
+            {isTerminalBlock ? 'Retire TB' : 'Retire Device'}
+          </Button>
         </CardContent>
       </Card>
     </aside>

@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.7
+# StudioWire IO Product Spec v0.2.7.2
 
-StudioWire IO v0.2.7 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.7.2 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future exports of the project data.
 
@@ -62,7 +62,7 @@ Examples:
 
 The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Devices are retired instead of physically deleted so cable numbers are not freed. Retired devices and terminal blocks are immutable historical objects: they cannot be edited, moved, or used as endpoints for new active connections.
 
-The inspector must not invent fields that are not documented in `DATA_MODEL_V0_2_5.md`.
+The inspector must not invent fields that are not documented in `DATA_MODEL.md`.
 
 ### Bottom Validation Panel
 
@@ -165,7 +165,7 @@ The numbering model includes:
 
 Cable numbers must be unique per project. Skipped gaps are reserved and cannot be reused.
 
-StudioWire IO tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, and validation, but does not export prewire documents yet.
+StudioWire IO tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, and validation. Interactive rack, device, and TB views are generated in-app views over project data; they are distinct from future exported drawing documents and prewire packages.
 
 ## Explicit Exclusions
 

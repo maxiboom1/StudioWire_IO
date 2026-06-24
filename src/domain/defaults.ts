@@ -54,7 +54,11 @@ export const DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS: CategoryConnectorAssignment
   { id: 'assignment-audio-rj45', categoryId: 'category-audio', connectorTypeId: 'connector-rj45' },
   { id: 'assignment-audio-db25', categoryId: 'category-audio', connectorTypeId: 'connector-db25' },
   { id: 'assignment-audio-madi-bnc', categoryId: 'category-audio', connectorTypeId: 'connector-madi-bnc' },
-  { id: 'assignment-audio-madi-fiber', categoryId: 'category-audio', connectorTypeId: 'connector-madi-fiber' },
+  {
+    id: 'assignment-audio-madi-fiber',
+    categoryId: 'category-audio',
+    connectorTypeId: 'connector-madi-fiber',
+  },
   { id: 'assignment-network-rj45', categoryId: 'category-network', connectorTypeId: 'connector-rj45' },
   { id: 'assignment-network-sfp', categoryId: 'category-network', connectorTypeId: 'connector-sfp' },
   { id: 'assignment-network-fiber', categoryId: 'category-network', connectorTypeId: 'connector-fiber' },
@@ -71,7 +75,11 @@ export const DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS: ConnectorCompatibilityGroup
 
 export const DEFAULT_CONNECTOR_COMPATIBILITY_GROUP_MEMBERS: ConnectorCompatibilityGroupMember[] = [
   { id: 'member-video-sdi-bnc', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-bnc' },
-  { id: 'member-video-sdi-micro-bnc', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-micro-bnc' },
+  {
+    id: 'member-video-sdi-micro-bnc',
+    groupId: 'group-video-sdi-coax',
+    connectorTypeId: 'connector-micro-bnc',
+  },
   { id: 'member-video-sdi-minidin', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-minidin' },
   { id: 'member-video-sdi-din', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-sdi-din' },
   { id: 'member-audio-xlr', groupId: 'group-audio-analog', connectorTypeId: 'connector-xlr' },

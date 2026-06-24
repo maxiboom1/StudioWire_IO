@@ -1,14 +1,7 @@
 import type { Location } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { Button } from '../ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { EmptyState, SummaryGrid, WorkspaceCard, WorkspaceHeader } from '../common/WorkspaceBits';
 
 export function LocationWorkspace({
@@ -106,7 +99,10 @@ export function LocationWorkspace({
           </Table>
         )}
       </WorkspaceCard>
-      <WorkspaceCard title="TBs" description={`${terminalBlocks.length} terminal block(s) assigned to this location.`}>
+      <WorkspaceCard
+        title="TBs"
+        description={`${terminalBlocks.length} terminal block(s) assigned to this location.`}
+      >
         {terminalBlocks.length === 0 ? (
           <p className="panel-empty">No terminal blocks in this location.</p>
         ) : (
@@ -121,7 +117,9 @@ export function LocationWorkspace({
             </TableHeader>
             <TableBody>
               {terminalBlocks.map((device) => {
-                const rack = device.rackId ? project.racks.find((candidate) => candidate.id === device.rackId) : null;
+                const rack = device.rackId
+                  ? project.racks.find((candidate) => candidate.id === device.rackId)
+                  : null;
 
                 return (
                   <TableRow key={device.id}>
