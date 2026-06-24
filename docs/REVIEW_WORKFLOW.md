@@ -52,7 +52,9 @@ npm run build
 npm run validate:project -- docs/samples/sample-project.studiowire.json
 npm run summary -- docs/samples/sample-project.studiowire.json
 npm run check
+npm run check:scale
 npm run check:full
+npm run package:source
 ```
 
 ## Versioning Rules

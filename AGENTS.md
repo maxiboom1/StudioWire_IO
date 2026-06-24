@@ -21,6 +21,7 @@ These instructions apply to future Codex sessions working in this repository.
 - Update `docs/DATA_MODEL.md` and `docs/VALIDATION_RULES.md` before changing the current data shape or validation behavior.
 - Active StudioWire IO versions use four numeric components, and the app version and current project schema version must always be identical.
 - Preserve JSON import/export compatibility once a format is released.
+- `docs/V0_2_ACCEPTANCE.md` defines the maintained v0.2 acceptance gate and must stay aligned with scripts, architecture, docs, and release packaging.
 
 ## Naming And Files
 
@@ -33,4 +34,4 @@ These instructions apply to future Codex sessions working in this repository.
 
 ## Cleanup Rule
 
-Every Codex task must finish by removing generated build, test, browser, cache, package, and temporary artifacts, then running the repository cleanliness check. The cleanup must cover `dist`, `coverage`, `.vite`, `.playwright-cli`, `test-results`, `playwright-report`, `blob-report`, `output`, `.source-package`, `*.tgz`, `*.tsbuildinfo`, and temporary logs/screenshots. Use `npm run clean` and `npm run clean:check`; do not rely on prose-only cleanup.
+Every Codex task must finish by removing generated build, test, browser, cache, package, and temporary artifacts, then running the repository cleanliness check. The cleanup must cover `dist`, `coverage`, `.vite`, `.playwright-cli`, `test-results`, `playwright-report`, `blob-report`, `output`, `.source-package`, `*.tgz`, `*.zip`, `*.tsbuildinfo`, and temporary logs/screenshots. Use `npm run clean` and `npm run clean:check`; do not rely on prose-only cleanup.

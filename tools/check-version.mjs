@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-const expected = '0.2.7.3';
+const expected = '0.2.8.0';
 const checks = [
   ['package.json version', () => JSON.parse(read('package.json')).version],
   ['package-lock root version', () => JSON.parse(read('package-lock.json')).version],

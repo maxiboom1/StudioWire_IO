@@ -22,7 +22,7 @@ Historical schema identifier `0.1.0` remains supported for import compatibility.
 
 ## v0.2.0.0
 
-Terminal blocks, rear/front TB faces, connection modeling, and stabilization only.
+Complete. Terminal blocks, rear/front TB faces, connection modeling, data safety, validation, local persistence, and release hardening only.
 
 Scope:
 
@@ -30,9 +30,13 @@ Scope:
 - Rear and front terminal block faces.
 - Device-to-TB and TB front-to-front connection modeling.
 - Terminal block port validation.
-- Import, storage, recovery, documentation, and quality-gate stabilization.
+- Cable register and validation.
+- Guarded retirement.
+- Safe JSON import/export and legacy migration.
+- Resilient local browser persistence.
+- Import, storage, recovery, documentation, acceptance, and quality-gate stabilization.
 
-Prewire export is not a `0.2.0.0` deliverable. The current app continues to state that prewire export is unsupported.
+Prewire export is not a `0.2.0.0` deliverable and is not required to close v0.2. The current app continues to state that prewire export is unsupported.
 
 ## v0.3.0.0
 

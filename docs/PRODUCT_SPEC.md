@@ -1,8 +1,8 @@
-# StudioWire IO Product Spec v0.2.7.3
+# StudioWire IO Product Spec v0.2.8.0
 
-StudioWire IO v0.2.7.3 is a local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.0 is the final v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
-Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future exports of the project data.
+Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
 ## Application Layout
 
@@ -165,7 +165,7 @@ The numbering model includes:
 
 Cable numbers must be unique per project. Skipped gaps are reserved and cannot be reused.
 
-StudioWire IO tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, and validation. Interactive rack, device, and TB views are generated in-app views over project data; they are distinct from future exported drawing documents and prewire packages.
+StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, cable register/filtering, guarded retirement, JSON import/export, resilient local persistence, and validation. Interactive rack, device, and TB views are generated in-app views over project data; they are distinct from future exported drawing documents and prewire packages.
 
 ## Explicit Exclusions
 

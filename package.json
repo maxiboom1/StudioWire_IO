@@ -1,7 +1,7 @@
 {
   "name": "studiowire-io",
   "private": true,
-  "version": "0.2.7.3",
+  "version": "0.2.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,13 +17,14 @@
     "test:e2e": "playwright test",
     "validate:project": "tsx tools/validate-project.ts",
     "validate:fixtures": "tsx tools/validate-fixtures.ts",
+    "check:scale": "tsx tools/check-scale.ts",
     "summary": "tsx tools/print-project-summary.ts",
     "version:check": "node tools/check-version.mjs",
     "clean": "node tools/clean-generated.mjs",
     "clean:check": "node tools/check-clean.mjs",
     "package:source": "node tools/package-source.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test:run && npm run coverage && npm run validate:fixtures && npm run version:check && npm run clean && npm run clean:check",
-    "check:full": "npm run check && npm run test:e2e && npm run package:source && npm run clean && npm run clean:check"
+    "check:full": "npm run check && npm run check:scale && npm run test:e2e && npm run package:source && npm run clean && npm run clean:check"
   },
   "files": [
     "AGENTS.md",

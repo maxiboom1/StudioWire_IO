@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.7.3 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.0 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -32,9 +32,10 @@ npm run build
 - `npm run test:run`: unit and contract tests.
 - `npm run coverage`: V8 coverage with thresholds protecting import, migration, persistence, reducer, connection, and validation modules.
 - `npm run validate:fixtures`: current, legacy, and invalid fixture contract checks.
+- `npm run check:scale`: synthetic multi-thousand-port validation, persistence, export, and import check.
 - `npm run version:check`: package/schema/sample/docs/UI version synchronization.
 - `npm run test:e2e`: Playwright browser tests.
-- `npm run package:source`: create and inspect an allowlisted source package in `.source-package/`.
+- `npm run package:source`: create and inspect `.source-package/StudioWire_IO-<version>.zip`.
 - `npm run clean` / `npm run clean:check`: remove and verify generated artifact hygiene.
 
 ## Test And Validate
@@ -46,7 +47,7 @@ npm run validate:project -- docs/samples/sample-project.studiowire.json
 npm run summary -- docs/samples/sample-project.studiowire.json
 ```
 
-`npm run check` is the deterministic source check: formatting, ESLint, TypeScript, unit tests, V8 coverage, fixture validation, version synchronization, and cleanliness. `npm run check:full` is the publish gate and adds Playwright E2E plus source-package verification.
+`npm run check` is the deterministic source check: formatting, ESLint, TypeScript, unit tests, V8 coverage, fixture validation, version synchronization, and cleanliness. `npm run check:full` is the publish gate and adds the synthetic scale check, Playwright E2E, source-package verification, and final cleanup checks.
 
 ## UI Stack
 
@@ -93,10 +94,11 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Generated port records and planned cable records.
 - Crosspoint creation from Device and TB views, including direct device links, device/TB segments, and TB front-to-front patches.
 - Crosspoint disconnect from the shared picker, restoring affected cable slots to planned state.
+- Cable register viewing and filtering.
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export compatibility guarantee: current exports use schema version `0.2.7.3`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, and `0.2.7.2`, then migrate to the current runtime/schema contract before state commit.
+- JSON import/export compatibility guarantee: current exports use schema version `0.2.8.0`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, and `0.2.7.3`, then migrate to the current runtime/schema contract before state commit.
 - Startup recovery tries the active autosave key and known legacy keys in order; corrupt storage records do not block fallback recovery, and autosave failures leave the in-memory project exportable.
 - Retired devices and terminal blocks are immutable historical objects. Their ports are excluded from new connection candidates, and domain connection commands reject retired endpoints.
 
@@ -127,8 +129,21 @@ npm run dev
 Open the Vite URL, usually `http://localhost:5173/`, load the sample project, and use the browser screenshot tool.
 
 See `docs/ROADMAP.md` for planned version boundaries.
+See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.0
+
+Final v0.2 closeout and release-readiness release.
+
+- Bumped app and project schema version to `0.2.8.0`.
+- Added an explicit identity migration from `0.2.7.3` and retained all documented legacy imports.
+- Formalized v0.2 completion without prewire export; prewire and document/export packages are future `0.3.0.0` scope.
+- Added `docs/V0_2_ACCEPTANCE.md` and mapped release acceptance to automated commands/tests with optional manual visual checks.
+- Added a synthetic multi-thousand-port scale/persistence/import/export check and included it in `check:full`.
+- Changed source packaging to create and inspect `StudioWire_IO-0.2.8.0.zip` with lockfile, docs, samples, source, tools, schema, and config.
+- Expanded Playwright lifecycle coverage for current-schema export/import, direct connections, device/TB segments, TB front-to-front patches, disconnect/reconnect, validation, reload, and failure paths.
 
 ### v0.2.7.3
 

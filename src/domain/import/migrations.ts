@@ -16,6 +16,7 @@ export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.7.0', to: '0.2.7.1', migrate: identityMigration },
   { from: '0.2.7.1', to: '0.2.7.2', migrate: identityMigration },
   { from: '0.2.7.2', to: '0.2.7.3', migrate: identityMigration },
+  { from: '0.2.7.3', to: '0.2.8.0', migrate: identityMigration },
 ];
 
 export function migrateProjectToCurrent(project: ProjectRoot, version: SchemaVersion): ProjectRoot {

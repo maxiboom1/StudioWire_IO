@@ -27,6 +27,7 @@ for (const entry of readdirSync('.')) {
   if (
     entry.endsWith('.tsbuildinfo') ||
     entry.endsWith('.tgz') ||
+    entry.endsWith('.zip') ||
     entry.endsWith('.log') ||
     entry.endsWith('.tmp') ||
     entry.endsWith('.trace.zip')

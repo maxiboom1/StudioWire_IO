@@ -4,14 +4,28 @@ import { resolve } from 'node:path';
 
 const currentSamplePath = resolve('docs/samples/sample-project.studiowire.json');
 const invalidSamplePath = resolve('docs/samples/invalid/invalid-project-status.studiowire.json');
-const legacyFixturePaths = ['0-2-7-1', '0-2-7-0', '0-2-6-0', '0-2-5-1', '0-2-4-1', '0-1-0'].map((version) =>
-  resolve(`docs/samples/legacy/project-${version}.studiowire.json`),
-);
+const legacyFixturePaths = [
+  '0-2-7-3',
+  '0-2-7-2',
+  '0-2-7-1',
+  '0-2-7-0',
+  '0-2-6-0',
+  '0-2-5-1',
+  '0-2-4-1',
+  '0-1-0',
+].map((version) => resolve(`docs/samples/legacy/project-${version}.studiowire.json`));
+
+const pageErrors = new WeakMap<Page, string[]>();
 
 test.beforeEach(async ({ page }) => {
+  watchPageErrors(page);
   await page.goto('/');
   await page.evaluate(() => window.localStorage.clear());
   await page.reload();
+});
+
+test.afterEach(async ({ page }) => {
+  expect(pageErrors.get(page) ?? []).toEqual([]);
 });
 
 test('boots empty and loads the sample project', async ({ page }) => {
@@ -20,49 +34,51 @@ test('boots empty and loads the sample project', async ({ page }) => {
   await expectProject(page, 'Demo Studio');
 });
 
-test('creates a location, rack, device, and terminal block', async ({ page }) => {
-  await page.getByText('Create location or device').click({ button: 'right' });
-  await page.getByText('Add Location').click();
-  await page.locator('#location-name').fill('E2E Room');
-  await page.locator('#location-type').fill('test_room');
-  await page.getByRole('button', { name: 'Add Location' }).click();
-  await expect(page.getByRole('heading', { name: 'E2E Room' })).toBeVisible();
+test('completes the v0.2 project lifecycle and preserves exported data after import', async ({ page }) => {
+  await expectProject(page, 'Untitled Project');
+  await configureSettings(page);
+  await createLocation(page, 'E2E Room');
+  await createRack(page, 'E2E Room', 'E2E Rack');
+  await createDevice(page, 'E2E Room', 'E2E Source');
+  await createDevice(page, 'E2E Room', 'E2E Destination');
+  await createTerminalBlock(page, 'E2E Room', 'E2E TB A', 1);
+  await createTerminalBlock(page, 'E2E Room', 'E2E TB B', 2);
 
-  await page.getByRole('button', { name: /^E2E Room 0$/ }).click({ button: 'right' });
-  await page.getByText('Add Rack').click();
-  await page.locator('#rack-name').fill('E2E Rack');
-  await page.getByRole('button', { name: 'Add Rack' }).click();
-  await expect(page.getByRole('button', { name: /E2E Rack 42 RU/ })).toBeVisible();
+  await connectPorts(page, 'E2E Source', 'E2E-SOURCE-OUT-001', 'E2E-DESTINATION-IN-001');
+  await clearConnection(page, 'E2E Source', 'E2E-SOURCE-OUT-001');
+  await connectPorts(page, 'E2E Source', 'E2E-SOURCE-OUT-001', 'E2E-DESTINATION-IN-001');
+  await connectPorts(page, 'E2E Source', 'E2E-SOURCE-OUT-002', 'E2E-TB-A (R)-01');
+  await connectPorts(page, 'E2E TB A', 'E2E-TB-A (F)-01', 'E2E-TB-B (F)-01');
 
-  await page.getByRole('button', { name: /^E2E Room 1$/ }).click({ button: 'right' });
-  await page.getByText('Add Device').click();
-  await page.locator('#device-name').fill('E2E Device');
-  await page.getByRole('button', { name: 'Create Device' }).click();
-  await expect(page.getByRole('button', { name: /E2E Device E2E-DEVICE/ })).toBeVisible();
+  await page.getByRole('button', { name: /E2E Destination/ }).click();
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Retire Device' }).click();
+  await page.getByRole('button', { name: /E2E Source/ }).click();
+  await page.getByLabel('Connect E2E-SOURCE-OUT-001').click();
+  await page.getByLabel('Search ports').fill('E2E-DESTINATION-IN-001');
+  await expect(page.getByText('No matching ports.')).toBeVisible();
+  await page.keyboard.press('Escape');
 
-  await page.getByRole('button', { name: /^E2E Room 2$/ }).click({ button: 'right' });
-  await page.getByText('Add TB').click();
-  await page.locator('#tb-name').fill('E2E TB');
-  await page.locator('#tb-count').fill('1');
-  await page.getByRole('button', { name: 'Create TB' }).click();
-  await expect(page.getByRole('button', { name: /E2E TB TB/ })).toBeVisible();
-});
+  await validateProject(page);
+  await page.getByRole('button', { name: 'Cables' }).click();
+  await expect(page.getByText(/of \d+ cable\(s\) shown/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Filter System status' })).toBeVisible();
 
-test('connects, disconnects, reloads, and restores persistence', async ({ page }) => {
-  await loadSample(page);
-  await page.getByText('Router 1').click();
-  await page.getByLabel('Connect RTR1-OUT-001').click();
-  await page.getByLabel('Search ports').fill('MV1');
-  await page.getByText('MV1-IN-001').first().click();
-  await expect(page.getByText(/connected RTR1-OUT-001 to MV1-IN-001/)).toBeVisible();
-  await page.getByLabel('Connect RTR1-OUT-001').click();
-  await page.getByText('Clear connection').click();
-  await expect(page.getByText('Connection cleared for RTR1-OUT-001')).toBeVisible();
-  await page.getByLabel('Connect RTR1-OUT-001').click();
-  await page.getByLabel('Search ports').fill('MV1');
-  await page.getByText('MV1-IN-001').first().click();
   await page.reload();
-  await expectProject(page, 'Demo Studio');
+  await expectProject(page, 'Untitled Project');
+  await expect(page.getByRole('button', { name: /E2E Source/ })).toBeVisible();
+
+  const exportedBeforeImport = await exportProject(page);
+  const beforeSummary = summarizeProject(exportedBeforeImport);
+
+  await createNewProject(page);
+  await expectProject(page, 'Untitled Project');
+  await importProject(page, exportedBeforeImport.path);
+  await expect(page.getByRole('button', { name: /E2E Source/ })).toBeVisible();
+
+  const exportedAfterImport = await exportProject(page);
+
+  expect(summarizeProject(exportedAfterImport)).toEqual(beforeSummary);
 });
 
 test('imports current and legacy fixtures', async ({ page }) => {
@@ -72,7 +88,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.7.3', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.8.0', { exact: true })).toBeVisible();
   }
 });
 
@@ -85,12 +101,7 @@ test('rejects malformed import without losing the open project', async ({ page }
 
 test('edits settings and connector compatibility data', async ({ page }) => {
   await loadSample(page);
-  await page.getByLabel('Project actions').click();
-  await page.getByText('Project Settings').click();
-  await page.getByRole('tab', { name: 'Connectors' }).click();
-  await page.getByPlaceholder('New connector').fill('E2E Connector');
-  await page.getByRole('button', { name: 'Add Connector' }).click();
-  await expect(page.locator('input[value="E2E Connector"]')).toBeVisible();
+  await configureSettings(page);
   await page.getByRole('tab', { name: 'Connector Groups' }).click();
   await expect(page.getByText('Video connector group')).toBeVisible();
 });
@@ -108,19 +119,16 @@ test('retires a device and blocks reconnection candidates', async ({ page }) => 
 
 test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
-  const downloadPromise = page.waitForEvent('download');
-  await page.getByLabel('Project actions').click();
-  await page.getByText('Export JSON').click();
-  const download = await downloadPromise;
-  const path = await download.path();
+  const exported = await exportProject(page);
 
-  expect(path).toBeTruthy();
-  await importProject(page, path ?? currentSamplePath);
+  expect(exported.schemaVersion).toBe('0.2.8.0');
+  await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
 
 test('handles storage failure and recovers from valid stored data', async ({ browser }) => {
   const blockedPage = await browser.newPage();
+  watchPageErrors(blockedPage);
   await blockedPage.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', {
       configurable: true,
@@ -131,20 +139,131 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
   });
   await blockedPage.goto('/');
   await expect(blockedPage.getByText(/Autosave unavailable/)).toBeVisible();
+  expect(pageErrors.get(blockedPage) ?? []).toEqual([]);
   await blockedPage.close();
 
   const page = await browser.newPage();
+  watchPageErrors(page);
   await page.addInitScript(
     (sample) => {
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.7.3', '0.2.7.1'),
+    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.0', '0.2.7.1'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');
+  expect(pageErrors.get(page) ?? []).toEqual([]);
   await page.close();
 });
+
+async function configureSettings(page: Page) {
+  await page.getByLabel('Project actions').click();
+  await page.getByText('Project Settings').click();
+  await page.getByRole('tab', { name: 'Connectors' }).click();
+  await page.getByPlaceholder('New connector').fill('E2E Connector');
+  await page.getByRole('button', { name: 'Add Connector' }).click();
+  await expect(page.locator('input[value="E2E Connector"]')).toBeVisible();
+}
+
+async function createLocation(page: Page, name: string) {
+  await page.getByText('Create location or device').click({ button: 'right' });
+  await page.getByText('Add Location').click();
+  await page.locator('#location-name').fill(name);
+  await page.locator('#location-type').fill('test_room');
+  await page.getByRole('button', { name: 'Add Location' }).click();
+  await expect(page.getByRole('heading', { name })).toBeVisible();
+}
+
+async function createRack(page: Page, locationName: string, rackName: string) {
+  await locationButton(page, locationName).click({ button: 'right' });
+  await page.getByText('Add Rack').click();
+  await page.locator('#rack-name').fill(rackName);
+  await page.getByRole('button', { name: 'Add Rack' }).click();
+  await expect(page.getByRole('button', { name: new RegExp(`${rackName} 42 RU`) })).toBeVisible();
+}
+
+async function createDevice(page: Page, locationName: string, deviceName: string) {
+  await locationButton(page, locationName).click({ button: 'right' });
+  await page.getByText('Add Device').click();
+  await page.locator('#device-name').fill(deviceName);
+  await page.getByRole('button', { name: 'Create Device' }).click();
+  await expect(page.getByRole('button', { name: new RegExp(deviceName) })).toBeVisible();
+}
+
+async function createTerminalBlock(page: Page, locationName: string, tbName: string, bottomRu: number) {
+  await locationButton(page, locationName).click({ button: 'right' });
+  await page.getByText('Add TB').click();
+  await page.locator('#tb-name').fill(tbName);
+  await page.locator('#tb-count').fill('2');
+  await page.locator('#tb-bottom-ru').fill(String(bottomRu));
+  await page.getByRole('button', { name: 'Create TB' }).click();
+  await expect(page.getByRole('button', { name: new RegExp(tbName) })).toBeVisible();
+}
+
+async function connectPorts(page: Page, sourceNodeName: string, fromLabel: string, toLabel: string) {
+  await page.getByRole('button', { name: new RegExp(sourceNodeName) }).click();
+  await page.getByLabel(`Connect ${fromLabel}`).click();
+  await page.getByLabel('Search ports').fill(toLabel);
+  await page.getByText(toLabel).first().click();
+  await expect(
+    page.getByText(new RegExp(`connected ${escapeRegExp(fromLabel)} to ${escapeRegExp(toLabel)}`)),
+  ).toBeVisible();
+}
+
+async function clearConnection(page: Page, sourceNodeName: string, fromLabel: string) {
+  await page.getByRole('button', { name: new RegExp(sourceNodeName) }).click();
+  await page.getByLabel(`Connect ${fromLabel}`).click();
+  await page.getByText('Clear connection').click();
+  await expect(page.getByText(`Connection cleared for ${fromLabel}`)).toBeVisible();
+}
+
+async function validateProject(page: Page) {
+  await page.getByLabel('Project actions').click();
+  await page.getByText('Validate').click();
+  await expect(page.getByText('Validation passed')).toBeVisible();
+}
+
+async function createNewProject(page: Page) {
+  await page.getByLabel('Project actions').click();
+  await page.getByText('New Project').click();
+}
+
+async function exportProject(page: Page): Promise<Record<string, any> & { path: string }> {
+  const downloadPromise = page.waitForEvent('download');
+
+  await page.getByLabel('Project actions').click();
+  await page.getByText('Export JSON').click();
+
+  const download = await downloadPromise;
+  const path = await download.path();
+
+  expect(path).toBeTruthy();
+
+  return {
+    ...JSON.parse(readFileSync(path ?? '', 'utf8')),
+    path: path ?? '',
+  };
+}
+
+function summarizeProject(project: Record<string, any>) {
+  return {
+    schemaVersion: project.schemaVersion,
+    devices: project.devices.map((device: any) => `${device.name}:${device.kind}:${device.status}`).sort(),
+    portCount: project.ports.length,
+    cableCount: project.cables.length,
+    connected: project.cables
+      .filter((cable: any) => cable.status === 'connected')
+      .map((cable: any) => `${cable.number}:${cable.labelTop}->${cable.labelBottom}`)
+      .sort(),
+    retiredCableCount: project.cables.filter((cable: any) => cable.status === 'retired').length,
+    validationErrorCount: project.validationIssues.filter((issue: any) => issue.severity === 'error').length,
+  };
+}
+
+function locationButton(page: Page, locationName: string) {
+  return page.getByRole('button', { name: new RegExp(`^${escapeRegExp(locationName)} \\d+$`) }).first();
+}
 
 async function expectProject(page: Page, name: string) {
   await expect(page.locator('.app-brand-project', { hasText: name })).toBeVisible();
@@ -157,4 +276,22 @@ async function loadSample(page: Page) {
 
 async function importProject(page: Page, path: string) {
   await page.locator('input[aria-label="Import Project JSON"]').setInputFiles(path);
+}
+
+function watchPageErrors(page: Page) {
+  const errors: string[] = [];
+
+  pageErrors.set(page, errors);
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      errors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => {
+    errors.push(error.message);
+  });
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

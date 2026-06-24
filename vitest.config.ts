@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    exclude: ['dist/**', 'build/**', 'node_modules/**', 'tests/e2e/**'],
+    exclude: ['dist/**', 'build/**', 'node_modules/**', 'tests/e2e/**', '.source-package/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],
