@@ -365,6 +365,26 @@
       "notes": "",
       "createdAt": "2026-05-06T00:00:00.000Z",
       "updatedAt": "2026-05-06T00:00:00.000Z"
+    },
+    {
+      "id": "device-tb-current-metadata",
+      "name": "Current TB Metadata",
+      "kind": "terminal_block",
+      "code": "TB",
+      "manufacturer": "Forbidden",
+      "model": "Forbidden",
+      "categoryId": "category-video",
+      "locationId": "location-machine-room",
+      "role": "Forbidden",
+      "labelPrefix": "TB",
+      "mountType": "rack",
+      "rackId": "rack-mcr-a",
+      "rackSizeRu": 1,
+      "rackBottomRu": 1,
+      "status": "planned",
+      "notes": "",
+      "createdAt": "2026-05-06T00:00:00.000Z",
+      "updatedAt": "2026-05-06T00:00:00.000Z"
     }
   ],
   "portGroups": [

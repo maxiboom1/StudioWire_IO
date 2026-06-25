@@ -1,7 +1,8 @@
-export const STUDIOWIRE_CURRENT_VERSION = '0.2.8.0' as const;
+export const STUDIOWIRE_CURRENT_VERSION = '0.2.8.1' as const;
 
 export const SUPPORTED_SCHEMA_VERSIONS = [
   STUDIOWIRE_CURRENT_VERSION,
+  '0.2.8.0',
   '0.2.7.3',
   '0.2.7.2',
   '0.2.7.1',

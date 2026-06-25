@@ -98,7 +98,7 @@ describe('project behavior characterization', () => {
 
   it('migrates without mutating the imported payload object', () => {
     const legacyProject = structuredClone(sampleProject) as any;
-    legacyProject.schemaVersion = '0.2.4.1';
+    legacyProject.schemaVersion = '0.1.0';
     legacyProject.cables = legacyProject.cables.map((cable: any) => {
       const { sideAEndpoint, sideBEndpoint, ...legacyCable } = cable;
 

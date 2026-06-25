@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.0 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.1 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -98,7 +98,7 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export compatibility guarantee: current exports use schema version `0.2.8.0`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, and `0.2.7.3`, then migrate to the current runtime/schema contract before state commit.
+- JSON import/export compatibility guarantee: current exports use schema version `0.2.8.1`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, and `0.2.8.0`, then migrate to the current runtime/schema contract before state commit.
 - Startup recovery tries the active autosave key and known legacy keys in order; corrupt storage records do not block fallback recovery, and autosave failures leave the in-memory project exportable.
 - Retired devices and terminal blocks are immutable historical objects. Their ports are excluded from new connection candidates, and domain connection commands reject retired endpoints.
 
@@ -132,6 +132,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.1
+
+- Bumped app and project schema version to `0.2.8.1`.
+- Made current-version imports validate the supplied JSON against the current schema before any migration or normalization.
+- Restricted legacy endpoint and terminal-block metadata cleanup to their owning migration steps, and added an explicit `0.2.8.0` migration.
+- Reworked import fixtures to cover historical serialized shapes and strict-current invalid cases.
 
 ### v0.2.8.0
 

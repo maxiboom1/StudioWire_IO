@@ -18,7 +18,7 @@ describe('importProjectValue structural safety', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.errors[0]).toMatchObject({
-        code: 'expected-object',
+        code: 'schema-type',
         path: '$.settings.connectorTypes[16]',
       });
     }
@@ -26,28 +26,28 @@ describe('importProjectValue structural safety', () => {
 
   it('reports path-specific errors for wrong primitive fields across project collections', () => {
     const cases: Array<[string, (project: any) => void, string]> = [
-      ['category', (project) => (project.settings.categories[0].name = 1), '$.settings.categories.0.name'],
+      ['category', (project) => (project.settings.categories[0].name = 1), '$.settings.categories[0].name'],
       [
         'connector',
         (project) => (project.settings.connectorTypes[0].name = 1),
-        '$.settings.connectorTypes.0.name',
+        '$.settings.connectorTypes[0].name',
       ],
-      ['location', (project) => (project.locations[0].name = 1), '$.locations.0.name'],
-      ['rack', (project) => (project.racks[0].heightRu = '42'), '$.racks.0.heightRu'],
-      ['device', (project) => (project.devices[0].status = 1), '$.devices.0.status'],
-      ['port', (project) => (project.ports[0].index = '1'), '$.ports.0.index'],
-      ['cable', (project) => (project.cables[0].status = 1), '$.cables.0.status'],
+      ['location', (project) => (project.locations[0].name = 1), '$.locations[0].name'],
+      ['rack', (project) => (project.racks[0].heightRu = '42'), '$.racks[0].heightRu'],
+      ['device', (project) => (project.devices[0].status = 1), '$.devices[0].status'],
+      ['port', (project) => (project.ports[0].index = '1'), '$.ports[0].index'],
+      ['cable', (project) => (project.cables[0].status = 1), '$.cables[0].status'],
       [
         'numbering ledger',
         (project) => (project.numberingLedgers[0].nextSuggested = '1'),
-        '$.numberingLedgers.0.nextSuggested',
+        '$.numberingLedgers[0].nextSuggested',
       ],
       [
         'validation issue',
         (project) => (project.validationIssues[0] = { ...project.validationIssues[0], severity: 1 }),
-        '$.validationIssues.0.severity',
+        '$.validationIssues[0].severity',
       ],
-      ['change log', (project) => (project.changeLog[0].message = 1), '$.changeLog.0.message'],
+      ['change log', (project) => (project.changeLog[0].message = 1), '$.changeLog[0].message'],
     ];
 
     for (const [, mutate, expectedPath] of cases) {
@@ -81,25 +81,25 @@ describe('importProjectValue structural safety', () => {
   it('rejects invalid enum-like fields', () => {
     const cases: Array<[string, (project: any) => void, string]> = [
       ['project status', (project) => (project.project.status = 'live'), '$.project.status'],
-      ['device status', (project) => (project.devices[0].status = 'active'), '$.devices.0.status'],
-      ['cable status', (project) => (project.cables[0].status = 'active'), '$.cables.0.status'],
-      ['port direction', (project) => (project.ports[0].direction = 'sideways'), '$.ports.0.direction'],
-      ['device kind', (project) => (project.devices[0].kind = 'rack'), '$.devices.0.kind'],
-      ['mount type', (project) => (project.devices[0].mountType = 'wall'), '$.devices.0.mountType'],
+      ['device status', (project) => (project.devices[0].status = 'active'), '$.devices[0].status'],
+      ['cable status', (project) => (project.cables[0].status = 'active'), '$.cables[0].status'],
+      ['port direction', (project) => (project.ports[0].direction = 'sideways'), '$.ports[0].direction'],
+      ['device kind', (project) => (project.devices[0].kind = 'rack'), '$.devices[0].kind'],
+      ['mount type', (project) => (project.devices[0].mountType = 'wall'), '$.devices[0].mountType'],
       [
         'rack direction',
         (project) => (project.racks[0].numberingDirection = 'left_to_right'),
-        '$.racks.0.numberingDirection',
+        '$.racks[0].numberingDirection',
       ],
       [
         'endpoint type',
         (project) => (project.cables[0].sideAEndpoint.type = 'port'),
-        '$.cables.0.sideAEndpoint.type',
+        '$.cables[0].sideAEndpoint.type',
       ],
       [
         'range status',
         (project) => (project.numberingLedgers[0].ranges[0].status = 'used'),
-        '$.numberingLedgers.0.ranges.0.status',
+        '$.numberingLedgers[0].ranges[0].status',
       ],
       [
         'severity',
@@ -107,7 +107,7 @@ describe('importProjectValue structural safety', () => {
           (project.validationIssues = [
             { id: 'v', severity: 'fatal', code: 'x', message: '', objectType: '', objectId: '' },
           ]),
-        '$.validationIssues.0.severity',
+        '$.validationIssues[0].severity',
       ],
     ];
 
@@ -131,7 +131,112 @@ describe('importProjectValue structural safety', () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors.some((error) => error.path === '$.devices.0.unexpected')).toBe(true);
+      expect(result.errors.some((error) => error.path === '$.devices[0].unexpected')).toBe(true);
+    }
+  });
+
+  it('rejects current-version legacy cable endpoint properties without normalizing them away', () => {
+    const project = currentProject();
+    const { sideAEndpoint, sideBEndpoint, ...legacyCable } = project.cables[0];
+    project.cables[0] = {
+      ...legacyCable,
+      sourceEndpoint: sideAEndpoint,
+      destinationEndpoint: sideBEndpoint,
+    };
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          code: 'schema-additional-property',
+          path: '$.cables[0].sourceEndpoint',
+        }),
+      );
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          code: 'schema-additional-property',
+          path: '$.cables[0].destinationEndpoint',
+        }),
+      );
+    }
+  });
+
+  it('rejects current-version terminal block standard-device metadata without cleanup', () => {
+    const project = currentProject();
+    const terminalBlock = {
+      id: 'device-tb-strict-import',
+      name: 'TB Strict Import',
+      kind: 'terminal_block',
+      code: 'TB',
+      manufacturer: 'Legacy',
+      model: 'Legacy Model',
+      categoryId: 'category-video',
+      locationId: 'location-machine-room',
+      role: 'Legacy Role',
+      labelPrefix: 'TB',
+      mountType: 'rack',
+      rackId: 'rack-mcr-a',
+      rackSizeRu: 1,
+      rackBottomRu: 1,
+      status: 'planned',
+      notes: '',
+      createdAt: '2026-05-06T00:00:00.000Z',
+      updatedAt: '2026-05-06T00:00:00.000Z',
+    };
+    project.devices.push(terminalBlock);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ code: 'schema-forbidden-property', path: '$.devices[2].code' }),
+          expect.objectContaining({
+            code: 'schema-forbidden-property',
+            path: '$.devices[2].manufacturer',
+          }),
+          expect.objectContaining({ code: 'schema-forbidden-property', path: '$.devices[2].model' }),
+          expect.objectContaining({ code: 'schema-forbidden-property', path: '$.devices[2].role' }),
+        ]),
+      );
+    }
+  });
+
+  it('reports a missing current settings array as a required schema error at the exact path', () => {
+    const project = currentProject();
+    delete project.settings.connectorTypes;
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          code: 'schema-required',
+          path: '$.settings.connectorTypes',
+        }),
+      );
+      expect(result.error).not.toContain('import-exception');
+    }
+  });
+
+  it('rejects nested current-version additional properties at the exact path', () => {
+    const project = currentProject();
+    project.settings.connectorTypes[0].legacyNested = true;
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          code: 'schema-additional-property',
+          path: '$.settings.connectorTypes[0].legacyNested',
+        }),
+      );
     }
   });
 
@@ -151,7 +256,7 @@ describe('importProjectValue structural safety', () => {
   it('declares the previous release migration step explicitly', () => {
     expect(MIGRATION_STEPS).toContainEqual(
       expect.objectContaining({
-        from: '0.2.7.3',
+        from: '0.2.8.0',
         to: STUDIOWIRE_CURRENT_VERSION,
       }),
     );

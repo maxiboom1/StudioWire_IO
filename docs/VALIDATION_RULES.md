@@ -2,6 +2,8 @@
 
 Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and only mutates project state when the UI stores the returned issues after the user clicks Validate.
 
+Current-version JSON imports are structurally validated exactly as supplied before any migration or cleanup. Legacy-only fields such as `sourceEndpoint`, `destinationEndpoint`, and terminal-block standard-device metadata are accepted only by the specific historical migration step that owns them; current imports report schema errors at the offending path.
+
 ## Implemented Rules
 
 - `duplicate-object-id`: object IDs must not collide across project data objects.

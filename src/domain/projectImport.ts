@@ -6,6 +6,7 @@ import { validateCurrentStructuralProject } from './import/structuralValidation'
 import type { ProjectImportResult } from './import/types';
 import type { ProjectRoot } from './types';
 import { validateProject } from './validators';
+import { STUDIOWIRE_CURRENT_VERSION } from './version';
 
 export type {
   ProjectImportError,
@@ -42,24 +43,45 @@ export function importProjectValue(payload: unknown): ProjectImportResult {
       return importFailure([versionResult.error]);
     }
 
+    if (versionResult.version === STUDIOWIRE_CURRENT_VERSION) {
+      const structuralResult = validateCurrentStructuralProject(payload);
+
+      if (!structuralResult.ok) {
+        return importFailure(structuralResult.errors);
+      }
+
+      const validationIssues = validateProject(structuralResult.project);
+
+      return {
+        ok: true,
+        project: structuralResult.project,
+        validationIssues,
+      };
+    }
+
     const preflightErrors = preflightProjectShape(payload);
 
     if (preflightErrors.length > 0) {
       return importFailure(preflightErrors);
     }
 
-    const migrated = migrateProjectToCurrent(payload as ProjectRoot, versionResult.version);
-    const structuralErrors = validateCurrentStructuralProject(migrated);
+    const migrationResult = migrateProjectToCurrent(payload, versionResult.version);
 
-    if (structuralErrors.length > 0) {
-      return importFailure(structuralErrors);
+    if (!migrationResult.ok) {
+      return importFailure(migrationResult.errors);
     }
 
-    const validationIssues = validateProject(migrated);
+    const structuralResult = validateCurrentStructuralProject(migrationResult.project);
+
+    if (!structuralResult.ok) {
+      return importFailure(structuralResult.errors);
+    }
+
+    const validationIssues = validateProject(structuralResult.project);
 
     return {
       ok: true,
-      project: migrated,
+      project: structuralResult.project,
       validationIssues,
     };
   } catch (error) {

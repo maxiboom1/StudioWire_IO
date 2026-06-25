@@ -1,12 +1,16 @@
 import { normalizeConnectorCompatibility } from '../connectorCompatibility';
-import type { Cable, Device, ProjectRoot, SchemaVersion } from '../types';
+import type { ProjectRoot, SchemaVersion } from '../types';
 import { STUDIOWIRE_CURRENT_VERSION } from '../version';
+import { isRecord } from './schemaVersion';
+import type { ProjectImportError } from './types';
 
 export interface MigrationStep {
   from: SchemaVersion;
   to: SchemaVersion;
-  migrate: (project: ProjectRoot) => ProjectRoot;
+  migrate: (project: unknown) => unknown;
 }
+
+export type MigrationResult = { ok: true; project: unknown } | { ok: false; errors: ProjectImportError[] };
 
 export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.1.0', to: '0.2.4.1', migrate: migrateLegacyEndpointFields },
@@ -17,111 +21,172 @@ export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.7.1', to: '0.2.7.2', migrate: identityMigration },
   { from: '0.2.7.2', to: '0.2.7.3', migrate: identityMigration },
   { from: '0.2.7.3', to: '0.2.8.0', migrate: identityMigration },
+  { from: '0.2.8.0', to: '0.2.8.1', migrate: identityMigration },
 ];
 
-export function migrateProjectToCurrent(project: ProjectRoot, version: SchemaVersion): ProjectRoot {
-  let migrated = normalizeCurrentShape(structuredClone(project));
+export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {
+  let migrated: unknown = structuredClone(payload);
   let currentVersion = version;
 
-  while (currentVersion !== STUDIOWIRE_CURRENT_VERSION) {
-    const step = MIGRATION_STEPS.find((candidate) => candidate.from === currentVersion);
+  try {
+    while (currentVersion !== STUDIOWIRE_CURRENT_VERSION) {
+      const step = MIGRATION_STEPS.find((candidate) => candidate.from === currentVersion);
 
-    if (!step) {
-      break;
-    }
-
-    migrated = step.migrate(migrated);
-    currentVersion = step.to;
-  }
-
-  return {
-    ...normalizeConnectorCompatibility(migrated),
-    schemaVersion: STUDIOWIRE_CURRENT_VERSION,
-  };
-}
-
-function normalizeCurrentShape(project: ProjectRoot): ProjectRoot {
-  return {
-    ...project,
-    cables: normalizeCableEndpoints(project.cables),
-    devices: normalizeTerminalBlocks(project.devices),
-  };
-}
-
-function migrateLegacyEndpointFields(project: ProjectRoot): ProjectRoot {
-  return {
-    ...project,
-    cables: normalizeCableEndpoints(project.cables),
-  };
-}
-
-function normalizeLegacyConnectorCompatibility(project: ProjectRoot): ProjectRoot {
-  return normalizeConnectorCompatibility(project);
-}
-
-function migrateStandardDeviceMetadata(project: ProjectRoot): ProjectRoot {
-  return {
-    ...project,
-    devices: project.devices.map((device): Device => {
-      if (device.kind === 'terminal_block') {
-        return device;
+      if (!step) {
+        return {
+          ok: false,
+          errors: [
+            {
+              code: 'migration-missing-step',
+              path: '$.schemaVersion',
+              message: `No migration step from ${currentVersion} to ${STUDIOWIRE_CURRENT_VERSION}.`,
+            },
+          ],
+        };
       }
 
+      migrated = stampSchemaVersion(step.migrate(migrated), step.to);
+      currentVersion = step.to;
+    }
+
+    return { ok: true, project: migrated };
+  } catch (error) {
+    return {
+      ok: false,
+      errors: [
+        {
+          code: 'migration-incompatible',
+          path: error instanceof MigrationError ? error.path : '$',
+          message: error instanceof Error ? error.message : 'Project migration failed.',
+        },
+      ],
+    };
+  }
+}
+
+function migrateLegacyEndpointFields(project: unknown): unknown {
+  const record = requireRecord(project, '$');
+  const cables = requireArray(record.cables, '$.cables');
+
+  return {
+    ...record,
+    cables: cables.map((cable, index) => {
+      const cableRecord = requireRecord(cable, `$.cables[${index}]`);
+      const {
+        sourceEndpoint: _sourceEndpoint,
+        destinationEndpoint: _destinationEndpoint,
+        ...normalizedCable
+      } = cableRecord;
+
       return {
-        ...device,
-        kind: 'device',
-        code: device.code ?? '',
-        manufacturer: device.manufacturer ?? '',
-        model: device.model ?? '',
-        role: device.role ?? '',
+        ...normalizedCable,
+        sideAEndpoint: cableRecord.sideAEndpoint ?? cableRecord.sourceEndpoint ?? unknownEndpoint(),
+        sideBEndpoint: cableRecord.sideBEndpoint ?? cableRecord.destinationEndpoint ?? unknownEndpoint(),
       };
     }),
   };
 }
 
-function normalizeCableEndpoints(cables: Cable[]): Cable[] {
-  const unknownEndpoint = {
-    type: 'unknown' as const,
+function normalizeLegacyConnectorCompatibility(project: unknown): unknown {
+  const record = requireRecord(project, '$');
+
+  requireRecord(record.settings, '$.settings');
+  requireArray((record.settings as Record<string, unknown>).categories, '$.settings.categories');
+  requireArray((record.settings as Record<string, unknown>).connectorTypes, '$.settings.connectorTypes');
+  requireArray(record.portGroups, '$.portGroups');
+  requireArray(record.ports, '$.ports');
+
+  return normalizeConnectorCompatibility(record as unknown as ProjectRoot);
+}
+
+function migrateStandardDeviceMetadata(project: unknown): unknown {
+  const record = requireRecord(project, '$');
+  const devices = requireArray(record.devices, '$.devices');
+
+  return {
+    ...record,
+    devices: devices.map((device, index) => {
+      const deviceRecord = requireRecord(device, `$.devices[${index}]`);
+
+      if (deviceRecord.kind === 'terminal_block') {
+        const {
+          code: _code,
+          manufacturer: _manufacturer,
+          model: _model,
+          role: _role,
+          ...terminalBlock
+        } = deviceRecord;
+
+        return {
+          ...terminalBlock,
+          kind: 'terminal_block',
+          mountType: 'rack',
+          rackSizeRu: 1,
+        };
+      }
+
+      return {
+        ...deviceRecord,
+        kind: 'device',
+        code:
+          readString(deviceRecord.code) ??
+          readString(deviceRecord.labelPrefix) ??
+          readString(deviceRecord.name) ??
+          '',
+        manufacturer: typeof deviceRecord.manufacturer === 'string' ? deviceRecord.manufacturer : '',
+        model: typeof deviceRecord.model === 'string' ? deviceRecord.model : '',
+        role: typeof deviceRecord.role === 'string' ? deviceRecord.role : '',
+      };
+    }),
+  };
+}
+
+function identityMigration(project: unknown): unknown {
+  return project;
+}
+
+function stampSchemaVersion(project: unknown, version: SchemaVersion): unknown {
+  const record = requireRecord(project, '$');
+
+  return {
+    ...record,
+    schemaVersion: version,
+  };
+}
+
+function requireRecord(value: unknown, path: string): Record<string, unknown> {
+  if (!isRecord(value)) {
+    throw new MigrationError(path, 'Expected an object while migrating project.');
+  }
+
+  return value;
+}
+
+function requireArray(value: unknown, path: string): unknown[] {
+  if (!Array.isArray(value)) {
+    throw new MigrationError(path, 'Expected an array while migrating project.');
+  }
+
+  return value;
+}
+
+function unknownEndpoint() {
+  return {
+    type: 'unknown',
     id: null,
     label: 'Unknown',
   };
-
-  return cables.map((cable) => {
-    const legacyCable = cable as Cable & {
-      sourceEndpoint?: Cable['sideAEndpoint'];
-      destinationEndpoint?: Cable['sideBEndpoint'];
-    };
-    const {
-      sourceEndpoint: _sourceEndpoint,
-      destinationEndpoint: _destinationEndpoint,
-      ...normalizedCable
-    } = legacyCable;
-
-    return {
-      ...normalizedCable,
-      sideAEndpoint: legacyCable.sideAEndpoint ?? legacyCable.sourceEndpoint ?? unknownEndpoint,
-      sideBEndpoint: legacyCable.sideBEndpoint ?? legacyCable.destinationEndpoint ?? unknownEndpoint,
-    };
-  });
 }
 
-function normalizeTerminalBlocks(devices: Device[]): Device[] {
-  return devices.map((device): Device => {
-    if (device.kind !== 'terminal_block') {
-      return device;
-    }
-
-    const { code: _code, manufacturer: _manufacturer, model: _model, role: _role, ...terminalBlock } = device;
-
-    return {
-      ...terminalBlock,
-      kind: 'terminal_block',
-      mountType: 'rack',
-      rackSizeRu: 1,
-    };
-  });
+function readString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value : null;
 }
 
-function identityMigration(project: ProjectRoot): ProjectRoot {
-  return project;
+class MigrationError extends Error {
+  constructor(
+    readonly path: string,
+    message: string,
+  ) {
+    super(message);
+  }
 }

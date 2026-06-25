@@ -514,20 +514,20 @@
       "prefix": "V",
       "index": 1,
       "status": "planned",
-      "sideAEndpoint": {
+      "labelTop": "RTR1-OUT-001",
+      "labelMiddle": "V-0001",
+      "labelBottom": "",
+      "notes": "",
+      "sourceEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
         "label": "RTR1-OUT-001"
       },
-      "sideBEndpoint": {
+      "destinationEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
-      },
-      "labelTop": "RTR1-OUT-001",
-      "labelMiddle": "V-0001",
-      "labelBottom": "",
-      "notes": ""
+      }
     },
     {
       "id": "cable-v-0002",

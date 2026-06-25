@@ -4,7 +4,7 @@
     "id": "project-demo-studio",
     "name": "Demo Studio",
     "customer": "Example Broadcast",
-    "revision": "0.1",
+    "revision": "0.2.7.3",
     "status": "draft",
     "createdAt": "2026-05-06T00:00:00.000Z",
     "updatedAt": "2026-05-06T00:00:00.000Z",

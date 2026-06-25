@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.8.0",
+  "title": "StudioWire IO Project v0.2.8.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.8.0"
+      "const": "0.2.8.1"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -482,6 +482,10 @@
           },
           "then": {
             "properties": {
+              "code": false,
+              "manufacturer": false,
+              "model": false,
+              "role": false,
               "mountType": {
                 "const": "rack"
               },

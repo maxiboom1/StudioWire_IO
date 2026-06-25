@@ -47,7 +47,8 @@
     "connectorTypes": [
       {
         "id": "connector-bnc",
-        "name": "BNC"
+        "name": "BNC",
+        "legacyNested": true
       },
       {
         "id": "connector-micro-bnc",

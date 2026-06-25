@@ -622,7 +622,7 @@ describe('parseImportedProject schema compatibility', () => {
   it('migrates legacy cable endpoint fields to side A and side B', () => {
     const oldProject = structuredClone(sampleProject) as any;
 
-    oldProject.schemaVersion = '0.2.4.1';
+    oldProject.schemaVersion = '0.1.0';
     oldProject.cables = oldProject.cables.map((cable: any) => {
       const { sideAEndpoint, sideBEndpoint, ...legacyCable } = cable;
 
@@ -648,7 +648,7 @@ describe('parseImportedProject schema compatibility', () => {
   it('normalizes legacy global connectors to category assignments', () => {
     const oldProject = structuredClone(sampleProject) as any;
 
-    oldProject.schemaVersion = '0.2.5.1';
+    oldProject.schemaVersion = '0.2.4.1';
     delete oldProject.settings.connectorCompatibilityGroups;
     oldProject.settings.connectorTypes = [
       { id: 'connector-bnc', name: 'BNC' },
