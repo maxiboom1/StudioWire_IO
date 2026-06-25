@@ -35,3 +35,12 @@ These instructions apply to future Codex sessions working in this repository.
 ## Cleanup Rule
 
 Every Codex task must finish by removing generated build, test, browser, cache, package, and temporary artifacts, then running the repository cleanliness check. The cleanup must cover `dist`, `coverage`, `.vite`, `.playwright-cli`, `test-results`, `playwright-report`, `blob-report`, `output`, `.source-package`, `*.tgz`, `*.zip`, `*.tsbuildinfo`, and temporary logs/screenshots. Use `npm run clean` and `npm run clean:check`; do not rely on prose-only cleanup.
+
+Release gates are layered and must remain non-recursive:
+
+- `npm run check` is the core gate: script hierarchy guard, format check, lint, typecheck, build, coverage-backed tests, fixture validation, version synchronization, cleanup, and cleanliness check.
+- `npm run check:release` adds scale validation, Chromium browser bootstrap, and Playwright E2E.
+- `npm run package:source` creates and verifies the ZIP from a clean extraction and runs `check:release` inside that extraction; it must not call `check:full`.
+- `npm run check:full` runs `check:release`, `package:source`, and final cleanup/cleanliness only.
+
+Cleanup and cleanliness checks are recursive under the maintained repository tree, skip `.git` and `node_modules`, avoid following symlinks outside the repository, and report relative paths in sorted order.

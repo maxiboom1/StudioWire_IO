@@ -1,179 +1,100 @@
-import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import {
+  SOURCE_PACKAGE_DIR,
+  createPackageNames,
+  createSourceArchive,
+  extractArchiveToFreshTemp,
+  inspectArchive,
+  readPackageJson,
+  removeExtraction,
+  runCommand,
+} from './release/source-package-lib.mjs';
 
-const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
+const repoRoot = resolve('.');
+const packageJson = readPackageJson(repoRoot);
 const version = packageJson.version;
-const outputDir = '.source-package';
-const rootName = `StudioWire_IO-${version}`;
-const stagingRoot = join(outputDir, rootName);
-const archiveName = `${rootName}.zip`;
-const archivePath = join(outputDir, archiveName);
-const requiredRootFiles = ['package.json', 'package-lock.json', 'README.md', '.gitattributes'];
-const sourceEntries = [...new Set([...requiredRootFiles, ...packageJson.files])];
-const forbiddenPathParts = new Set([
-  '.git',
-  'node_modules',
-  'dist',
-  'build',
-  'coverage',
-  '.vite',
-  '.playwright-cli',
-  'test-results',
-  'playwright-report',
-  'blob-report',
-  'output',
-  '.source-package',
-]);
-const forbiddenRootPaths = new Set(['samples']);
-const forbiddenExactNames = new Set(['CHANGELOG.md']);
-const forbiddenExtensions = [
-  '.tgz',
-  '.tsbuildinfo',
-  '.trace.zip',
-  '.log',
-  '.tmp',
-  '.env',
-  '.pdf',
-  '.xls',
-  '.xlsx',
-  '.jpg',
-  '.jpeg',
-];
+const target = '0.2.8.2';
+const { rootName } = createPackageNames(version);
+const reportPath = join(repoRoot, SOURCE_PACKAGE_DIR, 'source-package-report.json');
 
-if (!/^\d+\.\d+\.\d+\.\d+$/.test(version)) {
-  fail(`Expected four-component internal version, found ${version}.`);
+if (version !== target) {
+  fail(`Source package target must be ${target}, found ${version}.`);
 }
 
-if (existsSync(outputDir)) {
-  rmSync(outputDir, { recursive: true, force: true });
-}
+let extractionParent = null;
+let extractionCleaned = false;
+const commands = [];
 
-mkdirSync(stagingRoot, { recursive: true });
+try {
+  mkdirSync(join(repoRoot, SOURCE_PACKAGE_DIR), { recursive: true });
 
-for (const entry of sourceEntries) {
-  if (!existsSync(entry)) {
-    fail(`Package source entry does not exist: ${entry}`);
-  }
+  const archive = await createSourceArchive(repoRoot);
+  const inspection = await inspectArchive(archive.archivePath, rootName);
 
-  copySourceEntry(entry);
-}
-
-const manifest = {
-  name: packageJson.name,
-  version,
-  archive: archiveName,
-  generatedAt: new Date().toISOString(),
-  sourceEntries,
-};
-writeFileSync(join(stagingRoot, 'SOURCE_PACKAGE_MANIFEST.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-
-createZip();
-
-const listing = listArchiveEntries();
-const violations = listing.filter(isForbiddenArchiveEntry);
-
-if (violations.length > 0) {
-  fail(`Source package contains forbidden entries:\n${violations.join('\n')}`);
-}
-
-if (!listing.some((entry) => entry.endsWith('/package-lock.json'))) {
-  fail('Source package must contain package-lock.json.');
-}
-
-if (!listing.some((entry) => entry.endsWith('/docs/samples/sample-project.studiowire.json'))) {
-  fail('Source package must contain docs/samples.');
-}
-
-rmSync(stagingRoot, { recursive: true, force: true });
-
-console.log(`Source package created and inspected: ${archivePath}`);
-console.log(`Archive entries inspected: ${listing.length}`);
-
-function copySourceEntry(entry) {
-  const destination = join(stagingRoot, entry);
-
-  if (statSync(entry).isDirectory()) {
-    cpSync(entry, destination, {
-      recursive: true,
-      filter: (source) => !isForbiddenSourcePath(source),
-    });
-    return;
-  }
-
-  if (isForbiddenSourcePath(entry)) {
-    fail(`Package source entry is forbidden: ${entry}`);
-  }
-
-  mkdirSync(dirname(destination), { recursive: true });
-  cpSync(entry, destination);
-}
-
-function createZip() {
-  if (process.platform === 'win32') {
-    execFileSync(
-      'powershell',
+  if (!inspection.requiredEntriesPresent || !inspection.forbiddenEntriesAbsent) {
+    fail(
       [
-        '-NoProfile',
-        '-Command',
-        [
-          '$ErrorActionPreference = "Stop"',
-          `Compress-Archive -Path ${quotePowerShellPath(stagingRoot)} -DestinationPath ${quotePowerShellPath(
-            archivePath,
-          )} -Force`,
-        ].join('; '),
-      ],
-      { stdio: 'inherit' },
+        'Source archive inspection failed.',
+        `Missing required entries: ${inspection.missingRequiredEntries.join(', ') || 'none'}`,
+        `Forbidden entries: ${inspection.forbiddenEntries.join(', ') || 'none'}`,
+      ].join('\n'),
     );
-    return;
   }
 
-  execFileSync('zip', ['-qr', archivePath, basename(stagingRoot)], {
-    cwd: outputDir,
-    stdio: 'inherit',
-  });
-}
+  const extraction = await extractArchiveToFreshTemp(archive.archivePath, rootName);
+  extractionParent = extraction.extractionParent;
 
-function listArchiveEntries() {
-  return execFileSync('tar', ['-tf', archivePath], { encoding: 'utf8' })
-    .split(/\r?\n/)
-    .map((entry) => entry.replace(/\\/g, '/'))
-    .filter(Boolean);
-}
-
-function isForbiddenSourcePath(path) {
-  const normalizedParts = path.split(/[\\/]+/).filter(Boolean);
-  const name = normalizedParts[normalizedParts.length - 1] ?? '';
-  const normalized = normalizedParts.join('/').toLowerCase();
-
-  return (
-    forbiddenRootPaths.has(normalizedParts[0] ?? '') ||
-    normalizedParts.some((part) => forbiddenPathParts.has(part)) ||
-    forbiddenExactNames.has(name) ||
-    name === '.env' ||
-    name.startsWith('.env.') ||
-    forbiddenExtensions.some((extension) => normalized.endsWith(extension))
+  runPackageCommand('npm', ['ci'], extraction.packageRoot);
+  runPackageCommand('npm', ['run', 'test:e2e:install'], extraction.packageRoot);
+  runPackageCommand('npm', ['run', 'check:release'], extraction.packageRoot);
+  runPackageCommand(
+    'npm',
+    ['run', 'validate:project', '--', 'docs/samples/sample-project.studiowire.json'],
+    extraction.packageRoot,
   );
-}
-
-function isForbiddenArchiveEntry(entry) {
-  const parts = entry.split('/').filter(Boolean);
-  const relativeParts = parts[0] === rootName ? parts.slice(1) : parts;
-  const name = relativeParts[relativeParts.length - 1] ?? '';
-  const normalized = relativeParts.join('/').toLowerCase();
-
-  return (
-    forbiddenRootPaths.has(relativeParts[0] ?? '') ||
-    relativeParts.some((part) => forbiddenPathParts.has(part)) ||
-    forbiddenExactNames.has(name) ||
-    name === '.env' ||
-    name.startsWith('.env.') ||
-    forbiddenExtensions.some((extension) => normalized.endsWith(extension))
+  runPackageCommand(
+    'npm',
+    ['run', 'summary', '--', 'docs/samples/sample-project.studiowire.json'],
+    extraction.packageRoot,
   );
+  runPackageCommand('npm', ['run', 'version:check'], extraction.packageRoot);
+
+  extractionCleaned = removeExtraction(extractionParent);
+  extractionParent = null;
+
+  const report = {
+    archivePath: archive.archivePath,
+    archiveSizeBytes: statSync(archive.archivePath).size,
+    entryCount: inspection.entryCount,
+    requiredEntriesPresent: inspection.requiredEntriesPresent,
+    forbiddenEntriesAbsent: inspection.forbiddenEntriesAbsent,
+    missingRequiredEntries: inspection.missingRequiredEntries,
+    forbiddenEntries: inspection.forbiddenEntries,
+    extractionParent: extraction.extractionParent,
+    packageRoot: extraction.packageRoot,
+    commands,
+    extractionCleaned,
+  };
+
+  writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+
+  console.log(`Source package created and verified: ${archive.archivePath}`);
+  console.log(`Archive size: ${report.archiveSizeBytes} bytes`);
+  console.log(`Archive entries inspected: ${inspection.entryCount}`);
+  console.log(`Required entries present: ${inspection.requiredEntriesPresent}`);
+  console.log(`Forbidden entries absent: ${inspection.forbiddenEntriesAbsent}`);
+  console.log(`Clean extraction path used: ${extraction.extractionParent}`);
+  console.log(`Extraction cleanup complete: ${extractionCleaned}`);
+} finally {
+  if (extractionParent && existsSync(extractionParent)) {
+    rmSync(extractionParent, { recursive: true, force: true });
+  }
 }
 
-function quotePowerShellPath(path) {
-  return `'${path.replace(/'/g, "''")}'`;
+function runPackageCommand(command, args, cwd) {
+  commands.push(`${command} ${args.join(' ')}`);
+  runCommand(command, args, cwd);
 }
 
 function fail(message) {

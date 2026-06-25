@@ -1,7 +1,7 @@
 {
   "name": "studiowire-io",
   "private": true,
-  "version": "0.2.8.1",
+  "version": "0.2.8.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "test:run": "vitest --run",
     "coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
     "validate:project": "tsx tools/validate-project.ts",
     "validate:fixtures": "tsx tools/validate-fixtures.ts",
     "check:scale": "tsx tools/check-scale.ts",
@@ -23,8 +24,10 @@
     "clean": "node tools/clean-generated.mjs",
     "clean:check": "node tools/check-clean.mjs",
     "package:source": "node tools/package-source.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test:run && npm run coverage && npm run validate:fixtures && npm run version:check && npm run clean && npm run clean:check",
-    "check:full": "npm run check && npm run check:scale && npm run test:e2e && npm run package:source && npm run clean && npm run clean:check"
+    "check:scripts": "node tools/check-scripts.mjs",
+    "check": "npm run check:scripts && npm run format:check && npm run lint && npm run typecheck && npm run build && npm run coverage && npm run validate:fixtures && npm run version:check && npm run clean && npm run clean:check",
+    "check:release": "npm run check && npm run check:scale && npm run test:e2e:install && npm run test:e2e",
+    "check:full": "npm run check:release && npm run package:source && npm run clean && npm run clean:check"
   },
   "files": [
     "AGENTS.md",
@@ -56,7 +59,6 @@
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
-    "@radix-ui/react-tooltip": "^1.2.8",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "class-variance-authority": "^0.7.1",
@@ -78,6 +80,7 @@
     "@vitest/coverage-v8": "3.2.4",
     "autoprefixer": "10.4.20",
     "eslint": "8.57.1",
+    "jszip": "^3.10.1",
     "postcss": "8.4.49",
     "prettier": "3.6.0",
     "tailwindcss": "3.4.17",

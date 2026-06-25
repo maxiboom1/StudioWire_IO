@@ -1,8 +1,14 @@
 import { readFileSync } from 'node:fs';
 
-const expected = '0.2.8.1';
+const packageJson = JSON.parse(read('package.json'));
+const expected = packageJson.version;
+const failures = [];
+
+if (!/^\d+\.\d+\.\d+\.\d+$/.test(expected)) {
+  failures.push(`package.json version must use four numeric components, found ${expected}`);
+}
+
 const checks = [
-  ['package.json version', () => JSON.parse(read('package.json')).version],
   ['package-lock root version', () => JSON.parse(read('package-lock.json')).version],
   ['package-lock package version', () => JSON.parse(read('package-lock.json')).packages[''].version],
   [
@@ -22,8 +28,6 @@ const checks = [
   ['DATA_MODEL current schema', () => match(read('docs/DATA_MODEL.md'), /current schema version `([^`]+)`/)],
 ];
 
-const failures = [];
-
 for (const [label, getValue] of checks) {
   const value = getValue();
 
@@ -38,6 +42,10 @@ if (!read('src/components/layout/LeftTree.tsx').includes('STUDIOWIRE_CURRENT_VER
 
 if (read('AGENTS.md').includes('V0_2_5') || read('README.md').includes('V0_2_5')) {
   failures.push('current instructions must not reference V0_2_5 document names');
+}
+
+if (expected !== '0.2.8.2') {
+  failures.push(`0.2.8.2 implementation target mismatch: package.json is ${expected}`);
 }
 
 if (failures.length > 0) {

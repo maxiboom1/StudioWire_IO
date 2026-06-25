@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 const currentSamplePath = resolve('docs/samples/sample-project.studiowire.json');
 const invalidSamplePath = resolve('docs/samples/invalid/invalid-project-status.studiowire.json');
 const legacyFixturePaths = [
+  '0-2-8-1',
+  '0-2-8-0',
   '0-2-7-3',
   '0-2-7-2',
   '0-2-7-1',
@@ -69,7 +71,7 @@ test('completes the v0.2 project lifecycle and preserves exported data after imp
   await expect(page.getByRole('button', { name: /E2E Source/ })).toBeVisible();
 
   const exportedBeforeImport = await exportProject(page);
-  const beforeSummary = summarizeProject(exportedBeforeImport);
+  const beforeDomainData = normalizeExportedDomainData(exportedBeforeImport);
 
   await createNewProject(page);
   await expectProject(page, 'Untitled Project');
@@ -78,7 +80,7 @@ test('completes the v0.2 project lifecycle and preserves exported data after imp
 
   const exportedAfterImport = await exportProject(page);
 
-  expect(summarizeProject(exportedAfterImport)).toEqual(beforeSummary);
+  expect(normalizeExportedDomainData(exportedAfterImport)).toEqual(beforeDomainData);
 });
 
 test('imports current and legacy fixtures', async ({ page }) => {
@@ -88,7 +90,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.8.0', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.8.2', { exact: true })).toBeVisible();
   }
 });
 
@@ -121,7 +123,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.8.0');
+  expect(exported.schemaVersion).toBe('0.2.8.2');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
@@ -149,7 +151,7 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.0', '0.2.7.1'),
+    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.2', '0.2.7.1'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');
@@ -246,19 +248,15 @@ async function exportProject(page: Page): Promise<Record<string, any> & { path: 
   };
 }
 
-function summarizeProject(project: Record<string, any>) {
-  return {
-    schemaVersion: project.schemaVersion,
-    devices: project.devices.map((device: any) => `${device.name}:${device.kind}:${device.status}`).sort(),
-    portCount: project.ports.length,
-    cableCount: project.cables.length,
-    connected: project.cables
-      .filter((cable: any) => cable.status === 'connected')
-      .map((cable: any) => `${cable.number}:${cable.labelTop}->${cable.labelBottom}`)
-      .sort(),
-    retiredCableCount: project.cables.filter((cable: any) => cable.status === 'retired').length,
-    validationErrorCount: project.validationIssues.filter((issue: any) => issue.severity === 'error').length,
-  };
+function normalizeExportedDomainData(project: Record<string, any>) {
+  const { path: _path, ...domainData } = project;
+
+  delete domainData.project.updatedAt;
+  domainData.changeLog = domainData.changeLog.filter(
+    (entry: any) => !entry.message.startsWith('Project imported from JSON'),
+  );
+
+  return domainData;
 }
 
 function locationButton(page: Page, locationName: string) {
