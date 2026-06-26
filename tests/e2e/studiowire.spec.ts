@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const currentSamplePath = resolve('docs/samples/sample-project.studiowire.json');
 const invalidSamplePath = resolve('docs/samples/invalid/invalid-project-status.studiowire.json');
 const legacyFixturePaths = [
+  '0-2-8-5',
   '0-2-8-4',
   '0-2-8-3',
   '0-2-8-2',
@@ -93,7 +94,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.8.5', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.8.6', { exact: true })).toBeVisible();
   }
 });
 
@@ -111,6 +112,60 @@ test('edits settings and connector compatibility data', async ({ page }) => {
   await expect(page.getByText('Video connector group')).toBeVisible();
 });
 
+test('creates a device through Add Device defaults and port-group edits', async ({ page }) => {
+  await loadSample(page);
+  await locationButton(page, 'Machine Room').click({ button: 'right' });
+  await page.getByText('Add Device').click();
+
+  await expect(page.getByRole('heading', { name: 'Add Device' })).toBeVisible();
+  await expect(page.getByText('SDI IN')).toBeVisible();
+  await expect(page.getByText('SDI OUT')).toBeVisible();
+  await expect(page.getByText('V-0009 -> V-0012')).toBeVisible();
+  await expect(page.getByText('V-0013 -> V-0016')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Create Device' })).toBeDisabled();
+
+  await page.locator('#device-name').fill('E2E Detailed Source');
+  await page.locator('#device-category').click();
+  await page.getByRole('option', { name: 'Audio' }).click();
+  await expect(page.getByText('AUDIO IN')).toBeVisible();
+  await expect(page.getByText('AUDIO OUT')).toBeVisible();
+  await expect(page.getByText('A-0001 -> A-0004')).toBeVisible();
+  await expect(page.getByText('A-0005 -> A-0008')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Add Port Group' }).click();
+  await expect(page.getByText('A-0009 -> A-0009')).toBeVisible();
+  await page.getByLabel('Remove PORTS').click();
+  await expect(page.getByText('A-0009 -> A-0009')).not.toBeVisible();
+
+  await page.getByRole('button', { name: 'Create Device' }).click();
+  await expect(page.getByRole('button', { name: /E2E Detailed Source/ })).toBeVisible();
+
+  const exported = await exportProject(page);
+  const device = exported.devices.find((item: any) => item.name === 'E2E Detailed Source');
+
+  expect(device).toBeTruthy();
+  expect(device.code).toBe('E2E-DETAILED-SOURCE');
+  const devicePortGroups = exported.portGroups.filter((group: any) => group.deviceId === device.id);
+  expect(devicePortGroups).toEqual([
+    expect.objectContaining({
+      name: 'AUDIO IN',
+      connectorTypeId: 'connector-xlr',
+      firstCableNumber: 1,
+      lastCableNumber: 4,
+      createPlannedCables: true,
+    }),
+    expect.objectContaining({
+      name: 'AUDIO OUT',
+      connectorTypeId: 'connector-xlr',
+      firstCableNumber: 5,
+      lastCableNumber: 8,
+      createPlannedCables: true,
+    }),
+  ]);
+  expect(exported.ports.filter((port: any) => port.deviceId === device.id)).toHaveLength(8);
+  expect(exported.cables.filter((cable: any) => cable.prefix === 'A')).toHaveLength(8);
+});
+
 test('retires a device and blocks reconnection candidates', async ({ page }) => {
   await loadSample(page);
   page.on('dialog', (dialog) => dialog.accept());
@@ -126,7 +181,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.8.5');
+  expect(exported.schemaVersion).toBe('0.2.8.6');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
@@ -154,7 +209,7 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.5', '0.2.7.1'),
+    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.6', '0.2.7.1'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');

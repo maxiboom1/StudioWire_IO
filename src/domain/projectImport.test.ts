@@ -263,6 +263,12 @@ describe('importProjectValue structural safety', () => {
     expect(MIGRATION_STEPS).toContainEqual(
       expect.objectContaining({
         from: '0.2.8.4',
+        to: '0.2.8.5',
+      }),
+    );
+    expect(MIGRATION_STEPS).toContainEqual(
+      expect.objectContaining({
+        from: '0.2.8.5',
         to: STUDIOWIRE_CURRENT_VERSION,
       }),
     );
