@@ -3,7 +3,7 @@ import { makeId, makeIndexedId, makeUniqueId, nowIso } from '../domain/id';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { validateRackPlacement } from '../domain/rackPlacement';
 import type { Cable, Device, Port, PortGroup, ProjectRoot } from '../domain/types';
-import type { DeviceDraft, DevicePortGroupDraft, TerminalBlockDraft } from './projectReducer';
+import type { DeviceDraft, DevicePortGroupDraft, TerminalBlockDraft } from './projectTypes';
 
 export function createDeviceInProject(
   project: ProjectRoot,

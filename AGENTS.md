@@ -18,6 +18,7 @@ These instructions apply to future Codex sessions working in this repository.
 - The current release line is a local, frontend-only project editor.
 - Store project state as structured data and keep UI components as views over that data.
 - Put reusable domain rules, validation, numbering, import, and export code outside React components.
+- Keep the project reducer entry point as a thin exhaustive dispatcher. Stable state/action/draft types live in `src/state/projectTypes.ts`, reducer dependencies in `src/state/projectReducerContext.ts`, project stamping in `src/state/projectStamping.ts`, and action families in `src/state/projectHandlers/*`.
 - Update `docs/DATA_MODEL.md` and `docs/VALIDATION_RULES.md` before changing the current data shape or validation behavior.
 - Active StudioWire IO versions use four numeric components, and the app version and current project schema version must always be identical.
 - Preserve JSON import/export compatibility once a format is released.

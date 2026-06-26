@@ -9,7 +9,7 @@ import { makeId } from '../../domain/id';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import type { TerminalBlockDraft } from '../../state/projectReducer';
+import type { TerminalBlockDraft } from '../../state/projectTypes';
 import { ModalFrame } from '../common/ModalFrame';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';

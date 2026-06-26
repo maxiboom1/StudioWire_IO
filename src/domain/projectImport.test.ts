@@ -256,7 +256,7 @@ describe('importProjectValue structural safety', () => {
   it('declares the previous release migration step explicitly', () => {
     expect(MIGRATION_STEPS).toContainEqual(
       expect.objectContaining({
-        from: '0.2.8.1',
+        from: '0.2.8.2',
         to: STUDIOWIRE_CURRENT_VERSION,
       }),
     );

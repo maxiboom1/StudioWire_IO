@@ -25,15 +25,14 @@ import type {
 } from '../domain/types';
 import { createWindowTimerApi, scheduleProjectAutosave } from './projectAutosave';
 import { downloadProjectJson } from './projectExport';
-import {
-  createInitialProjectState,
-  projectReducer,
-  type DeviceDraft,
-  type DevicePortGroupDraft,
-  type DeviceUpdate,
-  type ProjectState,
-  type TerminalBlockDraft,
-} from './projectReducer';
+import { createInitialProjectState, projectReducer } from './projectReducer';
+import type {
+  DeviceDraft,
+  DevicePortGroupDraft,
+  DeviceUpdate,
+  ProjectState,
+  TerminalBlockDraft,
+} from './projectTypes';
 import { getBrowserStorage, restoreStoredProject, type BrowserStorageLike } from './projectStorage';
 
 interface ProjectContextValue extends ProjectState {

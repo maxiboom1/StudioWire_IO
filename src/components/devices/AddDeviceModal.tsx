@@ -8,7 +8,7 @@ import {
 } from '../../domain/connectorCompatibility';
 import type { ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
-import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectReducer';
+import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectTypes';
 import { ModalFrame } from '../common/ModalFrame';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Badge } from '../ui/badge';
