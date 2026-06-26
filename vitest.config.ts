@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
   test: {
     exclude: ['dist/**', 'build/**', 'node_modules/**', 'tests/e2e/**', '.source-package/**'],
     coverage: {

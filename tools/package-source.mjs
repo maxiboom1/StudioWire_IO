@@ -14,7 +14,7 @@ import {
 const repoRoot = resolve('.');
 const packageJson = readPackageJson(repoRoot);
 const version = packageJson.version;
-const target = '0.2.8.4';
+const target = '0.2.8.5';
 const { rootName } = createPackageNames(version);
 const reportPath = join(repoRoot, SOURCE_PACKAGE_DIR, 'source-package-report.json');
 

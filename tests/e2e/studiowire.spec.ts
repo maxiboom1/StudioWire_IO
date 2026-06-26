@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const currentSamplePath = resolve('docs/samples/sample-project.studiowire.json');
 const invalidSamplePath = resolve('docs/samples/invalid/invalid-project-status.studiowire.json');
 const legacyFixturePaths = [
+  '0-2-8-4',
   '0-2-8-3',
   '0-2-8-2',
   '0-2-8-1',
@@ -92,7 +93,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.8.4', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.8.5', { exact: true })).toBeVisible();
   }
 });
 
@@ -125,7 +126,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.8.4');
+  expect(exported.schemaVersion).toBe('0.2.8.5');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
@@ -153,7 +154,7 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.4', '0.2.7.1'),
+    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.5', '0.2.7.1'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');
