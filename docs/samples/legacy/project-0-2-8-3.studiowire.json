@@ -1,10 +1,10 @@
 {
-  "schemaVersion": "0.2.8.4",
+  "schemaVersion": "0.2.8.3",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
     "customer": "Example Broadcast",
-    "revision": "0.1",
+    "revision": "0.2.8.3",
     "status": "draft",
     "createdAt": "2026-05-06T00:00:00.000Z",
     "updatedAt": "2026-05-06T00:00:00.000Z",
@@ -514,20 +514,20 @@
       "prefix": "V",
       "index": 1,
       "status": "planned",
-      "labelTop": "RTR1-OUT-001",
-      "labelMiddle": "V-0001",
-      "labelBottom": "",
-      "notes": "",
-      "sourceEndpoint": {
+      "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
         "label": "RTR1-OUT-001"
       },
-      "destinationEndpoint": {
+      "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
-      }
+      },
+      "labelTop": "RTR1-OUT-001",
+      "labelMiddle": "V-0001",
+      "labelBottom": "",
+      "notes": ""
     },
     {
       "id": "cable-v-0002",

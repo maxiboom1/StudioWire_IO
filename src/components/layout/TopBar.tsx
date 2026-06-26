@@ -1,7 +1,8 @@
 import { Settings } from 'lucide-react';
 import { useRef } from 'react';
 import logoUrl from '../../assets/studiowire-logo.png';
-import { ProjectJsonInput, useProject } from '../../state/ProjectContext';
+import { ProjectJsonInput } from '../../state/ProjectJsonInput';
+import { useProject } from '../../state/ProjectContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
