@@ -27,7 +27,7 @@ export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.8.3', to: '0.2.8.4', migrate: identityMigration },
   { from: '0.2.8.4', to: '0.2.8.5', migrate: identityMigration },
   { from: '0.2.8.5', to: '0.2.8.6', migrate: identityMigration },
-  { from: '0.2.8.6', to: '0.2.8.7', migrate: identityMigration },
+  { from: '0.2.8.6', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
 ];
 
 export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {

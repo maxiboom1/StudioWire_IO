@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.7 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.8 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -30,7 +30,8 @@ npm run build
 - `npm run lint`: ESLint over source, tools, config, and E2E tests.
 - `npm run typecheck`: TypeScript project check.
 - `npm run test:run`: unit and contract tests.
-- `npm run coverage`: V8 coverage with thresholds protecting import, migration, persistence, reducer, connection, and validation modules.
+- `npm run coverage`: single-worker V8 coverage with thresholds protecting import, migration, persistence, reducer, connection, and validation modules.
+- `npm run check:dev`: normal feature-development validation without release packaging, clean extraction, Playwright install, or mandatory E2E.
 - `npm run validate:fixtures`: current, legacy, and invalid fixture contract checks.
 - `npm run check:scale`: synthetic multi-thousand-port validation, persistence, export, and import check.
 - `npm run version:check`: package/schema/sample/docs/UI version synchronization.
@@ -41,13 +42,12 @@ npm run build
 ## Test And Validate
 
 ```bash
-npm run check
-npm run check:full
+npm run check:dev
 npm run validate:project -- docs/samples/sample-project.studiowire.json
 npm run summary -- docs/samples/sample-project.studiowire.json
 ```
 
-`npm run check` is the deterministic source check: formatting, ESLint, TypeScript, unit tests, V8 coverage, fixture validation, version synchronization, and cleanliness. `npm run check:full` is the publish gate and adds the synthetic scale check, Playwright E2E, source-package verification, and final cleanup checks.
+`npm run check:dev` is the normal feature-development gate. Use `npm run check`, `npm run check:release`, `npm run check:full`, `npm run test:e2e`, and `npm run package:source` for stabilization, release, or prompt-specific verification. Release packaging and clean-extraction verification are not expected after every UI or product feature, and Playwright E2E is valuable but not required for every visual polish task.
 
 ## UI Stack
 
@@ -66,20 +66,18 @@ StudioWire IO uses versioned Codex changes.
 - These are internal app/product versions for this local project; StudioWire IO is not being published to npm as a package.
 - Active StudioWire IO versions use four numeric components, and the app version and current `schemaVersion` must always be identical, even for UI-only or documentation releases.
 - Every version bump must update `package.json`, `package-lock.json` when present or affected, the TypeScript current-version constant, JSON Schema metadata, generated/sample project data, and this README Version Changelog section.
+- Before the first public/released schema, dev-to-dev schema compatibility is not guaranteed. Compatibility is preserved from the first declared released baseline forward.
 - Each prompt normally corresponds to one final user-published version.
 - GPT-5.5 Pro reviews only after the user says `version published`.
 
-## Manual Publish Review Workflow
+## Review Workflow
 
-Normal StudioWire IO review uses a simplified master workflow controlled by the user.
+StudioWire IO review is controlled by the user and can use an uploaded source archive, a pushed feature branch, or the latest pushed repository state.
 
-- Work happens directly on `master`.
 - Codex does not use Git.
 - Codex edits files, updates required docs/version/changelog entries, and runs non-Git validation commands only.
-- The user manually commits and publishes after Codex finishes.
-- After publishing, the user tells GPT-5.5 Pro: `version published`.
-- GPT-5.5 Pro finds the latest pushed `master` diff by itself.
-- The user does not normally need to provide SHAs, compare URLs, branches, tags, or review bundles.
+- The user prepares the chosen review source after Codex finishes.
+- After publishing or uploading, the user tells GPT-5.5 Pro which review source is ready.
 - If review finds a problem, the fix is made as the next versioned change.
 - Public history is not rewritten.
 
@@ -98,12 +96,13 @@ Normal StudioWire IO review uses a simplified master workflow controlled by the 
 - Planned cable numbering with project numbering ledgers.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export compatibility guarantee: current exports use schema version `0.2.8.7`; imports accept exact schema identifiers `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, `0.2.8.0`, `0.2.8.1`, `0.2.8.2`, `0.2.8.3`, `0.2.8.4`, `0.2.8.5`, and `0.2.8.6`, then migrate to the current runtime/schema contract before state commit.
+- JSON import/export: current exports use schema version `0.2.8.8`. Existing supported legacy fixtures remain accepted and migrate to the current runtime/schema contract, but internal dev-to-dev compatibility is not guaranteed before the first public released schema.
 
 ## Release Gates
 
-Run the gates from a clean checkout or clean source-package extraction:
+Run release/stabilization gates from a clean checkout or clean source-package extraction:
 
+- `npm run check:dev`: normal feature-development validation without E2E, Playwright browser install, source packaging, or clean extraction.
 - `npm run check`: script hierarchy guard, format check, lint, typecheck, build, coverage-backed unit/contract/migration tests, fixture validation, version synchronization, cleanup, and cleanliness check.
 - `npm run check:release`: `check`, synthetic scale check, Chromium browser bootstrap, and Playwright E2E.
 - `npm run package:source`: creates and inspects `StudioWire_IO-<version>.zip`, extracts it outside the repository, runs `npm ci`, installs Chromium, runs `check:release`, validates the packaged sample, prints the packaged summary, verifies version sync, and removes the extraction.
@@ -141,6 +140,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.8
+
+- Bumped app and project schema version to `0.2.8.8`.
+- Added `npm run check:dev` as the normal feature-development validation gate without release packaging, clean extraction, Playwright install, or mandatory E2E.
+- Made coverage run with one Vitest worker for more stable local checks.
+- Documented feature-dev, stabilization, and release lanes, proportional testing, decomposition expectations, cleanup hygiene, and the pre-release dev-to-dev compatibility policy.
+- Kept v0.2 closed without prewire/export work; future product/UI features remain outside this workflow cleanup.
 
 ### v0.2.8.7
 

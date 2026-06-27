@@ -12,6 +12,22 @@ if (!scripts.coverage?.includes('vitest run --coverage')) {
   failures.push('coverage must use explicit Vitest run mode.');
 }
 
+if (!scripts.coverage?.includes('--maxWorkers=1') || !scripts.coverage?.includes('--minWorkers=1')) {
+  failures.push('coverage must run with one Vitest worker for local stability.');
+}
+
+if (!scripts['check:dev']) {
+  failures.push('check:dev must exist for ordinary feature-development validation.');
+}
+
+assertScriptDoesNotInvoke('check:dev', [
+  'test:e2e',
+  'test:e2e:install',
+  'package:source',
+  'check:release',
+  'check:full',
+]);
+
 if (/\bvitest\b(?!\s+(run|--run))/.test(resolveScript('check'))) {
   failures.push('check must not invoke Vitest watcher mode.');
 }

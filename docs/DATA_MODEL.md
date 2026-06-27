@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.7`. Older `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, `0.2.8.0`, `0.2.8.1`, `0.2.8.2`, `0.2.8.3`, `0.2.8.4`, `0.2.8.5`, and `0.2.8.6` projects are accepted on import and normalized to the current schema.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.8`. Existing supported legacy fixtures, including `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, `0.2.8.0`, `0.2.8.1`, `0.2.8.2`, `0.2.8.3`, `0.2.8.4`, `0.2.8.5`, and `0.2.8.6`, are accepted on import and normalized to the current schema. Before the first public/released schema baseline, dev-to-dev compatibility is not guaranteed and new internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.7`.
+- `schemaVersion`: current fixed string `0.2.8.8`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
