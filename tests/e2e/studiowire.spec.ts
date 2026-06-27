@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const currentSamplePath = resolve('docs/samples/sample-project.studiowire.json');
 const invalidSamplePath = resolve('docs/samples/invalid/invalid-project-status.studiowire.json');
 const legacyFixturePaths = [
+  '0-2-8-6',
   '0-2-8-5',
   '0-2-8-4',
   '0-2-8-3',
@@ -94,7 +95,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.8.6', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.8.7', { exact: true })).toBeVisible();
   }
 });
 
@@ -166,6 +167,58 @@ test('creates a device through Add Device defaults and port-group edits', async 
   expect(exported.cables.filter((cable: any) => cable.prefix === 'A')).toHaveLength(8);
 });
 
+test('exercises rack multi-view drag and navigator collapse/context menu workflows', async ({ page }) => {
+  await loadSample(page);
+  await page.getByLabel('Collapse Machine Room').click();
+  await expect(page.getByRole('button', { name: /MCR Rack A 42 RU/ })).not.toBeVisible();
+  await page.getByLabel('Expand Machine Room').click();
+  await expect(page.getByRole('button', { name: /MCR Rack A 42 RU/ })).toBeVisible();
+
+  await createRack(page, 'Machine Room', 'E2E Rack B');
+  await page.getByRole('button', { name: /MCR Rack A 42 RU/ }).click();
+  await page.getByLabel('Add rack to canvas').click();
+  await page.getByRole('option', { name: 'Machine Room / E2E Rack B' }).click();
+
+  const sourceRack = page.locator('.rack-canvas-card', { hasText: 'MCR Rack A' });
+  const targetRack = page.locator('.rack-canvas-card', { hasText: 'E2E Rack B' });
+
+  await expect(sourceRack.locator('.rack-device-block', { hasText: 'Router 1' })).toBeVisible();
+  await expect(targetRack).toBeVisible();
+  await page.evaluate(() => {
+    const rackCards = Array.from(document.querySelectorAll<HTMLElement>('.rack-canvas-card'));
+    const sourceCard = rackCards.find((card) => card.textContent?.includes('MCR Rack A'));
+    const targetCard = rackCards.find((card) => card.textContent?.includes('E2E Rack B'));
+    const sourceBlock = sourceCard?.querySelector<HTMLElement>('.rack-device-block');
+    const targetStack = targetCard?.querySelector<HTMLElement>('.rack-stack');
+
+    if (!sourceBlock || !targetStack) {
+      throw new Error('Rack drag test elements not found.');
+    }
+
+    const rect = targetStack.getBoundingClientRect();
+    const dataTransfer = new DataTransfer();
+    const dragOptions = {
+      bubbles: true,
+      cancelable: true,
+      clientY: rect.bottom - 22,
+      dataTransfer,
+    };
+
+    sourceBlock.dispatchEvent(new DragEvent('dragstart', dragOptions));
+    targetStack.dispatchEvent(new DragEvent('dragover', dragOptions));
+    targetStack.dispatchEvent(new DragEvent('drop', dragOptions));
+    sourceBlock.dispatchEvent(new DragEvent('dragend', dragOptions));
+  });
+  await expect(targetRack.locator('.rack-device-block', { hasText: 'Router 1' })).toBeVisible();
+
+  const exported = await exportProject(page);
+  const movedDevice = exported.devices.find((device: any) => device.name === 'Router 1');
+  const targetRackData = exported.racks.find((rack: any) => rack.name === 'E2E Rack B');
+
+  expect(movedDevice.rackId).toBe(targetRackData.id);
+  expect(movedDevice.rackBottomRu).toBeGreaterThan(0);
+});
+
 test('retires a device and blocks reconnection candidates', async ({ page }) => {
   await loadSample(page);
   page.on('dialog', (dialog) => dialog.accept());
@@ -181,7 +234,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.8.6');
+  expect(exported.schemaVersion).toBe('0.2.8.7');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
@@ -209,7 +262,7 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.6', '0.2.7.1'),
+    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.7', '0.2.7.1'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');

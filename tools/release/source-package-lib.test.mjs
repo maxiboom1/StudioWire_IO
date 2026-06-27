@@ -4,7 +4,7 @@ import { isForbiddenPackageRelativePath, validateArchiveEntryName } from './sour
 describe('source package path safety', () => {
   it('rejects traversal, absolute, drive-qualified, duplicate, generated, and forbidden entries', () => {
     const seen = new Set();
-    const rootName = 'StudioWire_IO-0.2.8.6';
+    const rootName = 'StudioWire_IO-0.2.8.7';
 
     expect(validateArchiveEntryName(`${rootName}/package.json`, rootName, seen)).toMatchObject({ ok: true });
     expect(validateArchiveEntryName(`${rootName}/../escape.txt`, rootName, seen)).toMatchObject({

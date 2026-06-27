@@ -500,10 +500,6 @@ textarea:not([data-ui]) {
   min-width: 232px;
 }
 
-.rack-panel-context {
-  margin-top: 0;
-}
-
 .device-tree-draggable {
   cursor: grab;
 }
@@ -543,20 +539,6 @@ textarea:not([data-ui]) {
   font-weight: 800;
   line-height: 1;
   text-align: center;
-}
-
-.rack-warning {
-  max-width: 760px;
-  margin-top: 18px;
-}
-
-.rack-canvas-grid .rack-warning {
-  max-width: none;
-}
-
-.rack-warning div {
-  display: grid;
-  gap: 4px;
 }
 
 .rack-elevation {

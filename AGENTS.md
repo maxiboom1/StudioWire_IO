@@ -22,6 +22,7 @@ These instructions apply to future Codex sessions working in this repository.
 - Keep `src/state/ProjectContext.tsx` as a React coordination layer only. Public context contracts, command creation, initial restore, autosave lifecycle, and file import/export orchestration live in focused non-UI state modules; `ProjectJsonInput` is its own component.
 - Keep `src/components/settings/SettingsWorkspace.tsx` as a small coordinator only. Settings panels own local form state, and settings selectors plus selection fallback helpers live in focused modules under `src/components/settings`.
 - Keep Add Device creation split into pure draft/range/validation helpers, a focused form controller, and typed presentation components. Do not fold Add Device presets, local row IDs, range previews, validation, and JSX back into one modal file.
+- Keep rack workspace responsibilities split between pure rack canvas/drop-target helpers, the rack-view controller hook, and rack selector/elevation presentation components. Keep the left navigator split between pure tree model helpers, collapsed-key state helpers, and focused branch/item presentation components.
 - Update `docs/DATA_MODEL.md` and `docs/VALIDATION_RULES.md` before changing the current data shape or validation behavior.
 - Active StudioWire IO versions use four numeric components, and the app version and current project schema version must always be identical.
 - Preserve JSON import/export compatibility once a format is released.
