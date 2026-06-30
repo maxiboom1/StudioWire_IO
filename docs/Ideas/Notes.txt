@@ -1,0 +1,4 @@
+1. Set default rack height to 28 instead 42
+2. There is no option to unassign device from rack (so this rack cannot be deleted)
+3. Currently - no way to delete device. The retire option not implemented good. We need to give an option to delete device - and free (relese the cables that wasa used). 
+Need to plan it well.
