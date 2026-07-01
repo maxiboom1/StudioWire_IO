@@ -14,6 +14,7 @@ import type {
   ConnectorTypeInput,
   ConnectorTypeUpdates,
   DisconnectPortInput,
+  EditDeviceInput,
   LocationInput,
   LocationUpdates,
   MoveMountedDeviceInput,
@@ -204,6 +205,7 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
       dispatch({ type: 'MOVE_MOUNTED_DEVICE', payload: input }),
     updateDevice: (id: string, updates: DeviceUpdate) =>
       dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } }),
+    editDevice: (input: EditDeviceInput) => dispatch({ type: 'EDIT_DEVICE', payload: input }),
     deleteDevice: (id: string) => dispatch({ type: 'DELETE_DEVICE', payload: { id } }),
   };
 }

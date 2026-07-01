@@ -24,6 +24,7 @@ export function LeftTree({
   onAddLocation,
   onAddRack,
   onAddDevice,
+  onEditDevice,
   onAddTerminalBlock,
 }: {
   selection: SelectionState;
@@ -31,6 +32,7 @@ export function LeftTree({
   onAddLocation: () => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string) => void;
+  onEditDevice: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const { project } = useProject();
@@ -78,6 +80,7 @@ export function LeftTree({
                       isTerminalBlocksOpen={collapsedTree.isOpen(branch.terminalBlocksKey)}
                       key={branch.location.id}
                       onAddDevice={onAddDevice}
+                      onEditDevice={onEditDevice}
                       onAddRack={onAddRack}
                       onAddTerminalBlock={onAddTerminalBlock}
                       onSelectObject={onSelectObject}

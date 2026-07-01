@@ -181,9 +181,27 @@ describe('project command factory', () => {
       locationId: 'location-a',
       rackSizeRu: null,
     });
+    commands.editDevice({
+      deviceId: 'device-a',
+      deviceUpdates: {
+        name: 'Router 2',
+        code: 'RTR2',
+        manufacturer: '',
+        model: '',
+        categoryId: 'category-video',
+        locationId: 'location-a',
+        role: '',
+        labelPrefix: 'RTR2',
+        notes: '',
+        rackSizeRu: null,
+      },
+      existingPortGroups: [],
+      newPortGroups: [],
+    });
     commands.deleteDevice('device-a');
 
     expect(seeds).not.toContainEqual(['device', 'Supplied']);
+    expect(actions.map((action) => action.type)).toContain('EDIT_DEVICE');
     expect(actions.map((action) => action.type)).toContain('DELETE_DEVICE');
   });
 

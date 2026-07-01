@@ -18,6 +18,7 @@ export function PortGroupEditor({
   cablePrefixes,
   categories,
   group,
+  lockedFields = false,
   settings,
   onCategoryChange,
   onPlannedCablesToggle,
@@ -27,10 +28,11 @@ export function PortGroupEditor({
   cablePrefixes: CablePrefix[];
   categories: Category[];
   group: DevicePortGroupForm;
+  lockedFields?: boolean;
   settings: Settings;
   onCategoryChange: (localId: string, categoryId: string) => void;
   onPlannedCablesToggle: (localId: string, checked: boolean) => void;
-  onRemove: (localId: string) => void;
+  onRemove?: (localId: string) => void;
   onUpdate: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
 }) {
   const connectorTypes = getConnectorsForCategory(settings, group.categoryId);
@@ -41,15 +43,17 @@ export function PortGroupEditor({
         <CardTitle>{group.name || 'Port group'}</CardTitle>
         <div className="interface-card-actions">
           <Badge>{formatPortGroupRange(group)}</Badge>
-          <Button
-            aria-label={`Remove ${group.name || 'interface'}`}
-            size="icon"
-            type="button"
-            variant="ghost"
-            onClick={() => onRemove(group.localId)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {onRemove ? (
+            <Button
+              aria-label={`Remove ${group.name || 'interface'}`}
+              size="icon"
+              type="button"
+              variant="ghost"
+              onClick={() => onRemove(group.localId)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
       </CardHeader>
       <CardContent className="port-group-editor-content">
@@ -65,6 +69,7 @@ export function PortGroupEditor({
           <div className="form-field">
             <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
             <Select
+              disabled={lockedFields}
               value={group.categoryId}
               onValueChange={(value) => onCategoryChange(group.localId, value)}
             >
@@ -83,6 +88,7 @@ export function PortGroupEditor({
           <div className="form-field">
             <Label htmlFor={`port-group-direction-${group.localId}`}>Direction</Label>
             <Select
+              disabled={lockedFields}
               value={group.direction}
               onValueChange={(value) =>
                 onUpdate(group.localId, {
@@ -103,6 +109,7 @@ export function PortGroupEditor({
           <div className="form-field">
             <Label htmlFor={`port-group-connector-${group.localId}`}>Connector</Label>
             <Select
+              disabled={lockedFields}
               value={group.connectorTypeId}
               onValueChange={(value) => onUpdate(group.localId, { connectorTypeId: value })}
             >
@@ -121,6 +128,7 @@ export function PortGroupEditor({
           <div className="form-field">
             <Label htmlFor={`port-group-count-${group.localId}`}>Count</Label>
             <Input
+              readOnly={lockedFields}
               id={`port-group-count-${group.localId}`}
               min="1"
               type="number"
@@ -135,6 +143,7 @@ export function PortGroupEditor({
             <Button
               aria-pressed={group.createPlannedCables}
               className="interface-auto-toggle"
+              disabled={lockedFields}
               type="button"
               variant={group.createPlannedCables ? 'default' : 'outline'}
               onClick={() => onPlannedCablesToggle(group.localId, !group.createPlannedCables)}
@@ -145,6 +154,7 @@ export function PortGroupEditor({
           <div className="form-field">
             <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable Prefix</Label>
             <Select
+              disabled={lockedFields}
               value={group.cablePrefix}
               onValueChange={(value) =>
                 onUpdate(group.localId, {
@@ -177,7 +187,7 @@ export function PortGroupEditor({
             <Input
               id={`port-group-first-cable-${group.localId}`}
               min="1"
-              readOnly={group.createPlannedCables}
+              readOnly={lockedFields || group.createPlannedCables}
               type="number"
               value={group.firstCableNumber ?? ''}
               onChange={(event) =>

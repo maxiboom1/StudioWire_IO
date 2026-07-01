@@ -9,7 +9,13 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 
-export function DeviceInspector({ device }: { device: Device }) {
+export function DeviceInspector({
+  device,
+  onEditDevice,
+}: {
+  device: Device;
+  onEditDevice: (deviceId: string) => void;
+}) {
   const { project, updateDevice, deleteDevice } = useProject();
   const isTerminalBlock = device.kind === 'terminal_block';
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
@@ -76,6 +82,11 @@ export function DeviceInspector({ device }: { device: Device }) {
           <CardTitle>{isTerminalBlock ? 'Edit TB' : 'Edit Device'}</CardTitle>
         </CardHeader>
         <CardContent>
+          {!isTerminalBlock ? (
+            <Button type="button" variant="outline" onClick={() => onEditDevice(device.id)}>
+              Edit Device
+            </Button>
+          ) : null}
           <form className="editor-form inspector-form" onSubmit={handleSubmit}>
             <div className="form-field">
               <Label htmlFor="inspector-device-name">Name</Label>

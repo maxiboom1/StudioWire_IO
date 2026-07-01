@@ -14,6 +14,7 @@ import type {
   DeviceDraft,
   DevicePortGroupDraft,
   DeviceUpdate,
+  EditDeviceInput,
   ProjectState,
   TerminalBlockDraft,
 } from './projectTypes';
@@ -39,6 +40,7 @@ export type LocationUpdates = Pick<Location, 'name' | 'type' | 'description'>;
 export type RackInput = Pick<Rack, 'locationId' | 'name' | 'heightRu' | 'numberingDirection'>;
 export type RackUpdates = Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'>;
 export type AddDeviceInput = { device: DeviceDraft; portGroups: DevicePortGroupDraft[] };
+export type { EditDeviceInput };
 export type ConnectPortsInput = { fromPortId: string; toPortId: string };
 export type DisconnectPortInput = { portId: string };
 export type MoveMountedDeviceInput = { deviceId: string; targetRackId: string; targetBottomRu: number };
@@ -74,6 +76,7 @@ export interface ProjectCommands {
   disconnectPort: (input: DisconnectPortInput) => void;
   moveMountedDevice: (input: MoveMountedDeviceInput) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
+  editDevice: (input: EditDeviceInput) => void;
   deleteDevice: (id: string) => void;
 }
 

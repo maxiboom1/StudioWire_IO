@@ -5,7 +5,13 @@ import { LocationInspector } from '../locations/LocationInspector';
 import { RackInspector } from '../racks/RackInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
-export function Inspector({ selection }: { selection: SelectionState }) {
+export function Inspector({
+  selection,
+  onEditDevice,
+}: {
+  selection: SelectionState;
+  onEditDevice: (deviceId: string) => void;
+}) {
   const { project } = useProject();
   const selected = resolveSelection(project, selection);
 
@@ -33,7 +39,7 @@ export function Inspector({ selection }: { selection: SelectionState }) {
   }
 
   if (selected.type === 'device') {
-    return <DeviceInspector device={selected.value} />;
+    return <DeviceInspector device={selected.value} onEditDevice={onEditDevice} />;
   }
 
   return (

@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.9
+# StudioWire IO Product Spec v0.2.8.10
 
-StudioWire IO v0.2.8.9 is the final v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.10 is the final v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -126,6 +126,8 @@ Each device has:
 - Optional notes.
 
 Device creation can generate port groups, ports, planned cables, and ledger allocations in one workflow.
+
+Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
 
 As of v0.2.5.1, terminal blocks are modeled as a device kind with fixed 1RU rack placement, rear/front port faces, optional planned cable numbers on FRONT ports only, and connection-chain drawing through rear/front connector pairs.
 

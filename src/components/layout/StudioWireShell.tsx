@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useProject } from '../../state/ProjectContext';
 import { AddDeviceModal } from '../devices/AddDeviceModal';
 import { AddTerminalBlockModal } from '../devices/AddTerminalBlockModal';
+import { EditDeviceModal } from '../devices/EditDeviceModal';
 import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
 import {
@@ -23,6 +24,7 @@ type ModalState =
   | { type: 'location' }
   | { type: 'rack'; locationId: string }
   | { type: 'device'; locationId: string }
+  | { type: 'edit_device'; deviceId: string }
   | { type: 'terminal_block'; locationId: string | null };
 
 export function StudioWireShell() {
@@ -65,6 +67,10 @@ export function StudioWireShell() {
     setModal({ type: 'device', locationId });
   }
 
+  function openEditDevice(deviceId: string) {
+    setModal({ type: 'edit_device', deviceId });
+  }
+
   function openAddTerminalBlock(locationId: string | null) {
     setModal({ type: 'terminal_block', locationId });
   }
@@ -84,6 +90,7 @@ export function StudioWireShell() {
           onAddLocation={() => setModal({ type: 'location' })}
           onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
           onAddDevice={openAddDevice}
+          onEditDevice={openEditDevice}
           onAddTerminalBlock={openAddTerminalBlock}
         />
         <SidebarInset className="app-shell">
@@ -105,7 +112,7 @@ export function StudioWireShell() {
             ) : (
               <CablesWorkspace />
             )}
-            <Inspector selection={selection} />
+            <Inspector selection={selection} onEditDevice={openEditDevice} />
             <ValidationPanel
               onSelectIssue={(issue) => {
                 const target = resolveIssueSelection(project, issue);
@@ -143,6 +150,16 @@ export function StudioWireShell() {
           initialLocationId={modal.locationId}
           onClose={() => setModal(null)}
           onCreated={(id) => {
+            setModal(null);
+            selectObject('device', id);
+          }}
+        />
+      ) : null}
+      {modal?.type === 'edit_device' ? (
+        <EditDeviceModal
+          device={project.devices.find((device) => device.id === modal.deviceId)!}
+          onClose={() => setModal(null)}
+          onSaved={(id) => {
             setModal(null);
             selectObject('device', id);
           }}

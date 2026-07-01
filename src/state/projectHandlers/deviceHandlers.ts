@@ -1,6 +1,7 @@
 import { stampProject } from '../projectStamping';
 import type { ProjectState } from '../projectTypes';
 import { createDeviceInProject, createTerminalBlockInProject } from '../projectDeviceCommands';
+import { editDeviceInProject } from '../projectDeviceEdits';
 import { deleteNormalDeviceFromProject } from '../../domain/deviceDeletion';
 import type { ActionOf, ProjectHandlerContext } from './shared';
 
@@ -123,6 +124,32 @@ export function handleUpdateDevice(
       context.dependencies,
     ),
     statusMessage: 'Device updated',
+    importError: null,
+  };
+}
+
+export function handleEditDevice(
+  state: ProjectState,
+  action: ActionOf<'EDIT_DEVICE'>,
+  context: ProjectHandlerContext,
+): ProjectState {
+  const result = editDeviceInProject(state.project, action.payload, context.dependencies.nowIso());
+
+  if (!result.ok) {
+    return {
+      ...state,
+      statusMessage: result.error,
+      importError: null,
+    };
+  }
+
+  return {
+    project: stampProject(
+      result.project,
+      `Device edited: ${action.payload.deviceId}`,
+      context.dependencies,
+    ),
+    statusMessage: 'Device edited',
     importError: null,
   };
 }

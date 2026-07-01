@@ -1,5 +1,6 @@
 import { allocateCableRange } from '../domain/cableNumbers';
 import { makeId, makeIndexedId, makeUniqueId, nowIso } from '../domain/id';
+import { formatPortLabel } from '../domain/portLabels';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { validateRackPlacement } from '../domain/rackPlacement';
 import type { Cable, Device, Port, PortGroup, ProjectRoot } from '../domain/types';
@@ -323,14 +324,4 @@ function createPortsForDraft({
       notes: '',
     };
   });
-}
-
-function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: number): string {
-  return pattern
-    .split('{DEVICE}')
-    .join(deviceLabelPrefix)
-    .split('{00}')
-    .join(String(index).padStart(2, '0'))
-    .split('{000}')
-    .join(String(index).padStart(3, '0'));
 }

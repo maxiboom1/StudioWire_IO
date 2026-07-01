@@ -1,5 +1,6 @@
 import { createDefaultSettings } from './defaults';
 import { makeId, makeIndexedId, makeUniqueId, nowIso } from './id';
+import { formatPortLabel } from './portLabels';
 import { createLinkedPlannedCablesForPorts } from './plannedCables';
 import { STUDIOWIRE_SCHEMA_VERSION } from './types';
 import type {
@@ -287,14 +288,4 @@ export function createNumberingLedger(input: NumberingLedgerInput): NumberingLed
     nextSuggested: input.nextSuggested,
     ranges: input.ranges ?? [],
   };
-}
-
-function formatPortLabel(pattern: string, deviceLabelPrefix: string, index: number): string {
-  return pattern
-    .split('{DEVICE}')
-    .join(deviceLabelPrefix)
-    .split('{00}')
-    .join(String(index).padStart(2, '0'))
-    .split('{000}')
-    .join(String(index).padStart(3, '0'));
 }

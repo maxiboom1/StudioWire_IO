@@ -34,6 +34,7 @@ export function LocationBranch({
   onSelectObject,
   onAddRack,
   onAddDevice,
+  onEditDevice,
   onAddTerminalBlock,
   onToggle,
 }: {
@@ -46,6 +47,7 @@ export function LocationBranch({
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string) => void;
+  onEditDevice: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
   onToggle: (key: string) => void;
 }) {
@@ -119,6 +121,7 @@ export function LocationBranch({
               {devices.map((device) => (
                 <DeviceTreeItem
                   active={isSelected(selection, 'device', device.id)}
+                  actions={[{ label: 'Edit Device', onSelect: () => onEditDevice(device.id) }]}
                   device={device}
                   key={device.id}
                   onSelect={() => onSelectObject('device', device.id)}
@@ -212,15 +215,17 @@ export function FolderBranch({
 }
 
 export function DeviceTreeItem({
+  actions = [],
   active,
   device,
   onSelect,
 }: {
+  actions?: ContextAction[];
   active: boolean;
   device: Device;
   onSelect: () => void;
 }) {
-  return (
+  const item = (
     <SidebarMenuSubItem>
       <SidebarMenuSubButton
         className="device-tree-draggable"
@@ -237,6 +242,8 @@ export function DeviceTreeItem({
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );
+
+  return actions.length > 0 ? <ActionContextMenu actions={actions}>{item}</ActionContextMenu> : item;
 }
 
 export function ActionContextMenu({ actions, children }: { actions: ContextAction[]; children: ReactNode }) {

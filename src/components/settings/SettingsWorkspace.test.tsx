@@ -92,6 +92,7 @@ function createContext(project: ProjectRoot, commands = createCommands()): Proje
     disconnectPort: vi.fn(),
     moveMountedDevice: vi.fn(),
     updateDevice: vi.fn(),
+    editDevice: vi.fn(),
     deleteDevice: vi.fn(),
   };
 }

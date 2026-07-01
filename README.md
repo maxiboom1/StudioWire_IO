@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.9 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.10 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -86,7 +86,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Browser-only project editing with localStorage autosave.
 - Project settings for project info, connector catalog, category connector assignments, connector compatibility groups, and cable prefixes.
 - Location and rack creation, editing, and guarded deletion.
-- Device creation, simple device editing, and standard-device hard delete.
+- Device creation, metadata editing, interface relabeling, new-interface append, and standard-device hard delete.
 - Terminal block creation as fixed 1RU rack objects with rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
@@ -96,7 +96,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.9`. Existing supported legacy fixtures remain accepted and migrate to the current runtime/schema contract, but internal dev-to-dev compatibility is not guaranteed before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.10`. Existing supported legacy fixtures remain accepted and migrate to the current runtime/schema contract, but internal dev-to-dev compatibility is not guaranteed before the first public released schema.
 
 ## Release Gates
 
@@ -140,6 +140,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.10
+
+- Bumped app and project schema version to `0.2.8.10`.
+- Added a normal-device Edit Device modal available from the device context menu and inspector.
+- Allowed editing device metadata plus existing interface names and label patterns while keeping existing interface count and wiring fields locked.
+- Added support for appending new I/O interfaces during device edit using the existing cable-number allocation rules.
+- Cascaded interface label edits through generated ports and affected cable display labels without changing cable IDs, numbers, or connections.
 
 ### v0.2.8.9
 

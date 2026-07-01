@@ -75,6 +75,25 @@ export interface DeviceUpdate {
   rackSizeRu: number | null;
 }
 
+export interface DeviceEditUpdate extends DeviceUpdate {
+  code: string;
+  categoryId: string;
+  labelPrefix: string;
+}
+
+export interface ExistingDevicePortGroupEdit {
+  id: string;
+  name: string;
+  portLabelPattern: string;
+}
+
+export interface EditDeviceInput {
+  deviceId: string;
+  deviceUpdates: DeviceEditUpdate;
+  existingPortGroups: ExistingDevicePortGroupEdit[];
+  newPortGroups: DevicePortGroupDraft[];
+}
+
 export type ProjectAction =
   | { type: 'NEW_PROJECT' }
   | { type: 'LOAD_SAMPLE_PROJECT' }
@@ -120,6 +139,7 @@ export type ProjectAction =
   | { type: 'CONNECT_PORTS'; payload: { fromPortId: string; toPortId: string } }
   | { type: 'DISCONNECT_PORT'; payload: { portId: string } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }
+  | { type: 'EDIT_DEVICE'; payload: EditDeviceInput }
   | {
       type: 'MOVE_MOUNTED_DEVICE';
       payload: { deviceId: string; targetRackId: string; targetBottomRu: number };

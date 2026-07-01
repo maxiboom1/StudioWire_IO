@@ -3,6 +3,7 @@ import {
   handleAddDevice,
   handleAddTerminalBlock,
   handleDeleteDevice,
+  handleEditDevice,
   handleUpdateDevice,
 } from './projectHandlers/deviceHandlers';
 import {
@@ -128,6 +129,8 @@ function reduceProjectState(
       return handleDisconnectPort(state, action, context);
     case 'UPDATE_DEVICE':
       return handleUpdateDevice(state, action, context);
+    case 'EDIT_DEVICE':
+      return handleEditDevice(state, action, context);
     case 'MOVE_MOUNTED_DEVICE':
       return handleMoveMountedDevice(state, action, context);
     case 'DELETE_LOCATION':

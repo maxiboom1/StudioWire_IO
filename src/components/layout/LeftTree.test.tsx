@@ -96,6 +96,7 @@ function createContext(project: ProjectRoot): ProjectContextValue {
     disconnectPort: vi.fn(),
     moveMountedDevice: vi.fn(),
     updateDevice: vi.fn(),
+    editDevice: vi.fn(),
     deleteDevice: vi.fn(),
   };
 }
@@ -106,6 +107,7 @@ function renderTree(project = projectFixture()) {
     onAddLocation: vi.fn(),
     onAddRack: vi.fn(),
     onAddDevice: vi.fn(),
+    onEditDevice: vi.fn(),
     onAddTerminalBlock: vi.fn(),
   };
 
@@ -114,6 +116,7 @@ function renderTree(project = projectFixture()) {
     <LeftTree
       selection={{ selectedObjectType: 'device', selectedObjectId: 'device-router-1' }}
       onAddDevice={callbacks.onAddDevice}
+      onEditDevice={callbacks.onEditDevice}
       onAddLocation={callbacks.onAddLocation}
       onAddRack={callbacks.onAddRack}
       onAddTerminalBlock={callbacks.onAddTerminalBlock}
@@ -206,6 +209,10 @@ describe('LeftTree', () => {
     expect(callbacks.onAddDevice).toHaveBeenCalledWith('location-machine-room');
     expect(screen.queryByText('Add Unassigned Device')).toBeNull();
 
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Router 1 RTR1/ }));
+    await user.click(await screen.findByText('Edit Device'));
+    expect(callbacks.onEditDevice).toHaveBeenCalledWith('device-router-1');
+
     const dragged = screen.getByRole('button', { name: /Router 1 RTR1/ });
     fireEvent.dragStart(dragged, { dataTransfer: createDataTransfer() });
     expect(window.__studioWireDraggingDeviceId).toBe('device-router-1');
@@ -222,6 +229,7 @@ describe('LeftTree', () => {
       <LeftTree
         selection={{ selectedObjectType: 'project', selectedObjectId: project.project.id }}
         onAddDevice={callbacks.onAddDevice}
+        onEditDevice={callbacks.onEditDevice}
         onAddLocation={callbacks.onAddLocation}
         onAddRack={callbacks.onAddRack}
         onAddTerminalBlock={callbacks.onAddTerminalBlock}
