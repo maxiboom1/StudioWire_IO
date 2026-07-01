@@ -1,0 +1,18 @@
+
+List of future implementations:
+
+1. We need to implement sub-location separation: 
+Let look at this example: We have control room: it has usually: Front table, back table, sound room, possible ccu/vtr room etc.  
+All those are inside control room - but wirewise - front and back tables are different sub-locations inside control room location
+
+Task is to implement the sublocation logic - that basically is just an folder inside main location.
+So, every device should have field for location (exists), and sub-location.
+Device may be assigned to location but not assigned to sublocation, this is allowed. (for example in CAR, we usually wont use sub-location).
+
+
+2. Set default rack height to 28 instead 42
+3. There is no option to unassign device from rack (so this rack cannot be deleted)
+4. Currently - no way to delete device. The retire option not implemented good. We need to give an option to delete device - and free (relese the cables that wasa used). 
+Need to plan it well.
+
+5. Multi-device sheets - drawing that combines more than one device - there is an concept file with details.
