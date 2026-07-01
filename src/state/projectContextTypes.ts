@@ -74,7 +74,7 @@ export interface ProjectCommands {
   disconnectPort: (input: DisconnectPortInput) => void;
   moveMountedDevice: (input: MoveMountedDeviceInput) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
-  retireDevice: (id: string) => void;
+  deleteDevice: (id: string) => void;
 }
 
 export interface ProjectContextValue extends ProjectState, ProjectCommands {}

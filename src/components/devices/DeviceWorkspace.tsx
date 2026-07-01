@@ -33,10 +33,7 @@ export function DeviceWorkspace({ device }: { device: Device }) {
   return (
     <section className="workspace device-workspace" aria-label="Device canvas">
       <div className="device-canvas">
-        <div
-          className={device.status === 'retired' ? 'device-diagram retired' : 'device-diagram'}
-          style={diagramStyle}
-        >
+        <div className="device-diagram" style={diagramStyle}>
           <div className="device-line-column device-line-column-left" aria-label="Input cable rows">
             <div className="device-line-header-spacer" />
             {rowIndexes.map((index) => (

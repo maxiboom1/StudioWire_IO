@@ -126,9 +126,6 @@ export function TopBar({
       </nav>
 
       <div className="app-logo-zone">
-        <span className="app-persistence-state" data-state={persistenceState ?? 'unsaved'}>
-          {persistenceState ?? 'unsaved'}
-        </span>
         {persistenceState === 'failed' ? (
           <button className="app-export-now" type="button" onClick={exportProjectJson}>
             Export JSON

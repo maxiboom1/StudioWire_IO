@@ -27,7 +27,7 @@ export interface DeviceDraft {
   manufacturer: string;
   model: string;
   categoryId: string;
-  locationId: string | null;
+  locationId: string;
   role: string;
   labelPrefix: string;
   mountType: Device['mountType'];
@@ -71,7 +71,7 @@ export interface DeviceUpdate {
   model?: string;
   role?: string;
   notes: string;
-  locationId: string | null;
+  locationId: string;
   rackSizeRu: number | null;
 }
 
@@ -126,6 +126,6 @@ export type ProjectAction =
     }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
-  | { type: 'RETIRE_DEVICE'; payload: { id: string } }
+  | { type: 'DELETE_DEVICE'; payload: { id: string } }
   | { type: 'VALIDATE_PROJECT' }
   | { type: 'DISMISS_IMPORT_ERROR' };

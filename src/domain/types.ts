@@ -10,8 +10,8 @@ export const DEVICE_KIND_VALUES = ['device', 'terminal_block'] as const;
 export const DEVICE_MOUNT_TYPE_VALUES = ['rack', 'non_rack', 'virtual'] as const;
 export const PORT_DIRECTION_VALUES = ['input', 'output', 'bidirectional', 'rear', 'front'] as const;
 export const CABLE_STATUS_VALUES = ['planned', 'connected', 'retired'] as const;
-export const OBJECT_STATUS_VALUES = ['planned', 'connected', 'retired'] as const;
-export const NUMBERING_RANGE_STATUS_VALUES = ['allocated', 'reserved_gap', 'retired'] as const;
+export const OBJECT_STATUS_VALUES = ['planned', 'connected'] as const;
+export const NUMBERING_RANGE_STATUS_VALUES = ['allocated', 'reserved_gap'] as const;
 export const ENDPOINT_TYPE_VALUES = ['device_port', 'tb_port', 'external', 'unknown'] as const;
 export const VALIDATION_SEVERITY_VALUES = ['error', 'warning', 'info'] as const;
 
@@ -132,7 +132,7 @@ export interface Device {
   manufacturer?: string;
   model?: string;
   categoryId: string;
-  locationId: string | null;
+  locationId: string;
   role?: string;
   labelPrefix: string;
   mountType: DeviceMountType;

@@ -11,7 +11,7 @@ v0.2 is complete around:
 - Direct device, device-to-terminal-block, and terminal-block front-to-front connection modeling.
 - Cable register visibility and filtering.
 - Relational validation and structural JSON import validation.
-- Guarded deletion and retirement, with retired objects blocked from new connections.
+- Guarded location/rack deletion and standard-device hard delete with connection cleanup and released cable-number reuse.
 - Safe JSON import/export with supported legacy migration.
 - Resilient local browser persistence and recovery.
 
@@ -61,14 +61,14 @@ Release packaging, clean-extraction verification, and Playwright E2E are not req
 | New, open, load sample, import, export flows                     | Playwright lifecycle and import/export tests in `tests/e2e/studiowire.spec.ts`; export/import compares complete project-domain JSON with only volatile download path excluded                    |
 | Local save, reload, unavailable storage, corrupt-record fallback | Playwright storage tests plus `src/state/projectStorage.test.ts` and `src/state/projectAutosave.test.ts`; quota/write failure after a user edit is covered by unit tests, not browser injection  |
 | Settings and connector compatibility                             | Playwright settings test plus `src/domain/connectorCompatibility.test.ts`                                                                                                                        |
-| Location, rack, device, and terminal-block creation              | Playwright lifecycle tests plus reducer and domain command tests; editing proof is limited to settings edits, rack movement, retirement, and reducer-level update behavior                       |
+| Location, rack, device, and terminal-block creation              | Playwright lifecycle tests plus reducer and domain command tests; editing proof is limited to settings edits, rack movement, device deletion, and reducer-level update behavior                    |
 | Rack placement and movement                                      | `src/domain/rackPlacement.test.ts`, `src/domain/rackDiagnostics.test.ts`, `src/state/projectReducer.test.ts`, and focused rack canvas/controller tests under `src/components/racks`              |
 | Cable allocation, skipped reserved gaps, and uniqueness          | `src/domain/cableNumbers.test.ts`, validator tests, and Playwright lifecycle export inspection                                                                                                   |
 | Direct device connections                                        | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
 | Device/TB connections                                            | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
 | TB front-to-front connections                                    | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
 | Disconnect behavior                                              | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
-| Retirement and blocked reconnection                              | Playwright retired-object test plus reducer/connection tests                                                                                                                                     |
+| Device deletion and cable-number release                         | Reducer/domain tests plus Playwright lifecycle coverage for removed reconnection candidates                                                                                                      |
 | Cable register and filtering                                     | `src/components/cables/cableRows.test.ts`, `src/components/layout/CablesWorkspace.test.ts`, and Playwright exported cable assertions                                                             |
 | Navigator grouping and interaction boundaries                    | Pure tree model/collapse tests and rendered navigator tests under `src/components/layout`, plus Playwright lifecycle navigation coverage                                                         |
 | Unsupported export/auth/backend features absent                  | README, `docs/PRODUCT_SPEC.md`, `docs/ROADMAP.md`, this acceptance doc, and UI/E2E coverage with no unsupported controls expected                                                                |

@@ -285,6 +285,7 @@ describe('Add Device cable range formatting and validation', () => {
   it('validates connector assignment, required device fields, empty groups, and disabled planning', () => {
     const project = projectFixture();
     const device = createInitialDeviceDraft(project, null);
+    const missingLocationDevice = { ...validDevice(project), locationId: 'missing-location' };
     const disabledPlanning = [
       { ...validGroups(project)[0], createPlannedCables: false, firstCableNumber: null },
     ];
@@ -298,6 +299,9 @@ describe('Add Device cable range formatting and validation', () => {
 
     expect(getAddDeviceValidation(project, device, []).errors).toEqual(
       expect.arrayContaining(['Device name is required.', 'At least one port group is required.']),
+    );
+    expect(getAddDeviceValidation(project, missingLocationDevice, validGroups(project)).errors).toContain(
+      'Device location is required.',
     );
     expect(getAddDeviceValidation(project, validDevice(project), disabledPlanning).errors).toEqual([]);
     expect(getAddDeviceValidation(project, validDevice(project), wrongConnector).errors).toContain(

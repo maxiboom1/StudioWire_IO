@@ -85,12 +85,12 @@ export function validateDevices(
       }
     }
 
-    if (device.mountType !== 'virtual' && (!device.locationId || !locations.has(device.locationId))) {
+    if (!device.locationId || !locations.has(device.locationId)) {
       issues.push(
         issue(
           'error',
           'device-without-location',
-          'Device must reference an existing location unless it is virtual.',
+          'Device must reference an existing location.',
           'device',
           device.id,
         ),
@@ -129,7 +129,7 @@ export function validateDevices(
       continue;
     }
 
-    if (device.locationId && rack.locationId !== device.locationId) {
+    if (rack.locationId !== device.locationId) {
       issues.push(
         issue(
           'error',

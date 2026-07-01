@@ -1,7 +1,5 @@
 import type { Device, ProjectRoot, Rack, Location } from '../../domain/types';
 
-export const UNASSIGNED_KEY = 'unassigned-devices';
-
 export interface LocationTreeBranchModel {
   location: Location;
   key: string;
@@ -14,15 +12,8 @@ export interface LocationTreeBranchModel {
   count: number;
 }
 
-export interface UnassignedTreeBranchModel {
-  key: string;
-  devices: Device[];
-  count: number;
-}
-
 export interface LeftTreeModel {
   locations: LocationTreeBranchModel[];
-  unassigned: UnassignedTreeBranchModel;
   isNavigatorEmpty: boolean;
 }
 
@@ -48,30 +39,10 @@ export function buildLeftTreeModel(project: ProjectRoot): LeftTreeModel {
       count: racks.length + devices.length + terminalBlocks.length,
     };
   });
-  const unassignedDevices = buildUnassignedDeviceList(project);
-  const unassigned = {
-    key: UNASSIGNED_KEY,
-    devices: unassignedDevices,
-    count: unassignedDevices.length,
-  };
-
   return {
     locations: locationBranches,
-    unassigned,
-    isNavigatorEmpty: locationBranches.length === 0 && unassignedDevices.length === 0,
+    isNavigatorEmpty: locationBranches.length === 0,
   };
-}
-
-export function buildUnassignedDeviceList(project: ProjectRoot): Device[] {
-  return project.devices.filter((device) => {
-    if (device.kind === 'terminal_block') {
-      return false;
-    }
-
-    const hasKnownLocation = project.locations.some((location) => location.id === device.locationId);
-
-    return !device.locationId || !hasKnownLocation;
-  });
 }
 
 export function getLocationKey(locationId: string): string {

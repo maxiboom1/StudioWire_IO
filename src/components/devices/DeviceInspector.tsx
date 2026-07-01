@@ -9,10 +9,8 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 
-const NONE_VALUE = '__none__';
-
 export function DeviceInspector({ device }: { device: Device }) {
-  const { project, updateDevice, retireDevice } = useProject();
+  const { project, updateDevice, deleteDevice } = useProject();
   const isTerminalBlock = device.kind === 'terminal_block';
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
   const assignedRack = device.rackId
@@ -31,7 +29,7 @@ export function DeviceInspector({ device }: { device: Device }) {
     model: device.model ?? '',
     role: device.role ?? '',
     notes: device.notes,
-    locationId: device.locationId ?? '',
+    locationId: device.locationId,
     rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
   });
 
@@ -42,7 +40,7 @@ export function DeviceInspector({ device }: { device: Device }) {
       model: device.model ?? '',
       role: device.role ?? '',
       notes: device.notes,
-      locationId: device.locationId ?? '',
+      locationId: device.locationId,
       rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
     });
   }, [device]);
@@ -55,18 +53,18 @@ export function DeviceInspector({ device }: { device: Device }) {
       model: form.model,
       role: form.role,
       notes: form.notes,
-      locationId: canEditLocation ? form.locationId || null : device.locationId,
+      locationId: canEditLocation ? form.locationId : device.locationId,
       rackSizeRu: form.rackSizeRu ? Number(form.rackSizeRu) : null,
     });
   }
 
-  function handleRetire() {
+  function handleDelete() {
     const confirmed = window.confirm(
-      `Retire ${isTerminalBlock ? 'terminal block' : 'device'} "${device.name}"?\n\nThe ${isTerminalBlock ? 'terminal block' : 'device'} remains in the project. Its planned cables and cable ranges are marked retired, and cable numbers stay unavailable.`,
+      `Delete device "${device.name}"?\n\nThis removes the device, ports, port groups, and device-owned cable numbers. Any active connections involving this device are disconnected.`,
     );
 
     if (confirmed) {
-      retireDevice(device.id);
+      deleteDevice(device.id);
     }
   }
 
@@ -119,16 +117,13 @@ export function DeviceInspector({ device }: { device: Device }) {
               <div className="form-field">
                 <Label htmlFor="inspector-device-location">Location</Label>
                 <Select
-                  value={form.locationId || NONE_VALUE}
-                  onValueChange={(value) =>
-                    setForm({ ...form, locationId: value === NONE_VALUE ? '' : value })
-                  }
+                  value={form.locationId}
+                  onValueChange={(value) => setForm({ ...form, locationId: value })}
                 >
                   <SelectTrigger id="inspector-device-location">
                     <SelectValue placeholder="Select location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE_VALUE}>No location</SelectItem>
                     {project.locations.map((location) => (
                       <SelectItem key={location.id} value={location.id}>
                         {location.name}
@@ -226,21 +221,19 @@ export function DeviceInspector({ device }: { device: Device }) {
           </p>
         </CardContent>
       </Card>
-      <Card className="inspector-card danger-zone">
-        <CardHeader>
-          <CardTitle>Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>
-            {isTerminalBlock
-              ? 'TB retirement keeps front planned cable numbers unavailable for reuse.'
-              : 'Device deletion retires allocations so cable numbers are never freed for reuse.'}
-          </p>
-          <Button variant="destructive" type="button" onClick={handleRetire}>
-            {isTerminalBlock ? 'Retire TB' : 'Retire Device'}
-          </Button>
-        </CardContent>
-      </Card>
+      {!isTerminalBlock ? (
+        <Card className="inspector-card danger-zone">
+          <CardHeader>
+            <CardTitle>Danger Zone</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Delete this device and release its device-owned cable numbers for reuse.</p>
+            <Button variant="destructive" type="button" onClick={handleDelete}>
+              Delete Device
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
     </aside>
   );
 }

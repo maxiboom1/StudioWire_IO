@@ -239,14 +239,14 @@ describe('validateProject ledger rules', () => {
     const project = structuredClone(sampleProject);
     const ledger = project.numberingLedgers[0];
 
-    ledger.nextSuggested = 4;
+    ledger.nextSuggested = 6;
     ledger.ranges[0].from = 0;
     ledger.ranges[0].to = -1;
     ledger.ranges[0].prefix = 'A';
 
     const codes = validateProject(project).map((issue) => issue.code);
 
-    expect(codes).toContain('ledger-next-suggested-after-ranges');
+    expect(codes).toContain('ledger-next-suggested-available');
     expect(codes).toContain('numbering-range-positive');
     expect(codes).toContain('numbering-range-to-before-from');
     expect(codes).toContain('numbering-range-prefix-mismatch');

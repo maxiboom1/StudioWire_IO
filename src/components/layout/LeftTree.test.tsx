@@ -30,7 +30,7 @@ function projectFixture(): ProjectRoot {
   project.devices = [
     ...project.devices,
     device({ id: 'device-tb', name: 'TB 1', kind: 'terminal_block', locationId: 'location-machine-room' }),
-    device({ id: 'device-loose', name: 'Loose Device', locationId: null, rackSizeRu: null }),
+    device({ id: 'device-loose', name: 'Loose Device', locationId: 'location-machine-room', rackSizeRu: null }),
   ];
 
   return project;
@@ -96,7 +96,7 @@ function createContext(project: ProjectRoot): ProjectContextValue {
     disconnectPort: vi.fn(),
     moveMountedDevice: vi.fn(),
     updateDevice: vi.fn(),
-    retireDevice: vi.fn(),
+    deleteDevice: vi.fn(),
   };
 }
 
@@ -140,7 +140,7 @@ describe('LeftTree', () => {
     ).toBeTruthy();
     const locationButtons = screen.getAllByRole('button', { name: /^(Control Room|Machine Room) \d+$/ });
 
-    expect(locationButtons.map((button) => button.textContent)).toEqual(['Control Room1', 'Machine Room3']);
+    expect(locationButtons.map((button) => button.textContent)).toEqual(['Control Room1', 'Machine Room4']);
     expect(screen.getByRole('button', { name: /MCR Rack A 42 RU/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Router 1 RTR1/ }).getAttribute('data-active')).toBe('true');
     expect(screen.getByRole('button', { name: /TB 1 TB/ })).toBeTruthy();
@@ -149,7 +149,7 @@ describe('LeftTree', () => {
     );
     expect(document.querySelector('[data-ui="location-collapse-trigger"]')).toBeTruthy();
     expect(document.querySelector('[data-ui="folder-collapse-trigger"]')).toBeTruthy();
-    expect(document.querySelector('[data-ui="unassigned-collapse-trigger"]')).toBeTruthy();
+    expect(document.querySelector('[data-ui="unassigned-collapse-trigger"]')).toBeNull();
   });
 
   it('renders empty folder labels and empty project prompt without changing labels', () => {
@@ -161,16 +161,16 @@ describe('LeftTree', () => {
     expect(screen.getAllByText('No racks')).toHaveLength(2);
     expect(screen.getAllByText('No devices')).toHaveLength(2);
     expect(screen.getAllByText('No terminal blocks')).toHaveLength(2);
-    expect(screen.getByText('No unassigned devices')).toBeTruthy();
+    expect(screen.queryByText('No unassigned devices')).toBeNull();
 
     cleanup();
     contextHarness.current = createContext({ ...project, locations: [] });
     renderTree({ ...project, locations: [] });
-    expect(screen.getByText('Create location or device')).toBeTruthy();
-    expect(screen.getByText('Right-click here to start the project tree.')).toBeTruthy();
+    expect(screen.getByText('Create a location')).toBeTruthy();
+    expect(screen.getByText('Devices are added from a location branch.')).toBeTruthy();
   });
 
-  it('tracks collapse and expand state per location, folder, and unassigned branch', async () => {
+  it('tracks collapse and expand state per location and folder', async () => {
     const user = userEvent.setup();
     renderTree();
 
@@ -182,10 +182,6 @@ describe('LeftTree', () => {
     await user.click(screen.getAllByLabelText('Collapse Devices')[1]);
     expect(screen.queryByRole('button', { name: /Router 1 RTR1/ })).toBeNull();
     expect(screen.getAllByLabelText('Expand Devices')[0]).toBeTruthy();
-
-    await user.click(screen.getByLabelText('Collapse Unassigned Devices'));
-    expect(screen.queryByRole('button', { name: /Loose Device EX/ })).toBeNull();
-    expect(screen.getByLabelText('Expand Unassigned Devices')).toBeTruthy();
   });
 
   it('wires selection callbacks, context-menu actions, drag data, and project replacement safely', async () => {
@@ -194,20 +190,21 @@ describe('LeftTree', () => {
 
     await user.click(screen.getByRole('button', { name: /MCR Rack A 42 RU/ }));
     expect(callbacks.onSelectObject).toHaveBeenCalledWith('rack', 'rack-mcr-a');
-    await user.click(screen.getByRole('button', { name: /Machine Room 3/ }));
+    await user.click(screen.getByRole('button', { name: /Machine Room 4/ }));
     expect(callbacks.onSelectObject).toHaveBeenCalledWith('location', 'location-machine-room');
 
     fireEvent.contextMenu(screen.getByText('Project navigator'));
     await user.click(await screen.findByText('Add Location'));
     expect(callbacks.onAddLocation).toHaveBeenCalled();
 
-    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 3/ }));
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 4/ }));
     await user.click(await screen.findByText('Add Rack'));
     expect(callbacks.onAddRack).toHaveBeenCalledWith('location-machine-room');
 
-    fireEvent.contextMenu(screen.getByRole('button', { name: /Unassigned Devices 1/ }));
-    await user.click(await screen.findByText('Add Unassigned Device'));
-    expect(callbacks.onAddDevice).toHaveBeenCalledWith(null);
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 4/ }));
+    await user.click(await screen.findByText('Add Device'));
+    expect(callbacks.onAddDevice).toHaveBeenCalledWith('location-machine-room');
+    expect(screen.queryByText('Add Unassigned Device')).toBeNull();
 
     const dragged = screen.getByRole('button', { name: /Router 1 RTR1/ });
     fireEvent.dragStart(dragged, { dataTransfer: createDataTransfer() });

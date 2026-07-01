@@ -116,7 +116,7 @@ export interface DeviceInput {
   manufacturer?: string;
   model?: string;
   categoryId: string;
-  locationId: string | null;
+  locationId: string;
   role?: string;
   labelPrefix?: string;
   mountType?: DeviceMountType;

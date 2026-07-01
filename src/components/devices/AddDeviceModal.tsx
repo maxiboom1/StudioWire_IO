@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { PortGroupEditor } from './PortGroupEditor';
 import { useAddDeviceForm } from './useAddDeviceForm';
 
-const NONE_VALUE = '__none__';
-
 export function AddDeviceModal({
   initialLocationId,
   onClose,
@@ -88,14 +86,13 @@ export function AddDeviceModal({
             <div className="form-field">
               <Label htmlFor="device-location">Location</Label>
               <Select
-                value={form.device.locationId ?? NONE_VALUE}
-                onValueChange={(value) => form.setDevice({ locationId: value === NONE_VALUE ? null : value })}
+                value={form.device.locationId}
+                onValueChange={(value) => form.setDevice({ locationId: value })}
               >
                 <SelectTrigger id="device-location">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NONE_VALUE}>No location</SelectItem>
                   {project.locations.map((location) => (
                     <SelectItem key={location.id} value={location.id}>
                       {location.name}

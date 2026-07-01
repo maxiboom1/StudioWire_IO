@@ -10,6 +10,12 @@ export function createDeviceInProject(
   payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] },
 ): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
   const timestamp = nowIso();
+  const locationExists = project.locations.some((location) => location.id === payload.device.locationId);
+
+  if (!locationExists) {
+    return { ok: false, error: 'Device creation blocked: select a valid location.' };
+  }
+
   const deviceId = payload.device.id ?? makeUniqueId('device', payload.device.code || payload.device.name);
   const labelPrefix = payload.device.labelPrefix || payload.device.code || payload.device.name;
   const device: Device = {

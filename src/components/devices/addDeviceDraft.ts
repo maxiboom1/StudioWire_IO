@@ -1,4 +1,9 @@
-import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
+import {
+  allocateCableRange,
+  formatCableNumber,
+  getNextSuggestedForPrefix,
+  previewCableRange,
+} from '../../domain/cableNumbers';
 import {
   getConnectorsForCategory,
   getDefaultConnectorForCategory,
@@ -30,7 +35,7 @@ export function createInitialDeviceDraft(
     manufacturer: '',
     model: '',
     categoryId: firstCategory?.id ?? '',
-    locationId: initialLocationId ?? null,
+    locationId: initialLocationId ?? project.locations[0]?.id ?? '',
     role: '',
     labelPrefix: '',
     mountType: 'virtual',
@@ -240,9 +245,7 @@ export function rebalancePlannedCableRanges(
   project: ProjectRoot,
   groups: DevicePortGroupForm[],
 ): DevicePortGroupForm[] {
-  const nextByPrefix = new Map(
-    project.numberingLedgers.map((ledger) => [ledger.prefix, ledger.nextSuggested]),
-  );
+  let previewProject = project;
 
   return groups.map((group) => {
     const count = Number(group.count);
@@ -251,14 +254,27 @@ export function rebalancePlannedCableRanges(
       return {
         ...group,
         count,
-        firstCableNumber: group.firstCableNumber ?? nextByPrefix.get(group.cablePrefix) ?? 1,
+        firstCableNumber: group.firstCableNumber ?? getNextSuggestedForPrefix(previewProject, group.cablePrefix),
       };
     }
 
-    const nextCableNumber = nextByPrefix.get(group.cablePrefix) ?? 1;
+    const nextCableNumber = Number.isSafeInteger(count) && count > 0
+      ? getNextSuggestedForPrefix(previewProject, group.cablePrefix, count)
+      : getNextSuggestedForPrefix(previewProject, group.cablePrefix);
 
     if (Number.isSafeInteger(count) && count > 0) {
-      nextByPrefix.set(group.cablePrefix, nextCableNumber + count);
+      const allocation = allocateCableRange(previewProject, {
+        prefix: group.cablePrefix,
+        firstCableNumber: nextCableNumber,
+        count,
+        ownerType: 'preview',
+        ownerId: group.localId,
+        reason: 'Preview device allocation',
+      });
+
+      if (allocation.preview.errors.length === 0) {
+        previewProject = allocation.project;
+      }
     }
 
     return {
@@ -333,6 +349,10 @@ export function getAddDeviceValidation(
 
   if (!device.categoryId) {
     errors.push('Device category is required.');
+  }
+
+  if (!project.locations.some((location) => location.id === device.locationId)) {
+    errors.push('Device location is required.');
   }
 
   if (!normalizeDeviceToken(device.labelPrefix || device.name)) {

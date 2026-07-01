@@ -97,7 +97,7 @@ describe('project command factory', () => {
     });
   });
 
-  it('centralizes location, rack, device, terminal-block, connection, and retirement commands', () => {
+  it('centralizes location, rack, device, terminal-block, connection, and delete commands', () => {
     const { actions, commands, seeds } = createHarness();
 
     expect(commands.addLocation({ name: 'MCR', type: 'machine_room', description: 'Main' })).toBe(
@@ -181,10 +181,10 @@ describe('project command factory', () => {
       locationId: 'location-a',
       rackSizeRu: null,
     });
-    commands.retireDevice('device-a');
+    commands.deleteDevice('device-a');
 
     expect(seeds).not.toContainEqual(['device', 'Supplied']);
-    expect(actions.map((action) => action.type)).toContain('RETIRE_DEVICE');
+    expect(actions.map((action) => action.type)).toContain('DELETE_DEVICE');
   });
 
   it('exports the latest project returned by the injected getter', () => {

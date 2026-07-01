@@ -12,7 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from '../ui/sidebar';
-import { ActionContextMenu, LocationBranch, UnassignedBranch } from './LeftTreeBranches';
+import { ActionContextMenu, LocationBranch } from './LeftTreeBranches';
 import { buildLeftTreeModel } from './leftTreeModel';
 import { useCollapsedTree } from './useCollapsedTree';
 
@@ -30,7 +30,7 @@ export function LeftTree({
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddLocation: () => void;
   onAddRack: (locationId: string) => void;
-  onAddDevice: (locationId: string | null) => void;
+  onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const { project } = useProject();
@@ -38,7 +38,6 @@ export function LeftTree({
   const collapsedTree = useCollapsedTree();
   const rootActions = [
     { label: 'Add Location', onSelect: onAddLocation },
-    { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
     { label: 'Add TB', onSelect: () => onAddTerminalBlock(null) },
   ];
 
@@ -60,10 +59,10 @@ export function LeftTree({
                       type="button"
                     >
                       <span className="text-sm font-semibold text-studio-text">
-                        Create location or device
+                        Create a location
                       </span>
                       <span className="text-xs leading-5 text-studio-muted">
-                        Right-click here to start the project tree.
+                        Devices are added from a location branch.
                       </span>
                     </button>
                   </ActionContextMenu>
@@ -86,16 +85,6 @@ export function LeftTree({
                       selection={selection}
                     />
                   ))}
-
-                  <UnassignedBranch
-                    branch={tree.unassigned}
-                    isOpen={collapsedTree.isOpen(tree.unassigned.key)}
-                    onAddDevice={onAddDevice}
-                    onAddLocation={onAddLocation}
-                    onSelectObject={onSelectObject}
-                    onToggle={collapsedTree.toggle}
-                    selection={selection}
-                  />
                   <SidebarMenuItem>
                     <ActionContextMenu actions={rootActions}>
                       <div

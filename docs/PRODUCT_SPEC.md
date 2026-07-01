@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.8
+# StudioWire IO Product Spec v0.2.8.9
 
-StudioWire IO v0.2.8.8 is the final v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.9 is the final v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -30,7 +30,6 @@ The left tree is the primary project navigator. It shows the hierarchy of:
 - Locations.
 - Racks within locations.
 - Devices within locations.
-- Unassigned devices.
 
 Selecting an item in the tree opens it in the center workspace and exposes editable fields in the right inspector.
 
@@ -60,7 +59,7 @@ Examples:
 - Device name, code, manufacturer, model, role, notes, location, rack placement, and rack units.
 - Locked cable range note for device port groups.
 
-The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Devices are retired instead of physically deleted so cable numbers are not freed. Retired devices and terminal blocks are immutable historical objects: they cannot be edited, moved, or used as endpoints for new active connections.
+The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Standard devices can be deleted; deletion removes device-owned ports, port groups, planned cables, rack placement, connections, and owned allocated cable-number ranges so released cable numbers may be reused. Reserved gaps remain unavailable.
 
 The inspector must not invent fields that are not documented in `DATA_MODEL.md`.
 
@@ -94,7 +93,7 @@ Settings are part of project data and must be included in JSON import/export. Im
 
 Locations represent physical places such as rooms, control rooms, machine rooms, studios, or equipment areas.
 
-Each location has a stable ID, display name, type, and description. Devices should reference a valid location unless they are virtual.
+Each location has a stable ID, display name, type, and description. Every device and terminal block must reference a valid location, including virtual and non-rack devices.
 
 ## Racks
 
@@ -119,7 +118,7 @@ Each device has:
 - Stable ID.
 - Name.
 - Category ID.
-- Optional location ID.
+- Required location ID.
 - Optional rack ID.
 - Optional rack start unit.
 - Optional rack unit height.
@@ -165,7 +164,7 @@ The numbering model includes:
 
 Cable numbers must be unique per project. Skipped gaps are reserved and cannot be reused.
 
-StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, cable register/filtering, guarded retirement, JSON import/export, resilient local persistence, and validation. Interactive rack, device, and TB views are generated in-app views over project data; they are distinct from future exported drawing documents and prewire packages.
+StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, cable register/filtering, standard-device deletion, JSON import/export, resilient local persistence, and validation. Interactive rack, device, and TB views are generated in-app views over project data; they are distinct from future exported drawing documents and prewire packages.
 
 ## Explicit Exclusions
 

@@ -32,7 +32,7 @@ export function ProjectWorkspace() {
       <MetricGrid items={metrics} />
       {project.locations.length === 0 && project.devices.length === 0 ? (
         <EmptyState title="Empty Project">
-          Right-click the sidebar to create a location or unassigned device.
+          Right-click the sidebar to create a location. Devices are added from location branches.
         </EmptyState>
       ) : null}
     </section>

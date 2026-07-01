@@ -1,4 +1,4 @@
-import { Cable, ChevronDown, ChevronRight, Folder, HardDrive, MapPin, Server } from 'lucide-react';
+import { Cable, ChevronDown, ChevronRight, HardDrive, MapPin, Server } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { Device } from '../../domain/types';
 import { clearDeviceDragData, writeDeviceDragData } from '../common/deviceDrag';
@@ -17,7 +17,6 @@ import {
   getDeviceTreeMeta,
   getDeviceTreeTitle,
   type LocationTreeBranchModel,
-  type UnassignedTreeBranchModel,
 } from './leftTreeModel';
 
 export type ContextAction = {
@@ -46,7 +45,7 @@ export function LocationBranch({
   selection: SelectionState;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
   onAddRack: (locationId: string) => void;
-  onAddDevice: (locationId: string | null) => void;
+  onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
   onToggle: (key: string) => void;
 }) {
@@ -209,74 +208,6 @@ export function FolderBranch({
         </CollapsibleContent>
       </Collapsible>
     </SidebarMenuSubItem>
-  );
-}
-
-export function UnassignedBranch({
-  branch,
-  isOpen,
-  selection,
-  onSelectObject,
-  onAddLocation,
-  onAddDevice,
-  onToggle,
-}: {
-  branch: UnassignedTreeBranchModel;
-  isOpen: boolean;
-  selection: SelectionState;
-  onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
-  onAddLocation: () => void;
-  onAddDevice: (locationId: string | null) => void;
-  onToggle: (key: string) => void;
-}) {
-  return (
-    <SidebarMenuItem>
-      <Collapsible open={isOpen} onOpenChange={() => onToggle(branch.key)}>
-        <ActionContextMenu
-          actions={[
-            { label: 'Add Location', onSelect: onAddLocation },
-            { label: 'Add Unassigned Device', onSelect: () => onAddDevice(null) },
-          ]}
-        >
-          <div className="flex items-center gap-1">
-            <CollapsibleTrigger asChild>
-              <button
-                aria-label={`${isOpen ? 'Collapse' : 'Expand'} Unassigned Devices`}
-                className="grid h-8 w-6 shrink-0 place-items-center rounded-md text-studio-muted hover:bg-slate-100"
-                data-ui="unassigned-collapse-trigger"
-                type="button"
-              >
-                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </button>
-            </CollapsibleTrigger>
-            <SidebarMenuButton onClick={() => onToggle(branch.key)}>
-              <Folder className="h-4 w-4 text-studio-muted" />
-              <span className="min-w-0 flex-1 truncate">Unassigned Devices</span>
-              <SidebarMenuBadge>{branch.count}</SidebarMenuBadge>
-            </SidebarMenuButton>
-          </div>
-        </ActionContextMenu>
-
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {branch.devices.length === 0 ? (
-              <SidebarMenuSubItem>
-                <div className="px-2 py-1 text-xs text-studio-muted">No unassigned devices</div>
-              </SidebarMenuSubItem>
-            ) : (
-              branch.devices.map((device) => (
-                <DeviceTreeItem
-                  active={isSelected(selection, 'device', device.id)}
-                  device={device}
-                  key={device.id}
-                  onSelect={() => onSelectObject('device', device.id)}
-                />
-              ))
-            )}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </Collapsible>
-    </SidebarMenuItem>
   );
 }
 

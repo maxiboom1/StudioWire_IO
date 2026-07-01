@@ -22,7 +22,7 @@ type ModalState =
   | null
   | { type: 'location' }
   | { type: 'rack'; locationId: string }
-  | { type: 'device'; locationId: string | null }
+  | { type: 'device'; locationId: string }
   | { type: 'terminal_block'; locationId: string | null };
 
 export function StudioWireShell() {
@@ -61,7 +61,7 @@ export function StudioWireShell() {
     selectObject('settings', 'settings');
   }
 
-  function openAddDevice(locationId: string | null) {
+  function openAddDevice(locationId: string) {
     setModal({ type: 'device', locationId });
   }
 

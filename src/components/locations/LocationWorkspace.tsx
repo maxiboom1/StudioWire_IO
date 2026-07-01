@@ -10,7 +10,7 @@ export function LocationWorkspace({
   onAddTerminalBlock,
 }: {
   location: Location;
-  onAddDevice: (locationId: string | null) => void;
+  onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const { project } = useProject();

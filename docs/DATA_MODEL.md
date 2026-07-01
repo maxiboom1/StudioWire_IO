@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.8`. Existing supported legacy fixtures, including `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, `0.2.8.0`, `0.2.8.1`, `0.2.8.2`, `0.2.8.3`, `0.2.8.4`, `0.2.8.5`, and `0.2.8.6`, are accepted on import and normalized to the current schema. Before the first public/released schema baseline, dev-to-dev compatibility is not guaranteed and new internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.9`. Existing supported legacy fixtures, including `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, `0.2.8.0`, `0.2.8.1`, `0.2.8.2`, `0.2.8.3`, `0.2.8.4`, `0.2.8.5`, and `0.2.8.6`, are accepted on import and normalized to the current schema. Before the first public/released schema baseline, dev-to-dev compatibility is not guaranteed and new internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.8`.
+- `schemaVersion`: current fixed string `0.2.8.9`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -173,9 +173,9 @@ Fields:
 - `createdAt`
 - `updatedAt`
 
-Current UI-created devices use `planned` or `retired` status. Retired devices and terminal blocks are immutable historical objects. Their ports are excluded from connection candidates, domain connection commands reject them, and editing or moving them is blocked. Existing historical cable references may remain for audit, but active connected cables referencing retired objects are validation errors. Retiring a device marks its related planned cables and ledger allocations as `retired`; it does not free cable numbers for reuse.
+Current devices use `planned` or `connected` status. Standard-device deletion is a hard delete: the device, its child port groups, its child ports, its device-owned planned cables, and its device-owned allocated numbering ranges are removed. Any surviving connected cable slots affected by the deleted device are reset to planned state where they still have a surviving owner port. Released allocated numbers may be suggested and reallocated again; reserved gaps remain blocked.
 
-`locationId` may be `null` for virtual devices and for unassigned handling. Rack and non-rack devices must reference an existing location.
+`locationId` is required for all devices and terminal blocks and must reference an existing location. Virtual and non-rack devices are still assigned to a location even when they are not rack-mounted.
 
 Standard devices use `kind: "device"` and may be virtual, non-rack, or rack-mounted. Imported older devices without `kind` are normalized to standard devices.
 
@@ -206,7 +206,7 @@ Standard devices use `input`, `output`, or `bidirectional` groups. Terminal bloc
 
 PortGroup allocation semantics are mode-specific:
 
-- If `createPlannedCables` is `true`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be set. The range must reference an allocated or retired ledger range, generated ports must link to planned cables, and planned cable numbers must be covered by that range.
+- If `createPlannedCables` is `true`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be set. The range must reference an allocated ledger range, generated ports must link to planned cables, and planned cable numbers must be covered by that range.
 - If `createPlannedCables` is `false`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be `null`. Generated ports must keep `plannedCableId` as `null`, no planned cables are created, and no cable ledger allocation is made.
 
 ## Port
@@ -265,7 +265,7 @@ Fields:
 - `nextSuggested`
 - `ranges`: `NumberingRange[]`
 
-`nextSuggested` must be a positive integer greater than every `to` value in the ledger ranges, including allocated, reserved gap, and retired ranges.
+`nextSuggested` must be a positive integer that points to the earliest currently available number for the prefix. It must not fall inside an allocated range or reserved gap.
 
 ## NumberingRange
 
@@ -275,15 +275,13 @@ Fields:
 - `prefix`
 - `from`
 - `to`
-- `status`: `allocated`, `reserved_gap`, or `retired`
+- `status`: `allocated` or `reserved_gap`
 - `ownerType`
 - `ownerId`
 - `reason`
 - `createdAt`
 
-Reserved gaps cannot be reused.
-
-Retired ranges also remain in the ledger. They continue to reserve historical cable numbers and must not be reallocated.
+Reserved gaps cannot be reused. Allocated ranges owned by a deleted standard device's port groups are removed during hard delete so those cable numbers may be reused.
 
 ## Endpoint
 

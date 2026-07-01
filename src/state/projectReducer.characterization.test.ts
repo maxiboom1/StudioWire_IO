@@ -59,15 +59,6 @@ function addTerminalBlock(state: ProjectState) {
   });
 }
 
-function retireRouter(project = structuredClone(sampleProject)) {
-  return {
-    ...project,
-    devices: project.devices.map((device) =>
-      device.id === 'device-router-1' ? { ...device, status: 'retired' as const } : device,
-    ),
-  };
-}
-
 describe('projectReducer action characterization', () => {
   const basicCases: Array<{
     name: string;
@@ -529,15 +520,15 @@ describe('projectReducer action characterization', () => {
         },
       },
     });
-    const retiredUpdateState = createState(retireRouter());
-    const blockedRetiredUpdate = reduce(retiredUpdateState, {
+    const invalidLocationUpdateState = createState();
+    const blockedInvalidLocationUpdate = reduce(invalidLocationUpdateState, {
       type: 'UPDATE_DEVICE',
       payload: {
         id: 'device-router-1',
         updates: {
           name: 'Blocked',
           notes: '',
-          locationId: 'location-machine-room',
+          locationId: 'missing-location',
           rackSizeRu: 1,
         },
       },
@@ -565,17 +556,17 @@ describe('projectReducer action characterization', () => {
     ) as Device;
     expect(terminalBlock).toMatchObject({ name: 'TB Renamed', notes: 'TB notes', rackSizeRu: 1 });
     expect(terminalBlock).not.toHaveProperty('manufacturer');
-    expect(blockedRetiredUpdate.statusMessage).toBe('Device update blocked: retired objects are immutable');
-    expect(blockedRetiredUpdate.project).toBe(retiredUpdateState.project);
+    expect(blockedInvalidLocationUpdate.statusMessage).toContain('select a valid location');
+    expect(blockedInvalidLocationUpdate.project).toBe(invalidLocationUpdateState.project);
   });
 
-  it('characterizes mounted-device move success, placement failure, and retired block', () => {
+  it('characterizes mounted-device move success and placement failure', () => {
     const virtualDevice = {
       ...sampleProject.devices[0],
       id: 'device-virtual-char',
       name: 'Virtual Char',
       mountType: 'virtual' as const,
-      locationId: null,
+      locationId: 'location-machine-room',
       rackId: null,
       rackSizeRu: 1,
       rackBottomRu: null,
@@ -598,11 +589,6 @@ describe('projectReducer action characterization', () => {
         payload: { deviceId: 'device-virtual-char', targetRackId: 'rack-mcr-a', targetBottomRu: 1 },
       },
     );
-    const retired = reduce(createState(retireRouter()), {
-      type: 'MOVE_MOUNTED_DEVICE',
-      payload: { deviceId: 'device-router-1', targetRackId: 'rack-mcr-a', targetBottomRu: 1 },
-    });
-
     expect(moved.project.devices.find((device) => device.id === 'device-virtual-char')).toMatchObject({
       mountType: 'rack',
       rackId: 'rack-mcr-a',
@@ -612,7 +598,6 @@ describe('projectReducer action characterization', () => {
     });
     expect(moved.statusMessage).toBe('Virtual Char moved to MCR Rack A RU 1');
     expect(invalid.statusMessage).toContain('Set rack size before assigning to a rack');
-    expect(retired.statusMessage).toBe('Device move blocked: retired objects are immutable');
   });
 
   it('characterizes connection success, rejection, disconnection success, and rejection', () => {
@@ -623,11 +608,11 @@ describe('projectReducer action characterization', () => {
         toPortId: 'port-group-multiviewer-inputs-port-0001',
       },
     });
-    const rejectedConnect = reduce(createState(retireRouter()), {
+    const rejectedConnect = reduce(createState(), {
       type: 'CONNECT_PORTS',
       payload: {
         fromPortId: 'port-group-router-outputs-port-0001',
-        toPortId: 'port-group-multiviewer-inputs-port-0001',
+        toPortId: 'port-group-router-outputs-port-0001',
       },
     });
     const disconnected = reduce(connected, {
@@ -644,7 +629,7 @@ describe('projectReducer action characterization', () => {
       status: 'connected',
       sideBEndpoint: { id: 'port-group-multiviewer-inputs-port-0001' },
     });
-    expect(rejectedConnect.statusMessage).toContain('retired');
+    expect(rejectedConnect.statusMessage).toBe('Cannot connect a port to itself.');
     expect(disconnected.statusMessage).toBe('Connection cleared for RTR1-OUT-001');
     expect(disconnected.project.cables.find((cable) => cable.id === 'cable-v-0001')).toMatchObject({
       status: 'planned',
@@ -653,27 +638,25 @@ describe('projectReducer action characterization', () => {
     expect(rejectedDisconnect.statusMessage).toBe('No active connection to clear.');
   });
 
-  it('characterizes retirement side effects and reserved-number behavior', () => {
-    const result = reduce(createState(), { type: 'RETIRE_DEVICE', payload: { id: 'device-router-1' } });
+  it('characterizes hard delete side effects and reusable reserved-number behavior', () => {
+    const result = reduce(createState(), { type: 'DELETE_DEVICE', payload: { id: 'device-router-1' } });
 
-    expect(result.statusMessage).toBe('Device retired; cable numbers remain unavailable');
-    expect(result.project.devices.find((device) => device.id === 'device-router-1')).toMatchObject({
-      status: 'retired',
-      updatedAt: TEST_TIMESTAMP,
-    });
-    expect(result.project.cables.every((cable) => cable.status === 'retired')).toBe(true);
-    expect(
-      result.project.numberingLedgers[0].ranges.find((range) => range.id === 'range-v-router-outputs'),
-    ).toMatchObject({
-      status: 'retired',
-    });
+    expect(result.statusMessage).toBe('Device deleted; cable numbers released');
+    expect(result.project.devices.some((device) => device.id === 'device-router-1')).toBe(false);
+    expect(result.project.portGroups.some((group) => group.deviceId === 'device-router-1')).toBe(false);
+    expect(result.project.ports.some((port) => port.portGroupId === 'port-group-router-outputs')).toBe(false);
+    expect(result.project.cables).toHaveLength(0);
+    expect(result.project.numberingLedgers[0].nextSuggested).toBe(1);
+    expect(result.project.numberingLedgers[0].ranges.some((range) => range.id === 'range-v-router-outputs')).toBe(
+      false,
+    );
     expect(
       result.project.numberingLedgers[0].ranges.find((range) => range.status === 'reserved_gap'),
     ).toMatchObject({
       from: 5,
       to: 8,
     });
-    expectStamped(result, 'Device retired: device-router-1');
+    expectStamped(result, 'Device deleted: device-router-1');
   });
 
   it('centralizes deterministic project creation and stamping helpers', () => {

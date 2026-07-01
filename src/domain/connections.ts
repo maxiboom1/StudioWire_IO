@@ -219,17 +219,6 @@ export function getConnectionTargetStatus(
     return { ok: false, reason: 'Port is missing.' };
   }
 
-  const fromDevice = effectiveLookup.devicesById.get(fromPort.deviceId);
-  const toDevice = effectiveLookup.devicesById.get(toPort.deviceId);
-
-  if (fromDevice?.status === 'retired') {
-    return { ok: false, reason: 'Origin belongs to a retired object.' };
-  }
-
-  if (toDevice?.status === 'retired') {
-    return { ok: false, reason: 'Target belongs to a retired object.' };
-  }
-
   const connectorStatus = arePortConnectorsCompatible(
     project,
     fromPort,

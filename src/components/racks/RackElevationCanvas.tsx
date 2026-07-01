@@ -94,7 +94,7 @@ export function RackElevationCanvas({
           {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd, diagnostics }) => (
             <div
               className={[
-                device.status === 'retired' ? 'rack-device-block retired' : 'rack-device-block',
+                'rack-device-block',
                 device.kind === 'terminal_block' ? 'terminal-block-rack-device' : '',
                 diagnostics.length > 0 ? 'invalid-placement' : '',
                 draggingDeviceId === device.id ? 'is-dragging' : '',

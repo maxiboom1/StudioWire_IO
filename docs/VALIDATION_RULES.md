@@ -41,7 +41,7 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `device-code-required`: standard device code is required.
 - `terminal-block-rack-mounted`: terminal blocks must be rack-mounted.
 - `terminal-block-size-fixed`: terminal blocks must be fixed at 1 RU.
-- `device-without-location`: non-virtual devices must reference an existing location.
+- `device-without-location`: every device and terminal block must reference an existing location.
 - `device-references-missing-rack`: a device with a rack reference must point at an existing rack.
 - `rack-mounted-device-without-rack`: rack-mounted devices must reference a rack.
 - `rack-location-device-location-mismatch`: rack-mounted devices must be in the same location as their rack.
@@ -60,13 +60,13 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `port-without-parent-device`: each port must reference an existing parent device.
 - `port-without-parent-port-group`: each port must reference an existing parent port group.
 - `port-group-numbering-range-missing`: locked port group numbering range references must resolve to a ledger range.
-- `port-group-numbering-range-reserved-gap`: port groups must reference allocated or retired ranges, not reserved gaps.
+- `port-group-numbering-range-reserved-gap`: port groups must reference allocated ranges, not reserved gaps.
 - `port-group-planned-cables-first-required`: planned-cables port groups require `firstCableNumber`.
 - `port-group-planned-cables-last-required`: planned-cables port groups require `lastCableNumber`.
 - `port-group-planned-cables-range-required`: planned-cables port groups require `numberingRangeId`.
 - `port-group-planned-cable-count-mismatch`: planned-cables port groups must have one linked planned cable per generated port.
 - `port-group-port-missing-planned-cable`: every port in a planned-cables group must have `plannedCableId`.
-- `port-group-planned-cable-outside-range`: planned cable numbers must be covered by the port group's allocated or retired ledger range.
+- `port-group-planned-cable-outside-range`: planned cable numbers must be covered by the port group's allocated ledger range.
 - `port-group-no-planned-cables-has-allocation`: no-planned-cables port groups must keep `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` as `null`.
 - `port-group-no-planned-cables-port-linked`: ports in no-planned-cables groups must not have `plannedCableId`.
 - `port-group-no-planned-cables-cable-reference`: planned cables must not reference ports from no-planned-cables groups.
@@ -80,7 +80,6 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `planned-cable-label-top-mismatch`: planned output and bidirectional cable `labelTop` must equal the source endpoint label.
 - `planned-cable-label-bottom-mismatch`: planned input cable `labelBottom` must equal the destination endpoint label.
 - `connected-cable-endpoints-required`: connected cables must reference two different project ports.
-- `connected-cable-retired-endpoint`: active connected cables must not reference ports owned by retired devices or terminal blocks.
 - `connection-category-mismatch`: connected cable endpoints must share a category.
 - `connection-connector-group-mismatch`: connected cable endpoints with different connector types must use connectors in the same compatibility group.
 - `connection-segment-invalid`: a connected cable segment must be valid for the selected endpoint directions/faces.
@@ -88,12 +87,12 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `connection-chain-direction-invalid`: a resolved chain through terminal blocks must not link incompatible standard device port directions.
 - `allocated-range-without-owner`: allocated numbering ranges must have owner type and owner ID.
 - `ledger-next-suggested-positive`: ledger `nextSuggested` must be a positive integer.
-- `ledger-next-suggested-after-ranges`: ledger `nextSuggested` must be greater than every range `to` value in that ledger.
+- `ledger-next-suggested-available`: ledger `nextSuggested` must not fall inside an allocated range or reserved gap.
 - `numbering-range-positive`: numbering range `from` and `to` values must be positive integers.
 - `numbering-range-to-before-from`: numbering range `to` must be greater than or equal to `from`.
 - `numbering-range-prefix-mismatch`: numbering range prefix must match the parent ledger prefix.
 - `overlapping-numbering-ledger-ranges`: ranges in the same ledger must not overlap.
-- `planned-cable-without-ledger-range`: planned cables must be covered by an allocated or retired ledger range.
+- `planned-cable-without-ledger-range`: planned cables must be covered by an allocated ledger range.
 - `reserved-gap-reused`: reserved gap numbers must not be used by cables or allocated ranges.
 
 ## Numbering Rules
@@ -102,15 +101,13 @@ Cable numbers are unique project data. Allocating a later first number creates a
 
 When a port group has `createPlannedCables` set to `false`, StudioWire IO does not allocate ledger ranges, does not create reserved gaps, and does not generate planned cables for that group.
 
-Reserved gaps and retired ranges remain unavailable. StudioWire IO does not free cable numbers when a device is retired.
+Reserved gaps remain unavailable. Deleting a standard device removes that device's owned allocated ranges and planned cables, so those released cable numbers can be suggested and reallocated again.
 
 Terminal blocks may create planned cable numbers for FRONT ports only. REAR ports remain unnumbered. Terminal block front planned cables use `tb_port` side A endpoints.
 
 When a connection is created, at least one selected endpoint must already have a planned cable slot. If both selected endpoints have planned cable numbers, the lower cable number becomes the active `connected` cable and the higher number is marked `retired`.
 
 Connection endpoints must share a category. Exact connector type equality is directly compatible when both connectors are assigned to the endpoint category. Different connector types must belong to the endpoint category and the same category-scoped compatibility group.
-
-Retired devices and terminal blocks are immutable historical objects. Their ports are not valid new connection endpoints, and an active connected cable that references a retired object is reported as `connected-cable-retired-endpoint`.
 
 ## UI Behavior
 

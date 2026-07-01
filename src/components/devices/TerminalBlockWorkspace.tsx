@@ -43,11 +43,7 @@ export function TerminalBlockWorkspace({ device }: { device: Device }) {
   return (
     <section className="workspace terminal-block-workspace" aria-label="Terminal block canvas">
       <div className="terminal-block-canvas">
-        <div
-          className={
-            device.status === 'retired' ? 'terminal-block-diagram retired' : 'terminal-block-diagram'
-          }
-        >
+        <div className="terminal-block-diagram">
           <div className="terminal-block-name">{device.name}</div>
           <div className="terminal-block-panel" role="img" aria-label={`${device.name} terminal block panel`}>
             {pairs.map((pair) => (

@@ -322,20 +322,6 @@ function validateConnectedCables(
       continue;
     }
 
-    const retiredEndpoint = [left, right].find((port) => devices.get(port.deviceId)?.status === 'retired');
-
-    if (retiredEndpoint) {
-      issues.push(
-        issue(
-          'error',
-          'connected-cable-retired-endpoint',
-          `Connected cable ${cable.number} references retired endpoint ${retiredEndpoint.label}.`,
-          'cable',
-          cable.id,
-        ),
-      );
-    }
-
     if (left.categoryId !== right.categoryId) {
       issues.push(
         issue(

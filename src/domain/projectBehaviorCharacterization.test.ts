@@ -87,13 +87,13 @@ describe('project behavior characterization', () => {
       },
       {
         severity: 'error',
-        code: 'ledger-next-suggested-after-ranges',
+        code: 'ledger-next-suggested-available',
         objectType: 'numberingLedger',
         objectId: 'V',
       },
     ]);
     expect(issues.map((issue) => issue.code)).toContain('port-group-count-mismatch');
-    expect(issues.map((issue) => issue.code)).toContain('ledger-next-suggested-after-ranges');
+    expect(issues.map((issue) => issue.code)).toContain('ledger-next-suggested-available');
   });
 
   it('migrates without mutating the imported payload object', () => {

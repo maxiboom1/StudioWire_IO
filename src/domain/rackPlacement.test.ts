@@ -57,7 +57,7 @@ describe('validateRackPlacement', () => {
       ...mountedDevice,
       id: 'device-virtual-eligible',
       name: 'Virtual Eligible',
-      locationId: null,
+      locationId: 'location-machine-room',
       mountType: 'virtual',
       rackId: null,
       rackSizeRu: 1,

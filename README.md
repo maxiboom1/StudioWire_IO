@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.8 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.9 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -86,17 +86,17 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Browser-only project editing with localStorage autosave.
 - Project settings for project info, connector catalog, category connector assignments, connector compatibility groups, and cable prefixes.
 - Location and rack creation, editing, and guarded deletion.
-- Device creation, simple device editing, and retirement.
+- Device creation, simple device editing, and standard-device hard delete.
 - Terminal block creation as fixed 1RU rack objects with rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
 - Crosspoint creation from Device and TB views, including direct device links, device/TB segments, and TB front-to-front patches.
 - Crosspoint disconnect from the shared picker, restoring affected cable slots to planned state.
 - Cable register viewing and filtering.
-- Planned cable numbering with project numbering ledgers.
+- Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.8`. Existing supported legacy fixtures remain accepted and migrate to the current runtime/schema contract, but internal dev-to-dev compatibility is not guaranteed before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.9`. Existing supported legacy fixtures remain accepted and migrate to the current runtime/schema contract, but internal dev-to-dev compatibility is not guaranteed before the first public released schema.
 
 ## Release Gates
 
@@ -108,7 +108,7 @@ Run release/stabilization gates from a clean checkout or clean source-package ex
 - `npm run package:source`: creates and inspects `StudioWire_IO-<version>.zip`, extracts it outside the repository, runs `npm ci`, installs Chromium, runs `check:release`, validates the packaged sample, prints the packaged summary, verifies version sync, and removes the extraction.
 - `npm run check:full`: `check:release`, `package:source`, final cleanup, and cleanliness check. It does not call itself indirectly.
 - Startup recovery tries the active autosave key and known legacy keys in order; corrupt storage records do not block fallback recovery, and autosave failures leave the in-memory project exportable.
-- Retired devices and terminal blocks are immutable historical objects. Their ports are excluded from new connection candidates, and domain connection commands reject retired endpoints.
+- Standard-device deletion removes child ports, port groups, owned planned cables, rack placement, and owned allocated cable-number ranges; reserved gaps remain unavailable.
 
 ## Current Release Intentionally Does Not Support
 
@@ -140,6 +140,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.9
+
+- Bumped app and project schema version to `0.2.8.9`.
+- Removed the top-bar `Saved` text while keeping bottom status and failed-autosave export behavior.
+- Removed unassigned devices from the navigator and Add Device flow; every device now requires a valid location.
+- Replaced standard-device retirement with hard delete that removes device-owned ports, port groups, cables, rack placement, and owned allocated cable-number ranges.
+- Updated cable-number suggestion so released allocated numbers can be reused while reserved gaps remain blocked.
 
 ### v0.2.8.8
 

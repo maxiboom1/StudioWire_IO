@@ -145,16 +145,6 @@ export function handleMoveMountedDevice(
   action: ActionOf<'MOVE_MOUNTED_DEVICE'>,
   context: ProjectHandlerContext,
 ): ProjectState {
-  const currentDevice = state.project.devices.find((device) => device.id === action.payload.deviceId);
-
-  if (currentDevice?.status === 'retired') {
-    return {
-      ...state,
-      statusMessage: 'Device move blocked: retired objects are immutable',
-      importError: null,
-    };
-  }
-
   const placement = validateRackPlacement(state.project, action.payload);
 
   if (!placement.ok) {

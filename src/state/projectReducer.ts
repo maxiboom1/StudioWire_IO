@@ -2,7 +2,7 @@ import { handleConnectPorts, handleDisconnectPort } from './projectHandlers/conn
 import {
   handleAddDevice,
   handleAddTerminalBlock,
-  handleRetireDevice,
+  handleDeleteDevice,
   handleUpdateDevice,
 } from './projectHandlers/deviceHandlers';
 import {
@@ -134,8 +134,8 @@ function reduceProjectState(
       return handleDeleteLocation(state, action, context);
     case 'DELETE_RACK':
       return handleDeleteRack(state, action, context);
-    case 'RETIRE_DEVICE':
-      return handleRetireDevice(state, action, context);
+    case 'DELETE_DEVICE':
+      return handleDeleteDevice(state, action, context);
     case 'VALIDATE_PROJECT':
       return handleValidateProject(state, action, context);
     case 'DISMISS_IMPORT_ERROR':

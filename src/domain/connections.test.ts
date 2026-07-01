@@ -3,7 +3,6 @@ import {
   connectPorts,
   describePortConnection,
   disconnectPort,
-  getConnectionTargetStatus,
 } from './connections';
 import { sampleProject } from './sampleProject';
 import { validateProject } from './validators';
@@ -414,54 +413,4 @@ describe('connectPorts', () => {
     expect(result.ok).toBe(false);
   });
 
-  it('blocks direct and picker-mediated attempts to connect retired objects', () => {
-    let project = structuredClone(sampleProject);
-    project = addDevicePort(project, {
-      id: 'device-switcher-retired-target',
-      labelPrefix: 'SWR',
-      direction: 'input',
-      firstCableNumber: 9,
-    });
-    project = {
-      ...project,
-      devices: project.devices.map((device) =>
-        device.id === 'device-switcher-retired-target' ? { ...device, status: 'retired' as const } : device,
-      ),
-    };
-    const routerOut = getPort(project, 'device-router-1', 'output');
-    const retiredIn = getPort(project, 'device-switcher-retired-target', 'input');
-
-    expect(getConnectionTargetStatus(project, { fromPortId: routerOut.id, toPortId: retiredIn.id }).ok).toBe(
-      false,
-    );
-    expect(connectPorts(project, { fromPortId: routerOut.id, toPortId: retiredIn.id }).ok).toBe(false);
-  });
-
-  it('reports connected cables that still reference retired endpoints', () => {
-    let project = structuredClone(sampleProject);
-    project = addDevicePort(project, {
-      id: 'device-switcher-retired-audit',
-      labelPrefix: 'SWA',
-      direction: 'input',
-      firstCableNumber: 9,
-    });
-    const routerOut = getPort(project, 'device-router-1', 'output');
-    const switcherIn = getPort(project, 'device-switcher-retired-audit', 'input');
-    const connected = connectPorts(project, { fromPortId: routerOut.id, toPortId: switcherIn.id });
-
-    expect(connected.ok).toBe(true);
-    if (!connected.ok) {
-      return;
-    }
-
-    const retiredProject = {
-      ...connected.project,
-      devices: connected.project.devices.map((device) =>
-        device.id === 'device-switcher-retired-audit' ? { ...device, status: 'retired' as const } : device,
-      ),
-    };
-    const codes = validateProject(retiredProject).map((issue) => issue.code);
-
-    expect(codes).toContain('connected-cable-retired-endpoint');
-  });
 });

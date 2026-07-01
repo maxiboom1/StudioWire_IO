@@ -76,7 +76,7 @@ export function validatePortsAndGroups(
         issue(
           'error',
           'port-group-numbering-range-reserved-gap',
-          `Port group ${portGroup.name} references a reserved gap instead of an allocated or retired range.`,
+          `Port group ${portGroup.name} references a reserved gap instead of an allocated range.`,
           'portGroup',
           portGroup.id,
         ),
@@ -257,7 +257,7 @@ function validatePortGroupPlannedCableMode(
     }
   }
 
-  if (numberingRange && (numberingRange.status === 'allocated' || numberingRange.status === 'retired')) {
+  if (numberingRange && numberingRange.status === 'allocated') {
     for (const cable of linkedPlannedCables) {
       if (
         cable.prefix !== numberingRange.prefix ||

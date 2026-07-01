@@ -20,7 +20,7 @@ let project = createEmptyProject({
   id: 'project-scale-check',
   name: 'Synthetic Scale Check',
   customer: 'Local release verification',
-  revision: '0.2.8.8',
+  revision: '0.2.8.9',
   status: 'draft',
 });
 

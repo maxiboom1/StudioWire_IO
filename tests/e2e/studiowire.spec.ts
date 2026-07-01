@@ -59,7 +59,7 @@ test('completes the v0.2 project lifecycle and preserves exported data after imp
 
   await page.getByRole('button', { name: /E2E Destination/ }).click();
   page.once('dialog', (dialog) => dialog.accept());
-  await page.getByRole('button', { name: 'Retire Device' }).click();
+  await page.getByRole('button', { name: 'Delete Device' }).click();
   await page.getByRole('button', { name: /E2E Source/ }).click();
   await page.getByLabel('Connect E2E-SOURCE-OUT-001').click();
   await page.getByLabel('Search ports').fill('E2E-DESTINATION-IN-001');
@@ -95,7 +95,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.8.8', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.8.9', { exact: true })).toBeVisible();
   }
 });
 
@@ -219,11 +219,11 @@ test('exercises rack multi-view drag and navigator collapse/context menu workflo
   expect(movedDevice.rackBottomRu).toBeGreaterThan(0);
 });
 
-test('retires a device and blocks reconnection candidates', async ({ page }) => {
+test('deletes a device and removes reconnection candidates', async ({ page }) => {
   await loadSample(page);
   page.on('dialog', (dialog) => dialog.accept());
   await page.getByText('Multiviewer 1').click();
-  await page.getByRole('button', { name: 'Retire Device' }).click();
+  await page.getByRole('button', { name: 'Delete Device' }).click();
   await page.getByText('Router 1').click();
   await page.getByLabel('Connect RTR1-OUT-001').click();
   await page.getByLabel('Search ports').fill('MV1');
@@ -234,7 +234,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.8.8');
+  expect(exported.schemaVersion).toBe('0.2.8.9');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
@@ -262,7 +262,7 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.8', '0.2.7.1'),
+    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.9', '0.2.7.1'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');

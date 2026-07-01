@@ -106,7 +106,7 @@ export function previewCableRange(
   const hasValidRange = errors.length === 0;
   const to = hasValidRange ? firstCableNumber + count - 1 : firstCableNumber;
   const ledger = project.numberingLedgers.find((item) => item.prefix === normalizedPrefix);
-  const nextSuggested = ledger?.nextSuggested ?? 1;
+  const nextSuggested = getNextSuggestedForPrefix(project, normalizedPrefix, count);
 
   if (hasValidRange && firstCableNumber < nextSuggested) {
     errors.push({
@@ -144,6 +144,16 @@ export function previewCableRange(
           status: 'reserved_gap' as const,
         }
       : null;
+
+  if (
+    reservedGap &&
+    ledger?.ranges.some((range) => rangesOverlap(reservedGap.from, reservedGap.to, range.from, range.to))
+  ) {
+    errors.push({
+      code: 'reserved-gap-crosses-existing-range',
+      message: `Skipped ${normalizedPrefix} numbers must not cross existing allocated or reserved ranges.`,
+    });
+  }
 
   return {
     prefix: normalizedPrefix,
@@ -207,7 +217,7 @@ export function allocateCableRange(
 
   ledger.ranges.push(allocatedRange);
   ledger.ranges.sort((left, right) => left.from - right.from);
-  ledger.nextSuggested = preview.to + 1;
+  ledger.nextSuggested = getNextSuggestedForRanges(ledger.ranges, 1);
 
   return {
     project: updatedProject,
@@ -215,6 +225,47 @@ export function allocateCableRange(
     allocatedRange,
     reservedGapRange,
   };
+}
+
+export function normalizeNumberingLedgers(project: ProjectRoot): ProjectRoot {
+  return {
+    ...project,
+    numberingLedgers: project.numberingLedgers.map((ledger) => ({
+      ...ledger,
+      ranges: [...ledger.ranges].sort((left, right) => left.from - right.from),
+      nextSuggested: getNextSuggestedForRanges(ledger.ranges, 1),
+    })),
+  };
+}
+
+export function getNextSuggestedForPrefix(
+  project: ProjectRoot,
+  prefix: string,
+  count = 1,
+): number {
+  const normalizedPrefix = normalizePrefix(prefix);
+  const ledger = project.numberingLedgers.find((item) => item.prefix === normalizedPrefix);
+
+  return getNextSuggestedForRanges(ledger?.ranges ?? [], count);
+}
+
+function getNextSuggestedForRanges(ranges: NumberingRange[], count: number): number {
+  assertPositiveInteger(count, 'count');
+
+  let candidate = 1;
+  const sortedRanges = [...ranges].sort((left, right) => left.from - right.from);
+
+  for (const range of sortedRanges) {
+    if (candidate + count - 1 < range.from) {
+      return candidate;
+    }
+
+    if (candidate <= range.to) {
+      candidate = range.to + 1;
+    }
+  }
+
+  return candidate;
 }
 
 function createNumberingRange(input: Omit<NumberingRange, 'id'>): NumberingRange {

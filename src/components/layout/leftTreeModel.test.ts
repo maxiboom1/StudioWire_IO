@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { Device, ProjectRoot } from '../../domain/types';
 import {
-  UNASSIGNED_KEY,
   buildLeftTreeModel,
-  buildUnassignedDeviceList,
   getDeviceTreeMeta,
   getDeviceTreeTitle,
   getLocationFolderKey,
@@ -18,15 +16,8 @@ function projectFixture(): ProjectRoot {
   project.devices = [
     ...project.devices,
     device({ id: 'device-tb', name: 'TB 1', kind: 'terminal_block', locationId: 'location-machine-room' }),
-    device({ id: 'device-unassigned', name: 'Loose Device', locationId: null, rackSizeRu: null }),
+    device({ id: 'device-virtual', name: 'Virtual Device', locationId: 'location-machine-room', rackSizeRu: null }),
     device({ id: 'device-unknown-location', name: 'Unknown Location Device', locationId: 'missing' }),
-    device({
-      id: 'device-retired',
-      name: 'Retired Device',
-      status: 'retired',
-      locationId: 'location-machine-room',
-    }),
-    device({ id: 'device-unassigned-tb', name: 'Loose TB', kind: 'terminal_block', locationId: null }),
   ];
 
   return project;
@@ -70,21 +61,8 @@ describe('leftTreeModel', () => {
     });
     expect(model.locations[0].devices.map((item) => item.name)).toEqual(['Multiviewer 1']);
     expect(model.locations[1].racks.map((item) => item.name)).toEqual(['MCR Rack A']);
-    expect(model.locations[1].devices.map((item) => item.name)).toEqual(['Router 1', 'Retired Device']);
+    expect(model.locations[1].devices.map((item) => item.name)).toEqual(['Router 1', 'Virtual Device']);
     expect(model.locations[1].terminalBlocks.map((item) => item.name)).toEqual(['TB 1']);
-  });
-
-  it('keeps current unassigned filtering and excludes terminal blocks from the unassigned branch', () => {
-    const project = projectFixture();
-
-    expect(buildUnassignedDeviceList(project).map((item) => item.name)).toEqual([
-      'Loose Device',
-      'Unknown Location Device',
-    ]);
-    expect(buildLeftTreeModel(project).unassigned).toMatchObject({
-      key: UNASSIGNED_KEY,
-      count: 2,
-    });
   });
 
   it('detects empty navigator, creates stable keys, and formats device title/meta labels', () => {

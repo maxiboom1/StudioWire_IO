@@ -13,7 +13,7 @@ export function Workspace({
   onAddTerminalBlock,
 }: {
   selection: SelectionState;
-  onAddDevice: (locationId: string | null) => void;
+  onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const { project } = useProject();

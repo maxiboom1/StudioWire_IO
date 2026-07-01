@@ -67,7 +67,7 @@ function createContext(
     disconnectPort: vi.fn(),
     moveMountedDevice: vi.fn(),
     updateDevice: vi.fn(),
-    retireDevice: vi.fn(),
+    deleteDevice: vi.fn(),
     ...commands,
   };
 }

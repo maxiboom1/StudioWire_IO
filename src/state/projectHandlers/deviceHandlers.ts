@@ -1,6 +1,7 @@
 import { stampProject } from '../projectStamping';
 import type { ProjectState } from '../projectTypes';
 import { createDeviceInProject, createTerminalBlockInProject } from '../projectDeviceCommands';
+import { deleteNormalDeviceFromProject } from '../../domain/deviceDeletion';
 import type { ActionOf, ProjectHandlerContext } from './shared';
 
 export function handleAddDevice(
@@ -62,12 +63,26 @@ export function handleUpdateDevice(
 ): ProjectState {
   const currentDevice = state.project.devices.find((device) => device.id === action.payload.id);
 
-  if (currentDevice?.status === 'retired') {
+  if (!currentDevice) {
     return {
       ...state,
-      statusMessage: 'Device update blocked: retired objects are immutable',
+      statusMessage: 'Device update blocked: selected device no longer exists',
       importError: null,
     };
+  }
+
+  if (currentDevice.kind !== 'terminal_block') {
+    const locationExists = state.project.locations.some(
+      (location) => location.id === action.payload.updates.locationId,
+    );
+
+    if (!locationExists) {
+      return {
+        ...state,
+        statusMessage: 'Device update blocked: select a valid location',
+        importError: null,
+      };
+    }
   }
 
   return {
@@ -112,45 +127,28 @@ export function handleUpdateDevice(
   };
 }
 
-export function handleRetireDevice(
+export function handleDeleteDevice(
   state: ProjectState,
-  action: ActionOf<'RETIRE_DEVICE'>,
+  action: ActionOf<'DELETE_DEVICE'>,
   context: ProjectHandlerContext,
 ): ProjectState {
-  const devicePortGroups = state.project.portGroups.filter(
-    (portGroup) => portGroup.deviceId === action.payload.id,
-  );
-  const rangeIds = new Set(devicePortGroups.map((portGroup) => portGroup.numberingRangeId).filter(Boolean));
-  const portIds = new Set(
-    state.project.ports.filter((port) => port.deviceId === action.payload.id).map((port) => port.id),
-  );
+  const result = deleteNormalDeviceFromProject(state.project, action.payload.id);
+
+  if (!result.ok) {
+    return {
+      ...state,
+      statusMessage: result.error,
+      importError: null,
+    };
+  }
 
   return {
     project: stampProject(
-      {
-        ...state.project,
-        devices: state.project.devices.map((device) =>
-          device.id === action.payload.id
-            ? { ...device, status: 'retired', updatedAt: context.dependencies.nowIso() }
-            : device,
-        ),
-        cables: state.project.cables.map((cable) =>
-          (cable.sideAEndpoint.id && portIds.has(cable.sideAEndpoint.id)) ||
-          (cable.sideBEndpoint.id && portIds.has(cable.sideBEndpoint.id))
-            ? { ...cable, status: 'retired' }
-            : cable,
-        ),
-        numberingLedgers: state.project.numberingLedgers.map((ledger) => ({
-          ...ledger,
-          ranges: ledger.ranges.map((range) =>
-            rangeIds.has(range.id) ? { ...range, status: 'retired' } : range,
-          ),
-        })),
-      },
-      `Device retired: ${action.payload.id}`,
+      result.project,
+      `Device deleted: ${action.payload.id}`,
       context.dependencies,
     ),
-    statusMessage: 'Device retired; cable numbers remain unavailable',
+    statusMessage: 'Device deleted; cable numbers released',
     importError: null,
   };
 }

@@ -15,12 +15,12 @@ function withDevices(devices: Device[]): ProjectRoot {
 }
 
 describe('analyzeRackPlacements', () => {
-  it('does not flag virtual or unassigned devices without rack placement', () => {
+  it('does not flag virtual devices without rack placement', () => {
     const project = withDevices([
       {
         ...virtualDevice,
         id: 'device-virtual-clean',
-        locationId: null,
+        locationId: 'location-control-room',
         mountType: 'virtual',
         rackId: null,
         rackSizeRu: null,

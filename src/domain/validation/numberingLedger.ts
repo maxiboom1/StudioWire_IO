@@ -26,14 +26,16 @@ export function validateLedgerRanges(
       );
     }
 
-    const maxRangeTo = ledger.ranges.reduce((max, range) => Math.max(max, Number(range.to) || 0), 0);
-
-    if (maxRangeTo > 0 && ledger.nextSuggested <= maxRangeTo) {
+    if (
+      ledger.ranges.some(
+        (range) => ledger.nextSuggested >= range.from && ledger.nextSuggested <= range.to,
+      )
+    ) {
       issues.push(
         issue(
           'error',
-          'ledger-next-suggested-after-ranges',
-          `Ledger ${ledger.prefix} nextSuggested must be greater than all range end values.`,
+          'ledger-next-suggested-available',
+          `Ledger ${ledger.prefix} nextSuggested must point to an available cable number.`,
           'numberingLedger',
           ledger.prefix,
         ),
@@ -95,7 +97,7 @@ export function validateLedgerRanges(
     )) {
       const owningRange = ledger.ranges.find(
         (range) =>
-          (range.status === 'allocated' || range.status === 'retired') &&
+          range.status === 'allocated' &&
           cable.index >= range.from &&
           cable.index <= range.to,
       );
@@ -106,7 +108,7 @@ export function validateLedgerRanges(
           issue(
             'error',
             'planned-cable-without-ledger-range',
-            `Planned cable ${cable.number} is not covered by an allocated or retired ledger range.`,
+            `Planned cable ${cable.number} is not covered by an allocated ledger range.`,
             'cable',
             cable.id,
           ),
@@ -141,7 +143,7 @@ export function validateLedgerRanges(
         issue(
           'error',
           'planned-cable-without-ledger-range',
-          `Planned cable ${cable.number} is not covered by an allocated or retired ledger range.`,
+          `Planned cable ${cable.number} is not covered by an allocated ledger range.`,
           'cable',
           cable.id,
         ),

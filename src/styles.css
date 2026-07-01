@@ -626,11 +626,6 @@ textarea:not([data-ui]) {
   cursor: grabbing;
 }
 
-.rack-device-block.retired {
-  border-color: #7d736c;
-  background: #dfd8d3;
-}
-
 .rack-device-block.invalid-placement {
   border-color: #d97706;
   background: #fff7d6;
@@ -1247,10 +1242,6 @@ textarea:not([data-ui]) {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.device-diagram.retired {
-  opacity: 0.6;
-}
-
 .device-line-column,
 .device-body {
   display: grid;
@@ -1546,10 +1537,6 @@ textarea:not([data-ui]) {
   min-width: 1120px;
   color: #050505;
   font-family: Arial, Helvetica, sans-serif;
-}
-
-.terminal-block-diagram.retired {
-  opacity: 0.6;
 }
 
 .terminal-block-name {

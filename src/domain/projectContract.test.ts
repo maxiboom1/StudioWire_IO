@@ -12,6 +12,7 @@ import {
   DEVICE_MOUNT_TYPE_VALUES,
   ENDPOINT_TYPE_VALUES,
   NUMBERING_RANGE_STATUS_VALUES,
+  OBJECT_STATUS_VALUES,
   PORT_DIRECTION_VALUES,
   PROJECT_STATUS_VALUES,
   RACK_NUMBERING_DIRECTION_VALUES,
@@ -74,6 +75,8 @@ describe('current project contract', () => {
   it('rejects invalid enums, primitive type drift, missing required fields, and additional properties', () => {
     const cases: Array<(project: any) => void> = [
       (project) => (project.devices[0].status = 'active'),
+      (project) => (project.devices[0].status = 'retired'),
+      (project) => (project.devices[0].locationId = null),
       (project) => (project.racks[0].heightRu = '42'),
       (project) => delete project.project.name,
       (project) => (project.ports[0].unexpected = true),
@@ -106,7 +109,7 @@ describe('current project contract', () => {
 
     expect(schema.properties.project.$ref).toBe('#/$defs/ProjectInfo');
     expect(defs.ProjectInfo.properties.status.enum).toEqual([...PROJECT_STATUS_VALUES]);
-    expect(defs.Device.properties.status.enum).toEqual([...CABLE_STATUS_VALUES]);
+    expect(defs.Device.properties.status.enum).toEqual([...OBJECT_STATUS_VALUES]);
     expect(defs.Cable.properties.status.enum).toEqual([...CABLE_STATUS_VALUES]);
     expect(defs.NumberingRange.properties.status.enum).toEqual([...NUMBERING_RANGE_STATUS_VALUES]);
     expect(defs.RackNumberingDirection.enum).toEqual([...RACK_NUMBERING_DIRECTION_VALUES]);

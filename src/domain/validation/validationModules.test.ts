@@ -104,7 +104,7 @@ describe('validation aggregate modules', () => {
     const subject = codes();
     subject.project.numberingLedgers[0].nextSuggested = 4;
 
-    expect(subject.ledgerRanges()).toContain('ledger-next-suggested-after-ranges');
+    expect(subject.ledgerRanges()).toContain('ledger-next-suggested-available');
   });
 
   it('validates reserved gap reuse independently', () => {

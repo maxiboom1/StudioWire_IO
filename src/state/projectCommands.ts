@@ -204,7 +204,7 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
       dispatch({ type: 'MOVE_MOUNTED_DEVICE', payload: input }),
     updateDevice: (id: string, updates: DeviceUpdate) =>
       dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } }),
-    retireDevice: (id: string) => dispatch({ type: 'RETIRE_DEVICE', payload: { id } }),
+    deleteDevice: (id: string) => dispatch({ type: 'DELETE_DEVICE', payload: { id } }),
   };
 }
 
