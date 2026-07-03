@@ -9,7 +9,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 export function RackInspector({ rack }: { rack: Rack }) {
-  const { project, updateRack, deleteRack } = useProject();
+  const { project, updateRack, deleteRack, unassignDeviceFromRack } = useProject();
   const devices = project.devices.filter((device) => device.rackId === rack.id);
   const placementDiagnostics = analyzeRackPlacements(project).filter(
     (diagnostic) => diagnostic.rackId === rack.id,
@@ -108,9 +108,31 @@ export function RackInspector({ rack }: { rack: Rack }) {
             <p>No devices assigned to this rack.</p>
           ) : (
             <ul className="compact-list">
-              {devices.map((device) => (
-                <li key={device.id}>{device.name}</li>
-              ))}
+              {devices.map((device) => {
+                const topRu =
+                  device.rackBottomRu && device.rackSizeRu
+                    ? device.rackBottomRu + device.rackSizeRu - 1
+                    : null;
+
+                return (
+                  <li key={device.id}>
+                    <span>
+                      {device.name}
+                      {device.rackBottomRu && topRu ? `, RU ${device.rackBottomRu}-${topRu}` : ''}
+                    </span>
+                    {device.kind === 'device' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        type="button"
+                        onClick={() => unassignDeviceFromRack(device.id)}
+                      >
+                        Unassign
+                      </Button>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

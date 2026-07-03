@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { DEFAULT_RACK_DEFAULTS } from '../../domain/defaults';
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { ModalFrame } from '../common/ModalFrame';
@@ -20,7 +21,7 @@ export function AddRackModal({
   const { addRack } = useProject();
   const [form, setForm] = useState({
     name: '',
-    heightRu: '42',
+    heightRu: String(DEFAULT_RACK_DEFAULTS.heightRu),
     numberingDirection: 'bottom_to_top' as Rack['numberingDirection'],
   });
 

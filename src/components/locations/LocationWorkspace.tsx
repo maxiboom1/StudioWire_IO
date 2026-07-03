@@ -3,6 +3,7 @@ import { useProject } from '../../state/ProjectContext';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { EmptyState, SummaryGrid, WorkspaceCard, WorkspaceHeader } from '../common/WorkspaceBits';
+import { SubLocationManager } from './SubLocationManager';
 
 export function LocationWorkspace({
   location,
@@ -13,13 +14,21 @@ export function LocationWorkspace({
   onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
-  const { project } = useProject();
+  const { project, addSubLocation, updateSubLocation, deleteSubLocation } = useProject();
   const racks = project.racks.filter((rack) => rack.locationId === location.id);
+  const subLocations = project.subLocations.filter((subLocation) => subLocation.locationId === location.id);
   const devices = project.devices.filter(
     (device) => device.locationId === location.id && device.kind !== 'terminal_block',
   );
   const terminalBlocks = project.devices.filter(
     (device) => device.locationId === location.id && device.kind === 'terminal_block',
+  );
+  const referencedDeviceCounts = new Map(
+    subLocations.map((subLocation) => [
+      subLocation.id,
+      project.devices.filter((device) => device.subLocationId === subLocation.id).length +
+        project.racks.filter((rack) => rack.subLocationId === subLocation.id).length,
+    ]),
   );
 
   return (
@@ -29,6 +38,7 @@ export function LocationWorkspace({
         items={[
           ['Location ID', location.id],
           ['Type', location.type || 'Not set'],
+          ['Folders', String(subLocations.length)],
           ['Racks', String(racks.length)],
           ['Devices', String(devices.length)],
           ['TBs', String(terminalBlocks.length)],
@@ -48,6 +58,16 @@ export function LocationWorkspace({
         }
       >
         <p>{location.description || 'No description set.'}</p>
+      </WorkspaceCard>
+      <WorkspaceCard title="Folders" description={`${subLocations.length} folder(s) inside this location.`}>
+        <SubLocationManager
+          locationId={location.id}
+          referencedDeviceCounts={referencedDeviceCounts}
+          subLocations={subLocations}
+          onAdd={addSubLocation}
+          onDelete={deleteSubLocation}
+          onUpdate={updateSubLocation}
+        />
       </WorkspaceCard>
       <WorkspaceCard title="Racks" description={`${racks.length} rack(s) in this location.`}>
         {racks.length === 0 ? (

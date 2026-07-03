@@ -36,19 +36,21 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `port-connector-not-assigned-to-category`: port connector types must be assigned to the port category.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
 - `duplicate-location-name`: duplicate location names are reported as warnings.
-- `duplicate-sub-location-name`: duplicate sub-location names inside one location are reported as warnings.
-- `sub-location-without-location`: sub-locations must reference an existing location.
-- `sub-location-name-required`: sub-location names are required.
+- `duplicate-sub-location-name`: duplicate folder names inside one location are reported as warnings.
+- `sub-location-without-location`: folders must reference an existing location.
+- `sub-location-name-required`: folder names are required.
 - `rack-without-location`: rack `locationId` must reference an existing location.
 - `rack-height-positive`: rack height must be a positive integer.
 - `rack-name-required`: rack name is required.
+- `rack-sub-location-missing`: rack `subLocationId` must reference an existing folder when set.
+- `rack-sub-location-location-mismatch`: a rack folder must belong to the rack's main location.
 - `device-name-required`: device name is required.
 - `device-code-required`: standard device code is required.
 - `terminal-block-rack-mounted`: terminal blocks must be rack-mounted.
 - `terminal-block-size-fixed`: terminal blocks must be fixed at 1 RU.
 - `device-without-location`: every device and terminal block must reference an existing location.
-- `device-sub-location-missing`: device `subLocationId` must reference an existing sub-location when set.
-- `device-sub-location-location-mismatch`: a device sub-location must belong to the device's main location.
+- `device-sub-location-missing`: device `subLocationId` must reference an existing folder when set.
+- `device-sub-location-location-mismatch`: a device folder must belong to the device's main location.
 - `device-references-missing-rack`: a device with a rack reference must point at an existing rack.
 - `rack-mounted-device-without-rack`: rack-mounted devices must reference a rack.
 - `rack-location-device-location-mismatch`: rack-mounted devices must be in the same location as their rack.

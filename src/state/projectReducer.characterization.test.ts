@@ -245,6 +245,7 @@ describe('projectReducer action characterization', () => {
         payload: {
           id: 'rack-char',
           locationId: 'location-machine-room',
+          subLocationId: null,
           name: 'Char Rack',
           heightRu: 12,
           numberingDirection: 'bottom_to_top',
@@ -395,6 +396,7 @@ describe('projectReducer action characterization', () => {
       payload: {
         id: 'rack-empty',
         locationId: 'location-machine-room',
+        subLocationId: null,
         name: 'Empty Rack',
         heightRu: 8,
         numberingDirection: 'bottom_to_top',
@@ -403,7 +405,7 @@ describe('projectReducer action characterization', () => {
     const deletedRack = reduce(withEmptyRack, { type: 'DELETE_RACK', payload: { id: 'rack-empty' } });
 
     expect(blockedLocationDelete.statusMessage).toBe(
-      'Location deletion blocked: remove racks and devices first',
+      'Location deletion blocked: remove folders, racks, and devices first',
     );
     expect(blockedLocationDelete.importError).toBe('stale import error');
     expect(blockedRackDelete.statusMessage).toBe('Rack deletion blocked: unassign devices first');
@@ -651,9 +653,9 @@ describe('projectReducer action characterization', () => {
     expect(result.project.ports.some((port) => port.portGroupId === 'port-group-router-outputs')).toBe(false);
     expect(result.project.cables).toHaveLength(0);
     expect(result.project.numberingLedgers[0].nextSuggested).toBe(1);
-    expect(result.project.numberingLedgers[0].ranges.some((range) => range.id === 'range-v-router-outputs')).toBe(
-      false,
-    );
+    expect(
+      result.project.numberingLedgers[0].ranges.some((range) => range.id === 'range-v-router-outputs'),
+    ).toBe(false);
     expect(
       result.project.numberingLedgers[0].ranges.find((range) => range.status === 'reserved_gap'),
     ).toMatchObject({

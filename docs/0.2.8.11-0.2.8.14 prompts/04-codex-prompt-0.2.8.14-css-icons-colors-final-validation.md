@@ -6,7 +6,7 @@ Implement **only** the StudioWire IO `0.2.8.14` CSS connector icons, category co
 
 This is a **feature-dev task**. Do not run Git commands, create commits, create tags, rewrite history, run source packaging, or run release gates.
 
-The repository must start at app/schema version `0.2.8.13` with model groundwork, sub-location workflows, rack unassign, Add/Edit Device tabs, `{NAME}` labels, and I/O ordering already implemented.
+The repository must start at app/schema version `0.2.8.13` with model groundwork, folder navigator workflows, rack unassign, Add/Edit Device tabs, `{NAME}` labels, and I/O ordering already implemented.
 
 ## Release goal
 

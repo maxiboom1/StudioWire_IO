@@ -9,6 +9,7 @@ import type {
   Location,
   ProjectInfo,
   Rack,
+  SubLocation,
 } from '../domain/types';
 import type {
   DeviceDraft,
@@ -37,13 +38,22 @@ export type ConnectorTypeUpdates = Pick<ConnectorType, 'name'>;
 export type CablePrefixInput = Pick<CablePrefix, 'prefix' | 'name'>;
 export type LocationInput = Pick<Location, 'name' | 'type' | 'description'>;
 export type LocationUpdates = Pick<Location, 'name' | 'type' | 'description'>;
-export type RackInput = Pick<Rack, 'locationId' | 'name' | 'heightRu' | 'numberingDirection'>;
+export type SubLocationInput = Pick<SubLocation, 'locationId' | 'name' | 'description'>;
+export type SubLocationUpdates = Pick<SubLocation, 'name' | 'description'>;
+export type RackInput = Pick<Rack, 'locationId' | 'name' | 'heightRu' | 'numberingDirection'> &
+  Partial<Pick<Rack, 'subLocationId'>>;
 export type RackUpdates = Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'>;
 export type AddDeviceInput = { device: DeviceDraft; portGroups: DevicePortGroupDraft[] };
 export type { EditDeviceInput };
 export type ConnectPortsInput = { fromPortId: string; toPortId: string };
 export type DisconnectPortInput = { portId: string };
 export type MoveMountedDeviceInput = { deviceId: string; targetRackId: string; targetBottomRu: number };
+export type MoveNavigatorItemToFolderInput = {
+  itemType: 'device' | 'rack';
+  itemId: string;
+  targetLocationId: string;
+  targetFolderId: string | null;
+};
 
 export interface ProjectCommands {
   createNewProject: () => void;
@@ -67,6 +77,9 @@ export interface ProjectCommands {
   addLocation: (input: LocationInput) => string;
   updateLocation: (id: string, updates: LocationUpdates) => void;
   deleteLocation: (id: string) => void;
+  addSubLocation: (input: SubLocationInput) => string;
+  updateSubLocation: (id: string, updates: SubLocationUpdates) => void;
+  deleteSubLocation: (id: string) => void;
   addRack: (input: RackInput) => string;
   updateRack: (id: string, updates: RackUpdates) => void;
   deleteRack: (id: string) => void;
@@ -75,6 +88,8 @@ export interface ProjectCommands {
   connectPorts: (input: ConnectPortsInput) => void;
   disconnectPort: (input: DisconnectPortInput) => void;
   moveMountedDevice: (input: MoveMountedDeviceInput) => void;
+  moveNavigatorItemToFolder: (input: MoveNavigatorItemToFolderInput) => void;
+  unassignDeviceFromRack: (deviceId: string) => void;
   updateDevice: (id: string, updates: DeviceUpdate) => void;
   editDevice: (input: EditDeviceInput) => void;
   deleteDevice: (id: string) => void;

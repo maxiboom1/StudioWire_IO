@@ -42,6 +42,7 @@ function rack(id: string, name: string): Rack {
   return {
     id,
     locationId: 'location-machine-room',
+    subLocationId: null,
     name,
     heightRu: 10,
     numberingDirection: 'bottom_to_top',

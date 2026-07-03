@@ -27,10 +27,29 @@ vi.mock('../../state/ProjectContext', () => ({
 function projectFixture(): ProjectRoot {
   const project = structuredClone(sampleProject);
 
+  project.subLocations = [
+    {
+      id: 'sub-location-front-table',
+      locationId: 'location-machine-room',
+      name: 'Front Table',
+      description: '',
+    },
+  ];
   project.devices = [
     ...project.devices,
     device({ id: 'device-tb', name: 'TB 1', kind: 'terminal_block', locationId: 'location-machine-room' }),
-    device({ id: 'device-loose', name: 'Loose Device', locationId: 'location-machine-room', rackSizeRu: null }),
+    device({
+      id: 'device-loose',
+      name: 'Loose Device',
+      locationId: 'location-machine-room',
+      rackSizeRu: null,
+    }),
+    device({
+      id: 'device-front-table',
+      name: 'Front Table Device',
+      locationId: 'location-machine-room',
+      subLocationId: 'sub-location-front-table',
+    }),
   ];
 
   return project;
@@ -61,7 +80,10 @@ function device(overrides: Partial<Device>): Device {
   };
 }
 
-function createContext(project: ProjectRoot): ProjectContextValue {
+function createContext(
+  project: ProjectRoot,
+  commands: Partial<ProjectContextValue> = {},
+): ProjectContextValue {
   return {
     project,
     statusMessage: '',
@@ -88,6 +110,9 @@ function createContext(project: ProjectRoot): ProjectContextValue {
     addLocation: vi.fn(),
     updateLocation: vi.fn(),
     deleteLocation: vi.fn(),
+    addSubLocation: vi.fn(),
+    updateSubLocation: vi.fn(),
+    deleteSubLocation: vi.fn(),
     addRack: vi.fn(),
     updateRack: vi.fn(),
     deleteRack: vi.fn(),
@@ -96,13 +121,16 @@ function createContext(project: ProjectRoot): ProjectContextValue {
     connectPorts: vi.fn(),
     disconnectPort: vi.fn(),
     moveMountedDevice: vi.fn(),
+    moveNavigatorItemToFolder: vi.fn(),
+    unassignDeviceFromRack: vi.fn(),
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    ...commands,
   };
 }
 
-function renderTree(project = projectFixture()) {
+function renderTree(project = projectFixture(), commands: Partial<ProjectContextValue> = {}) {
   const callbacks = {
     onSelectObject: vi.fn(),
     onAddLocation: vi.fn(),
@@ -112,7 +140,7 @@ function renderTree(project = projectFixture()) {
     onAddTerminalBlock: vi.fn(),
   };
 
-  contextHarness.current = createContext(project);
+  contextHarness.current = createContext(project, commands);
   const view = render(
     <LeftTree
       selection={{ selectedObjectType: 'device', selectedObjectId: 'device-router-1' }}
@@ -132,11 +160,13 @@ afterEach(() => {
   cleanup();
   contextHarness.current = null;
   vi.clearAllMocks();
+  vi.restoreAllMocks();
   window.__studioWireDraggingDeviceId = undefined;
+  window.__studioWireNavigatorDragPayload = undefined;
 });
 
 describe('LeftTree', () => {
-  it('renders version header, location order, grouped folders, empty labels, active selection, and stable attributes', () => {
+  it('renders version header, flat item rows, folders, active selection, and stable attributes', () => {
     renderTree();
 
     expect(
@@ -144,11 +174,15 @@ describe('LeftTree', () => {
     ).toBeTruthy();
     const locationButtons = screen.getAllByRole('button', { name: /^(Control Room|Machine Room) \d+$/ });
 
-    expect(locationButtons.map((button) => button.textContent)).toEqual(['Control Room1', 'Machine Room4']);
-    expect(screen.getByRole('button', { name: /MCR Rack A 42 RU/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Router 1 RTR1/ }).getAttribute('data-active')).toBe('true');
+    expect(locationButtons.map((button) => button.textContent)).toEqual(['Control Room1', 'Machine Room5']);
+    expect(screen.getByRole('button', { name: /MCR Rack A Rack 42 RU/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Front Table 1/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Front Table Device Device EX/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Router 1 Device RTR1/ }).getAttribute('data-active')).toBe(
+      'true',
+    );
     expect(screen.getByRole('button', { name: /TB 1 TB/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Loose Device EX/ }).getAttribute('title')).toBe(
+    expect(screen.getByRole('button', { name: /Loose Device Device EX/ }).getAttribute('title')).toBe(
       'Set rack size before assigning to a rack',
     );
     expect(document.querySelector('[data-ui="location-collapse-trigger"]')).toBeTruthy();
@@ -156,15 +190,16 @@ describe('LeftTree', () => {
     expect(document.querySelector('[data-ui="unassigned-collapse-trigger"]')).toBeNull();
   });
 
-  it('renders empty folder labels and empty project prompt without changing labels', () => {
+  it('does not render kind grouping folders and still renders the empty project prompt', () => {
     const project = projectFixture();
     project.racks = [];
     project.devices = [];
+    project.subLocations = [];
     renderTree(project);
 
-    expect(screen.getAllByText('No racks')).toHaveLength(2);
-    expect(screen.getAllByText('No devices')).toHaveLength(2);
-    expect(screen.getAllByText('No terminal blocks')).toHaveLength(2);
+    expect(screen.queryByText('Racks')).toBeNull();
+    expect(screen.queryByText('Devices')).toBeNull();
+    expect(screen.queryByText('TBs')).toBeNull();
     expect(screen.queryByText('No unassigned devices')).toBeNull();
 
     cleanup();
@@ -179,46 +214,40 @@ describe('LeftTree', () => {
     renderTree();
 
     await user.click(screen.getByLabelText('Collapse Machine Room'));
-    expect(screen.queryByRole('button', { name: /MCR Rack A 42 RU/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /MCR Rack A Rack 42 RU/ })).toBeNull();
     expect(screen.getByLabelText('Expand Machine Room')).toBeTruthy();
 
     await user.click(screen.getByLabelText('Expand Machine Room'));
-    await user.click(screen.getAllByLabelText('Collapse Devices')[1]);
-    expect(screen.queryByRole('button', { name: /Router 1 RTR1/ })).toBeNull();
-    expect(screen.getAllByLabelText('Expand Devices')[0]).toBeTruthy();
+    await user.click(screen.getByLabelText('Collapse Front Table'));
+    expect(screen.queryByRole('button', { name: /Front Table Device Device EX/ })).toBeNull();
+    expect(screen.getByLabelText('Expand Front Table')).toBeTruthy();
   });
 
   it('wires selection callbacks, context-menu actions, drag data, and project replacement safely', async () => {
     const user = userEvent.setup();
     const { callbacks, project, rerender } = renderTree();
 
-    await user.click(screen.getByRole('button', { name: /MCR Rack A 42 RU/ }));
+    await user.click(screen.getByRole('button', { name: /MCR Rack A Rack 42 RU/ }));
     expect(callbacks.onSelectObject).toHaveBeenCalledWith('rack', 'rack-mcr-a');
-    await user.click(screen.getByRole('button', { name: /Machine Room 4/ }));
+    await user.click(screen.getByRole('button', { name: /Machine Room 5/ }));
     expect(callbacks.onSelectObject).toHaveBeenCalledWith('location', 'location-machine-room');
 
     fireEvent.contextMenu(screen.getByText('Project navigator'));
     await user.click(await screen.findByText('Add Location'));
     expect(callbacks.onAddLocation).toHaveBeenCalled();
 
-    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 4/ }));
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 5/ }));
     await user.click(await screen.findByText('Add Rack'));
     expect(callbacks.onAddRack).toHaveBeenCalledWith('location-machine-room');
 
-    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 4/ }));
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 5/ }));
     await user.click(await screen.findByText('Add Device'));
     expect(callbacks.onAddDevice).toHaveBeenCalledWith('location-machine-room');
     expect(screen.queryByText('Add Unassigned Device')).toBeNull();
 
-    fireEvent.contextMenu(screen.getByRole('button', { name: /Router 1 RTR1/ }));
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Router 1 Device RTR1/ }));
     await user.click(await screen.findByText('Edit Device'));
     expect(callbacks.onEditDevice).toHaveBeenCalledWith('device-router-1');
-
-    const dragged = screen.getByRole('button', { name: /Router 1 RTR1/ });
-    fireEvent.dragStart(dragged, { dataTransfer: createDataTransfer() });
-    expect(window.__studioWireDraggingDeviceId).toBe('device-router-1');
-    fireEvent.dragEnd(dragged);
-    expect(window.__studioWireDraggingDeviceId).toBeUndefined();
 
     contextHarness.current = createContext({
       ...project,
@@ -239,6 +268,84 @@ describe('LeftTree', () => {
     );
     expect(screen.getByRole('button', { name: /^Control Room 0$/ })).toBeTruthy();
     expect(screen.queryByText('Machine Room')).toBeNull();
+  });
+
+  it('adds folders from the location context menu', async () => {
+    const user = userEvent.setup();
+    const addSubLocation = vi.fn();
+
+    vi.spyOn(window, 'prompt').mockReturnValue('Back Table');
+    renderTree(projectFixture(), { addSubLocation });
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 5/ }));
+    await user.click(await screen.findByText('Add Folder'));
+
+    expect(addSubLocation).toHaveBeenCalledWith({
+      locationId: 'location-machine-room',
+      name: 'Back Table',
+      description: '',
+    });
+  });
+
+  it('renames folders from the folder context menu', async () => {
+    const user = userEvent.setup();
+    const updateSubLocation = vi.fn();
+
+    vi.spyOn(window, 'prompt').mockReturnValue('Back Table');
+    renderTree(projectFixture(), { updateSubLocation });
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Front Table 1/ }));
+    await user.click(await screen.findByText('Rename Folder'));
+
+    expect(window.prompt).toHaveBeenCalledWith('Folder name', 'Front Table');
+    expect(updateSubLocation).toHaveBeenCalledWith('sub-location-front-table', {
+      name: 'Back Table',
+      description: '',
+    });
+  });
+
+  it('drops navigator devices and racks onto folders and parent locations', () => {
+    const moveNavigatorItemToFolder = vi.fn();
+
+    renderTree(projectFixture(), { moveNavigatorItemToFolder });
+
+    const dragged = screen.getByRole('button', { name: /Router 1 Device RTR1/ });
+    const deviceTransfer = createDataTransfer();
+    fireEvent.dragStart(dragged, { dataTransfer: deviceTransfer });
+    expect(window.__studioWireDraggingDeviceId).toBe('device-router-1');
+    fireEvent.drop(screen.getByRole('button', { name: /Front Table 1/ }), { dataTransfer: deviceTransfer });
+    expect(moveNavigatorItemToFolder).toHaveBeenCalledWith({
+      itemType: 'device',
+      itemId: 'device-router-1',
+      targetLocationId: 'location-machine-room',
+      targetFolderId: 'sub-location-front-table',
+    });
+    fireEvent.dragEnd(dragged);
+    expect(window.__studioWireDraggingDeviceId).toBeUndefined();
+
+    const rackTransfer = createDataTransfer();
+    fireEvent.dragStart(screen.getByRole('button', { name: /MCR Rack A Rack 42 RU/ }), {
+      dataTransfer: rackTransfer,
+    });
+    fireEvent.drop(screen.getByRole('button', { name: /Front Table 1/ }), { dataTransfer: rackTransfer });
+    expect(moveNavigatorItemToFolder).toHaveBeenCalledWith({
+      itemType: 'rack',
+      itemId: 'rack-mcr-a',
+      targetLocationId: 'location-machine-room',
+      targetFolderId: 'sub-location-front-table',
+    });
+
+    const parentTransfer = createDataTransfer();
+    fireEvent.dragStart(screen.getByRole('button', { name: /Front Table Device Device EX/ }), {
+      dataTransfer: parentTransfer,
+    });
+    fireEvent.drop(screen.getByRole('button', { name: /Machine Room 5/ }), { dataTransfer: parentTransfer });
+    expect(moveNavigatorItemToFolder).toHaveBeenCalledWith({
+      itemType: 'device',
+      itemId: 'device-front-table',
+      targetLocationId: 'location-machine-room',
+      targetFolderId: null,
+    });
   });
 });
 

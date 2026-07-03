@@ -32,6 +32,7 @@ describe('validateRackPlacement', () => {
     const targetRack: Rack = {
       id: 'rack-control-a',
       locationId: 'location-control-room',
+      subLocationId: null,
       name: 'Control Rack A',
       heightRu: 24,
       numberingDirection: 'bottom_to_top',

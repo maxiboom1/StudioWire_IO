@@ -19,10 +19,13 @@ import type {
   LocationInput,
   LocationUpdates,
   MoveMountedDeviceInput,
+  MoveNavigatorItemToFolderInput,
   ProjectCommands,
   ProjectInfoUpdates,
   RackInput,
   RackUpdates,
+  SubLocationInput,
+  SubLocationUpdates,
 } from './projectContextTypes';
 import type { ProjectAction, TerminalBlockDraft, DeviceUpdate } from './projectTypes';
 
@@ -168,6 +171,24 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
     updateLocation: (id: string, updates: LocationUpdates) =>
       dispatch({ type: 'UPDATE_LOCATION', payload: { id, updates } }),
     deleteLocation: (id: string) => dispatch({ type: 'DELETE_LOCATION', payload: { id } }),
+    addSubLocation: (input: SubLocationInput) => {
+      const id = dependencies.makeUniqueId('sub-location', `${input.locationId}-${input.name}`);
+
+      dispatch({
+        type: 'ADD_SUB_LOCATION',
+        payload: {
+          id,
+          locationId: input.locationId,
+          name: input.name,
+          description: input.description,
+        },
+      });
+
+      return id;
+    },
+    updateSubLocation: (id: string, updates: SubLocationUpdates) =>
+      dispatch({ type: 'UPDATE_SUB_LOCATION', payload: { id, updates } }),
+    deleteSubLocation: (id: string) => dispatch({ type: 'DELETE_SUB_LOCATION', payload: { id } }),
     addRack: (input: RackInput) => {
       const id = dependencies.makeUniqueId('rack', `${input.locationId}-${input.name}`);
 
@@ -176,6 +197,7 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
         payload: {
           id,
           locationId: input.locationId,
+          subLocationId: input.subLocationId ?? null,
           name: input.name,
           heightRu: input.heightRu,
           numberingDirection: input.numberingDirection,
@@ -206,6 +228,10 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
     disconnectPort: (input: DisconnectPortInput) => dispatch({ type: 'DISCONNECT_PORT', payload: input }),
     moveMountedDevice: (input: MoveMountedDeviceInput) =>
       dispatch({ type: 'MOVE_MOUNTED_DEVICE', payload: input }),
+    moveNavigatorItemToFolder: (input: MoveNavigatorItemToFolderInput) =>
+      dispatch({ type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER', payload: input }),
+    unassignDeviceFromRack: (deviceId: string) =>
+      dispatch({ type: 'UNASSIGN_DEVICE_FROM_RACK', payload: { deviceId } }),
     updateDevice: (id: string, updates: DeviceUpdate) =>
       dispatch({ type: 'UPDATE_DEVICE', payload: { id, updates } }),
     editDevice: (input: EditDeviceInput) => dispatch({ type: 'EDIT_DEVICE', payload: input }),

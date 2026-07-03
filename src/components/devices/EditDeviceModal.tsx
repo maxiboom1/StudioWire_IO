@@ -9,6 +9,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PortGroupEditor } from './PortGroupEditor';
+import { SubLocationSelect } from './SubLocationSelect';
 import { useEditDeviceForm } from './useEditDeviceForm';
 
 export function EditDeviceModal({
@@ -113,6 +114,13 @@ export function EditDeviceModal({
                 </SelectContent>
               </Select>
             </div>
+            <SubLocationSelect
+              id="edit-device-sub-location"
+              locationId={form.device.locationId}
+              project={project}
+              value={form.device.subLocationId}
+              onChange={(value) => form.setDevice({ subLocationId: value })}
+            />
             <div className="form-field">
               <Label htmlFor="edit-device-label-prefix">Label Prefix</Label>
               <Input

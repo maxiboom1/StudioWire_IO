@@ -10,7 +10,24 @@ import { createSequentialAddDeviceLocalIdFactory } from './addDeviceLocalIds';
 import { useAddDeviceForm, type AddDeviceFormController } from './useAddDeviceForm';
 
 function projectFixture(): ProjectRoot {
-  return structuredClone(sampleProject);
+  const project = structuredClone(sampleProject);
+
+  project.subLocations = [
+    {
+      id: 'sub-location-front-table',
+      locationId: 'location-control-room',
+      name: 'Front Table',
+      description: '',
+    },
+    {
+      id: 'sub-location-mcr-racks',
+      locationId: 'location-machine-room',
+      name: 'MCR Racks',
+      description: '',
+    },
+  ];
+
+  return project;
 }
 
 function renderController(project = projectFixture()) {
@@ -87,6 +104,26 @@ describe('useAddDeviceForm', () => {
       ['controller-3', 'AUDIO IN', 'connector-xlr'],
       ['controller-4', 'AUDIO OUT', 'connector-xlr'],
     ]);
+  });
+
+  it('clears sub-location when location changes to a location that does not own it', () => {
+    const { controller } = renderController();
+
+    act(() => {
+      controller().setDevice({ subLocationId: 'sub-location-mcr-racks' });
+    });
+    expect(controller().device.subLocationId).toBe('sub-location-mcr-racks');
+
+    act(() => {
+      controller().setDevice({ locationId: 'location-control-room' });
+    });
+
+    expect(controller().device).toEqual(
+      expect.objectContaining({
+        locationId: 'location-control-room',
+        subLocationId: null,
+      }),
+    );
   });
 
   it('coordinates add, remove, group updates, category changes, and planned toggles', () => {

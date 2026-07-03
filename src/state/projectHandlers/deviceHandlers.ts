@@ -1,4 +1,5 @@
 import { stampProject } from '../projectStamping';
+import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { ProjectState } from '../projectTypes';
 import { createDeviceInProject, createTerminalBlockInProject } from '../projectDeviceCommands';
 import { editDeviceInProject } from '../projectDeviceEdits';
@@ -102,6 +103,11 @@ export function handleUpdateDevice(
             device.mountType === 'rack'
               ? (assignedRack?.locationId ?? device.locationId)
               : action.payload.updates.locationId;
+          const subLocationId = normalizeSubLocationForLocation(
+            state.project,
+            action.payload.updates.subLocationId ?? device.subLocationId,
+            locationId,
+          );
 
           return {
             ...device,
@@ -115,6 +121,7 @@ export function handleUpdateDevice(
                 }),
             notes: action.payload.updates.notes,
             locationId,
+            subLocationId,
             rackSizeRu: device.kind === 'terminal_block' ? 1 : (action.payload.updates.rackSizeRu ?? null),
             updatedAt: context.dependencies.nowIso(),
           };

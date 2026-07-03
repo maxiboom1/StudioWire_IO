@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.11`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.12`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.11`.
+- `schemaVersion`: current fixed string `0.2.8.12`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -125,6 +125,8 @@ Fields:
 - `heightRu`
 - `numberingDirection`: `bottom_to_top` or `top_to_bottom`
 
+New racks default to 28 RU unless the user changes the Add Rack form. Existing rack records keep their stored `heightRu` values and are not rewritten when defaults change.
+
 ## LabelRules
 
 Fields:
@@ -150,7 +152,9 @@ Fields:
 - `name`
 - `description`
 
-Sub-locations are folders inside one main location. A device may reference a sub-location in its assigned location or may leave `subLocationId` as `null`.
+Sub-locations are the stored data records for user-facing folders inside one main location. A rack, device, or terminal block may reference a folder in its assigned location or may leave `subLocationId` as `null`.
+
+Folder deletion removes the folder and clears matching `subLocationId` values from racks, devices, and terminal blocks. Location changes preserve `subLocationId` only when the folder belongs to the new location; otherwise `subLocationId` is reset to `null`.
 
 ## Rack
 
@@ -158,9 +162,12 @@ Fields:
 
 - `id`
 - `locationId`
+- `subLocationId`
 - `name`
 - `heightRu`
 - `numberingDirection`: `bottom_to_top` or `top_to_bottom`
+
+`subLocationId` is optional and may be `null`; when set, it must reference a folder inside the same location. Folder membership is organizational. A rack may be moved into a folder, back to its parent location, or to another location.
 
 ## Device
 
@@ -190,9 +197,11 @@ Fields:
 
 Current devices use `planned` or `connected` status. Standard-device deletion is a hard delete: the device, its child port groups, its child ports, its device-owned planned cables, and its device-owned allocated numbering ranges are removed. Any surviving connected cable slots affected by the deleted device are reset to planned state where they still have a surviving owner port. Released allocated numbers may be suggested and reallocated again; reserved gaps remain blocked.
 
-`locationId` is required for all devices and terminal blocks and must reference an existing location. `subLocationId` is optional and may be `null`; when set, it must reference a sub-location inside the same location. Virtual and non-rack devices are still assigned to a location even when they are not rack-mounted.
+`locationId` is required for all devices and terminal blocks and must reference an existing location. `subLocationId` is optional and may be `null`; when set, it must reference a folder inside the same location. Virtual and non-rack devices are still assigned to a location even when they are not rack-mounted.
 
-Standard devices use `kind: "device"` and may be virtual, non-rack, or rack-mounted. Imported older devices without `kind` are normalized to standard devices.
+Rack-mounted devices and terminal blocks can move between folders inside their rack's current location. Moving them to another location is blocked until they are released from the rack. Moving a rack to another location updates mounted items to that location and clears any folder assignment that does not belong to the new location.
+
+Standard devices use `kind: "device"` and may be virtual, non-rack, or rack-mounted. Rack-mounted standard devices can be unassigned from a rack, which clears `rackId` and `rackBottomRu`, changes `mountType` to `non_rack`, preserves `rackSizeRu`, and keeps the rack's current location when the rack exists. Imported older devices without `kind` are normalized to standard devices.
 
 Terminal blocks use `kind: "terminal_block"` and are stored in the same `devices` array. They omit `code`, `manufacturer`, `model`, and `role`; current-version imports reject those standard-device fields on terminal blocks. Terminal blocks are always rack-mounted, must reference a rack and bottom RU, and must have `rackSizeRu: 1`.
 

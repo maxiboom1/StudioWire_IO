@@ -5,20 +5,41 @@ import {
   buildLeftTreeModel,
   getDeviceTreeMeta,
   getDeviceTreeTitle,
-  getLocationFolderKey,
   getLocationKey,
+  getSubLocationKey,
 } from './leftTreeModel';
 import { isTreeKeyOpen, toggleCollapsedKey } from './useCollapsedTree';
 
 function projectFixture(): ProjectRoot {
   const project = structuredClone(sampleProject);
 
+  project.subLocations = [
+    {
+      id: 'sub-location-front-table',
+      locationId: 'location-machine-room',
+      name: 'Front Table',
+      description: '',
+    },
+  ];
+
   project.devices = [
     ...project.devices,
     device({ id: 'device-tb', name: 'TB 1', kind: 'terminal_block', locationId: 'location-machine-room' }),
-    device({ id: 'device-virtual', name: 'Virtual Device', locationId: 'location-machine-room', rackSizeRu: null }),
+    device({
+      id: 'device-virtual',
+      name: 'Virtual Device',
+      locationId: 'location-machine-room',
+      rackSizeRu: null,
+    }),
+    device({
+      id: 'device-front-table',
+      name: 'Front Table Device',
+      locationId: 'location-machine-room',
+      subLocationId: 'sub-location-front-table',
+    }),
     device({ id: 'device-unknown-location', name: 'Unknown Location Device', locationId: 'missing' }),
   ];
+  project.racks = project.racks.map((rack) => ({ ...rack, subLocationId: 'sub-location-front-table' }));
 
   return project;
 }
@@ -49,21 +70,28 @@ function device(overrides: Partial<Device>): Device {
 }
 
 describe('leftTreeModel', () => {
-  it('builds location branches in project order with current rack/device/TB grouping', () => {
+  it('builds location branches in project order with flat folder/item grouping', () => {
     const model = buildLeftTreeModel(projectFixture());
 
     expect(model.locations.map((branch) => branch.location.name)).toEqual(['Control Room', 'Machine Room']);
     expect(model.locations[0]).toMatchObject({
       key: 'location:location-control-room',
-      racksKey: 'location:location-control-room:racks',
-      devicesKey: 'location:location-control-room:devices',
-      terminalBlocksKey: 'location:location-control-room:terminal-blocks',
       count: 1,
     });
-    expect(model.locations[0].devices.map((item) => item.name)).toEqual(['Multiviewer 1']);
-    expect(model.locations[1].racks.map((item) => item.name)).toEqual(['MCR Rack A']);
-    expect(model.locations[1].devices.map((item) => item.name)).toEqual(['Router 1', 'Virtual Device']);
-    expect(model.locations[1].terminalBlocks.map((item) => item.name)).toEqual(['TB 1']);
+    expect(model.locations[0].items.map((item) => item.label)).toEqual(['Multiviewer 1']);
+    expect(model.locations[1].subLocations[0]).toMatchObject({
+      key: 'location:location-machine-room:folder:sub-location-front-table',
+      count: 2,
+    });
+    expect(model.locations[1].subLocations[0].items.map((item) => item.label)).toEqual([
+      'MCR Rack A',
+      'Front Table Device',
+    ]);
+    expect(model.locations[1].items.map((item) => item.label)).toEqual([
+      'Router 1',
+      'TB 1',
+      'Virtual Device',
+    ]);
   });
 
   it('detects empty navigator, creates stable keys, and formats device title/meta labels', () => {
@@ -76,7 +104,9 @@ describe('leftTreeModel', () => {
 
     expect(buildLeftTreeModel(emptyProject).isNavigatorEmpty).toBe(true);
     expect(getLocationKey('location-a')).toBe('location:location-a');
-    expect(getLocationFolderKey('location-a', 'terminal-blocks')).toBe('location:location-a:terminal-blocks');
+    expect(getSubLocationKey('location-a', 'sub-location-a')).toBe(
+      'location:location-a:folder:sub-location-a',
+    );
     expect(getDeviceTreeTitle(device({ rackSizeRu: 1 }))).toBe('Drag to a visible rack to assign or move');
     expect(getDeviceTreeTitle(device({ rackSizeRu: null }))).toBe('Set rack size before assigning to a rack');
     expect(getDeviceTreeMeta(device({ labelPrefix: 'CAM', role: 'Camera' }))).toBe('CAM');

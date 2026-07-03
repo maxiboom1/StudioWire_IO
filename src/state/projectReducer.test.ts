@@ -18,6 +18,7 @@ describe('projectReducer core project actions', () => {
 
     expect(state.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(state.project.project.name).toBe('Untitled Project');
+    expect(state.project.settings.rackDefaults.heightRu).toBe(28);
     expect(state.persistenceState).toBe('unsaved');
     expect(state.importError).toBeNull();
   });
@@ -174,6 +175,7 @@ describe('projectReducer core project actions', () => {
       payload: {
         id: 'rack-test',
         locationId: 'location-test',
+        subLocationId: null,
         name: 'Test Rack',
         heightRu: 12,
         numberingDirection: 'bottom_to_top',
@@ -206,10 +208,59 @@ describe('projectReducer core project actions', () => {
     });
     expect(state.project.numberingLedgers).toContainEqual({ prefix: 'T', nextSuggested: 1, ranges: [] });
     expect(blockedLocationDelete.statusMessage).toBe(
-      'Location deletion blocked: remove racks and devices first',
+      'Location deletion blocked: remove folders, racks, and devices first',
     );
     expect(state.project.racks.some((rack) => rack.id === 'rack-test')).toBe(false);
     expect(state.project.locations.some((location) => location.id === 'location-test')).toBe(false);
+  });
+
+  it('adds, updates, deletes, and clears referenced folders', () => {
+    let state = createState();
+
+    state = projectReducer(state, {
+      type: 'ADD_SUB_LOCATION',
+      payload: {
+        id: 'sub-location-front-table',
+        locationId: 'location-control-room',
+        name: 'Front Table',
+        description: 'Operator desk',
+      },
+    });
+    state = projectReducer(state, {
+      type: 'UPDATE_SUB_LOCATION',
+      payload: {
+        id: 'sub-location-front-table',
+        updates: { name: 'Front Desk', description: 'Main operator desk' },
+      },
+    });
+
+    state = {
+      ...state,
+      project: {
+        ...state.project,
+        racks: state.project.racks.map((rack) =>
+          rack.id === 'rack-mcr-a' ? { ...rack, subLocationId: 'sub-location-front-table' } : rack,
+        ),
+        devices: state.project.devices.map((device) =>
+          device.id === 'device-multiviewer-1'
+            ? { ...device, subLocationId: 'sub-location-front-table' }
+            : device,
+        ),
+      },
+    };
+    state = projectReducer(state, {
+      type: 'DELETE_SUB_LOCATION',
+      payload: { id: 'sub-location-front-table' },
+    });
+
+    expect(state.statusMessage).toBe('Folder deleted');
+    expect(state.project.racks.find((rack) => rack.id === 'rack-mcr-a')?.subLocationId).toBeNull();
+    expect(
+      state.project.devices.find((device) => device.id === 'device-multiviewer-1')?.subLocationId,
+    ).toBeNull();
+    expect(
+      state.project.subLocations.some((subLocation) => subLocation.id === 'sub-location-front-table'),
+    ).toBe(false);
   });
 
   it('retains status text when persistence is updated without a message and dismisses import errors', () => {
@@ -492,6 +543,51 @@ describe('projectReducer UPDATE_DEVICE placement safety', () => {
     expect(device?.rackId).toBe('rack-mcr-a');
     expect(device?.rackBottomRu).toBe(20);
   });
+
+  it('resets sub-location when a device moves to a location that does not own it', () => {
+    const state = createState();
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        subLocations: [
+          {
+            id: 'sub-location-front-table',
+            locationId: 'location-control-room',
+            name: 'Front Table',
+            description: '',
+          },
+        ],
+        devices: state.project.devices.map((device) =>
+          device.id === 'device-multiviewer-1'
+            ? { ...device, subLocationId: 'sub-location-front-table' }
+            : device,
+        ),
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'UPDATE_DEVICE',
+      payload: {
+        id: 'device-multiviewer-1',
+        updates: {
+          name: 'Multiviewer 1',
+          manufacturer: '',
+          model: '',
+          role: '',
+          notes: '',
+          locationId: 'location-machine-room',
+          subLocationId: 'sub-location-front-table',
+          rackSizeRu: null,
+        },
+      },
+    });
+    const device = result.project.devices.find((candidate) => candidate.id === 'device-multiviewer-1');
+
+    expect(device).toMatchObject({
+      locationId: 'location-machine-room',
+      subLocationId: null,
+    });
+  });
 });
 
 describe('projectReducer MOVE_MOUNTED_DEVICE', () => {
@@ -566,6 +662,224 @@ describe('projectReducer MOVE_MOUNTED_DEVICE', () => {
     expect(result.project).toBe(seededState.project);
     expect(result.statusMessage).toContain('Set rack size before assigning to a rack');
   });
+
+  it('unassigns standard rack devices while preserving rack height metadata', () => {
+    const state = createState();
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        subLocations: [
+          {
+            id: 'sub-location-front-table',
+            locationId: 'location-control-room',
+            name: 'Front Table',
+            description: '',
+          },
+        ],
+        devices: state.project.devices.map((device) =>
+          device.id === 'device-router-1' ? { ...device, subLocationId: 'sub-location-front-table' } : device,
+        ),
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'UNASSIGN_DEVICE_FROM_RACK',
+      payload: { deviceId: 'device-router-1' },
+    });
+    const device = result.project.devices.find((candidate) => candidate.id === 'device-router-1');
+
+    expect(device).toMatchObject({
+      mountType: 'non_rack',
+      rackId: null,
+      rackBottomRu: null,
+      rackSizeRu: 2,
+      locationId: 'location-machine-room',
+      subLocationId: null,
+    });
+    expect(result.statusMessage).toBe('Router 1 unassigned from rack');
+  });
+
+  it('blocks terminal blocks from rack unassign workflow', () => {
+    const state = createState();
+    const terminalBlock = {
+      ...state.project.devices[0],
+      id: 'device-tb-unassign-test',
+      name: 'TB Unassign Test',
+      kind: 'terminal_block' as const,
+      rackSizeRu: 1,
+      rackBottomRu: 1,
+      rackId: 'rack-mcr-a',
+      mountType: 'rack' as const,
+    };
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        devices: [...state.project.devices, terminalBlock],
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'UNASSIGN_DEVICE_FROM_RACK',
+      payload: { deviceId: terminalBlock.id },
+    });
+
+    expect(result.project).toBe(seededState.project);
+    expect(result.statusMessage).toBe('Rack unassign blocked: terminal blocks use the TB workflow');
+  });
+
+  it('moves navigator devices and terminal blocks to a target folder', () => {
+    const state = createState();
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        subLocations: [
+          {
+            id: 'sub-location-mcr-racks',
+            locationId: 'location-machine-room',
+            name: 'MCR Racks',
+            description: '',
+          },
+        ],
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER',
+      payload: {
+        itemType: 'device',
+        itemId: 'device-router-1',
+        targetLocationId: 'location-machine-room',
+        targetFolderId: 'sub-location-mcr-racks',
+      },
+    });
+    const device = result.project.devices.find((candidate) => candidate.id === 'device-router-1');
+
+    expect(device).toMatchObject({
+      locationId: 'location-machine-room',
+      subLocationId: 'sub-location-mcr-racks',
+    });
+    expect(result.statusMessage).toBe('Router 1 moved to MCR Racks');
+  });
+
+  it('blocks moving racks with mounted devices to another location', () => {
+    const state = createState();
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        subLocations: [
+          {
+            id: 'sub-location-front-table',
+            locationId: 'location-control-room',
+            name: 'Front Table',
+            description: '',
+          },
+        ],
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER',
+      payload: {
+        itemType: 'rack',
+        itemId: 'rack-mcr-a',
+        targetLocationId: 'location-control-room',
+        targetFolderId: 'sub-location-front-table',
+      },
+    });
+
+    expect(result.project).toBe(seededState.project);
+    expect(result.statusMessage).toBe('Move blocked: rack has mounted devices; unassign them first.');
+  });
+
+  it('allows moving empty racks to another location folder', () => {
+    const state = createState();
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        subLocations: [
+          {
+            id: 'sub-location-front-table',
+            locationId: 'location-control-room',
+            name: 'Front Table',
+            description: '',
+          },
+        ],
+        racks: [
+          ...state.project.racks,
+          {
+            id: 'rack-empty',
+            locationId: 'location-machine-room',
+            subLocationId: null,
+            name: 'Empty Rack',
+            heightRu: 12,
+            numberingDirection: 'bottom_to_top' as const,
+          },
+        ],
+      },
+    };
+    const result = projectReducer(seededState, {
+      type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER',
+      payload: {
+        itemType: 'rack',
+        itemId: 'rack-empty',
+        targetLocationId: 'location-control-room',
+        targetFolderId: 'sub-location-front-table',
+      },
+    });
+
+    expect(result.project.racks.find((candidate) => candidate.id === 'rack-empty')).toMatchObject({
+      locationId: 'location-control-room',
+      subLocationId: 'sub-location-front-table',
+    });
+    expect(result.statusMessage).toBe('Empty Rack moved to Front Table');
+  });
+
+  it('moves navigator items back to the parent location and blocks mounted cross-location item moves', () => {
+    const state = createState();
+    const seededState = {
+      ...state,
+      project: {
+        ...state.project,
+        subLocations: [
+          {
+            id: 'sub-location-mcr-racks',
+            locationId: 'location-machine-room',
+            name: 'MCR Racks',
+            description: '',
+          },
+        ],
+        racks: state.project.racks.map((rack) =>
+          rack.id === 'rack-mcr-a' ? { ...rack, subLocationId: 'sub-location-mcr-racks' } : rack,
+        ),
+      },
+    };
+
+    const movedRack = projectReducer(seededState, {
+      type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER',
+      payload: {
+        itemType: 'rack',
+        itemId: 'rack-mcr-a',
+        targetLocationId: 'location-machine-room',
+        targetFolderId: null,
+      },
+    });
+    expect(movedRack.project.racks.find((rack) => rack.id === 'rack-mcr-a')?.subLocationId).toBeNull();
+
+    const blocked = projectReducer(seededState, {
+      type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER',
+      payload: {
+        itemType: 'device',
+        itemId: 'device-router-1',
+        targetLocationId: 'location-control-room',
+        targetFolderId: null,
+      },
+    });
+    expect(blocked.project).toBe(seededState.project);
+    expect(blocked.statusMessage).toBe(
+      'Move blocked: item is assigned to a rack in this location; release it first.',
+    );
+  });
 });
 
 describe('parseImportedProject schema compatibility', () => {
@@ -600,114 +914,17 @@ describe('parseImportedProject schema compatibility', () => {
     expect(secondImport.project.cables[0]).toHaveProperty('sideBEndpoint');
   });
 
-  it('normalizes old projects with devices missing kind', () => {
+  it('rejects older internal dev schemas instead of migrating them in this dev line', () => {
     const oldProject = structuredClone(sampleProject) as any;
 
-    oldProject.schemaVersion = '0.1.0';
-    delete oldProject.devices[0].kind;
+    oldProject.schemaVersion = '0.2.8.11';
 
     const result = parseImportedProject(oldProject);
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
+    expect(result.ok).toBe(false);
+    if (result.ok) {
       return;
     }
-    expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
-    expect(result.project.devices[0]).toMatchObject({
-      kind: 'device',
-      code: 'RTR1',
-    });
-  });
-
-  it('migrates legacy cable endpoint fields to side A and side B', () => {
-    const oldProject = structuredClone(sampleProject) as any;
-
-    oldProject.schemaVersion = '0.1.0';
-    oldProject.cables = oldProject.cables.map((cable: any) => {
-      const { sideAEndpoint, sideBEndpoint, ...legacyCable } = cable;
-
-      return {
-        ...legacyCable,
-        sourceEndpoint: sideAEndpoint,
-        destinationEndpoint: sideBEndpoint,
-      };
-    });
-
-    const result = parseImportedProject(oldProject);
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
-      return;
-    }
-    expect(result.project.cables[0].sideAEndpoint).toMatchObject({ type: 'device_port' });
-    expect(result.project.cables[0].sideBEndpoint).toMatchObject({ type: 'unknown' });
-    expect(result.project.cables[0]).not.toHaveProperty('sourceEndpoint');
-    expect(result.project.cables[0]).not.toHaveProperty('destinationEndpoint');
-  });
-
-  it('normalizes legacy global connectors to category assignments', () => {
-    const oldProject = structuredClone(sampleProject) as any;
-
-    oldProject.schemaVersion = '0.2.4.1';
-    delete oldProject.settings.connectorCompatibilityGroups;
-    oldProject.settings.connectorTypes = [
-      { id: 'connector-bnc', name: 'BNC' },
-      { id: 'connector-xlr', name: 'XLR' },
-    ];
-    oldProject.portGroups[0].connectorTypeId = 'connector-bnc';
-    oldProject.ports[0].connectorTypeId = 'connector-bnc';
-    oldProject.portGroups.push({
-      ...oldProject.portGroups[0],
-      id: 'port-group-audio-legacy',
-      categoryId: 'category-audio',
-      connectorTypeId: 'connector-xlr',
-      numberingRangeId: null,
-      createPlannedCables: false,
-      firstCableNumber: null,
-      lastCableNumber: null,
-    });
-    oldProject.ports.push({
-      ...oldProject.ports[0],
-      id: 'port-audio-legacy',
-      portGroupId: 'port-group-audio-legacy',
-      categoryId: 'category-audio',
-      connectorTypeId: 'connector-xlr',
-      plannedCableId: null,
-    });
-
-    const result = parseImportedProject(oldProject);
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
-      return;
-    }
-
-    const videoPort = result.project.ports.find((port) => port.id === oldProject.ports[0].id);
-    const audioPort = result.project.ports.find((port) => port.id === 'port-audio-legacy');
-    const videoAssignment = result.project.settings.categoryConnectorAssignments.find(
-      (assignment) =>
-        assignment.categoryId === videoPort?.categoryId &&
-        assignment.connectorTypeId === videoPort?.connectorTypeId,
-    );
-    const audioAssignment = result.project.settings.categoryConnectorAssignments.find(
-      (assignment) =>
-        assignment.categoryId === audioPort?.categoryId &&
-        assignment.connectorTypeId === audioPort?.connectorTypeId,
-    );
-    const videoConnector = result.project.settings.connectorTypes.find(
-      (connectorType) => connectorType.id === videoPort?.connectorTypeId,
-    );
-    const audioConnector = result.project.settings.connectorTypes.find(
-      (connectorType) => connectorType.id === audioPort?.connectorTypeId,
-    );
-
-    expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
-    expect(result.project.settings.connectorCompatibilityGroups.length).toBeGreaterThan(0);
-    expect(videoConnector).toMatchObject({ name: 'BNC' });
-    expect(audioConnector).toMatchObject({ name: 'XLR' });
-    expect(videoConnector).not.toHaveProperty('categoryId');
-    expect(audioConnector).not.toHaveProperty('categoryId');
-    expect(videoAssignment).toBeDefined();
-    expect(audioAssignment).toBeDefined();
+    expect(result.error).toContain('Unsupported schemaVersion');
   });
 });

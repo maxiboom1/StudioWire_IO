@@ -140,6 +140,7 @@ export interface SubLocation {
 export interface Rack {
   id: string;
   locationId: string;
+  subLocationId: string | null;
   name: string;
   heightRu: number;
   numberingDirection: RackNumberingDirection;

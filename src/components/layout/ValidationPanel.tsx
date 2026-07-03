@@ -10,11 +10,19 @@ export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: Vali
     warning: issues.filter((issue) => issue.severity === 'warning'),
     info: issues.filter((issue) => issue.severity === 'info'),
   };
+  const statusClassName = isErrorStatus(statusMessage)
+    ? 'status-message status-message-error'
+    : 'status-message';
 
   return (
     <footer className="validation-panel" aria-label="Bottom validation panel">
       <div className="validation-panel-main">
-        <div>
+        <p className={statusClassName} aria-live={isErrorStatus(statusMessage) ? 'assertive' : 'polite'}>
+          {statusMessage}
+        </p>
+      </div>
+      <div className="validation-panel-right">
+        <div className="validation-summary">
           <h2>Validation</h2>
           <p>{issues.length === 0 ? 'No validation issues.' : `${issues.length} validation issue(s).`}</p>
         </div>
@@ -44,13 +52,12 @@ export function ValidationPanel({ onSelectIssue }: { onSelectIssue: (issue: Vali
           </div>
         ) : null}
       </div>
-      <div className="validation-panel-right">
-        <p className="status-message" aria-live="polite">
-          {statusMessage}
-        </p>
-      </div>
     </footer>
   );
+}
+
+function isErrorStatus(statusMessage: string) {
+  return /\b(blocked|failed|error|cannot|invalid)\b/i.test(statusMessage);
 }
 
 function getIssueButtonClass(severity: ValidationIssue['severity']) {

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { Device, ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectContextTypes';
 import type { DeviceDraft } from '../../state/projectTypes';
@@ -63,7 +64,17 @@ export function useEditDeviceForm({
   );
 
   function setDevice(updates: Partial<DeviceDraft>) {
-    setDeviceState((current) => ({ ...current, ...updates }));
+    setDeviceState((current) => {
+      const locationId = updates.locationId ?? current.locationId;
+      const requestedSubLocationId =
+        updates.subLocationId !== undefined ? updates.subLocationId : current.subLocationId;
+
+      return {
+        ...current,
+        ...updates,
+        subLocationId: normalizeSubLocationForLocation(project, requestedSubLocationId, locationId),
+      };
+    });
   }
 
   function updateExistingPortGroup(

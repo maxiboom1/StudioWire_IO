@@ -4,11 +4,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { connectPorts } from '../../domain/connections';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
-import { CrosspointPicker } from './CrosspointPicker';
+import { LocationWorkspace } from './LocationWorkspace';
 
 const contextHarness = vi.hoisted(() => ({
   current: null as ProjectContextValue | null,
@@ -24,8 +23,19 @@ vi.mock('../../state/ProjectContext', () => ({
   },
 }));
 
-function projectFixture(): ProjectRoot {
-  return structuredClone(sampleProject);
+function createProject(): ProjectRoot {
+  const project = structuredClone(sampleProject);
+
+  project.subLocations = [
+    {
+      id: 'sub-location-front-table',
+      locationId: 'location-control-room',
+      name: 'Front Table',
+      description: 'Operators',
+    },
+  ];
+
+  return project;
 }
 
 function createContext(
@@ -84,49 +94,48 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('CrosspointPicker command payloads', () => {
-  it('filters visible candidates and dispatches the selected target port payload', async () => {
+describe('LocationWorkspace', () => {
+  it('wires folder add, edit, and delete controls', async () => {
     const user = userEvent.setup();
-    const project = projectFixture();
-    const originPort = project.ports.find((port) => port.label === 'RTR1-OUT-001')!;
-    const targetPort = project.ports.find((port) => port.label === 'MV1-IN-001')!;
-    const connectPortsCommand = vi.fn();
+    const project = createProject();
+    const location = project.locations.find((candidate) => candidate.id === 'location-control-room');
+    const addSubLocation = vi.fn();
+    const updateSubLocation = vi.fn();
+    const deleteSubLocation = vi.fn();
 
-    contextHarness.current = createContext(project, { connectPorts: connectPortsCommand });
-    render(
-      <CrosspointPicker ariaLabel="Connect router output" className="test-trigger" portId={originPort.id} />,
-    );
-
-    await user.click(screen.getByLabelText('Connect router output'));
-    await user.type(screen.getByLabelText('Search ports'), 'MV1-IN-001');
-    await user.click(await screen.findByText('MV1-IN-001'));
-
-    expect(connectPortsCommand).toHaveBeenCalledWith({
-      fromPortId: originPort.id,
-      toPortId: targetPort.id,
-    });
-  });
-
-  it('dispatches the clear-connection payload for a connected origin port', async () => {
-    const user = userEvent.setup();
-    const project = projectFixture();
-    const originPort = project.ports.find((port) => port.label === 'RTR1-OUT-001')!;
-    const targetPort = project.ports.find((port) => port.label === 'MV1-IN-001')!;
-    const connected = connectPorts(project, { fromPortId: originPort.id, toPortId: targetPort.id });
-    const disconnectPort = vi.fn();
-
-    if (!connected.ok) {
-      throw new Error(connected.error);
+    if (!location) {
+      throw new Error('Expected control room location');
     }
 
-    contextHarness.current = createContext(connected.project, { disconnectPort });
-    render(
-      <CrosspointPicker ariaLabel="Connect router output" className="test-trigger" portId={originPort.id} />,
+    contextHarness.current = createContext(project, {
+      addSubLocation,
+      updateSubLocation,
+      deleteSubLocation,
+    });
+    render(<LocationWorkspace location={location} onAddDevice={vi.fn()} onAddTerminalBlock={vi.fn()} />);
+
+    await user.type(screen.getByLabelText('Name', { selector: '#sub-location-name' }), 'Back Table');
+    await user.type(
+      screen.getByLabelText('Description', { selector: '#sub-location-description' }),
+      'Producer',
     );
+    await user.click(screen.getByRole('button', { name: 'Add Folder' }));
+    expect(addSubLocation).toHaveBeenCalledWith({
+      locationId: 'location-control-room',
+      name: 'Back Table',
+      description: 'Producer',
+    });
 
-    await user.click(screen.getByLabelText('Connect router output'));
-    await user.click(await screen.findByText('Clear connection'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.clear(screen.getByLabelText('Folder name'));
+    await user.type(screen.getByLabelText('Folder name'), 'Front Desk');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(updateSubLocation).toHaveBeenCalledWith('sub-location-front-table', {
+      name: 'Front Desk',
+      description: 'Operators',
+    });
 
-    expect(disconnectPort).toHaveBeenCalledWith({ portId: originPort.id });
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(deleteSubLocation).toHaveBeenCalledWith('sub-location-front-table');
   });
 });

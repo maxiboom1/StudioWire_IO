@@ -9,11 +9,16 @@ import {
 import {
   handleAddLocation,
   handleAddRack,
+  handleAddSubLocation,
   handleDeleteLocation,
   handleDeleteRack,
+  handleDeleteSubLocation,
   handleMoveMountedDevice,
+  handleMoveNavigatorItemToFolder,
+  handleUnassignDeviceFromRack,
   handleUpdateLocation,
   handleUpdateRack,
+  handleUpdateSubLocation,
 } from './projectHandlers/hierarchyHandlers';
 import {
   createInitialProjectState as createInitialProjectStateWithContext,
@@ -115,6 +120,12 @@ function reduceProjectState(
       return handleAddLocation(state, action, context);
     case 'UPDATE_LOCATION':
       return handleUpdateLocation(state, action, context);
+    case 'ADD_SUB_LOCATION':
+      return handleAddSubLocation(state, action, context);
+    case 'UPDATE_SUB_LOCATION':
+      return handleUpdateSubLocation(state, action, context);
+    case 'DELETE_SUB_LOCATION':
+      return handleDeleteSubLocation(state, action, context);
     case 'ADD_RACK':
       return handleAddRack(state, action, context);
     case 'UPDATE_RACK':
@@ -133,6 +144,10 @@ function reduceProjectState(
       return handleEditDevice(state, action, context);
     case 'MOVE_MOUNTED_DEVICE':
       return handleMoveMountedDevice(state, action, context);
+    case 'MOVE_NAVIGATOR_ITEM_TO_FOLDER':
+      return handleMoveNavigatorItemToFolder(state, action, context);
+    case 'UNASSIGN_DEVICE_FROM_RACK':
+      return handleUnassignDeviceFromRack(state, action, context);
     case 'DELETE_LOCATION':
       return handleDeleteLocation(state, action, context);
     case 'DELETE_RACK':

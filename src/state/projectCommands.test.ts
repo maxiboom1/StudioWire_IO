@@ -106,6 +106,15 @@ describe('project command factory', () => {
     commands.updateLocation('location-a', { name: 'PCR', type: 'control_room', description: 'Prod' });
     commands.deleteLocation('location-a');
     expect(
+      commands.addSubLocation({
+        locationId: 'location-a',
+        name: 'Front Table',
+        description: 'Operators',
+      }),
+    ).toBe('sub-location:location-a-Front Table');
+    commands.updateSubLocation('sub-location-a', { name: 'Back Table', description: 'Producers' });
+    commands.deleteSubLocation('sub-location-a');
+    expect(
       commands.addRack({
         locationId: 'location-a',
         name: 'Rack A',
@@ -175,6 +184,13 @@ describe('project command factory', () => {
     commands.connectPorts({ fromPortId: 'port-a', toPortId: 'port-b' });
     commands.disconnectPort({ portId: 'port-a' });
     commands.moveMountedDevice({ deviceId: 'device-a', targetRackId: 'rack-b', targetBottomRu: 4 });
+    commands.moveNavigatorItemToFolder({
+      itemType: 'device',
+      itemId: 'device-a',
+      targetLocationId: 'location-a',
+      targetFolderId: 'sub-location-a',
+    });
+    commands.unassignDeviceFromRack('device-a');
     commands.updateDevice('device-a', {
       name: 'Router 2',
       notes: '',
@@ -203,6 +219,8 @@ describe('project command factory', () => {
     expect(seeds).not.toContainEqual(['device', 'Supplied']);
     expect(actions.map((action) => action.type)).toContain('EDIT_DEVICE');
     expect(actions.map((action) => action.type)).toContain('DELETE_DEVICE');
+    expect(actions.map((action) => action.type)).toContain('MOVE_NAVIGATOR_ITEM_TO_FOLDER');
+    expect(actions.map((action) => action.type)).toContain('UNASSIGN_DEVICE_FROM_RACK');
   });
 
   it('exports the latest project returned by the injected getter', () => {

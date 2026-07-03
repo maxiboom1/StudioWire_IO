@@ -3,6 +3,7 @@ import { makeId, makeIndexedId, makeUniqueId, nowIso } from '../domain/id';
 import { formatPortLabel } from '../domain/portLabels';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
 import { validateRackPlacement } from '../domain/rackPlacement';
+import { normalizeSubLocationForLocation } from '../domain/subLocations';
 import type { Cable, Device, Port, PortGroup, ProjectRoot } from '../domain/types';
 import type { DeviceDraft, DevicePortGroupDraft, TerminalBlockDraft } from './projectTypes';
 
@@ -17,6 +18,12 @@ export function createDeviceInProject(
     return { ok: false, error: 'Device creation blocked: select a valid location.' };
   }
 
+  const subLocationId = normalizeSubLocationForLocation(
+    project,
+    payload.device.subLocationId,
+    payload.device.locationId,
+  );
+
   const deviceId = payload.device.id ?? makeUniqueId('device', payload.device.code || payload.device.name);
   const labelPrefix = payload.device.labelPrefix || payload.device.code || payload.device.name;
   const device: Device = {
@@ -28,7 +35,7 @@ export function createDeviceInProject(
     model: payload.device.model,
     categoryId: payload.device.categoryId,
     locationId: payload.device.locationId,
-    subLocationId: payload.device.subLocationId ?? null,
+    subLocationId,
     role: payload.device.role,
     labelPrefix,
     mountType: payload.device.mountType,

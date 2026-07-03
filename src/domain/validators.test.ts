@@ -189,6 +189,25 @@ describe('validateProject sub-location rules', () => {
     expect(codes).toContain('device-sub-location-missing');
     expect(codes).toContain('device-sub-location-location-mismatch');
   });
+
+  it('reports missing and mismatched rack folder assignments', () => {
+    const project = structuredClone(sampleProject);
+
+    project.subLocations.push({
+      id: 'sub-location-front-table',
+      locationId: 'location-control-room',
+      name: 'Front Table',
+      description: '',
+    });
+    project.racks[0].subLocationId = 'sub-location-front-table';
+
+    let codes = validateProject(project).map((issue) => issue.code);
+    expect(codes).toContain('rack-sub-location-location-mismatch');
+
+    project.racks[0].subLocationId = 'sub-location-missing';
+    codes = validateProject(project).map((issue) => issue.code);
+    expect(codes).toContain('rack-sub-location-missing');
+  });
 });
 
 describe('validateProject planned cable rules', () => {

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { Badge } from '../ui/badge';
@@ -8,6 +9,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { SubLocationSelect } from './SubLocationSelect';
 
 export function DeviceInspector({
   device,
@@ -16,7 +18,7 @@ export function DeviceInspector({
   device: Device;
   onEditDevice: (deviceId: string) => void;
 }) {
-  const { project, updateDevice, deleteDevice } = useProject();
+  const { project, updateDevice, deleteDevice, unassignDeviceFromRack } = useProject();
   const isTerminalBlock = device.kind === 'terminal_block';
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
   const assignedRack = device.rackId
@@ -36,6 +38,7 @@ export function DeviceInspector({
     role: device.role ?? '',
     notes: device.notes,
     locationId: device.locationId,
+    subLocationId: device.subLocationId,
     rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
   });
 
@@ -47,19 +50,27 @@ export function DeviceInspector({
       role: device.role ?? '',
       notes: device.notes,
       locationId: device.locationId,
+      subLocationId: device.subLocationId,
       rackSizeRu: device.rackSizeRu ? String(device.rackSizeRu) : '',
     });
   }, [device]);
 
+  const effectiveLocationId = canEditLocation
+    ? form.locationId
+    : (placementLocation?.id ?? device.locationId);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const locationId = canEditLocation ? form.locationId : device.locationId;
+
     updateDevice(device.id, {
       name: form.name,
       manufacturer: form.manufacturer,
       model: form.model,
       role: form.role,
       notes: form.notes,
-      locationId: canEditLocation ? form.locationId : device.locationId,
+      locationId,
+      subLocationId: normalizeSubLocationForLocation(project, form.subLocationId, effectiveLocationId),
       rackSizeRu: form.rackSizeRu ? Number(form.rackSizeRu) : null,
     });
   }
@@ -129,7 +140,13 @@ export function DeviceInspector({
                 <Label htmlFor="inspector-device-location">Location</Label>
                 <Select
                   value={form.locationId}
-                  onValueChange={(value) => setForm({ ...form, locationId: value })}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      locationId: value,
+                      subLocationId: normalizeSubLocationForLocation(project, form.subLocationId, value),
+                    })
+                  }
                 >
                   <SelectTrigger id="inspector-device-location">
                     <SelectValue placeholder="Select location" />
@@ -143,6 +160,15 @@ export function DeviceInspector({
                   </SelectContent>
                 </Select>
               </div>
+            ) : null}
+            {!isTerminalBlock ? (
+              <SubLocationSelect
+                id="inspector-device-sub-location"
+                locationId={effectiveLocationId}
+                project={project}
+                value={form.subLocationId}
+                onChange={(value) => setForm({ ...form, subLocationId: value })}
+              />
             ) : null}
             {!isTerminalBlock ? (
               <div className="form-field">
@@ -198,6 +224,13 @@ export function DeviceInspector({
               <dd>{placementLocation?.name ?? 'Not assigned'}</dd>
             </div>
             <div>
+              <dt>Folder</dt>
+              <dd>
+                {project.subLocations.find((subLocation) => subLocation.id === device.subLocationId)?.name ??
+                  'No folder'}
+              </dd>
+            </div>
+            <div>
               <dt>Rack</dt>
               <dd>{assignedRack?.name ?? 'Not assigned'}</dd>
             </div>
@@ -230,6 +263,11 @@ export function DeviceInspector({
               ? 'Rear and front port groups are locked in this release.'
               : 'Port group cable allocation fields are locked in this release.'}
           </p>
+          {!isTerminalBlock && device.mountType === 'rack' ? (
+            <Button variant="outline" type="button" onClick={() => unassignDeviceFromRack(device.id)}>
+              Unassign From Rack
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
       {!isTerminalBlock ? (

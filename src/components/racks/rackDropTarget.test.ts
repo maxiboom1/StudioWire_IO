@@ -11,6 +11,7 @@ function projectFixture(): ProjectRoot {
     {
       id: 'rack-second',
       locationId: 'location-machine-room',
+      subLocationId: null,
       name: 'MCR Rack B',
       heightRu: 10,
       numberingDirection: 'top_to_bottom',

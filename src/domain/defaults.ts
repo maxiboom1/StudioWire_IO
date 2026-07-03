@@ -138,7 +138,7 @@ export const DEFAULT_CABLE_PREFIXES: CablePrefix[] = [
 ];
 
 export const DEFAULT_RACK_DEFAULTS: RackDefaults = {
-  heightRu: 42,
+  heightRu: 28,
   numberingDirection: 'bottom_to_top',
 };
 

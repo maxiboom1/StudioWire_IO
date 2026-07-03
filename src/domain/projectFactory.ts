@@ -1,4 +1,4 @@
-import { createDefaultSettings } from './defaults';
+import { createDefaultSettings, DEFAULT_RACK_DEFAULTS } from './defaults';
 import { makeId, makeIndexedId, makeUniqueId, nowIso } from './id';
 import { formatPortLabel } from './portLabels';
 import { createLinkedPlannedCablesForPorts } from './plannedCables';
@@ -113,6 +113,7 @@ export function createSubLocation(input: SubLocationInput): SubLocation {
 export interface RackInput {
   id?: string;
   locationId: string;
+  subLocationId?: string | null;
   name: string;
   heightRu?: number;
   numberingDirection?: RackNumberingDirection;
@@ -122,8 +123,9 @@ export function createRack(input: RackInput): Rack {
   return {
     id: input.id ?? makeUniqueId('rack', input.name),
     locationId: input.locationId,
+    subLocationId: input.subLocationId ?? null,
     name: input.name,
-    heightRu: input.heightRu ?? 42,
+    heightRu: input.heightRu ?? DEFAULT_RACK_DEFAULTS.heightRu,
     numberingDirection: input.numberingDirection ?? 'bottom_to_top',
   };
 }

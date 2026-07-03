@@ -3,6 +3,7 @@ import { getConnectorsForCategory } from '../domain/connectorCompatibility';
 import { makeId, makeIndexedId } from '../domain/id';
 import { formatPortLabel } from '../domain/portLabels';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
+import { normalizeSubLocationForLocation } from '../domain/subLocations';
 import type { Cable, Device, Endpoint, Port, PortGroup, ProjectRoot } from '../domain/types';
 import type { EditDeviceInput, DevicePortGroupDraft } from './projectTypes';
 
@@ -71,6 +72,8 @@ export function editDeviceInProject(
     input.deviceUpdates.labelPrefix.trim() ||
     input.deviceUpdates.code.trim() ||
     input.deviceUpdates.name.trim();
+  const locationId =
+    device.mountType === 'rack' ? (assignedRack?.locationId ?? device.locationId) : input.deviceUpdates.locationId;
   const nextDevice: Device = {
     ...device,
     name: input.deviceUpdates.name.trim(),
@@ -78,8 +81,8 @@ export function editDeviceInProject(
     manufacturer: input.deviceUpdates.manufacturer ?? '',
     model: input.deviceUpdates.model ?? '',
     categoryId: input.deviceUpdates.categoryId,
-    locationId: device.mountType === 'rack' ? (assignedRack?.locationId ?? device.locationId) : input.deviceUpdates.locationId,
-    subLocationId: input.deviceUpdates.subLocationId ?? null,
+    locationId,
+    subLocationId: normalizeSubLocationForLocation(project, input.deviceUpdates.subLocationId, locationId),
     role: input.deviceUpdates.role ?? '',
     labelPrefix,
     notes: input.deviceUpdates.notes,

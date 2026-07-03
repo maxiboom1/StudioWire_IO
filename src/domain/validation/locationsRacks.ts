@@ -33,7 +33,7 @@ export function validateLocationsAndRacks(
         issue(
           'error',
           'sub-location-name-required',
-          'Sub-location name is required.',
+          'Folder name is required.',
           'subLocation',
           subLocation.id,
         ),
@@ -45,7 +45,7 @@ export function validateLocationsAndRacks(
         issue(
           'error',
           'sub-location-without-location',
-          'Sub-location must reference an existing location.',
+          'Folder must reference an existing location.',
           'subLocation',
           subLocation.id,
         ),
@@ -53,14 +53,14 @@ export function validateLocationsAndRacks(
     }
 
     if (
-      (subLocationNameCounts.get(`${subLocation.locationId}:${subLocation.name.trim().toLowerCase()}`) ??
-        0) > 1
+      (subLocationNameCounts.get(`${subLocation.locationId}:${subLocation.name.trim().toLowerCase()}`) ?? 0) >
+      1
     ) {
       issues.push(
         issue(
           'warning',
           'duplicate-sub-location-name',
-          `Sub-location name "${subLocation.name}" is used more than once in one location.`,
+          `Folder name "${subLocation.name}" is used more than once in one location.`,
           'subLocation',
           subLocation.id,
         ),
@@ -77,6 +77,32 @@ export function validateLocationsAndRacks(
       issues.push(
         issue('error', 'rack-without-location', 'Rack must reference an existing location.', 'rack', rack.id),
       );
+    }
+
+    if (rack.subLocationId !== null) {
+      const subLocation = project.subLocations.find((candidate) => candidate.id === rack.subLocationId);
+
+      if (!subLocation) {
+        issues.push(
+          issue(
+            'error',
+            'rack-sub-location-missing',
+            'Rack folder must reference an existing folder.',
+            'rack',
+            rack.id,
+          ),
+        );
+      } else if (subLocation.locationId !== rack.locationId) {
+        issues.push(
+          issue(
+            'error',
+            'rack-sub-location-location-mismatch',
+            'Rack folder must belong to the same location as the rack.',
+            'rack',
+            rack.id,
+          ),
+        );
+      }
     }
 
     if (!isPositiveInteger(rack.heightRu)) {
@@ -151,7 +177,7 @@ export function validateDevices(
           issue(
             'error',
             'device-sub-location-missing',
-            'Device sub-location must reference an existing sub-location.',
+            'Device folder must reference an existing folder.',
             'device',
             device.id,
           ),
@@ -161,7 +187,7 @@ export function validateDevices(
           issue(
             'error',
             'device-sub-location-location-mismatch',
-            'Device sub-location must belong to the same location as the device.',
+            "Device folder must belong to the device's location.",
             'device',
             device.id,
           ),

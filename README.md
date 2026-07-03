@@ -1,8 +1,8 @@
-﻿# StudioWire IO
+# StudioWire IO
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.11 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.12 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -85,8 +85,8 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 
 - Browser-only project editing with localStorage autosave.
 - Project settings for project info, connector catalog, category connector assignments, connector compatibility groups, and cable prefixes.
-- Location and rack creation, editing, and guarded deletion.
-- Device creation, metadata editing, interface relabeling, new-interface append, and standard-device hard delete.
+- Location, folder, and rack creation/editing, plus guarded location/rack deletion.
+- Device creation, metadata editing, folder assignment, interface relabeling, new-interface append, rack unassign, and standard-device hard delete.
 - Terminal block creation as fixed 1RU rack objects with rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
@@ -96,7 +96,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.11`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.12`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
 
 ## Release Gates
 
@@ -140,6 +140,16 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.12
+
+- Bumped app and project schema version to `0.2.8.12`.
+- Added folder management inside Location views, including add, edit, delete, and navigator folder rendering.
+- Added standard-device folder selectors in Add Device, Edit Device, and Device Inspector with automatic reset when the selected location changes.
+- Reworked the left navigator to show flat mixed rack/device/TB lists with inline type badges instead of separate kind folders.
+- Added rack folder assignment and drag/drop moves into folders, back to parent locations, and between locations where valid.
+- Changed newly created racks to default to 28 RU while preserving existing rack heights.
+- Added standard-device rack unassign controls from Rack Inspector and Device Inspector; terminal blocks remain excluded from this workflow.
 
 ### v0.2.8.11
 

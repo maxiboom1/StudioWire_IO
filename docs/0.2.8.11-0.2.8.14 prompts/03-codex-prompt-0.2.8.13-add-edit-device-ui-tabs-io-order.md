@@ -6,7 +6,7 @@ Implement **only** the StudioWire IO `0.2.8.13` Add/Edit Device modal UI and I/O
 
 This is a **feature-dev task**. Do not run Git commands, create commits, create tags, rewrite history, run release packaging, install Playwright browsers, or run release gates.
 
-The repository must start at app/schema version `0.2.8.12` with sub-location and rack unassign workflows already implemented.
+The repository must start at app/schema version `0.2.8.12` with folder-based navigator organization and rack unassign workflows already implemented.
 
 ## Release goal
 
@@ -64,8 +64,8 @@ Show only these user-facing fields for standard devices:
 5. `Category`
    - Helper: `Assign the device as video, audio, network, or another category.`
 6. `Location`
-7. `Sub-location`
-   - Include `No sub-location`.
+7. `Folder`
+   - Include `No folder`.
    - Filter by selected location.
 
 Remove these fields from Add/Edit Device UI:
@@ -172,7 +172,7 @@ Required scenarios:
 - Add Device payload derives `labelPrefix` from Device sub-label or Device Label.
 - Add/Edit Device no longer exposes Label Prefix, Role, or Notes fields.
 - Helper text appears beside the requested General fields.
-- Changing location resets invalid sub-location.
+- Changing location resets invalid folder assignment.
 - Add Device preserves I/O interface order in submitted payload.
 - Edit Device persists changed existing interface order without changing existing port IDs/cable IDs.
 - Collapse/expand hides and reveals interface fields without losing edits.

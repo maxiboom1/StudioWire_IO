@@ -49,6 +49,9 @@ function createContext(project: ProjectRoot, editDevice = vi.fn()): ProjectConte
     addLocation: vi.fn(),
     updateLocation: vi.fn(),
     deleteLocation: vi.fn(),
+    addSubLocation: vi.fn(),
+    updateSubLocation: vi.fn(),
+    deleteSubLocation: vi.fn(),
     addRack: vi.fn(),
     updateRack: vi.fn(),
     deleteRack: vi.fn(),
@@ -57,6 +60,8 @@ function createContext(project: ProjectRoot, editDevice = vi.fn()): ProjectConte
     connectPorts: vi.fn(),
     disconnectPort: vi.fn(),
     moveMountedDevice: vi.fn(),
+    moveNavigatorItemToFolder: vi.fn(),
+    unassignDeviceFromRack: vi.fn(),
     updateDevice: vi.fn(),
     editDevice,
     deleteDevice: vi.fn(),
@@ -72,6 +77,20 @@ afterEach(() => {
 describe('EditDeviceModal', () => {
   it('locks existing interface wiring fields while submitting edits and new interfaces separately', async () => {
     const project = structuredClone(sampleProject);
+    project.subLocations = [
+      {
+        id: 'sub-location-mcr-racks',
+        locationId: 'location-machine-room',
+        name: 'MCR Racks',
+        description: '',
+      },
+      {
+        id: 'sub-location-front-table',
+        locationId: 'location-control-room',
+        name: 'Front Table',
+        description: '',
+      },
+    ];
     const device = project.devices.find((candidate) => candidate.id === 'device-router-1');
     const editDevice = vi.fn();
     const onSaved = vi.fn();
@@ -82,6 +101,8 @@ describe('EditDeviceModal', () => {
 
     contextHarness.current = createContext(project, editDevice);
     render(<EditDeviceModal device={device} onClose={vi.fn()} onSaved={onSaved} />);
+
+    expect(screen.getByRole('combobox', { name: 'Folder' }).textContent).toContain('No folder');
 
     const existingCount = screen.getByLabelText('Count') as HTMLInputElement;
     expect(existingCount.value).toBe('4');

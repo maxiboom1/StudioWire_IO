@@ -321,6 +321,7 @@
     {
       "id": "rack-mcr-a",
       "locationId": "location-machine-room",
+      "subLocationId": null,
       "name": "MCR Rack A",
       "heightRu": 42,
       "numberingDirection": "bottom_to_top"

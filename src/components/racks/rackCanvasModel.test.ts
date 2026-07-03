@@ -21,6 +21,7 @@ function rack(overrides: Partial<Rack> = {}): Rack {
   return {
     id: 'rack-a',
     locationId: 'location-machine-room',
+    subLocationId: null,
     name: 'Rack A',
     heightRu: 6,
     numberingDirection: 'bottom_to_top',

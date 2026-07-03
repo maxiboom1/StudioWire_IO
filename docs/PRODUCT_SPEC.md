@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.11
+# StudioWire IO Product Spec v0.2.8.12
 
-StudioWire IO v0.2.8.11 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.12 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -28,12 +28,12 @@ The left tree is the primary project navigator. It shows the hierarchy of:
 
 - Project settings.
 - Locations.
-- Racks within locations.
-- Devices within locations.
+- Folders within locations.
+- A flat mixed list of racks, devices, and terminal blocks under each location or folder.
 
 Selecting an item in the tree opens it in the center workspace and exposes editable fields in the right inspector.
 
-The Locations section includes an Add Location action. Each location branch includes Add Rack and Add Device actions. Right-click on the Locations section or a location branch may open the practical add flow where supported by the browser.
+The Locations section includes an Add Location action. Each location branch includes Add Rack, Add Device, Add Folder, and Add TB actions. Racks, devices, and terminal blocks can be dragged between folders or back to the parent location when the move is valid.
 
 ### Center Workspace
 
@@ -55,8 +55,9 @@ Examples:
 
 - Project metadata and settings.
 - Location name, type, and description.
-- Rack name, height, numbering direction, and assigned device list.
-- Device name, code, manufacturer, model, role, notes, location, rack placement, and rack units.
+- Location folder list, including add, edit, and delete actions.
+- Rack name, height, numbering direction, assigned device list, and standard-device rack unassign controls.
+- Device name, code, manufacturer, model, role, notes, location, folder, rack placement, and rack units.
 - Locked cable range note for device port groups.
 
 The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Standard devices can be deleted; deletion removes device-owned ports, port groups, planned cables, rack placement, connections, and owned allocated cable-number ranges so released cable numbers may be reused. Reserved gaps remain unavailable.
@@ -95,6 +96,8 @@ Locations represent physical places such as rooms, control rooms, machine rooms,
 
 Each location has a stable ID, display name, type, and description. Every device and terminal block must reference a valid location, including virtual and non-rack devices.
 
+Folders are organizational containers inside one location, such as a front table, back table, sound room, CCU/VTR room, or a rack group inside a control room. Racks, devices, and terminal blocks may be assigned to a folder or left directly under the parent location.
+
 ## Racks
 
 Racks belong to locations and define physical rack capacity.
@@ -103,9 +106,12 @@ Each rack has:
 
 - Stable ID.
 - Location ID.
+- Folder ID, stored as `subLocationId`, or `null`.
 - Name.
 - Rack height in rack units.
 - Numbering direction.
+
+New racks default to 28 RU. Existing rack records keep their stored height.
 
 Rack placement validation checks device rack positions against rack height and detects rack unit overlap.
 
@@ -128,6 +134,8 @@ Each device has:
 Device creation can generate port groups, ports, planned cables, and ledger allocations in one workflow.
 
 Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
+
+Rack-mounted standard devices can be unassigned from their rack without deleting the device. This clears rack assignment and RU placement, preserves mount height, and keeps the device in the rack's location. Terminal blocks are not unassigned through this workflow.
 
 As of v0.2.5.1, terminal blocks are modeled as a device kind with fixed 1RU rack placement, rear/front port faces, optional planned cable numbers on FRONT ports only, and connection-chain drawing through rear/front connector pairs.
 

@@ -11,6 +11,7 @@ import type {
   ProjectInfo,
   ProjectRoot,
   Rack,
+  SubLocation,
 } from '../domain/types';
 
 export interface ProjectState {
@@ -133,6 +134,12 @@ export type ProjectAction =
       type: 'UPDATE_LOCATION';
       payload: { id: string; updates: Pick<Location, 'name' | 'type' | 'description'> };
     }
+  | { type: 'ADD_SUB_LOCATION'; payload: SubLocation }
+  | {
+      type: 'UPDATE_SUB_LOCATION';
+      payload: { id: string; updates: Pick<SubLocation, 'name' | 'description'> };
+    }
+  | { type: 'DELETE_SUB_LOCATION'; payload: { id: string } }
   | { type: 'ADD_RACK'; payload: Rack }
   | {
       type: 'UPDATE_RACK';
@@ -148,6 +155,16 @@ export type ProjectAction =
       type: 'MOVE_MOUNTED_DEVICE';
       payload: { deviceId: string; targetRackId: string; targetBottomRu: number };
     }
+  | {
+      type: 'MOVE_NAVIGATOR_ITEM_TO_FOLDER';
+      payload: {
+        itemType: 'device' | 'rack';
+        itemId: string;
+        targetLocationId: string;
+        targetFolderId: string | null;
+      };
+    }
+  | { type: 'UNASSIGN_DEVICE_FROM_RACK'; payload: { deviceId: string } }
   | { type: 'DELETE_LOCATION'; payload: { id: string } }
   | { type: 'DELETE_RACK'; payload: { id: string } }
   | { type: 'DELETE_DEVICE'; payload: { id: string } }

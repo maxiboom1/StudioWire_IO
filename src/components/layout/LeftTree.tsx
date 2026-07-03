@@ -35,13 +35,37 @@ export function LeftTree({
   onEditDevice: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
-  const { project } = useProject();
+  const { project, addSubLocation, moveNavigatorItemToFolder, updateSubLocation } = useProject();
   const tree = useMemo(() => buildLeftTreeModel(project), [project]);
   const collapsedTree = useCollapsedTree();
   const rootActions = [
     { label: 'Add Location', onSelect: onAddLocation },
     { label: 'Add TB', onSelect: () => onAddTerminalBlock(null) },
   ];
+  function handleAddSubLocation(locationId: string) {
+    const name = window.prompt('Folder name');
+
+    if (name?.trim()) {
+      addSubLocation({ locationId, name: name.trim(), description: '' });
+    }
+  }
+
+  function handleRenameSubLocation(subLocationId: string) {
+    const subLocation = project.subLocations.find((candidate) => candidate.id === subLocationId);
+
+    if (!subLocation) {
+      return;
+    }
+
+    const name = window.prompt('Folder name', subLocation.name);
+
+    if (name?.trim() && name.trim() !== subLocation.name) {
+      updateSubLocation(subLocation.id, {
+        name: name.trim(),
+        description: subLocation.description,
+      });
+    }
+  }
 
   return (
     <Sidebar aria-label="StudioWire project sidebar" className="app-sidebar">
@@ -60,9 +84,7 @@ export function LeftTree({
                       data-ui="empty-project-prompt"
                       type="button"
                     >
-                      <span className="text-sm font-semibold text-studio-text">
-                        Create a location
-                      </span>
+                      <span className="text-sm font-semibold text-studio-text">Create a location</span>
                       <span className="text-xs leading-5 text-studio-muted">
                         Devices are added from a location branch.
                       </span>
@@ -74,15 +96,16 @@ export function LeftTree({
                   {tree.locations.map((branch) => (
                     <LocationBranch
                       branch={branch}
-                      isDevicesOpen={collapsedTree.isOpen(branch.devicesKey)}
                       isOpen={collapsedTree.isOpen(branch.key)}
-                      isRacksOpen={collapsedTree.isOpen(branch.racksKey)}
-                      isTerminalBlocksOpen={collapsedTree.isOpen(branch.terminalBlocksKey)}
+                      isSubLocationOpen={collapsedTree.isOpen}
                       key={branch.location.id}
                       onAddDevice={onAddDevice}
+                      onAddSubLocation={handleAddSubLocation}
                       onEditDevice={onEditDevice}
                       onAddRack={onAddRack}
                       onAddTerminalBlock={onAddTerminalBlock}
+                      onMoveNavigatorItemToFolder={moveNavigatorItemToFolder}
+                      onRenameSubLocation={handleRenameSubLocation}
                       onSelectObject={onSelectObject}
                       onToggle={collapsedTree.toggle}
                       selection={selection}

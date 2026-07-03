@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.8.11",
+  "title": "StudioWire IO Project v0.2.8.12",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,7 +21,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.8.11"
+      "const": "0.2.8.12"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -388,7 +388,7 @@
     "Rack": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "locationId", "name", "heightRu", "numberingDirection"],
+      "required": ["id", "locationId", "subLocationId", "name", "heightRu", "numberingDirection"],
       "properties": {
         "id": {
           "type": "string",
@@ -397,6 +397,9 @@
         "locationId": {
           "type": "string",
           "minLength": 1
+        },
+        "subLocationId": {
+          "type": ["string", "null"]
         },
         "name": {
           "type": "string",

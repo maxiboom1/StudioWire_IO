@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.11",
+  "schemaVersion": "0.2.8.12",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -316,7 +316,7 @@
       }
     ],
     "rackDefaults": {
-      "heightRu": 42,
+      "heightRu": 28,
       "numberingDirection": "bottom_to_top"
     },
     "labelRules": {
@@ -343,6 +343,7 @@
     {
       "id": "rack-mcr-a",
       "locationId": "location-machine-room",
+      "subLocationId": null,
       "name": "MCR Rack A",
       "heightRu": 42,
       "numberingDirection": "bottom_to_top"

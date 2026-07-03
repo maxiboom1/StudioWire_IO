@@ -39,11 +39,10 @@ class MemoryStorage implements BrowserStorageLike {
 }
 
 describe('projectStorage recovery', () => {
-  it('restores a valid fallback when current storage is corrupt', () => {
+  it('restores a current-schema fallback when current storage is corrupt', () => {
     const storage = new MemoryStorage();
-    const legacyProject = { ...structuredClone(sampleProject), schemaVersion: '0.2.7.0' };
     storage.values.set(ACTIVE_STORAGE_KEY, '{');
-    storage.values.set('studiowire.io.project.v0.2.7', JSON.stringify(legacyProject));
+    storage.values.set('studiowire.io.project.v0.2.7', JSON.stringify(sampleProject));
 
     const result = restoreStoredProject(storage);
 

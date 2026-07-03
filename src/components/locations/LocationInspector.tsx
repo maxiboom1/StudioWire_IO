@@ -11,6 +11,9 @@ export function LocationInspector({ location }: { location: Location }) {
   const { project, updateLocation, deleteLocation } = useProject();
   const rackCount = project.racks.filter((rack) => rack.locationId === location.id).length;
   const deviceCount = project.devices.filter((device) => device.locationId === location.id).length;
+  const subLocationCount = project.subLocations.filter(
+    (subLocation) => subLocation.locationId === location.id,
+  ).length;
   const [form, setForm] = useState({
     name: location.name,
     type: location.type,
@@ -32,7 +35,7 @@ export function LocationInspector({ location }: { location: Location }) {
 
   function handleDelete() {
     const confirmed = window.confirm(
-      `Delete location "${location.name}"?\n\nLocations with racks or devices will be blocked.`,
+      `Delete location "${location.name}"?\n\nLocations with folders, racks, or devices will be blocked.`,
     );
 
     if (confirmed) {
@@ -83,8 +86,8 @@ export function LocationInspector({ location }: { location: Location }) {
         </CardHeader>
         <CardContent>
           <p>
-            This location references {rackCount} rack(s) and {deviceCount} device(s). Deletion is allowed only
-            when both counts are zero.
+            This location references {subLocationCount} folder(s), {rackCount} rack(s), and {deviceCount}{' '}
+            device(s). Deletion is allowed only when all counts are zero.
           </p>
           <Button variant="destructive" type="button" onClick={handleDelete}>
             Delete Location

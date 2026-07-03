@@ -51,6 +51,7 @@ describe('Add Device initial draft and presets', () => {
       model: '',
       categoryId: 'category-video',
       locationId: 'location-machine-room',
+      subLocationId: null,
       role: '',
       labelPrefix: '',
       mountType: 'virtual',
@@ -363,6 +364,7 @@ describe('Add Device token normalization and submit shaping', () => {
           cablePrefix: 'V',
           firstCableNumber: 9,
           createPlannedCables: true,
+          colorOverride: null,
         },
         {
           name: 'SDI OUT',
@@ -374,6 +376,7 @@ describe('Add Device token normalization and submit shaping', () => {
           cablePrefix: 'V',
           firstCableNumber: null,
           createPlannedCables: false,
+          colorOverride: null,
         },
       ],
     });
