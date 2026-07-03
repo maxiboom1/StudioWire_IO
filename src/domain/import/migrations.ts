@@ -5,8 +5,8 @@ import { isRecord } from './schemaVersion';
 import type { ProjectImportError } from './types';
 
 export interface MigrationStep {
-  from: SchemaVersion;
-  to: SchemaVersion;
+  from: string;
+  to: string;
   migrate: (project: unknown) => unknown;
 }
 
@@ -32,7 +32,7 @@ export const MIGRATION_STEPS: MigrationStep[] = [
 
 export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {
   let migrated: unknown = structuredClone(payload);
-  let currentVersion = version;
+  let currentVersion: string = version;
 
   try {
     while (currentVersion !== STUDIOWIRE_CURRENT_VERSION) {
@@ -151,7 +151,7 @@ function identityMigration(project: unknown): unknown {
   return project;
 }
 
-function stampSchemaVersion(project: unknown, version: SchemaVersion): unknown {
+function stampSchemaVersion(project: unknown, version: string): unknown {
   const record = requireRecord(project, '$');
 
   return {

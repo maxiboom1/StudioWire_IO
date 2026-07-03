@@ -31,6 +31,7 @@ export function createEditDeviceDraft(device: Device): DeviceDraft {
     model: device.kind === 'terminal_block' ? '' : (device.model ?? ''),
     categoryId: device.categoryId,
     locationId: device.locationId,
+    subLocationId: device.subLocationId,
     role: device.kind === 'terminal_block' ? '' : (device.role ?? ''),
     labelPrefix: device.labelPrefix,
     mountType: device.mountType,
@@ -236,6 +237,7 @@ export function createEditDeviceCommandInput(
       model: device.model,
       categoryId: device.categoryId,
       locationId: device.locationId,
+      subLocationId: device.subLocationId,
       role: device.role,
       labelPrefix: effectiveLabelPrefix,
       notes: device.notes,
@@ -265,5 +267,6 @@ function groupToForm(group: PortGroup): Omit<ExistingPortGroupForm, 'id' | 'loca
     cablePrefix: group.cablePrefix,
     firstCableNumber: group.firstCableNumber,
     createPlannedCables: group.createPlannedCables,
+    colorOverride: group.colorOverride,
   };
 }

@@ -68,7 +68,7 @@ describe('projectReducer core project actions', () => {
 
     state = projectReducer(state, {
       type: 'ADD_CATEGORY',
-      payload: { id: 'category-test', name: 'Test', defaultCablePrefix: 'T' },
+      payload: { id: 'category-test', name: 'Test', defaultCablePrefix: 'T', color: '#111827' },
     });
     state = projectReducer(state, {
       type: 'UPDATE_CATEGORY',
@@ -76,7 +76,7 @@ describe('projectReducer core project actions', () => {
     });
     state = projectReducer(state, {
       type: 'ADD_CONNECTOR_TYPE',
-      payload: { id: 'connector-test', name: 'Test Connector' },
+      payload: { id: 'connector-test', name: 'Test Connector', iconKey: 'generic' },
     });
     state = projectReducer(state, {
       type: 'UPDATE_CONNECTOR_TYPE',

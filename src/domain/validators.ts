@@ -30,7 +30,7 @@ export function validateProject(project: ProjectRoot): ValidationIssue[] {
     ),
   );
   issues.push(...validateLocationsAndRacks(project, context.locations, builder));
-  issues.push(...validateDevices(project, context.locations, context.racks, builder));
+  issues.push(...validateDevices(project, context.locations, context.subLocations, context.racks, builder));
   issues.push(...validateRackOverlaps(project, builder));
   issues.push(...validatePortsAndGroups(project, context.devices, context.portGroups, builder));
   issues.push(...validateLedgerRanges(project, context.cablePrefixes, builder));

@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.10 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.11 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -96,7 +96,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.10`. Existing supported legacy fixtures remain accepted and migrate to the current runtime/schema contract, but internal dev-to-dev compatibility is not guaranteed before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.11`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
 
 ## Release Gates
 
@@ -140,6 +140,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.11
+
+- Bumped app and project schema version to `0.2.8.11`.
+- Added current-schema fields for sub-locations, device sub-location assignment, category colors, connector icon keys, and I/O interface color overrides.
+- Made this internal dev schema current-shape only instead of adding a `0.2.8.10` compatibility migration.
+- Added focused validation for sub-location references, hex color fields, connector icon keys, and I/O color override values.
 
 ### v0.2.8.10
 

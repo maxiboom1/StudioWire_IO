@@ -14,6 +14,7 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `duplicate-cable-prefix-value`: cable prefix values must be unique.
 - `invalid-cable-prefix-format`: cable prefixes must contain uppercase letters only.
 - `category-default-prefix-missing`: category default cable prefixes must exist in settings.
+- `category-color-invalid`: category colors must use `#RRGGBB` format.
 - `duplicate-category-name`: category names must be unique.
 - `empty-category-name`: category names are required.
 - `connector-group-category-missing`: connector groups must reference an existing category.
@@ -28,12 +29,16 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `duplicate-connector-group-member`: a connector type can be listed only once in one compatibility group.
 - `duplicate-connector-type-name`: connector type names must be unique in the global connector catalog.
 - `empty-connector-type-name`: connector type names are required.
+- `connector-icon-key-invalid`: connector icon keys must use one of the fixed in-app CSS-drawn connector icon tokens.
 - `unknown-category`: device, port group, and port category references must exist in settings.
 - `unknown-connector-type`: port group and port connector type references must exist in settings.
 - `port-group-connector-not-assigned-to-category`: port group connector types must be assigned to the port group category.
 - `port-connector-not-assigned-to-category`: port connector types must be assigned to the port category.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
 - `duplicate-location-name`: duplicate location names are reported as warnings.
+- `duplicate-sub-location-name`: duplicate sub-location names inside one location are reported as warnings.
+- `sub-location-without-location`: sub-locations must reference an existing location.
+- `sub-location-name-required`: sub-location names are required.
 - `rack-without-location`: rack `locationId` must reference an existing location.
 - `rack-height-positive`: rack height must be a positive integer.
 - `rack-name-required`: rack name is required.
@@ -42,6 +47,8 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `terminal-block-rack-mounted`: terminal blocks must be rack-mounted.
 - `terminal-block-size-fixed`: terminal blocks must be fixed at 1 RU.
 - `device-without-location`: every device and terminal block must reference an existing location.
+- `device-sub-location-missing`: device `subLocationId` must reference an existing sub-location when set.
+- `device-sub-location-location-mismatch`: a device sub-location must belong to the device's main location.
 - `device-references-missing-rack`: a device with a rack reference must point at an existing rack.
 - `rack-mounted-device-without-rack`: rack-mounted devices must reference a rack.
 - `rack-location-device-location-mismatch`: rack-mounted devices must be in the same location as their rack.
@@ -51,6 +58,7 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `rack-ru-overlap`: rack-mounted devices in the same rack must not overlap rack units.
 - `port-group-count-mismatch`: generated ports must match `PortGroup.count`.
 - `port-group-count-positive`: port group count must be positive.
+- `port-group-color-override-invalid`: port group color overrides must be `null` or `#RRGGBB`.
 - `device-invalid-port-direction`: standard device port groups must use input, output, or bidirectional.
 - `terminal-block-face-groups-required`: terminal blocks must have exactly one rear and one front group.
 - `terminal-block-invalid-port-direction`: terminal block groups and ports must use rear or front.

@@ -10,6 +10,7 @@ export interface ValidationContext {
   categoryConnectorAssignments: Set<string>;
   cablePrefixes: Set<string>;
   locations: Set<string>;
+  subLocations: Map<string, ProjectRoot['subLocations'][number]>;
   racks: Map<string, ProjectRoot['racks'][number]>;
   devices: Map<string, Device>;
   portGroups: Map<string, ProjectRoot['portGroups'][number]>;
@@ -27,6 +28,7 @@ export function buildValidationContext(project: ProjectRoot): ValidationContext 
     ),
     cablePrefixes: new Set(project.settings.cablePrefixes.map((prefix) => prefix.prefix)),
     locations: new Set(project.locations.map((location) => location.id)),
+    subLocations: new Map(project.subLocations.map((subLocation) => [subLocation.id, subLocation])),
     racks: new Map(project.racks.map((rack) => [rack.id, rack])),
     devices: new Map(project.devices.map((device) => [device.id, device])),
     portGroups: new Map(project.portGroups.map((portGroup) => [portGroup.id, portGroup])),

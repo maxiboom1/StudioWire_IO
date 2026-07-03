@@ -31,7 +31,10 @@ function codes(project = structuredClone(sampleProject)) {
       ).map((item) => item.code),
     locationsRacks: () =>
       validateLocationsAndRacks(project, context.locations, issue).map((item) => item.code),
-    devices: () => validateDevices(project, context.locations, context.racks, issue).map((item) => item.code),
+    devices: () =>
+      validateDevices(project, context.locations, context.subLocations, context.racks, issue).map(
+        (item) => item.code,
+      ),
     portsAndGroups: () =>
       validatePortsAndGroups(project, context.devices, context.portGroups, issue).map((item) => item.code),
     ledgerRanges: () => validateLedgerRanges(project, context.cablePrefixes, issue).map((item) => item.code),

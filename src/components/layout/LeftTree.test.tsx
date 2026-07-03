@@ -46,6 +46,7 @@ function device(overrides: Partial<Device>): Device {
     model: '',
     categoryId: 'category-video',
     locationId: 'location-machine-room',
+    subLocationId: null,
     role: '',
     labelPrefix: 'EX',
     mountType: 'rack',

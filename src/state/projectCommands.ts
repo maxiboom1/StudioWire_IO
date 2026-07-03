@@ -1,4 +1,5 @@
 import { makeUniqueId } from '../domain/id';
+import { getDefaultCategoryColor, getDefaultConnectorIconKey } from '../domain/defaults';
 import type { ProjectRoot } from '../domain/types';
 import { importProjectFile, exportProjectFile, type ProjectFileLike } from './projectFileTransfer';
 import type {
@@ -62,6 +63,7 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
           id,
           name: input.name,
           defaultCablePrefix: input.defaultCablePrefix,
+          color: getDefaultCategoryColor(dependencies.getProject().settings.categories.length),
         },
       });
 
@@ -125,6 +127,7 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
         payload: {
           id,
           name: input.name,
+          iconKey: getDefaultConnectorIconKey(input.name),
         },
       });
 

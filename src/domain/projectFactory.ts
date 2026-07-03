@@ -20,6 +20,7 @@ import type {
   ProjectStatus,
   Rack,
   RackNumberingDirection,
+  SubLocation,
 } from './types';
 
 export interface ProjectInfoInput {
@@ -58,6 +59,7 @@ export function createEmptyProject(input: ProjectInfoInput): ProjectRoot {
     project,
     settings: createDefaultSettings(),
     locations: [],
+    subLocations: [],
     racks: [],
     devices: [],
     portGroups: [],
@@ -92,6 +94,22 @@ export function createLocation(input: LocationInput): Location {
   };
 }
 
+export interface SubLocationInput {
+  id?: string;
+  locationId: string;
+  name: string;
+  description?: string;
+}
+
+export function createSubLocation(input: SubLocationInput): SubLocation {
+  return {
+    id: input.id ?? makeUniqueId('sub-location', `${input.locationId}-${input.name}`),
+    locationId: input.locationId,
+    name: input.name,
+    description: input.description ?? '',
+  };
+}
+
 export interface RackInput {
   id?: string;
   locationId: string;
@@ -118,6 +136,7 @@ export interface DeviceInput {
   model?: string;
   categoryId: string;
   locationId: string;
+  subLocationId?: string | null;
   role?: string;
   labelPrefix?: string;
   mountType?: DeviceMountType;
@@ -142,6 +161,7 @@ export function createDevice(input: DeviceInput): Device {
     model: input.model ?? '',
     categoryId: input.categoryId,
     locationId: input.locationId,
+    subLocationId: input.subLocationId ?? null,
     role: input.role ?? '',
     labelPrefix: input.labelPrefix ?? input.code ?? '',
     mountType: input.mountType ?? 'non_rack',
@@ -160,6 +180,7 @@ export interface TerminalBlockInput {
   name: string;
   categoryId: string;
   locationId: string;
+  subLocationId?: string | null;
   labelPrefix?: string;
   rackId: string;
   rackBottomRu: number;
@@ -178,6 +199,7 @@ export function createTerminalBlock(input: TerminalBlockInput): Device {
     kind: 'terminal_block',
     categoryId: input.categoryId,
     locationId: input.locationId,
+    subLocationId: input.subLocationId ?? null,
     labelPrefix: input.labelPrefix ?? input.name,
     mountType: 'rack',
     rackId: input.rackId,
@@ -205,6 +227,7 @@ export interface PortGroupInput {
   numberingRangeId?: string | null;
   createPlannedCables?: boolean;
   locked?: boolean;
+  colorOverride?: string | null;
 }
 
 export function createPortGroup(input: PortGroupInput): PortGroup {
@@ -225,6 +248,7 @@ export function createPortGroup(input: PortGroupInput): PortGroup {
     numberingRangeId: input.numberingRangeId ?? null,
     createPlannedCables: input.createPlannedCables ?? false,
     locked: input.locked ?? false,
+    colorOverride: input.colorOverride ?? null,
   };
 }
 

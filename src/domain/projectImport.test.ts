@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { MIGRATION_STEPS } from './import/migrations';
 import { importProjectJsonText, importProjectValue, parseImportedProject } from './projectImport';
 import { sampleProject } from './sampleProject';
 import { STUDIOWIRE_CURRENT_VERSION, SUPPORTED_SCHEMA_VERSIONS } from './version';
@@ -240,44 +239,21 @@ describe('importProjectValue structural safety', () => {
     }
   });
 
-  it('migrates every supported schema version to the current version', () => {
-    for (const version of SUPPORTED_SCHEMA_VERSIONS) {
-      const project = currentProject();
-      project.schemaVersion = version;
-      const result = importProjectValue(project);
+  it('supports only the current internal dev schema version', () => {
+    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([STUDIOWIRE_CURRENT_VERSION]);
 
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
-      }
+    const project = currentProject();
+    project.schemaVersion = '0.2.8.10';
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors[0]).toMatchObject({
+        code: 'unsupported-schema-version',
+        path: '$.schemaVersion',
+      });
     }
-  });
-
-  it('declares the previous release migration step explicitly', () => {
-    expect(MIGRATION_STEPS).toContainEqual(
-      expect.objectContaining({
-        from: '0.2.8.3',
-        to: '0.2.8.4',
-      }),
-    );
-    expect(MIGRATION_STEPS).toContainEqual(
-      expect.objectContaining({
-        from: '0.2.8.4',
-        to: '0.2.8.5',
-      }),
-    );
-    expect(MIGRATION_STEPS).toContainEqual(
-      expect.objectContaining({
-        from: '0.2.8.5',
-        to: '0.2.8.6',
-      }),
-    );
-    expect(MIGRATION_STEPS).toContainEqual(
-      expect.objectContaining({
-        from: '0.2.8.6',
-        to: STUDIOWIRE_CURRENT_VERSION,
-      }),
-    );
   });
 
   it('returns controlled syntax errors for invalid JSON text', () => {

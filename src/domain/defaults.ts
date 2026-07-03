@@ -4,6 +4,7 @@ import type {
   Category,
   ConnectorCompatibilityGroup,
   ConnectorCompatibilityGroupMember,
+  ConnectorIconKey,
   ConnectorType,
   LabelRules,
   RackDefaults,
@@ -14,32 +15,72 @@ export const DEFAULT_CABLE_NUMBER_PADDING = 4;
 export const DEFAULT_CABLE_NUMBER_FORMAT = 'PREFIX-0001';
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'category-video', name: 'Video', defaultCablePrefix: 'V' },
-  { id: 'category-audio', name: 'Audio', defaultCablePrefix: 'A' },
-  { id: 'category-network', name: 'Network', defaultCablePrefix: 'N' },
-  { id: 'category-reference', name: 'Reference', defaultCablePrefix: 'R' },
-  { id: 'category-rf', name: 'RF', defaultCablePrefix: 'RF' },
-  { id: 'category-control', name: 'Control', defaultCablePrefix: 'C' },
+  { id: 'category-video', name: 'Video', defaultCablePrefix: 'V', color: '#2563EB' },
+  { id: 'category-audio', name: 'Audio', defaultCablePrefix: 'A', color: '#DC2626' },
+  { id: 'category-network', name: 'Network', defaultCablePrefix: 'N', color: '#059669' },
+  { id: 'category-reference', name: 'Reference', defaultCablePrefix: 'R', color: '#7C3AED' },
+  { id: 'category-rf', name: 'RF', defaultCablePrefix: 'RF', color: '#D97706' },
+  { id: 'category-control', name: 'Control', defaultCablePrefix: 'C', color: '#475569' },
 ];
 
+const DEFAULT_CATEGORY_COLOR_PALETTE = ['#2563EB', '#DC2626', '#059669', '#7C3AED', '#D97706', '#475569'];
+
+export function getDefaultCategoryColor(index: number): string {
+  return DEFAULT_CATEGORY_COLOR_PALETTE[Math.max(0, index) % DEFAULT_CATEGORY_COLOR_PALETTE.length];
+}
+
 export const DEFAULT_CONNECTOR_TYPES: ConnectorType[] = [
-  { id: 'connector-bnc', name: 'BNC' },
-  { id: 'connector-micro-bnc', name: 'Micro BNC' },
-  { id: 'connector-minidin', name: 'MiniDIN' },
-  { id: 'connector-sdi-din', name: 'SDI DIN' },
-  { id: 'connector-hdmi', name: 'HDMI' },
-  { id: 'connector-xlr', name: 'XLR' },
-  { id: 'connector-pl', name: 'PL' },
-  { id: 'connector-rca', name: 'RCA' },
-  { id: 'connector-rj45', name: 'RJ45' },
-  { id: 'connector-db25', name: 'DB25' },
-  { id: 'connector-madi-bnc', name: 'MADI BNC' },
-  { id: 'connector-madi-fiber', name: 'MADI Fiber' },
-  { id: 'connector-sfp', name: 'SFP' },
-  { id: 'connector-fiber', name: 'Fiber' },
-  { id: 'connector-gpio', name: 'GPIO' },
-  { id: 'connector-other', name: 'Other' },
+  { id: 'connector-bnc', name: 'BNC', iconKey: 'bnc' },
+  { id: 'connector-micro-bnc', name: 'Micro BNC', iconKey: 'bnc' },
+  { id: 'connector-minidin', name: 'MiniDIN', iconKey: 'generic' },
+  { id: 'connector-sdi-din', name: 'SDI DIN', iconKey: 'bnc' },
+  { id: 'connector-hdmi', name: 'HDMI', iconKey: 'hdmi' },
+  { id: 'connector-xlr', name: 'XLR', iconKey: 'xlr' },
+  { id: 'connector-pl', name: 'PL', iconKey: 'generic' },
+  { id: 'connector-rca', name: 'RCA', iconKey: 'generic' },
+  { id: 'connector-rj45', name: 'RJ45', iconKey: 'rj45' },
+  { id: 'connector-db25', name: 'DB25', iconKey: 'db25' },
+  { id: 'connector-madi-bnc', name: 'MADI BNC', iconKey: 'bnc' },
+  { id: 'connector-madi-fiber', name: 'MADI Fiber', iconKey: 'fiber' },
+  { id: 'connector-sfp', name: 'SFP', iconKey: 'sfp' },
+  { id: 'connector-fiber', name: 'Fiber', iconKey: 'fiber' },
+  { id: 'connector-gpio', name: 'GPIO', iconKey: 'generic' },
+  { id: 'connector-other', name: 'Other', iconKey: 'generic' },
 ];
+
+export function getDefaultConnectorIconKey(name: string): ConnectorIconKey {
+  const normalizedName = name.trim().toLowerCase();
+
+  if (normalizedName.includes('bnc') || normalizedName.includes('sdi din')) {
+    return 'bnc';
+  }
+
+  if (normalizedName.includes('xlr')) {
+    return 'xlr';
+  }
+
+  if (normalizedName.includes('rj45')) {
+    return 'rj45';
+  }
+
+  if (normalizedName.includes('fiber')) {
+    return 'fiber';
+  }
+
+  if (normalizedName.includes('sfp')) {
+    return 'sfp';
+  }
+
+  if (normalizedName.includes('hdmi')) {
+    return 'hdmi';
+  }
+
+  if (normalizedName.includes('db25')) {
+    return 'db25';
+  }
+
+  return 'generic';
+}
 
 export const DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS: CategoryConnectorAssignment[] = [
   { id: 'assignment-video-bnc', categoryId: 'category-video', connectorTypeId: 'connector-bnc' },

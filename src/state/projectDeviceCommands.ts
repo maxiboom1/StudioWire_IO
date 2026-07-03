@@ -28,6 +28,7 @@ export function createDeviceInProject(
     model: payload.device.model,
     categoryId: payload.device.categoryId,
     locationId: payload.device.locationId,
+    subLocationId: payload.device.subLocationId ?? null,
     role: payload.device.role,
     labelPrefix,
     mountType: payload.device.mountType,
@@ -128,6 +129,7 @@ export function createDeviceInProject(
       numberingRangeId,
       createPlannedCables,
       locked: true,
+      colorOverride: draft.colorOverride ?? null,
     });
     newPorts.push(...groupPorts);
   }
@@ -160,6 +162,7 @@ export function createTerminalBlockInProject(
     kind: 'terminal_block',
     categoryId: draft.categoryId,
     locationId: rack.locationId,
+    subLocationId: draft.subLocationId ?? null,
     labelPrefix: draft.labelPrefix || draft.name,
     mountType: 'rack',
     rackId: rack.id,
@@ -272,6 +275,7 @@ export function createTerminalBlockInProject(
     lastCableNumber: null,
     numberingRangeId: null,
     locked: true,
+    colorOverride: null,
   };
   const frontGroup: PortGroup = {
     id: frontGroupId,
@@ -283,6 +287,7 @@ export function createTerminalBlockInProject(
         : null,
     numberingRangeId,
     locked: true,
+    colorOverride: null,
   };
 
   return {

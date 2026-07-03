@@ -79,6 +79,7 @@ export function editDeviceInProject(
     model: input.deviceUpdates.model ?? '',
     categoryId: input.deviceUpdates.categoryId,
     locationId: device.mountType === 'rack' ? (assignedRack?.locationId ?? device.locationId) : input.deviceUpdates.locationId,
+    subLocationId: input.deviceUpdates.subLocationId ?? null,
     role: input.deviceUpdates.role ?? '',
     labelPrefix,
     notes: input.deviceUpdates.notes,
@@ -187,6 +188,7 @@ export function editDeviceInProject(
       numberingRangeId,
       createPlannedCables: draft.createPlannedCables,
       locked: true,
+      colorOverride: draft.colorOverride ?? null,
     });
     newPorts.push(...groupPorts);
   }

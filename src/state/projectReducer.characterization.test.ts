@@ -156,7 +156,7 @@ describe('projectReducer action characterization', () => {
       name: 'ADD_CATEGORY',
       action: {
         type: 'ADD_CATEGORY',
-        payload: { id: 'category-char', name: 'Char', defaultCablePrefix: 'CH' },
+        payload: { id: 'category-char', name: 'Char', defaultCablePrefix: 'CH', color: '#111827' },
       },
       expectedStatus: 'Category added',
       expectedChange: 'Category added: Char',
@@ -165,6 +165,7 @@ describe('projectReducer action characterization', () => {
           id: 'category-char',
           name: 'Char',
           defaultCablePrefix: 'CH',
+          color: '#111827',
         });
       },
     },
@@ -187,7 +188,10 @@ describe('projectReducer action characterization', () => {
     },
     {
       name: 'ADD_CONNECTOR_TYPE',
-      action: { type: 'ADD_CONNECTOR_TYPE', payload: { id: 'connector-char', name: 'Char Connector' } },
+      action: {
+        type: 'ADD_CONNECTOR_TYPE',
+        payload: { id: 'connector-char', name: 'Char Connector', iconKey: 'generic' },
+      },
       expectedStatus: 'Connector type added',
       expectedChange: 'Connector type added: Char Connector',
     },
@@ -296,11 +300,11 @@ describe('projectReducer action characterization', () => {
   it('characterizes category assignment and compatibility-group member branches', () => {
     const withCategory = reduce(createState(), {
       type: 'ADD_CATEGORY',
-      payload: { id: 'category-char', name: 'Char', defaultCablePrefix: 'CH' },
+      payload: { id: 'category-char', name: 'Char', defaultCablePrefix: 'CH', color: '#111827' },
     });
     const withConnector = reduce(withCategory, {
       type: 'ADD_CONNECTOR_TYPE',
-      payload: { id: 'connector-char', name: 'Char Connector' },
+      payload: { id: 'connector-char', name: 'Char Connector', iconKey: 'generic' },
     });
     const withAssignment = reduce(withConnector, {
       type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT',

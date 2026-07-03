@@ -1,5 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import schema from '../../schema/studiowire.project.schema.json';
 import { connectPorts } from './connections';
@@ -8,6 +7,7 @@ import { importProjectJsonText, importProjectValue } from './projectImport';
 import { sampleProject } from './sampleProject';
 import {
   CABLE_STATUS_VALUES,
+  CONNECTOR_ICON_KEY_VALUES,
   DEVICE_KIND_VALUES,
   DEVICE_MOUNT_TYPE_VALUES,
   ENDPOINT_TYPE_VALUES,
@@ -91,24 +91,22 @@ describe('current project contract', () => {
     }
   });
 
-  it('migrates every supported legacy fixture to a current-schema-valid project', () => {
-    const legacyDir = resolve('docs/samples/legacy');
+  it('rejects older internal dev schema versions instead of migrating them', () => {
+    const project = JSON.parse(JSON.stringify(sampleProject));
+    project.schemaVersion = '0.2.8.10';
 
-    for (const file of readdirSync(legacyDir).filter((name) => name.endsWith('.json'))) {
-      const result = importProjectJsonText(readFileSync(join(legacyDir, file), 'utf8'));
+    const result = importProjectValue(project);
 
-      expect(result.ok, file).toBe(true);
-      if (result.ok) {
-        expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
-      }
-    }
+    expect(result.ok).toBe(false);
   });
 
   it('keeps TypeScript union values aligned with JSON Schema enums', () => {
     const defs = schema.$defs;
 
     expect(schema.properties.project.$ref).toBe('#/$defs/ProjectInfo');
+    expect(schema.properties.subLocations.items.$ref).toBe('#/$defs/SubLocation');
     expect(defs.ProjectInfo.properties.status.enum).toEqual([...PROJECT_STATUS_VALUES]);
+    expect(defs.ConnectorIconKey.enum).toEqual([...CONNECTOR_ICON_KEY_VALUES]);
     expect(defs.Device.properties.status.enum).toEqual([...OBJECT_STATUS_VALUES]);
     expect(defs.Cable.properties.status.enum).toEqual([...CABLE_STATUS_VALUES]);
     expect(defs.NumberingRange.properties.status.enum).toEqual([...NUMBERING_RANGE_STATUS_VALUES]);
@@ -164,6 +162,7 @@ function createRepresentativeProject(): ProjectRoot {
         model: '',
         categoryId: 'category-video',
         locationId: 'location-control-room',
+        subLocationId: null,
         role: '',
         labelPrefix: 'CMON',
         mountType: 'non_rack',

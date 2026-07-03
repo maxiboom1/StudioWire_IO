@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.10`. Existing supported legacy fixtures, including `0.1.0`, `0.2.4.1`, `0.2.5.1`, `0.2.6.0`, `0.2.7.0`, `0.2.7.1`, `0.2.7.2`, `0.2.7.3`, `0.2.8.0`, `0.2.8.1`, `0.2.8.2`, `0.2.8.3`, `0.2.8.4`, `0.2.8.5`, and `0.2.8.6`, are accepted on import and normalized to the current schema. Before the first public/released schema baseline, dev-to-dev compatibility is not guaranteed and new internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.11`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,10 +10,11 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.10`.
+- `schemaVersion`: current fixed string `0.2.8.11`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
+- `subLocations`: `SubLocation[]`.
 - `racks`: `Rack[]`.
 - `devices`: `Device[]`.
 - `portGroups`: `PortGroup[]`.
@@ -50,9 +51,9 @@ Fields:
 - `rackDefaults`: `RackDefaults`
 - `labelRules`: `LabelRules`
 
-Default categories are Video, Audio, Network, Reference, RF, and Control. Each category has a default cable prefix.
+Default categories are Video, Audio, Network, Reference, RF, and Control. Each category has a default cable prefix and a hex display color.
 
-Connector types are a global catalog, for example BNC, XLR, PL, RJ45, and HDMI. Categories assign the connector types that are valid for that category. A port can select only connector types assigned to its category.
+Connector types are a global catalog, for example BNC, XLR, PL, RJ45, and HDMI. Each connector has an `iconKey` selecting a fixed in-app CSS-drawn connector symbol. Categories assign the connector types that are valid for that category. A port can select only connector types assigned to its category.
 
 Direct connections are strict by default: endpoints must share a category and the same connector type. Connector compatibility groups are the advanced override for direct cross-connector connections inside one category. If two different connector types are members of the same category-scoped group, they can be connected directly. Connectors in different categories or different groups require conversion somewhere else in the design.
 
@@ -67,6 +68,7 @@ Fields:
 - `id`
 - `name`
 - `defaultCablePrefix`
+- `color`: `#RRGGBB`
 
 ## ConnectorType
 
@@ -74,6 +76,7 @@ Fields:
 
 - `id`
 - `name`
+- `iconKey`: `bnc`, `xlr`, `rj45`, `fiber`, `sfp`, `hdmi`, `db25`, or `generic`
 
 Connector type names must be unique in the global connector catalog.
 
@@ -138,6 +141,17 @@ Fields:
 - `type`
 - `description`
 
+## SubLocation
+
+Fields:
+
+- `id`
+- `locationId`
+- `name`
+- `description`
+
+Sub-locations are folders inside one main location. A device may reference a sub-location in its assigned location or may leave `subLocationId` as `null`.
+
 ## Rack
 
 Fields:
@@ -162,6 +176,7 @@ Fields:
 - `model` for standard devices
 - `categoryId`
 - `locationId`
+- `subLocationId`
 - `role` for standard devices
 - `labelPrefix`
 - `mountType`: `rack`, `non_rack`, or `virtual`
@@ -175,7 +190,7 @@ Fields:
 
 Current devices use `planned` or `connected` status. Standard-device deletion is a hard delete: the device, its child port groups, its child ports, its device-owned planned cables, and its device-owned allocated numbering ranges are removed. Any surviving connected cable slots affected by the deleted device are reset to planned state where they still have a surviving owner port. Released allocated numbers may be suggested and reallocated again; reserved gaps remain blocked.
 
-`locationId` is required for all devices and terminal blocks and must reference an existing location. Virtual and non-rack devices are still assigned to a location even when they are not rack-mounted.
+`locationId` is required for all devices and terminal blocks and must reference an existing location. `subLocationId` is optional and may be `null`; when set, it must reference a sub-location inside the same location. Virtual and non-rack devices are still assigned to a location even when they are not rack-mounted.
 
 Standard devices use `kind: "device"` and may be virtual, non-rack, or rack-mounted. Imported older devices without `kind` are normalized to standard devices.
 
@@ -199,6 +214,7 @@ Fields:
 - `numberingRangeId`
 - `createPlannedCables`
 - `locked`
+- `colorOverride`
 
 `portLabelPattern` supports `{DEVICE}`, `{00}`, and `{000}`. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits.
 
@@ -208,6 +224,8 @@ PortGroup allocation semantics are mode-specific:
 
 - If `createPlannedCables` is `true`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be set. The range must reference an allocated ledger range, generated ports must link to planned cables, and planned cable numbers must be covered by that range.
 - If `createPlannedCables` is `false`, `firstCableNumber`, `lastCableNumber`, and `numberingRangeId` must be `null`. Generated ports must keep `plannedCableId` as `null`, no planned cables are created, and no cable ledger allocation is made.
+
+`colorOverride` is either `null` or a `#RRGGBB` display color. `null` means the group inherits its category color.
 
 ## Port
 
@@ -315,6 +333,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, structural preflight, one-step legacy migration to the current version, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid.
 
 Autosave stores compact JSON under `studiowire.io.project.current`. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

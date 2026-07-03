@@ -8,6 +8,10 @@ export function validateLocationsAndRacks(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const locationNameCounts = countBy(project.locations, (location) => location.name.trim().toLowerCase());
+  const subLocationNameCounts = countBy(
+    project.subLocations,
+    (subLocation) => `${subLocation.locationId}:${subLocation.name.trim().toLowerCase()}`,
+  );
 
   for (const location of project.locations) {
     if ((locationNameCounts.get(location.name.trim().toLowerCase()) ?? 0) > 1) {
@@ -18,6 +22,47 @@ export function validateLocationsAndRacks(
           `Location name "${location.name}" is used more than once.`,
           'location',
           location.id,
+        ),
+      );
+    }
+  }
+
+  for (const subLocation of project.subLocations) {
+    if (!subLocation.name.trim()) {
+      issues.push(
+        issue(
+          'error',
+          'sub-location-name-required',
+          'Sub-location name is required.',
+          'subLocation',
+          subLocation.id,
+        ),
+      );
+    }
+
+    if (!locations.has(subLocation.locationId)) {
+      issues.push(
+        issue(
+          'error',
+          'sub-location-without-location',
+          'Sub-location must reference an existing location.',
+          'subLocation',
+          subLocation.id,
+        ),
+      );
+    }
+
+    if (
+      (subLocationNameCounts.get(`${subLocation.locationId}:${subLocation.name.trim().toLowerCase()}`) ??
+        0) > 1
+    ) {
+      issues.push(
+        issue(
+          'warning',
+          'duplicate-sub-location-name',
+          `Sub-location name "${subLocation.name}" is used more than once in one location.`,
+          'subLocation',
+          subLocation.id,
         ),
       );
     }
@@ -45,6 +90,7 @@ export function validateLocationsAndRacks(
 export function validateDevices(
   project: ProjectRoot,
   locations: Set<string>,
+  subLocations: Map<string, ProjectRoot['subLocations'][number]>,
   racks: Map<string, ProjectRoot['racks'][number]>,
   issue: ValidationIssueBuilder,
 ): ValidationIssue[] {
@@ -95,6 +141,32 @@ export function validateDevices(
           device.id,
         ),
       );
+    }
+
+    if (device.subLocationId !== null) {
+      const subLocation = subLocations.get(device.subLocationId);
+
+      if (!subLocation) {
+        issues.push(
+          issue(
+            'error',
+            'device-sub-location-missing',
+            'Device sub-location must reference an existing sub-location.',
+            'device',
+            device.id,
+          ),
+        );
+      } else if (subLocation.locationId !== device.locationId) {
+        issues.push(
+          issue(
+            'error',
+            'device-sub-location-location-mismatch',
+            'Device sub-location must belong to the same location as the device.',
+            'device',
+            device.id,
+          ),
+        );
+      }
     }
 
     if (device.mountType !== 'rack') {

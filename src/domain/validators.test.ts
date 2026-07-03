@@ -32,17 +32,19 @@ describe('validateProject settings rules', () => {
     const project = createValidationTestProject();
 
     project.settings.categories.push(
-      { id: 'category-empty', name: '', defaultCablePrefix: 'V' },
-      { id: 'category-video-copy', name: 'Video', defaultCablePrefix: 'MISSING' },
+      { id: 'category-empty', name: '', defaultCablePrefix: 'V', color: '#111827' },
+      { id: 'category-video-copy', name: 'Video', defaultCablePrefix: 'MISSING', color: '#111827' },
     );
     project.settings.connectorTypes.push(
       {
         id: 'connector-empty',
         name: '',
+        iconKey: 'generic',
       },
       {
         id: 'connector-bnc-copy',
         name: 'BNC',
+        iconKey: 'bnc',
       },
     );
 
@@ -53,6 +55,18 @@ describe('validateProject settings rules', () => {
     expect(codes).toContain('category-default-prefix-missing');
     expect(codes).toContain('empty-connector-type-name');
     expect(codes).toContain('duplicate-connector-type-name');
+  });
+
+  it('reports invalid category colors and connector icon keys', () => {
+    const project = createValidationTestProject();
+
+    project.settings.categories[0].color = 'blue';
+    project.settings.connectorTypes[0].iconKey = 'uploaded-image' as any;
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('category-color-invalid');
+    expect(codes).toContain('connector-icon-key-invalid');
   });
 
   it('reports connector assignment and connector group issues', () => {
@@ -113,6 +127,67 @@ describe('validateProject settings rules', () => {
     expect(codes).toContain('connector-group-member-connector-missing');
     expect(codes).toContain('connector-group-member-unassigned-connector');
     expect(codes).toContain('duplicate-connector-group-member');
+  });
+});
+
+describe('validateProject sub-location rules', () => {
+  it('accepts null and valid device sub-location assignments', () => {
+    const project = structuredClone(sampleProject);
+
+    project.subLocations.push({
+      id: 'sub-location-front-table',
+      locationId: 'location-control-room',
+      name: 'Front Table',
+      description: '',
+    });
+    project.devices[1].subLocationId = 'sub-location-front-table';
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(project.devices[0].subLocationId).toBeNull();
+    expect(codes).not.toContain('device-sub-location-missing');
+    expect(codes).not.toContain('device-sub-location-location-mismatch');
+  });
+
+  it('reports duplicate, empty, missing, and mismatched sub-locations', () => {
+    const project = structuredClone(sampleProject);
+
+    project.subLocations.push(
+      {
+        id: 'sub-location-empty',
+        locationId: 'location-control-room',
+        name: '',
+        description: '',
+      },
+      {
+        id: 'sub-location-front-table',
+        locationId: 'location-control-room',
+        name: 'Front Table',
+        description: '',
+      },
+      {
+        id: 'sub-location-front-table-copy',
+        locationId: 'location-control-room',
+        name: 'front table',
+        description: '',
+      },
+      {
+        id: 'sub-location-missing-location',
+        locationId: 'location-missing',
+        name: 'Missing',
+        description: '',
+      },
+    );
+    project.devices[0].subLocationId = 'sub-location-missing';
+    project.devices[1].subLocationId = 'sub-location-missing-location';
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('sub-location-name-required');
+    expect(codes).toContain('duplicate-sub-location-name');
+    expect(codes).toContain('sub-location-without-location');
+    expect(codes).toContain('device-sub-location-missing');
+    expect(codes).toContain('device-sub-location-location-mismatch');
   });
 });
 
@@ -231,6 +306,16 @@ describe('validateProject port group planned-cable mode rules', () => {
     const codes = validateProject(project).map((issue) => issue.code);
 
     expect(codes).toContain('port-group-planned-cable-count-mismatch');
+  });
+
+  it('reports invalid port group color overrides', () => {
+    const project = structuredClone(sampleProject);
+
+    project.portGroups[0].colorOverride = 'red';
+
+    const codes = validateProject(project).map((issue) => issue.code);
+
+    expect(codes).toContain('port-group-color-override-invalid');
   });
 });
 

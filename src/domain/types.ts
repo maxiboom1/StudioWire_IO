@@ -14,6 +14,16 @@ export const OBJECT_STATUS_VALUES = ['planned', 'connected'] as const;
 export const NUMBERING_RANGE_STATUS_VALUES = ['allocated', 'reserved_gap'] as const;
 export const ENDPOINT_TYPE_VALUES = ['device_port', 'tb_port', 'external', 'unknown'] as const;
 export const VALIDATION_SEVERITY_VALUES = ['error', 'warning', 'info'] as const;
+export const CONNECTOR_ICON_KEY_VALUES = [
+  'bnc',
+  'xlr',
+  'rj45',
+  'fiber',
+  'sfp',
+  'hdmi',
+  'db25',
+  'generic',
+] as const;
 
 export type ProjectStatus = (typeof PROJECT_STATUS_VALUES)[number];
 export type RackNumberingDirection = (typeof RACK_NUMBERING_DIRECTION_VALUES)[number];
@@ -25,12 +35,14 @@ export type ObjectStatus = (typeof OBJECT_STATUS_VALUES)[number];
 export type NumberingRangeStatus = (typeof NUMBERING_RANGE_STATUS_VALUES)[number];
 export type EndpointType = (typeof ENDPOINT_TYPE_VALUES)[number];
 export type ValidationSeverity = (typeof VALIDATION_SEVERITY_VALUES)[number];
+export type ConnectorIconKey = (typeof CONNECTOR_ICON_KEY_VALUES)[number];
 
 export interface ProjectRoot {
   schemaVersion: SchemaVersion;
   project: ProjectInfo;
   settings: Settings;
   locations: Location[];
+  subLocations: SubLocation[];
   racks: Rack[];
   devices: Device[];
   portGroups: PortGroup[];
@@ -68,11 +80,13 @@ export interface Category {
   id: string;
   name: string;
   defaultCablePrefix: string;
+  color: string;
 }
 
 export interface ConnectorType {
   id: string;
   name: string;
+  iconKey: ConnectorIconKey;
 }
 
 export interface CategoryConnectorAssignment {
@@ -116,6 +130,13 @@ export interface Location {
   description: string;
 }
 
+export interface SubLocation {
+  id: string;
+  locationId: string;
+  name: string;
+  description: string;
+}
+
 export interface Rack {
   id: string;
   locationId: string;
@@ -133,6 +154,7 @@ export interface Device {
   model?: string;
   categoryId: string;
   locationId: string;
+  subLocationId: string | null;
   role?: string;
   labelPrefix: string;
   mountType: DeviceMountType;
@@ -160,6 +182,7 @@ export interface PortGroup {
   numberingRangeId: string | null;
   createPlannedCables: boolean;
   locked: boolean;
+  colorOverride: string | null;
 }
 
 export interface Port {

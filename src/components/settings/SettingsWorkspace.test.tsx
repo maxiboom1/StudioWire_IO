@@ -283,7 +283,12 @@ describe('SettingsWorkspace category workflows', () => {
     expect(commands.addCategory).toHaveBeenCalledWith({ name: 'Lighting', defaultCablePrefix: 'V' });
     expect(screen.getByPlaceholderText('New category')).toHaveProperty('value', '');
 
-    const newCategory: Category = { id: 'category-new', name: 'Lighting', defaultCablePrefix: 'V' };
+    const newCategory: Category = {
+      id: 'category-new',
+      name: 'Lighting',
+      defaultCablePrefix: 'V',
+      color: '#2563EB',
+    };
     contextHarness.current = createContext(
       {
         ...project,

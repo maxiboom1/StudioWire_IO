@@ -3,6 +3,7 @@ import {
   DEFAULT_CONNECTOR_COMPATIBILITY_GROUP_MEMBERS,
   DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS,
   DEFAULT_CONNECTOR_TYPES,
+  getDefaultConnectorIconKey,
 } from './defaults';
 import type {
   CategoryConnectorAssignment,
@@ -260,6 +261,7 @@ function normalizeConnectorTypes(settings: LegacySettings): ConnectorType[] {
       connectorTypesByName.set(key, {
         id: makeUniqueConnectorId(connectorTypesByName, name),
         name,
+        iconKey: getDefaultConnectorIconKey(name),
       });
     }
   }

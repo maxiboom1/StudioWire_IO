@@ -57,6 +57,18 @@ export function validatePortsAndGroups(
       );
     }
 
+    if (portGroup.colorOverride !== null && !/^#[0-9A-Fa-f]{6}$/.test(portGroup.colorOverride)) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-color-override-invalid',
+          `Port group ${portGroup.name} color override must use #RRGGBB format.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
     if (portGroup.numberingRangeId && !rangesById.has(portGroup.numberingRangeId)) {
       issues.push(
         issue(

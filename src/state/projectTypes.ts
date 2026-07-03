@@ -28,6 +28,7 @@ export interface DeviceDraft {
   model: string;
   categoryId: string;
   locationId: string;
+  subLocationId?: string | null;
   role: string;
   labelPrefix: string;
   mountType: Device['mountType'];
@@ -47,6 +48,7 @@ export interface DevicePortGroupDraft {
   cablePrefix: string;
   firstCableNumber: number | null;
   createPlannedCables: boolean;
+  colorOverride?: string | null;
 }
 
 export interface TerminalBlockDraft {
@@ -54,6 +56,7 @@ export interface TerminalBlockDraft {
   name: string;
   categoryId: string;
   locationId: string;
+  subLocationId?: string | null;
   labelPrefix: string;
   rackId: string;
   rackBottomRu: number;
@@ -72,6 +75,7 @@ export interface DeviceUpdate {
   role?: string;
   notes: string;
   locationId: string;
+  subLocationId?: string | null;
   rackSizeRu: number | null;
 }
 

@@ -36,6 +36,7 @@ export function createInitialDeviceDraft(
     model: '',
     categoryId: firstCategory?.id ?? '',
     locationId: initialLocationId ?? project.locations[0]?.id ?? '',
+    subLocationId: null,
     role: '',
     labelPrefix: '',
     mountType: 'virtual',
@@ -82,6 +83,7 @@ export function createQuickPortGroups(
       cablePrefix: input.prefix,
       firstCableNumber: null,
       createPlannedCables: true,
+      colorOverride: null,
     };
   }
 
@@ -226,6 +228,7 @@ export function addPortGroupDraft(
       cablePrefix: prefix,
       firstCableNumber: null,
       createPlannedCables: true,
+      colorOverride: null,
     },
   ]);
 }

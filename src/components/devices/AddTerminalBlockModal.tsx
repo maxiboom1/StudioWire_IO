@@ -346,6 +346,7 @@ function getAddTerminalBlockValidation(
       kind: 'terminal_block',
       categoryId: draft.categoryId,
       locationId: rack.locationId,
+      subLocationId: null,
       labelPrefix: effectiveLabelPrefix,
       mountType: 'rack',
       rackId: rack.id,

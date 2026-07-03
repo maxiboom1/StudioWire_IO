@@ -1,5 +1,5 @@
 import { createCategoryAssignmentKey } from '../connectorCompatibility';
-import type { ProjectRoot, ValidationIssue } from '../types';
+import { CONNECTOR_ICON_KEY_VALUES, type ProjectRoot, type ValidationIssue } from '../types';
 import { countBy, type ValidationIssueBuilder } from './shared';
 
 export function validateSettings(project: ProjectRoot, issue: ValidationIssueBuilder): ValidationIssue[] {
@@ -85,6 +85,18 @@ export function validateSettings(project: ProjectRoot, issue: ValidationIssueBui
         ),
       );
     }
+
+    if (!isHexColor(category.color)) {
+      issues.push(
+        issue(
+          'error',
+          'category-color-invalid',
+          `Category ${category.name || category.id} color must use #RRGGBB format.`,
+          'category',
+          category.id,
+        ),
+      );
+    }
   }
 
   for (const connectorType of project.settings.connectorTypes) {
@@ -106,6 +118,18 @@ export function validateSettings(project: ProjectRoot, issue: ValidationIssueBui
           'error',
           'duplicate-connector-type-name',
           `Connector type name "${connectorType.name}" is used more than once.`,
+          'connectorType',
+          connectorType.id,
+        ),
+      );
+    }
+
+    if (!CONNECTOR_ICON_KEY_VALUES.includes(connectorType.iconKey)) {
+      issues.push(
+        issue(
+          'error',
+          'connector-icon-key-invalid',
+          `Connector type ${connectorType.name || connectorType.id} uses an unknown icon key.`,
           'connectorType',
           connectorType.id,
         ),
@@ -266,6 +290,7 @@ export function validateDuplicateIds(project: ProjectRoot, issue: ValidationIssu
     })),
     ...project.settings.cablePrefixes.map((item) => ({ objectType: 'cablePrefix', objectId: item.id })),
     ...project.locations.map((item) => ({ objectType: 'location', objectId: item.id })),
+    ...project.subLocations.map((item) => ({ objectType: 'subLocation', objectId: item.id })),
     ...project.racks.map((item) => ({ objectType: 'rack', objectId: item.id })),
     ...project.devices.map((item) => ({ objectType: 'device', objectId: item.id })),
     ...project.portGroups.map((item) => ({ objectType: 'portGroup', objectId: item.id })),
@@ -300,4 +325,8 @@ export function validateDuplicateIds(project: ProjectRoot, issue: ValidationIssu
   }
 
   return issues;
+}
+
+function isHexColor(value: string): boolean {
+  return /^#[0-9A-Fa-f]{6}$/.test(value);
 }
