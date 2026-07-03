@@ -90,6 +90,7 @@ export interface ExistingDevicePortGroupEdit {
   id: string;
   name: string;
   portLabelPattern: string;
+  colorOverride?: string | null;
 }
 
 export interface EditDeviceInput {
@@ -115,7 +116,7 @@ export type ProjectAction =
   | { type: 'ADD_CATEGORY'; payload: Category }
   | {
       type: 'UPDATE_CATEGORY';
-      payload: { id: string; updates: Pick<Category, 'name' | 'defaultCablePrefix'> };
+      payload: { id: string; updates: Partial<Pick<Category, 'name' | 'defaultCablePrefix' | 'color'>> };
     }
   | { type: 'ADD_CATEGORY_CONNECTOR_ASSIGNMENT'; payload: CategoryConnectorAssignment }
   | { type: 'REMOVE_CATEGORY_CONNECTOR_ASSIGNMENT'; payload: { categoryId: string; connectorTypeId: string } }
@@ -127,7 +128,10 @@ export type ProjectAction =
   | { type: 'ADD_CONNECTOR_GROUP_MEMBER'; payload: ConnectorCompatibilityGroupMember }
   | { type: 'REMOVE_CONNECTOR_GROUP_MEMBER'; payload: { groupId: string; connectorTypeId: string } }
   | { type: 'ADD_CONNECTOR_TYPE'; payload: ConnectorType }
-  | { type: 'UPDATE_CONNECTOR_TYPE'; payload: { id: string; updates: Pick<ConnectorType, 'name'> } }
+  | {
+      type: 'UPDATE_CONNECTOR_TYPE';
+      payload: { id: string; updates: Partial<Pick<ConnectorType, 'name' | 'iconKey'>> };
+    }
   | { type: 'ADD_CABLE_PREFIX'; payload: CablePrefix }
   | { type: 'ADD_LOCATION'; payload: Location }
   | {

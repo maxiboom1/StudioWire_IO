@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import type { ConnectorType } from '../../domain/types';
+import type { ConnectorIconKey, ConnectorType } from '../../domain/types';
 import type { ConnectorTypeInput, ConnectorTypeUpdates } from '../../state/projectContextTypes';
+import { ConnectorIcon } from '../common/ConnectorIcon';
+import { CONNECTOR_ICON_OPTIONS } from '../common/connectorVisuals';
 
 export function ConnectorsPanel({
   connectorTypes,
@@ -48,7 +50,24 @@ export function ConnectorsPanel({
                 }
               }}
             />
-            <span className="settings-future-slot">Future icon</span>
+            <div className="connector-icon-select">
+              <ConnectorIcon iconKey={connectorType.iconKey} label={`${connectorType.name} icon`} />
+              <select
+                aria-label={`${connectorType.name} connector icon`}
+                value={connectorType.iconKey}
+                onChange={(event) =>
+                  onUpdateConnectorType(connectorType.id, {
+                    iconKey: event.target.value as ConnectorIconKey,
+                  })
+                }
+              >
+                {CONNECTOR_ICON_OPTIONS.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         ))}
       </div>

@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import {
   describePortConnection,
   type PortConnectionChainPart,
@@ -6,29 +6,36 @@ import {
 } from '../../domain/connections';
 import type { Device, Port, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { ConnectorIcon } from '../common/ConnectorIcon';
+import { getPortGroupColor, getPortGroupConnectorIconKey } from '../common/connectorVisuals';
 import { CrosspointPicker } from '../connections/CrosspointPicker';
+import { createDeviceMetadataEditInput } from './deviceMetadataEdit';
 
 interface DevicePortRow {
   port: Port;
   connection: PortConnectionSummary;
+  accentColor: string;
+  iconKey: string;
+}
+
+interface DevicePortRowSlot {
+  input?: DevicePortRow;
+  output?: DevicePortRow;
 }
 
 export function DeviceWorkspace({ device }: { device: Device }) {
-  const { project } = useProject();
+  const { project, editDevice } = useProject();
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const ports = project.ports.filter((port) => port.deviceId === device.id);
-  const groupsByDirection = {
-    input: portGroups.filter((group) => group.direction === 'input'),
-    output: portGroups.filter((group) => group.direction === 'output'),
-    bidirectional: portGroups.filter((group) => group.direction === 'bidirectional'),
-  };
-  const sideOutputGroups = [...groupsByDirection.output, ...groupsByDirection.bidirectional];
-  const inputRows = buildPortRows(project, groupsByDirection.input, ports);
-  const outputRows = buildPortRows(project, sideOutputGroups, ports);
-  const rowCount = Math.max(inputRows.length, outputRows.length, 1);
+  const rowSlots = buildPortRowSlots(project, portGroups, ports);
+  const rowCount = Math.max(rowSlots.length, 1);
   const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
-  const secondaryLabel = device.code || device.labelPrefix || device.model || '';
+  const secondaryLabel = device.code ?? '';
   const diagramStyle = { '--device-port-rows': rowCount } as CSSProperties;
+
+  function commitHeaderEdit(updates: { name?: string; code?: string }) {
+    editDevice(createDeviceMetadataEditInput(project, device, updates));
+  }
 
   return (
     <section className="workspace device-workspace" aria-label="Device canvas">
@@ -37,34 +44,144 @@ export function DeviceWorkspace({ device }: { device: Device }) {
           <div className="device-line-column device-line-column-left" aria-label="Input cable rows">
             <div className="device-line-header-spacer" />
             {rowIndexes.map((index) => (
-              <CableLineRow key={`input-${index}`} row={inputRows[index]} side="input" />
+              <CableLineRow key={`input-${index}`} row={rowSlots[index]?.input} side="input" />
             ))}
           </div>
           <div className="device-body">
             <div className="device-body-header">
-              <strong>{device.name}</strong>
-              {secondaryLabel ? <span>{secondaryLabel}</span> : null}
+              <strong>
+                <InlineDeviceHeaderField
+                  ariaLabel="Edit device label"
+                  required
+                  value={device.name}
+                  onCommit={(name) => commitHeaderEdit({ name })}
+                />
+              </strong>
+              <span>
+                <InlineDeviceHeaderField
+                  ariaLabel="Edit device sub-label"
+                  value={secondaryLabel}
+                  onCommit={(code) => commitHeaderEdit({ code })}
+                />
+              </span>
             </div>
             {rowIndexes.map((index) => (
               <div className="device-body-row" key={`body-${index}`}>
-                <span className="device-port-label device-port-label-input">
-                  {inputRows[index]?.port.label ?? ''}
-                </span>
-                <span className="device-port-label device-port-label-output">
-                  {outputRows[index]?.port.label ?? ''}
-                </span>
+                <DevicePortLabel row={rowSlots[index]?.input} side="input" />
+                <DevicePortLabel row={rowSlots[index]?.output} side="output" />
               </div>
             ))}
           </div>
           <div className="device-line-column device-line-column-right" aria-label="Output cable rows">
             <div className="device-line-header-spacer" />
             {rowIndexes.map((index) => (
-              <CableLineRow key={`output-${index}`} row={outputRows[index]} side="output" />
+              <CableLineRow key={`output-${index}`} row={rowSlots[index]?.output} side="output" />
             ))}
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function InlineDeviceHeaderField({
+  ariaLabel,
+  onCommit,
+  required = false,
+  value,
+}: {
+  ariaLabel: string;
+  onCommit: (value: string) => void;
+  required?: boolean;
+  value: string;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(value);
+    }
+  }, [isEditing, value]);
+
+  function closeWithoutSaving() {
+    setDraft(value);
+    setIsEditing(false);
+  }
+
+  function commit() {
+    const nextValue = draft.trim();
+
+    if (required && !nextValue) {
+      closeWithoutSaving();
+      return;
+    }
+
+    setIsEditing(false);
+
+    if (nextValue !== value) {
+      onCommit(nextValue);
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commit();
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeWithoutSaving();
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <input
+        aria-label={ariaLabel}
+        autoFocus
+        className="device-header-inline-input"
+        value={draft}
+        onBlur={commit}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={handleKeyDown}
+      />
+    );
+  }
+
+  return (
+    <button
+      aria-label={ariaLabel}
+      className="device-header-inline-button"
+      title={ariaLabel}
+      type="button"
+      onClick={() => setIsEditing(true)}
+    >
+      {value}
+    </button>
+  );
+}
+
+function DevicePortLabel({ row, side }: { row: DevicePortRow | undefined; side: 'input' | 'output' }) {
+  if (!row) {
+    return <span className={`device-port-label device-port-label-${side}`} />;
+  }
+
+  return (
+    <span
+      className={`device-port-label device-port-label-${side}`}
+      style={{ '--device-port-color': row.accentColor } as CSSProperties}
+    >
+      <span>{row.port.label}</span>
+    </span>
+  );
+}
+
+function DevicePortAnchor({ row }: { row: DevicePortRow }) {
+  return (
+    <ConnectorIcon className="device-port-anchor" color={row.accentColor} decorative iconKey={row.iconKey} />
   );
 }
 
@@ -76,9 +193,10 @@ function CableLineRow({ row, side }: { row: DevicePortRow | undefined; side: 'in
   const inlineMarker = row.connection.chainParts.find((part) => part.type === 'terminal_block') ?? null;
   const remoteLabel = getRemoteChainLabel(row.connection.chainParts);
   const hasInlineFrontPicker = Boolean(inlineMarker?.exitPortId);
+  const rowStyle = { '--device-port-color': row.accentColor } as CSSProperties;
 
   return (
-    <div className={`device-wire-row device-wire-row-${side}`}>
+    <div className={`device-wire-row device-wire-row-${side}`} style={rowStyle}>
       {side === 'input' && inlineMarker && hasInlineFrontPicker ? (
         <>
           <CrosspointPicker
@@ -94,7 +212,7 @@ function CableLineRow({ row, side }: { row: DevicePortRow | undefined; side: 'in
             portId={row.port.id}
           />
           <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
-          <span className="device-port-anchor" aria-hidden="true" />
+          <DevicePortAnchor row={row} />
         </>
       ) : side === 'input' ? (
         <>
@@ -106,11 +224,11 @@ function CableLineRow({ row, side }: { row: DevicePortRow | undefined; side: 'in
           <span className="device-cable-line device-cable-line-outer" aria-hidden="true" />
           {inlineMarker ? <InlineTbMarker part={inlineMarker} /> : null}
           <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
-          <span className="device-port-anchor" aria-hidden="true" />
+          <DevicePortAnchor row={row} />
         </>
       ) : inlineMarker && hasInlineFrontPicker ? (
         <>
-          <span className="device-port-anchor" aria-hidden="true" />
+          <DevicePortAnchor row={row} />
           <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
           <CrosspointPicker
             ariaLabel={`Connect ${row.port.label}`}
@@ -127,7 +245,7 @@ function CableLineRow({ row, side }: { row: DevicePortRow | undefined; side: 'in
         </>
       ) : (
         <>
-          <span className="device-port-anchor" aria-hidden="true" />
+          <DevicePortAnchor row={row} />
           <span className="device-cable-line device-cable-line-inner" aria-hidden="true" />
           {inlineMarker ? <InlineTbMarker part={inlineMarker} /> : null}
           <span className="device-cable-line device-cable-line-outer" aria-hidden="true" />
@@ -190,6 +308,20 @@ function buildPortRows(
       .map((port) => ({
         port,
         connection: describePortConnection(project, port.id),
+        accentColor: getPortGroupColor(project, group),
+        iconKey: getPortGroupConnectorIconKey(project, group),
       })),
   );
+}
+
+function buildPortRowSlots(
+  project: ProjectRoot,
+  groups: ProjectRoot['portGroups'],
+  ports: ProjectRoot['ports'],
+): DevicePortRowSlot[] {
+  return groups.flatMap((group) => {
+    const side = group.direction === 'input' ? 'input' : 'output';
+
+    return buildPortRows(project, [group], ports).map((row) => ({ [side]: row }));
+  });
 }

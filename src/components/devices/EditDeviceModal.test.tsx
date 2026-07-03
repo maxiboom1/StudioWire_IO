@@ -98,6 +98,13 @@ describe('EditDeviceModal', () => {
     if (!device) {
       throw new Error('Expected sample router');
     }
+    const routerGroup = project.portGroups.find((group) => group.id === 'port-group-router-outputs');
+
+    if (!routerGroup) {
+      throw new Error('Expected sample router group');
+    }
+
+    routerGroup.colorOverride = '#123456';
 
     contextHarness.current = createContext(project, editDevice);
     render(<EditDeviceModal device={device} onClose={vi.fn()} onSaved={onSaved} />);
@@ -131,6 +138,7 @@ describe('EditDeviceModal', () => {
       }),
       { target: { value: '{DEVICE}-PROGRAM-{000}' } },
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Clear override' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add I/O Interface' }));
     fireEvent.change(screen.getAllByLabelText('Name').at(-1) as HTMLInputElement, {
       target: { value: 'MGMT' },
@@ -148,6 +156,7 @@ describe('EditDeviceModal', () => {
         id: 'port-group-router-outputs',
         name: 'PROGRAM',
         portLabelPattern: '{DEVICE}-PROGRAM-{000}',
+        colorOverride: null,
       },
     ]);
     expect(payload.newPortGroups).toHaveLength(1);

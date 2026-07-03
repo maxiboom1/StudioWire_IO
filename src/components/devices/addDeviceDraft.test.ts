@@ -263,6 +263,7 @@ describe('Add Device cable range formatting and validation', () => {
         firstCableNumber: null,
         cablePrefix: 'Z',
         connectorTypeId: 'missing',
+        colorOverride: 'red',
       },
     ];
 
@@ -279,6 +280,7 @@ describe('Add Device cable range formatting and validation', () => {
         'I/O interface uses an unknown cable prefix.',
         'I/O interface uses an unknown connector.',
         'I/O interface needs a positive first cable number.',
+        'I/O interface color override must use #RRGGBB.',
       ]),
     );
   });
@@ -336,7 +338,7 @@ describe('Add Device token normalization and submit shaping', () => {
       notes: 'ignored notes',
     };
     const groups = [
-      { ...validGroups(project)[0], localId: 'local-a' },
+      { ...validGroups(project)[0], localId: 'local-a', colorOverride: '#ABCDEF' },
       { ...validGroups(project)[1], localId: 'local-b', createPlannedCables: false },
     ];
 
@@ -364,7 +366,7 @@ describe('Add Device token normalization and submit shaping', () => {
           cablePrefix: 'V',
           firstCableNumber: 9,
           createPlannedCables: true,
-          colorOverride: null,
+          colorOverride: '#ABCDEF',
         },
         {
           name: 'SDI OUT',

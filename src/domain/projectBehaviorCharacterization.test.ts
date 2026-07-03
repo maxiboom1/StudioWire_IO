@@ -96,7 +96,7 @@ describe('project behavior characterization', () => {
     expect(issues.map((issue) => issue.code)).toContain('ledger-next-suggested-available');
   });
 
-  it('migrates without mutating the imported payload object', () => {
+  it('rejects unsupported legacy imports without mutating the imported payload object', () => {
     const legacyProject = structuredClone(sampleProject) as any;
     legacyProject.schemaVersion = '0.1.0';
     legacyProject.cables = legacyProject.cables.map((cable: any) => {
@@ -112,7 +112,10 @@ describe('project behavior characterization', () => {
 
     const result = importProjectValue(legacyProject);
 
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('Unsupported schemaVersion');
+    }
     expect(JSON.stringify(legacyProject)).toBe(before);
   });
 

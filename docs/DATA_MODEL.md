@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.13`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.14`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.13`.
+- `schemaVersion`: current fixed string `0.2.8.14`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -53,7 +53,7 @@ Fields:
 
 Default categories are Video, Audio, Network, Reference, RF, and Control. Each category has a default cable prefix and a hex display color.
 
-Connector types are a global catalog, for example BNC, XLR, PL, RJ45, and HDMI. Each connector has an `iconKey` selecting a fixed in-app CSS-drawn connector symbol. Categories assign the connector types that are valid for that category. A port can select only connector types assigned to its category.
+Connector types are a global catalog, for example BNC, XLR, PL, RJ45, and HDMI. Each connector has an `iconKey` selecting a fixed in-app CSS-drawn connector symbol. Connector icons are app-owned CSS drawings, not user-provided image assets, file paths, or stored SVG. Categories assign the connector types that are valid for that category. A port can select only connector types assigned to its category.
 
 Direct connections are strict by default: endpoints must share a category and the same connector type. Connector compatibility groups are the advanced override for direct cross-connector connections inside one category. If two different connector types are members of the same category-scoped group, they can be connected directly. Connectors in different categories or different groups require conversion somewhere else in the design.
 

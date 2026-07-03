@@ -102,6 +102,7 @@ export function editDeviceInProject(
       ...group,
       name: edit.name.trim(),
       portLabelPattern: edit.portLabelPattern,
+      colorOverride: edit.colorOverride ?? null,
     };
   });
   const reorderedExistingGroups = reorderDevicePortGroups(

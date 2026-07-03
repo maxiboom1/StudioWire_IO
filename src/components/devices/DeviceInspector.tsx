@@ -9,6 +9,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { createDeviceMetadataEditInput } from './deviceMetadataEdit';
 import { SubLocationSelect } from './SubLocationSelect';
 
 export function DeviceInspector({
@@ -18,7 +19,7 @@ export function DeviceInspector({
   device: Device;
   onEditDevice: (deviceId: string) => void;
 }) {
-  const { project, updateDevice, deleteDevice, unassignDeviceFromRack } = useProject();
+  const { project, updateDevice, editDevice, deleteDevice, unassignDeviceFromRack } = useProject();
   const isTerminalBlock = device.kind === 'terminal_block';
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
   const assignedRack = device.rackId
@@ -33,9 +34,8 @@ export function DeviceInspector({
   const portCount = project.ports.filter((port) => port.deviceId === device.id).length;
   const [form, setForm] = useState({
     name: device.name,
-    manufacturer: device.manufacturer ?? '',
+    code: device.kind === 'terminal_block' ? '' : (device.code ?? ''),
     model: device.model ?? '',
-    role: device.role ?? '',
     notes: device.notes,
     locationId: device.locationId,
     subLocationId: device.subLocationId,
@@ -45,9 +45,8 @@ export function DeviceInspector({
   useEffect(() => {
     setForm({
       name: device.name,
-      manufacturer: device.manufacturer ?? '',
+      code: device.kind === 'terminal_block' ? '' : (device.code ?? ''),
       model: device.model ?? '',
-      role: device.role ?? '',
       notes: device.notes,
       locationId: device.locationId,
       subLocationId: device.subLocationId,
@@ -62,16 +61,31 @@ export function DeviceInspector({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const locationId = canEditLocation ? form.locationId : device.locationId;
+    const subLocationId = normalizeSubLocationForLocation(project, form.subLocationId, effectiveLocationId);
+    const rackSizeRu = form.rackSizeRu ? Number(form.rackSizeRu) : null;
+
+    if (!isTerminalBlock) {
+      editDevice(
+        createDeviceMetadataEditInput(project, device, {
+          name: form.name,
+          code: form.code,
+          model: form.model,
+          locationId,
+          subLocationId,
+          rackSizeRu,
+          notes: form.notes,
+        }),
+      );
+      return;
+    }
 
     updateDevice(device.id, {
       name: form.name,
-      manufacturer: form.manufacturer,
       model: form.model,
-      role: form.role,
       notes: form.notes,
       locationId,
-      subLocationId: normalizeSubLocationForLocation(project, form.subLocationId, effectiveLocationId),
-      rackSizeRu: form.rackSizeRu ? Number(form.rackSizeRu) : null,
+      subLocationId,
+      rackSizeRu,
     });
   }
 
@@ -100,7 +114,7 @@ export function DeviceInspector({
           ) : null}
           <form className="editor-form inspector-form" onSubmit={handleSubmit}>
             <div className="form-field">
-              <Label htmlFor="inspector-device-name">Name</Label>
+              <Label htmlFor="inspector-device-name">{isTerminalBlock ? 'Name' : 'Device Label'}</Label>
               <Input
                 id="inspector-device-name"
                 value={form.name}
@@ -110,27 +124,19 @@ export function DeviceInspector({
             {!isTerminalBlock ? (
               <>
                 <div className="form-field">
-                  <Label htmlFor="inspector-device-manufacturer">Manufacturer</Label>
+                  <Label htmlFor="inspector-device-code">Device sub-label</Label>
                   <Input
-                    id="inspector-device-manufacturer"
-                    value={form.manufacturer}
-                    onChange={(event) => setForm({ ...form, manufacturer: event.target.value })}
+                    id="inspector-device-code"
+                    value={form.code}
+                    onChange={(event) => setForm({ ...form, code: event.target.value })}
                   />
                 </div>
                 <div className="form-field">
-                  <Label htmlFor="inspector-device-model">Model</Label>
+                  <Label htmlFor="inspector-device-model">Device Model</Label>
                   <Input
                     id="inspector-device-model"
                     value={form.model}
                     onChange={(event) => setForm({ ...form, model: event.target.value })}
-                  />
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="inspector-device-role">Role</Label>
-                  <Input
-                    id="inspector-device-role"
-                    value={form.role}
-                    onChange={(event) => setForm({ ...form, role: event.target.value })}
                   />
                 </div>
               </>
@@ -212,8 +218,8 @@ export function DeviceInspector({
               </dd>
             </div>
             <div>
-              <dt>Label prefix</dt>
-              <dd>{device.labelPrefix || 'Not set'}</dd>
+              <dt>{isTerminalBlock ? 'Label prefix' : 'Device sub-label'}</dt>
+              <dd>{isTerminalBlock ? device.labelPrefix || 'Not set' : device.code || 'Not set'}</dd>
             </div>
             <div>
               <dt>Mount</dt>

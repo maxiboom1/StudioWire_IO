@@ -9,6 +9,7 @@ import {
   getDefaultConnectorForCategory,
   isConnectorAssignedToCategory,
 } from '../../domain/connectorCompatibility';
+import { isHexColor } from '../../domain/colors';
 import type { ProjectRoot } from '../../domain/types';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectTypes';
 import type { AddDeviceInput } from '../../state/projectContextTypes';
@@ -385,6 +386,14 @@ export function getAddDeviceValidation(
       errors.push(`${group.name || 'I/O interface'} uses an unknown connector.`);
     } else if (!isConnectorAssignedToCategory(project.settings, group.categoryId, group.connectorTypeId)) {
       errors.push(`${group.name || 'I/O interface'} connector must be assigned to the selected category.`);
+    }
+
+    if (
+      group.colorOverride !== null &&
+      group.colorOverride !== undefined &&
+      !isHexColor(group.colorOverride)
+    ) {
+      errors.push(`${group.name || 'I/O interface'} color override must use #RRGGBB.`);
     }
 
     if (group.createPlannedCables) {

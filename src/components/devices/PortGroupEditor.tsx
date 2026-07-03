@@ -1,7 +1,10 @@
 import { ChevronDown, ChevronUp, GripVertical, X } from 'lucide-react';
+import { normalizeHexColor } from '../../domain/colors';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
 import type { CablePrefix, Category, Settings } from '../../domain/types';
 import type { DevicePortGroupDraft } from '../../state/projectTypes';
+import { ConnectorIcon } from '../common/ConnectorIcon';
+import { resolveConnectorIconKey } from '../common/connectorVisuals';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -56,6 +59,12 @@ export function PortGroupEditor({
   onUpdate: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
 }) {
   const connectorTypes = getConnectorsForCategory(settings, group.categoryId);
+  const currentConnectorType = settings.connectorTypes.find(
+    (connector) => connector.id === group.connectorTypeId,
+  );
+  const inheritedColor = categories.find((category) => category.id === group.categoryId)?.color ?? '#64748B';
+  const displayColor = normalizeHexColor(group.colorOverride ?? '') ?? inheritedColor;
+  const iconKey = resolveConnectorIconKey(currentConnectorType?.iconKey);
 
   return (
     <Card
@@ -79,14 +88,25 @@ export function PortGroupEditor({
       <CardHeader className="port-group-editor-heading">
         <div className="interface-card-title">
           <GripVertical className="h-4 w-4 interface-drag-handle" aria-hidden="true" />
+          <ConnectorIcon
+            color={displayColor}
+            iconKey={iconKey}
+            label={`${currentConnectorType?.name ?? 'Generic'} connector`}
+          />
           <div>
             <CardTitle>{group.name || 'I/O Interface'}</CardTitle>
             <p>
-              {group.direction} · {group.count} ports
+              {group.direction} / {group.count} ports
             </p>
           </div>
         </div>
         <div className="interface-card-actions">
+          <span
+            aria-label={`Interface color ${displayColor}`}
+            className="interface-color-dot"
+            role="img"
+            style={{ backgroundColor: displayColor }}
+          />
           <Badge>{formatPortGroupRange(group)}</Badge>
           <Button
             aria-label={`Move ${group.name || 'I/O interface'} up`}
@@ -132,157 +152,185 @@ export function PortGroupEditor({
         </div>
       </CardHeader>
       {isCollapsed ? null : (
-        <CardContent className="port-group-editor-content">
-          <div className="port-group-row port-group-row-primary">
-            <div className="form-field">
-              <Label htmlFor={`port-group-name-${group.localId}`}>Name</Label>
-              <Input
-                id={`port-group-name-${group.localId}`}
-                value={group.name}
-                onChange={(event) => onUpdate(group.localId, { name: event.target.value })}
-              />
+        <>
+          <CardContent className="port-group-editor-content">
+            <div className="port-group-row port-group-row-primary">
+              <div className="form-field">
+                <Label htmlFor={`port-group-name-${group.localId}`}>Name</Label>
+                <Input
+                  id={`port-group-name-${group.localId}`}
+                  value={group.name}
+                  onChange={(event) => onUpdate(group.localId, { name: event.target.value })}
+                />
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
+                <Select
+                  disabled={lockedFields}
+                  value={group.categoryId}
+                  onValueChange={(value) => onCategoryChange(group.localId, value)}
+                >
+                  <SelectTrigger id={`port-group-category-${group.localId}`}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-direction-${group.localId}`}>Direction</Label>
+                <Select
+                  disabled={lockedFields}
+                  value={group.direction}
+                  onValueChange={(value) =>
+                    onUpdate(group.localId, {
+                      direction: value as DevicePortGroupDraft['direction'],
+                    })
+                  }
+                >
+                  <SelectTrigger id={`port-group-direction-${group.localId}`}>
+                    <SelectValue placeholder="Select direction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="input">Input</SelectItem>
+                    <SelectItem value="output">Output</SelectItem>
+                    <SelectItem value="bidirectional">Bidirectional</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-connector-${group.localId}`}>Connector</Label>
+                <Select
+                  disabled={lockedFields}
+                  value={group.connectorTypeId}
+                  onValueChange={(value) => onUpdate(group.localId, { connectorTypeId: value })}
+                >
+                  <SelectTrigger id={`port-group-connector-${group.localId}`}>
+                    <SelectValue placeholder="Select connector" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {connectorTypes.map((connectorType) => (
+                      <SelectItem key={connectorType.id} value={connectorType.id}>
+                        {connectorType.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-count-${group.localId}`}>Count</Label>
+                <Input
+                  readOnly={lockedFields}
+                  id={`port-group-count-${group.localId}`}
+                  min="1"
+                  type="number"
+                  value={group.count}
+                  onChange={(event) => onUpdate(group.localId, { count: Number(event.target.value) })}
+                />
+              </div>
             </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-category-${group.localId}`}>Category</Label>
-              <Select
-                disabled={lockedFields}
-                value={group.categoryId}
-                onValueChange={(value) => onCategoryChange(group.localId, value)}
-              >
-                <SelectTrigger id={`port-group-category-${group.localId}`}>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="port-group-row port-group-row-secondary">
+              <div className="form-field">
+                <Label>Mode</Label>
+                <Button
+                  aria-pressed={group.createPlannedCables}
+                  className="interface-auto-toggle"
+                  disabled={lockedFields}
+                  type="button"
+                  variant={group.createPlannedCables ? 'default' : 'outline'}
+                  onClick={() => onPlannedCablesToggle(group.localId, !group.createPlannedCables)}
+                >
+                  AUTO
+                </Button>
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable Prefix</Label>
+                <Select
+                  disabled={lockedFields}
+                  value={group.cablePrefix}
+                  onValueChange={(value) =>
+                    onUpdate(group.localId, {
+                      cablePrefix: value,
+                    })
+                  }
+                >
+                  <SelectTrigger id={`port-group-prefix-${group.localId}`}>
+                    <SelectValue placeholder="Select prefix" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cablePrefixes.map((prefix) => (
+                      <SelectItem key={prefix.id} value={prefix.prefix}>
+                        {prefix.prefix}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-pattern-${group.localId}`}>Label Pattern</Label>
+                <Input
+                  id={`port-group-pattern-${group.localId}`}
+                  value={group.portLabelPattern}
+                  onChange={(event) => onUpdate(group.localId, { portLabelPattern: event.target.value })}
+                />
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-first-cable-${group.localId}`}>First Cable Number</Label>
+                <Input
+                  id={`port-group-first-cable-${group.localId}`}
+                  min="1"
+                  readOnly={lockedFields || group.createPlannedCables}
+                  type="number"
+                  value={group.firstCableNumber ?? ''}
+                  onChange={(event) =>
+                    onUpdate(group.localId, {
+                      firstCableNumber: event.target.value ? Number(event.target.value) : null,
+                    })
+                  }
+                />
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-last-cable-${group.localId}`}>Last Cable Number</Label>
+                <Input
+                  id={`port-group-last-cable-${group.localId}`}
+                  readOnly
+                  value={formatPortGroupLastCableNumber(group)}
+                />
+              </div>
             </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-direction-${group.localId}`}>Direction</Label>
-              <Select
-                disabled={lockedFields}
-                value={group.direction}
-                onValueChange={(value) =>
-                  onUpdate(group.localId, {
-                    direction: value as DevicePortGroupDraft['direction'],
-                  })
-                }
-              >
-                <SelectTrigger id={`port-group-direction-${group.localId}`}>
-                  <SelectValue placeholder="Select direction" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="input">Input</SelectItem>
-                  <SelectItem value="output">Output</SelectItem>
-                  <SelectItem value="bidirectional">Bidirectional</SelectItem>
-                </SelectContent>
-              </Select>
+          </CardContent>
+          <CardContent className="port-group-color-content">
+            <div className="port-group-color-row">
+              <div className="form-field">
+                <Label htmlFor={`port-group-color-picker-${group.localId}`}>Color</Label>
+                <input
+                  id={`port-group-color-picker-${group.localId}`}
+                  type="color"
+                  value={displayColor}
+                  onChange={(event) =>
+                    onUpdate(group.localId, { colorOverride: normalizeHexColor(event.target.value) })
+                  }
+                />
+              </div>
+              <div className="form-field">
+                <Label>Default</Label>
+                <Button
+                  disabled={!group.colorOverride}
+                  type="button"
+                  variant="outline"
+                  onClick={() => onUpdate(group.localId, { colorOverride: null })}
+                >
+                  Clear override
+                </Button>
+              </div>
             </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-connector-${group.localId}`}>Connector</Label>
-              <Select
-                disabled={lockedFields}
-                value={group.connectorTypeId}
-                onValueChange={(value) => onUpdate(group.localId, { connectorTypeId: value })}
-              >
-                <SelectTrigger id={`port-group-connector-${group.localId}`}>
-                  <SelectValue placeholder="Select connector" />
-                </SelectTrigger>
-                <SelectContent>
-                  {connectorTypes.map((connectorType) => (
-                    <SelectItem key={connectorType.id} value={connectorType.id}>
-                      {connectorType.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-count-${group.localId}`}>Count</Label>
-              <Input
-                readOnly={lockedFields}
-                id={`port-group-count-${group.localId}`}
-                min="1"
-                type="number"
-                value={group.count}
-                onChange={(event) => onUpdate(group.localId, { count: Number(event.target.value) })}
-              />
-            </div>
-          </div>
-          <div className="port-group-row port-group-row-secondary">
-            <div className="form-field">
-              <Label>Mode</Label>
-              <Button
-                aria-pressed={group.createPlannedCables}
-                className="interface-auto-toggle"
-                disabled={lockedFields}
-                type="button"
-                variant={group.createPlannedCables ? 'default' : 'outline'}
-                onClick={() => onPlannedCablesToggle(group.localId, !group.createPlannedCables)}
-              >
-                AUTO
-              </Button>
-            </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable Prefix</Label>
-              <Select
-                disabled={lockedFields}
-                value={group.cablePrefix}
-                onValueChange={(value) =>
-                  onUpdate(group.localId, {
-                    cablePrefix: value,
-                  })
-                }
-              >
-                <SelectTrigger id={`port-group-prefix-${group.localId}`}>
-                  <SelectValue placeholder="Select prefix" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cablePrefixes.map((prefix) => (
-                    <SelectItem key={prefix.id} value={prefix.prefix}>
-                      {prefix.prefix}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-pattern-${group.localId}`}>Label Pattern</Label>
-              <Input
-                id={`port-group-pattern-${group.localId}`}
-                value={group.portLabelPattern}
-                onChange={(event) => onUpdate(group.localId, { portLabelPattern: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-first-cable-${group.localId}`}>First Cable Number</Label>
-              <Input
-                id={`port-group-first-cable-${group.localId}`}
-                min="1"
-                readOnly={lockedFields || group.createPlannedCables}
-                type="number"
-                value={group.firstCableNumber ?? ''}
-                onChange={(event) =>
-                  onUpdate(group.localId, {
-                    firstCableNumber: event.target.value ? Number(event.target.value) : null,
-                  })
-                }
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor={`port-group-last-cable-${group.localId}`}>Last Cable Number</Label>
-              <Input
-                id={`port-group-last-cable-${group.localId}`}
-                readOnly
-                value={formatPortGroupLastCableNumber(group)}
-              />
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        </>
       )}
     </Card>
   );

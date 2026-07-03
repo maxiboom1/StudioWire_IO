@@ -22,7 +22,7 @@ import type {
 
 export type ProjectInfoUpdates = Pick<ProjectInfo, 'name' | 'customer' | 'revision'>;
 export type CategoryInput = Pick<Category, 'name' | 'defaultCablePrefix'>;
-export type CategoryUpdates = Pick<Category, 'name' | 'defaultCablePrefix'>;
+export type CategoryUpdates = Partial<Pick<Category, 'name' | 'defaultCablePrefix' | 'color'>>;
 export type CategoryConnectorAssignmentInput = Pick<
   CategoryConnectorAssignment,
   'categoryId' | 'connectorTypeId'
@@ -34,7 +34,7 @@ export type ConnectorGroupMemberInput = Pick<
   'groupId' | 'connectorTypeId'
 >;
 export type ConnectorTypeInput = Pick<ConnectorType, 'name'>;
-export type ConnectorTypeUpdates = Pick<ConnectorType, 'name'>;
+export type ConnectorTypeUpdates = Partial<Pick<ConnectorType, 'name' | 'iconKey'>>;
 export type CablePrefixInput = Pick<CablePrefix, 'prefix' | 'name'>;
 export type LocationInput = Pick<Location, 'name' | 'type' | 'description'>;
 export type LocationUpdates = Pick<Location, 'name' | 'type' | 'description'>;

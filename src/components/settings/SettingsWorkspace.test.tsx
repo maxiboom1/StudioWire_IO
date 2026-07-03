@@ -209,12 +209,12 @@ describe('SettingsWorkspace project settings workflows', () => {
 });
 
 describe('SettingsWorkspace connector workflows', () => {
-  it('renders current connectors, adds trimmed connector names, blocks blanks, and preserves future icon slot', async () => {
+  it('renders current connectors, adds trimmed connector names, blocks blanks, and shows icon selectors', async () => {
     const user = userEvent.setup();
     const { commands } = setup();
 
     expect(screen.getByLabelText('BNC connector name')).toBeTruthy();
-    expect(screen.getAllByText('Future icon').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('BNC connector icon')).toHaveProperty('value', 'bnc');
 
     await user.click(screen.getByRole('button', { name: 'Add Connector' }));
     expect(commands.addConnectorType).not.toHaveBeenCalled();
@@ -224,7 +224,7 @@ describe('SettingsWorkspace connector workflows', () => {
     expect(screen.getByPlaceholderText('New connector')).toHaveProperty('value', '');
   });
 
-  it('renames current connector types with the existing command payload', async () => {
+  it('renames current connector types and updates icon keys', async () => {
     const user = userEvent.setup();
     const { commands } = setup();
     const input = screen.getByLabelText('BNC connector name');
@@ -234,6 +234,9 @@ describe('SettingsWorkspace connector workflows', () => {
     fireEvent.blur(input);
 
     expect(commands.updateConnectorType).toHaveBeenCalledWith('connector-bnc', { name: 'BNC 75' });
+
+    fireEvent.change(screen.getByLabelText('BNC connector icon'), { target: { value: 'xlr' } });
+    expect(commands.updateConnectorType).toHaveBeenCalledWith('connector-bnc', { iconKey: 'xlr' });
   });
 });
 
@@ -321,8 +324,10 @@ describe('SettingsWorkspace category workflows', () => {
     fireEvent.blur(categoryNameInput);
     expect(commands.updateCategory).toHaveBeenCalledWith('category-video', {
       name: 'Video Updated',
-      defaultCablePrefix: 'V',
     });
+
+    fireEvent.change(screen.getByLabelText('Video color picker'), { target: { value: '#123abc' } });
+    expect(commands.updateCategory).toHaveBeenCalledWith('category-video', { color: '#123ABC' });
 
     const assignmentSelect = screen.getAllByRole('combobox').at(-1) as HTMLSelectElement;
     fireEvent.change(assignmentSelect, { target: { value: 'connector-fiber' } });

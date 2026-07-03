@@ -38,6 +38,18 @@ export function CategoriesPanel({
   });
   const [connectorToAssign, setConnectorToAssign] = useState('');
 
+  function updateSelectedCategoryColor(value: string) {
+    if (!selectedCategory) {
+      return;
+    }
+
+    if (value === selectedCategory.color) {
+      return;
+    }
+
+    onUpdateCategory(selectedCategory.id, { color: value.toUpperCase() });
+  }
+
   function handleAddCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -126,7 +138,6 @@ export function CategoriesPanel({
                   if (name && name !== selectedCategory.name) {
                     onUpdateCategory(selectedCategory.id, {
                       name,
-                      defaultCablePrefix: selectedCategory.defaultCablePrefix,
                     });
                   }
                 }}
@@ -138,7 +149,6 @@ export function CategoriesPanel({
                 value={selectedCategory.defaultCablePrefix}
                 onChange={(event) =>
                   onUpdateCategory(selectedCategory.id, {
-                    name: selectedCategory.name,
                     defaultCablePrefix: event.target.value,
                   })
                 }
@@ -152,7 +162,12 @@ export function CategoriesPanel({
             </label>
             <label>
               <span>Color</span>
-              <input readOnly value="Future color" />
+              <input
+                aria-label={`${selectedCategory.name} color picker`}
+                type="color"
+                value={selectedCategory.color}
+                onChange={(event) => updateSelectedCategoryColor(event.target.value)}
+              />
             </label>
           </div>
           <div className="settings-token-list">

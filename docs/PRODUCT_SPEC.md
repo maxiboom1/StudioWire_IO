@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.13
+# StudioWire IO Product Spec v0.2.8.14
 
-StudioWire IO v0.2.8.13 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.14 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -89,6 +89,8 @@ Project settings define global configuration used by the rest of the project:
 - Numbering ledger behavior.
 
 Settings are part of project data and must be included in JSON import/export. Imports use staged syntax, schema-version, structural, migration, and relational validation; failed structural imports preserve the open project.
+
+Connector icons are fixed CSS-drawn in-app symbols selected by `iconKey`; users do not upload connector images or provide SVG/path assets. Category colors are editable hex values and may be overridden per I/O interface for drawing presentation.
 
 ## Locations
 

@@ -1,4 +1,5 @@
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
+import { isHexColor } from '../../domain/colors';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
 import type { Device, PortGroup, ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectContextTypes';
@@ -58,7 +59,7 @@ export function createExistingPortGroupForms(
 export function updateExistingPortGroupForms(
   groups: ExistingPortGroupForm[],
   id: string,
-  updates: Pick<Partial<ExistingPortGroupForm>, 'name' | 'portLabelPattern'>,
+  updates: Pick<Partial<ExistingPortGroupForm>, 'name' | 'portLabelPattern' | 'colorOverride'>,
 ): ExistingPortGroupForm[] {
   return groups.map((group) =>
     group.id === id
@@ -66,6 +67,7 @@ export function updateExistingPortGroupForms(
           ...group,
           ...(updates.name === undefined ? {} : { name: updates.name }),
           ...(updates.portLabelPattern === undefined ? {} : { portLabelPattern: updates.portLabelPattern }),
+          ...(updates.colorOverride === undefined ? {} : { colorOverride: updates.colorOverride }),
         }
       : group,
   );
@@ -149,6 +151,14 @@ export function getEditDeviceValidation(
     if (!group.portLabelPattern.trim()) {
       errors.push(`${group.name || 'Existing interface'} label pattern is required.`);
     }
+
+    if (
+      group.colorOverride !== null &&
+      group.colorOverride !== undefined &&
+      !isHexColor(group.colorOverride)
+    ) {
+      errors.push(`${group.name || 'Existing interface'} color override must use #RRGGBB.`);
+    }
   }
 
   for (const group of newGroups) {
@@ -172,6 +182,14 @@ export function getEditDeviceValidation(
       )
     ) {
       errors.push(`${group.name || 'New interface'} connector must be assigned to the selected category.`);
+    }
+
+    if (
+      group.colorOverride !== null &&
+      group.colorOverride !== undefined &&
+      !isHexColor(group.colorOverride)
+    ) {
+      errors.push(`${group.name || 'New interface'} color override must use #RRGGBB.`);
     }
 
     if (group.createPlannedCables) {
@@ -246,6 +264,7 @@ export function createEditDeviceCommandInput(
       id: group.id,
       name: group.name.trim(),
       portLabelPattern: group.portLabelPattern,
+      colorOverride: group.colorOverride,
     })),
     newPortGroups: newGroups.map(({ localId: _localId, ...group }) => ({
       ...group,
