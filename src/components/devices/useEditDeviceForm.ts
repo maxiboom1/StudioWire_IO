@@ -18,6 +18,7 @@ import {
   updateNewEditPortGroupCategory,
   type ExistingPortGroupForm,
 } from './editDeviceDraft';
+import { moveByOffset, reorderById } from './portGroupOrdering';
 
 export interface EditDeviceFormController {
   device: DeviceDraft;
@@ -26,6 +27,10 @@ export interface EditDeviceFormController {
   validation: ReturnType<typeof getEditDeviceValidation>;
   addPortGroup: () => void;
   removeNewPortGroup: (localId: string) => void;
+  moveExistingPortGroup: (id: string, targetId: string) => void;
+  moveExistingPortGroupByOffset: (id: string, offset: -1 | 1) => void;
+  moveNewPortGroup: (localId: string, targetLocalId: string) => void;
+  moveNewPortGroupByOffset: (localId: string, offset: -1 | 1) => void;
   setDevice: (updates: Partial<DeviceDraft>) => void;
   submit: (confirmWarnings: (message: string) => boolean) => boolean;
   updateExistingPortGroup: (
@@ -93,9 +98,7 @@ export function useEditDeviceForm({
   }
 
   function toggleNewPortGroupPlannedCables(localId: string, checked: boolean) {
-    setNewPortGroups((current) =>
-      toggleNewEditPortGroupPlannedCables(project, current, localId, checked),
-    );
+    setNewPortGroups((current) => toggleNewEditPortGroupPlannedCables(project, current, localId, checked));
   }
 
   function addPortGroup() {
@@ -104,6 +107,22 @@ export function useEditDeviceForm({
 
   function removeNewPortGroup(localId: string) {
     setNewPortGroups((current) => removeNewEditPortGroup(project, current, localId));
+  }
+
+  function moveExistingPortGroup(id: string, targetId: string) {
+    setExistingPortGroups((current) => reorderById(current, id, targetId, (group) => group.id));
+  }
+
+  function moveExistingPortGroupByOffset(id: string, offset: -1 | 1) {
+    setExistingPortGroups((current) => moveByOffset(current, id, offset, (group) => group.id));
+  }
+
+  function moveNewPortGroup(localId: string, targetLocalId: string) {
+    setNewPortGroups((current) => reorderById(current, localId, targetLocalId, (group) => group.localId));
+  }
+
+  function moveNewPortGroupByOffset(localId: string, offset: -1 | 1) {
+    setNewPortGroups((current) => moveByOffset(current, localId, offset, (group) => group.localId));
   }
 
   function submit(confirmWarnings: (message: string) => boolean): boolean {
@@ -134,6 +153,10 @@ export function useEditDeviceForm({
     validation,
     addPortGroup,
     removeNewPortGroup,
+    moveExistingPortGroup,
+    moveExistingPortGroupByOffset,
+    moveNewPortGroup,
+    moveNewPortGroupByOffset,
     setDevice,
     submit,
     updateExistingPortGroup,

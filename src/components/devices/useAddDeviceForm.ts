@@ -17,6 +17,7 @@ import {
   type DevicePortGroupForm,
 } from './addDeviceDraft';
 import { createRuntimeAddDeviceLocalIdFactory, type AddDeviceLocalIdFactory } from './addDeviceLocalIds';
+import { moveByOffset, reorderById } from './portGroupOrdering';
 
 export interface AddDeviceFormController {
   device: DeviceDraft;
@@ -25,6 +26,8 @@ export interface AddDeviceFormController {
   validation: ReturnType<typeof getAddDeviceValidation>;
   addPortGroup: () => void;
   removePortGroup: (localId: string) => void;
+  movePortGroup: (localId: string, targetLocalId: string) => void;
+  movePortGroupByOffset: (localId: string, offset: -1 | 1) => void;
   setDevice: (updates: Partial<DeviceDraft>) => void;
   submit: (confirmWarnings: (message: string) => boolean) => boolean;
   updatePortGroup: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
@@ -59,7 +62,7 @@ export function useAddDeviceForm({
     () => getAddDeviceValidation(project, device, portGroups),
     [device, portGroups, project],
   );
-  const effectiveLabelPrefix = normalizeDeviceToken(device.labelPrefix || device.name);
+  const effectiveLabelPrefix = normalizeDeviceToken(device.code || device.name);
 
   function setDevice(updates: Partial<DeviceDraft>) {
     setDeviceState((current) => {
@@ -100,6 +103,14 @@ export function useAddDeviceForm({
     setPortGroups((current) => removePortGroupDraft(project, current, localId));
   }
 
+  function movePortGroup(localId: string, targetLocalId: string) {
+    setPortGroups((current) => reorderById(current, localId, targetLocalId, (group) => group.localId));
+  }
+
+  function movePortGroupByOffset(localId: string, offset: -1 | 1) {
+    setPortGroups((current) => moveByOffset(current, localId, offset, (group) => group.localId));
+  }
+
   function submit(confirmWarnings: (message: string) => boolean): boolean {
     if (validation.errors.length > 0) {
       return false;
@@ -128,6 +139,8 @@ export function useAddDeviceForm({
     validation,
     addPortGroup,
     removePortGroup,
+    movePortGroup,
+    movePortGroupByOffset,
     setDevice,
     submit,
     updateDeviceCategory,

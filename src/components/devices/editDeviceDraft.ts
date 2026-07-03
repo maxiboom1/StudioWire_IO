@@ -65,9 +65,7 @@ export function updateExistingPortGroupForms(
       ? {
           ...group,
           ...(updates.name === undefined ? {} : { name: updates.name }),
-          ...(updates.portLabelPattern === undefined
-            ? {}
-            : { portLabelPattern: updates.portLabelPattern }),
+          ...(updates.portLabelPattern === undefined ? {} : { portLabelPattern: updates.portLabelPattern }),
         }
       : group,
   );
@@ -139,8 +137,8 @@ export function getEditDeviceValidation(
     errors.push('Device location is required.');
   }
 
-  if (!normalizeDeviceToken(device.labelPrefix || device.code || device.name)) {
-    errors.push('A label prefix, device code, or device name is required for generated port labels.');
+  if (!normalizeDeviceToken(device.code || device.name)) {
+    errors.push('A device sub-label or device label is required for generated port labels.');
   }
 
   for (const group of existingGroups) {
@@ -226,21 +224,22 @@ export function createEditDeviceCommandInput(
   existingGroups: ExistingPortGroupForm[],
   newGroups: DevicePortGroupForm[],
 ): EditDeviceInput {
-  const effectiveLabelPrefix = normalizeDeviceToken(device.labelPrefix || device.code || device.name);
+  const deviceSubLabel = normalizeDeviceToken(device.code || device.name);
+  const effectiveLabelPrefix = normalizeDeviceToken(device.code || device.name);
 
   return {
     deviceId: device.id ?? '',
     deviceUpdates: {
       name: device.name.trim(),
-      code: normalizeDeviceToken(device.code || effectiveLabelPrefix),
+      code: deviceSubLabel,
       manufacturer: device.manufacturer,
       model: device.model,
       categoryId: device.categoryId,
       locationId: device.locationId,
       subLocationId: device.subLocationId,
-      role: device.role,
+      role: '',
       labelPrefix: effectiveLabelPrefix,
-      notes: device.notes,
+      notes: '',
       rackSizeRu: device.rackSizeRu,
     },
     existingPortGroups: existingGroups.map((group) => ({

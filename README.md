@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.12 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.13 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -96,7 +96,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.12`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.13`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
 
 ## Release Gates
 
@@ -140,6 +140,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.13
+
+- Bumped app and project schema version to `0.2.8.13`.
+- Reworked Add/Edit Device into General and I/O tabs with helper text, Folder selectors, and visible Device Label / Device sub-label fields.
+- Removed Label Prefix, Role, Notes, and edit rack-height controls from Add/Edit Device while keeping stable stored defaults.
+- Updated new I/O interface label defaults to `{NAME}-{000}` and added `{NAME}` formatting support while preserving `{DEVICE}`.
+- Added collapsible and reorderable I/O interface cards; edit saves existing interface order through `project.portGroups`.
 
 ### v0.2.8.12
 

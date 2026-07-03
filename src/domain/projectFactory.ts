@@ -264,7 +264,12 @@ export function createPortsForGroup(portGroup: PortGroup, deviceLabelPrefix = ''
       portGroupId: portGroup.id,
       index,
       name: `${portGroup.name} ${index}`,
-      label: formatPortLabel(portGroup.portLabelPattern, deviceLabelPrefix || portGroup.name, index),
+      label: formatPortLabel(
+        portGroup.portLabelPattern,
+        deviceLabelPrefix || portGroup.name,
+        index,
+        portGroup.name,
+      ),
       direction: portGroup.direction,
       categoryId: portGroup.categoryId,
       connectorTypeId: portGroup.connectorTypeId,

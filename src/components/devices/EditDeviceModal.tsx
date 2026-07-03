@@ -1,4 +1,4 @@
-import { type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { ModalFrame } from '../common/ModalFrame';
@@ -22,6 +22,10 @@ export function EditDeviceModal({
   onSaved: (id: string) => void;
 }) {
   const { project, editDevice } = useProject();
+  const [activeTab, setActiveTab] = useState<'general' | 'io'>('general');
+  const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
+  const [draggingExistingInterfaceId, setDraggingExistingInterfaceId] = useState<string | null>(null);
+  const [draggingNewInterfaceId, setDraggingNewInterfaceId] = useState<string | null>(null);
   const form = useEditDeviceForm({
     device,
     editDevice,
@@ -34,6 +38,36 @@ export function EditDeviceModal({
     form.submit((message) => window.confirm(message));
   }
 
+  function toggleInterfaceCollapsed(localId: string) {
+    setCollapsedInterfaceIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(localId)) {
+        next.delete(localId);
+      } else {
+        next.add(localId);
+      }
+
+      return next;
+    });
+  }
+
+  function dropExistingInterface(targetId: string) {
+    if (draggingExistingInterfaceId) {
+      form.moveExistingPortGroup(draggingExistingInterfaceId, targetId);
+    }
+
+    setDraggingExistingInterfaceId(null);
+  }
+
+  function dropNewInterface(targetLocalId: string) {
+    if (draggingNewInterfaceId) {
+      form.moveNewPortGroup(draggingNewInterfaceId, targetLocalId);
+    }
+
+    setDraggingNewInterfaceId(null);
+  }
+
   return (
     <ModalFrame
       title="Edit Device"
@@ -41,188 +75,193 @@ export function EditDeviceModal({
       onClose={onClose}
     >
       <form className="editor-form add-device-form" onSubmit={handleSubmit}>
-        <section className="modal-section">
-          <h3>Basic</h3>
-          <div className="form-grid two">
-            <div className="form-field">
-              <Label htmlFor="edit-device-name">Name</Label>
-              <Input
-                autoFocus
-                id="edit-device-name"
-                required
-                value={form.device.name}
-                onChange={(event) => form.setDevice({ name: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-code">Code</Label>
-              <Input
-                id="edit-device-code"
-                value={form.device.code}
-                onChange={(event) => form.setDevice({ code: event.target.value.toUpperCase() })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-manufacturer">Manufacturer</Label>
-              <Input
-                id="edit-device-manufacturer"
-                value={form.device.manufacturer}
-                onChange={(event) => form.setDevice({ manufacturer: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-model">Model</Label>
-              <Input
-                id="edit-device-model"
-                value={form.device.model}
-                onChange={(event) => form.setDevice({ model: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-category">Category</Label>
-              <Select
-                value={form.device.categoryId}
-                onValueChange={(value) => form.setDevice({ categoryId: value })}
-              >
-                <SelectTrigger id="edit-device-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {project.settings.categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
+        <div className="device-modal-tabs">
+          <nav className="device-modal-tabbar" aria-label="Device edit sections">
+            <button
+              aria-current={activeTab === 'general' ? 'page' : undefined}
+              type="button"
+              onClick={() => setActiveTab('general')}
+            >
+              General
+            </button>
+            <button
+              aria-current={activeTab === 'io' ? 'page' : undefined}
+              type="button"
+              onClick={() => setActiveTab('io')}
+            >
+              I/O
+            </button>
+          </nav>
+          <div className="device-modal-tab-content">
+            {activeTab === 'general' ? (
+              <section className="modal-section device-modal-tab-panel">
+                <h3>General</h3>
+                <div className="form-grid two">
+                  <div className="form-field">
+                    <Label htmlFor="edit-device-name">Device Label</Label>
+                    <Input
+                      autoFocus
+                      id="edit-device-name"
+                      required
+                      value={form.device.name}
+                      onChange={(event) => form.setDevice({ name: event.target.value })}
+                    />
+                    <p className="form-help">This label will appear as device header.</p>
+                  </div>
+                  <div className="form-field">
+                    <Label htmlFor="edit-device-code">Device sub-label</Label>
+                    <Input
+                      id="edit-device-code"
+                      value={form.device.code}
+                      onChange={(event) => form.setDevice({ code: event.target.value.toUpperCase() })}
+                    />
+                    <p className="form-help">This will appear as device 2nd line header.</p>
+                  </div>
+                  <div className="form-field">
+                    <Label htmlFor="edit-device-manufacturer">Manufacturer</Label>
+                    <Input
+                      id="edit-device-manufacturer"
+                      value={form.device.manufacturer}
+                      onChange={(event) => form.setDevice({ manufacturer: event.target.value })}
+                    />
+                    <p className="form-help">Hardware vendor.</p>
+                  </div>
+                  <div className="form-field">
+                    <Label htmlFor="edit-device-model">Device Model</Label>
+                    <Input
+                      id="edit-device-model"
+                      value={form.device.model}
+                      onChange={(event) => form.setDevice({ model: event.target.value })}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <Label htmlFor="edit-device-category">Category</Label>
+                    <Select
+                      value={form.device.categoryId}
+                      onValueChange={(value) => form.setDevice({ categoryId: value })}
+                    >
+                      <SelectTrigger id="edit-device-category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {project.settings.categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="form-help">
+                      Assign the device as video, audio, network, or another category.
+                    </p>
+                  </div>
+                  <div className="form-field">
+                    <Label htmlFor="edit-device-location">Location</Label>
+                    <Select
+                      value={form.device.locationId}
+                      onValueChange={(value) => form.setDevice({ locationId: value })}
+                    >
+                      <SelectTrigger id="edit-device-location">
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {project.locations.map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <SubLocationSelect
+                    id="edit-device-sub-location"
+                    locationId={form.device.locationId}
+                    project={project}
+                    value={form.device.subLocationId}
+                    onChange={(value) => form.setDevice({ subLocationId: value })}
+                  />
+                </div>
+              </section>
+            ) : (
+              <section className="modal-section device-modal-tab-panel">
+                <div className="section-heading">
+                  <h3>I/O Interfaces</h3>
+                </div>
+                <div className="port-group-editor-list">
+                  {form.existingPortGroups.map((group, index) => (
+                    <PortGroupEditor
+                      cablePrefixes={project.settings.cablePrefixes}
+                      canMoveDown={index < form.existingPortGroups.length - 1}
+                      canMoveUp={index > 0}
+                      categories={project.settings.categories}
+                      group={group}
+                      isCollapsed={collapsedInterfaceIds.has(group.localId)}
+                      key={group.id}
+                      lockedFields
+                      settings={project.settings}
+                      onCategoryChange={() => undefined}
+                      onDragEnd={() => setDraggingExistingInterfaceId(null)}
+                      onDragStart={setDraggingExistingInterfaceId}
+                      onDrop={dropExistingInterface}
+                      onMoveDown={(id) => form.moveExistingPortGroupByOffset(id, 1)}
+                      onMoveUp={(id) => form.moveExistingPortGroupByOffset(id, -1)}
+                      onPlannedCablesToggle={() => undefined}
+                      onToggleCollapsed={toggleInterfaceCollapsed}
+                      onUpdate={(id, updates) =>
+                        form.updateExistingPortGroup(id, {
+                          name: updates.name,
+                          portLabelPattern: updates.portLabelPattern,
+                        })
+                      }
+                    />
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-location">Location</Label>
-              <Select
-                value={form.device.locationId}
-                onValueChange={(value) => form.setDevice({ locationId: value })}
-              >
-                <SelectTrigger id="edit-device-location">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {project.locations.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
+                </div>
+                <div className="section-heading">
+                  <h3>New I/O Interfaces</h3>
+                </div>
+                <div className="port-group-editor-list">
+                  {form.newPortGroups.map((group, index) => (
+                    <PortGroupEditor
+                      cablePrefixes={project.settings.cablePrefixes}
+                      canMoveDown={index < form.newPortGroups.length - 1}
+                      canMoveUp={index > 0}
+                      categories={project.settings.categories}
+                      group={group}
+                      isCollapsed={collapsedInterfaceIds.has(group.localId)}
+                      key={group.localId}
+                      settings={project.settings}
+                      onCategoryChange={form.updateNewPortGroupCategory}
+                      onDragEnd={() => setDraggingNewInterfaceId(null)}
+                      onDragStart={setDraggingNewInterfaceId}
+                      onDrop={dropNewInterface}
+                      onMoveDown={(localId) => form.moveNewPortGroupByOffset(localId, 1)}
+                      onMoveUp={(localId) => form.moveNewPortGroupByOffset(localId, -1)}
+                      onPlannedCablesToggle={form.toggleNewPortGroupPlannedCables}
+                      onRemove={form.removeNewPortGroup}
+                      onToggleCollapsed={toggleInterfaceCollapsed}
+                      onUpdate={form.updateNewPortGroup}
+                    />
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <SubLocationSelect
-              id="edit-device-sub-location"
-              locationId={form.device.locationId}
-              project={project}
-              value={form.device.subLocationId}
-              onChange={(value) => form.setDevice({ subLocationId: value })}
-            />
-            <div className="form-field">
-              <Label htmlFor="edit-device-label-prefix">Label Prefix</Label>
-              <Input
-                id="edit-device-label-prefix"
-                value={form.device.labelPrefix}
-                onChange={(event) => form.setDevice({ labelPrefix: event.target.value.toUpperCase() })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-role">Role</Label>
-              <Input
-                id="edit-device-role"
-                value={form.device.role}
-                onChange={(event) => form.setDevice({ role: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-rack-size">Rack Height</Label>
-              <Input
-                id="edit-device-rack-size"
-                min="1"
-                type="number"
-                value={form.device.rackSizeRu ?? ''}
-                onChange={(event) =>
-                  form.setDevice({
-                    rackSizeRu: event.target.value ? Number(event.target.value) : null,
-                  })
-                }
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="edit-device-notes">Notes</Label>
-              <Input
-                id="edit-device-notes"
-                value={form.device.notes}
-                onChange={(event) => form.setDevice({ notes: event.target.value })}
-              />
-            </div>
+                </div>
+                <Button variant="outline" size="sm" type="button" onClick={form.addPortGroup}>
+                  Add I/O Interface
+                </Button>
+                <div className="form-messages">
+                  {form.validation.warnings.map((warning) => (
+                    <Alert className="border-amber-200 bg-amber-50 text-amber-800" key={warning}>
+                      <AlertDescription>{warning}</AlertDescription>
+                    </Alert>
+                  ))}
+                  {form.validation.errors.map((error) => (
+                    <Alert className="border-red-200 bg-red-50 text-red-800" key={error}>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
-        </section>
-
-        <section className="modal-section">
-          <div className="section-heading">
-            <h3>Existing I/O Interfaces</h3>
-          </div>
-          <div className="port-group-editor-list">
-            {form.existingPortGroups.map((group) => (
-              <PortGroupEditor
-                cablePrefixes={project.settings.cablePrefixes}
-                categories={project.settings.categories}
-                group={group}
-                key={group.id}
-                lockedFields
-                settings={project.settings}
-                onCategoryChange={() => undefined}
-                onPlannedCablesToggle={() => undefined}
-                onUpdate={(id, updates) =>
-                  form.updateExistingPortGroup(id, {
-                    name: updates.name,
-                    portLabelPattern: updates.portLabelPattern,
-                  })
-                }
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="modal-section">
-          <div className="section-heading">
-            <h3>New I/O Interfaces</h3>
-          </div>
-          <div className="port-group-editor-list">
-            {form.newPortGroups.map((group) => (
-              <PortGroupEditor
-                cablePrefixes={project.settings.cablePrefixes}
-                categories={project.settings.categories}
-                group={group}
-                key={group.localId}
-                settings={project.settings}
-                onCategoryChange={form.updateNewPortGroupCategory}
-                onPlannedCablesToggle={form.toggleNewPortGroupPlannedCables}
-                onRemove={form.removeNewPortGroup}
-                onUpdate={form.updateNewPortGroup}
-              />
-            ))}
-          </div>
-          <Button variant="outline" size="sm" type="button" onClick={form.addPortGroup}>
-            Add Port Group
-          </Button>
-          <div className="form-messages">
-            {form.validation.warnings.map((warning) => (
-              <Alert className="border-amber-200 bg-amber-50 text-amber-800" key={warning}>
-                <AlertDescription>{warning}</AlertDescription>
-              </Alert>
-            ))}
-            {form.validation.errors.map((error) => (
-              <Alert className="border-red-200 bg-red-50 text-red-800" key={error}>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            ))}
-          </div>
-        </section>
+        </div>
 
         <DialogFooter>
           <Button variant="outline" type="button" onClick={onClose}>

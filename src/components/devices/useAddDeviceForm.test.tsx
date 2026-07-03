@@ -166,6 +166,20 @@ describe('useAddDeviceForm', () => {
     expect(controller().portGroups.map((group) => group.localId)).toEqual(['controller-1', 'controller-2']);
   });
 
+  it('reorders interface drafts by offset and target ID', () => {
+    const { controller } = renderController();
+
+    act(() => {
+      controller().movePortGroupByOffset('controller-2', -1);
+    });
+    expect(controller().portGroups.map((group) => group.localId)).toEqual(['controller-2', 'controller-1']);
+
+    act(() => {
+      controller().movePortGroup('controller-2', 'controller-1');
+    });
+    expect(controller().portGroups.map((group) => group.localId)).toEqual(['controller-1', 'controller-2']);
+  });
+
   it('blocks failed validation and does not dispatch or complete', () => {
     const { addDevice, controller, onCreated } = renderController();
 
@@ -178,7 +192,7 @@ describe('useAddDeviceForm', () => {
     const { addDevice, controller, onCreated } = renderController();
 
     act(() => {
-      controller().setDevice({ name: 'Router One', labelPrefix: 'rtr one' });
+      controller().setDevice({ name: 'Router One', code: 'rtr one' });
       controller().removePortGroup('controller-2');
     });
 

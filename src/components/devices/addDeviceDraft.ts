@@ -94,14 +94,14 @@ export function createQuickPortGroups(
         direction: 'input',
         connectorName: 'BNC',
         prefix: 'V',
-        pattern: '{DEVICE}-IN-{000}',
+        pattern: '{NAME}-{000}',
       }),
       makeGroup({
         name: 'SDI OUT',
         direction: 'output',
         connectorName: 'BNC',
         prefix: 'V',
-        pattern: '{DEVICE}-OUT-{000}',
+        pattern: '{NAME}-{000}',
       }),
     ]);
   }
@@ -113,14 +113,14 @@ export function createQuickPortGroups(
         direction: 'input',
         connectorName: 'XLR',
         prefix: 'A',
-        pattern: '{DEVICE}-AIN-{000}',
+        pattern: '{NAME}-{000}',
       }),
       makeGroup({
         name: 'AUDIO OUT',
         direction: 'output',
         connectorName: 'XLR',
         prefix: 'A',
-        pattern: '{DEVICE}-AOUT-{000}',
+        pattern: '{NAME}-{000}',
       }),
     ]);
   }
@@ -132,7 +132,7 @@ export function createQuickPortGroups(
         direction: 'bidirectional',
         connectorName: 'RJ45',
         prefix: 'N',
-        pattern: '{DEVICE}-NET-{000}',
+        pattern: '{NAME}-{000}',
       }),
     ]);
   }
@@ -143,7 +143,7 @@ export function createQuickPortGroups(
       direction: 'bidirectional',
       connectorName: project.settings.connectorTypes[0]?.name ?? 'Other',
       prefix: defaultPrefix,
-      pattern: '{DEVICE}-{000}',
+      pattern: '{NAME}-{000}',
     }),
   ]);
 }
@@ -224,7 +224,7 @@ export function addPortGroupDraft(
       categoryId: device.categoryId,
       connectorTypeId: getDefaultConnectorForCategory(project.settings, device.categoryId)?.id ?? '',
       count: 1,
-      portLabelPattern: '{DEVICE}-{000}',
+      portLabelPattern: '{NAME}-{000}',
       cablePrefix: prefix,
       firstCableNumber: null,
       createPlannedCables: true,
@@ -257,13 +257,15 @@ export function rebalancePlannedCableRanges(
       return {
         ...group,
         count,
-        firstCableNumber: group.firstCableNumber ?? getNextSuggestedForPrefix(previewProject, group.cablePrefix),
+        firstCableNumber:
+          group.firstCableNumber ?? getNextSuggestedForPrefix(previewProject, group.cablePrefix),
       };
     }
 
-    const nextCableNumber = Number.isSafeInteger(count) && count > 0
-      ? getNextSuggestedForPrefix(previewProject, group.cablePrefix, count)
-      : getNextSuggestedForPrefix(previewProject, group.cablePrefix);
+    const nextCableNumber =
+      Number.isSafeInteger(count) && count > 0
+        ? getNextSuggestedForPrefix(previewProject, group.cablePrefix, count)
+        : getNextSuggestedForPrefix(previewProject, group.cablePrefix);
 
     if (Number.isSafeInteger(count) && count > 0) {
       const allocation = allocateCableRange(previewProject, {
@@ -358,36 +360,36 @@ export function getAddDeviceValidation(
     errors.push('Device location is required.');
   }
 
-  if (!normalizeDeviceToken(device.labelPrefix || device.name)) {
-    errors.push('A label prefix or device name is required for generated port labels.');
+  if (!normalizeDeviceToken(device.code || device.name)) {
+    errors.push('A device sub-label or device label is required for generated port labels.');
   }
 
   if (portGroups.length === 0) {
-    errors.push('At least one port group is required.');
+    errors.push('At least one I/O interface is required.');
   }
 
   for (const group of portGroups) {
     if (!group.name.trim()) {
-      errors.push('Port group name is required.');
+      errors.push('I/O interface name is required.');
     }
 
     if (!Number.isSafeInteger(group.count) || group.count <= 0) {
-      errors.push(`${group.name || 'Port group'} count must be positive.`);
+      errors.push(`${group.name || 'I/O interface'} count must be positive.`);
     }
 
     if (!project.settings.cablePrefixes.some((prefix) => prefix.prefix === group.cablePrefix)) {
-      errors.push(`${group.name || 'Port group'} uses an unknown cable prefix.`);
+      errors.push(`${group.name || 'I/O interface'} uses an unknown cable prefix.`);
     }
 
     if (!project.settings.connectorTypes.some((connector) => connector.id === group.connectorTypeId)) {
-      errors.push(`${group.name || 'Port group'} uses an unknown connector.`);
+      errors.push(`${group.name || 'I/O interface'} uses an unknown connector.`);
     } else if (!isConnectorAssignedToCategory(project.settings, group.categoryId, group.connectorTypeId)) {
-      errors.push(`${group.name || 'Port group'} connector must be assigned to the selected category.`);
+      errors.push(`${group.name || 'I/O interface'} connector must be assigned to the selected category.`);
     }
 
     if (group.createPlannedCables) {
       if (!group.firstCableNumber || group.firstCableNumber < 1) {
-        errors.push(`${group.name || 'Port group'} needs a positive first cable number.`);
+        errors.push(`${group.name || 'I/O interface'} needs a positive first cable number.`);
         continue;
       }
 
@@ -434,14 +436,14 @@ export function createAddDeviceCommandInput(
   device: DeviceDraft,
   portGroups: DevicePortGroupForm[],
 ): AddDeviceInput {
-  const generatedCode = normalizeDeviceToken(device.labelPrefix || device.name);
-  const effectiveLabelPrefix = normalizeDeviceToken(device.labelPrefix || device.name);
+  const deviceSubLabel = normalizeDeviceToken(device.code || device.name);
+  const effectiveLabelPrefix = normalizeDeviceToken(device.code || device.name);
 
   return {
     device: {
       ...device,
       name: device.name.trim(),
-      code: generatedCode,
+      code: deviceSubLabel,
       role: '',
       labelPrefix: effectiveLabelPrefix,
       mountType: 'virtual',

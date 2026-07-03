@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.12
+# StudioWire IO Product Spec v0.2.8.13
 
-StudioWire IO v0.2.8.12 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.13 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -131,7 +131,9 @@ Each device has:
 - Status.
 - Optional notes.
 
-Device creation can generate port groups, ports, planned cables, and ledger allocations in one workflow.
+Device creation can generate I/O interfaces, ports, planned cables, and ledger allocations in one workflow.
+
+Add/Edit Device uses General and I/O tabs. General exposes Device Label, Device sub-label, Manufacturer, Device Model, Category, Location, and Folder. Label Prefix, Role, Notes, and edit rack height are not shown in Add/Edit Device.
 
 Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
 
@@ -141,7 +143,7 @@ As of v0.2.5.1, terminal blocks are modeled as a device kind with fixed 1RU rack
 
 ## Port Groups
 
-Port groups define repeated ports on a device. A port group generates individual `Port` records using a count and naming pattern.
+Port groups are presented to users as I/O interfaces. A port group generates individual `Port` records using a count and naming pattern.
 
 Each port group has:
 
@@ -160,6 +162,8 @@ Each port group has:
 - Locked state.
 
 Generated ports must match the declared count.
+
+New I/O interfaces default to `{NAME}-{000}` label patterns. `{NAME}` resolves to the current interface name; `{DEVICE}` remains supported for existing project data and resolves to the device label prefix.
 
 ## Cable Numbering
 

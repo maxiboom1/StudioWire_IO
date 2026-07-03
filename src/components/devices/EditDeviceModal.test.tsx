@@ -103,6 +103,14 @@ describe('EditDeviceModal', () => {
     render(<EditDeviceModal device={device} onClose={vi.fn()} onSaved={onSaved} />);
 
     expect(screen.getByRole('combobox', { name: 'Folder' }).textContent).toContain('No folder');
+    expect(screen.getByLabelText('Device Label')).toBeTruthy();
+    expect(screen.getByLabelText('Device sub-label')).toBeTruthy();
+    expect(screen.queryByLabelText('Label Prefix')).toBeNull();
+    expect(screen.queryByLabelText('Role')).toBeNull();
+    expect(screen.queryByLabelText('Notes')).toBeNull();
+    expect(screen.queryByLabelText('Rack Height')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'I/O' }));
 
     const existingCount = screen.getByLabelText('Count') as HTMLInputElement;
     expect(existingCount.value).toBe('4');
@@ -123,7 +131,7 @@ describe('EditDeviceModal', () => {
       }),
       { target: { value: '{DEVICE}-PROGRAM-{000}' } },
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Add Port Group' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add I/O Interface' }));
     fireEvent.change(screen.getAllByLabelText('Name').at(-1) as HTMLInputElement, {
       target: { value: 'MGMT' },
     });
@@ -133,6 +141,8 @@ describe('EditDeviceModal', () => {
     const payload = editDevice.mock.calls[0][0] as EditDeviceInput;
 
     expect(payload.deviceId).toBe('device-router-1');
+    expect(payload.deviceUpdates.role).toBe('');
+    expect(payload.deviceUpdates.notes).toBe('');
     expect(payload.existingPortGroups).toEqual([
       {
         id: 'port-group-router-outputs',

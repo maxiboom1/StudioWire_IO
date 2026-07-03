@@ -22,9 +22,7 @@ export function editDeviceInProject(
     return { ok: false, error: 'Device edit blocked: terminal blocks use the TB workflow.' };
   }
 
-  const locationExists = project.locations.some(
-    (location) => location.id === input.deviceUpdates.locationId,
-  );
+  const locationExists = project.locations.some((location) => location.id === input.deviceUpdates.locationId);
 
   if (!locationExists) {
     return { ok: false, error: 'Device edit blocked: select a valid location.' };
@@ -73,7 +71,9 @@ export function editDeviceInProject(
     input.deviceUpdates.code.trim() ||
     input.deviceUpdates.name.trim();
   const locationId =
-    device.mountType === 'rack' ? (assignedRack?.locationId ?? device.locationId) : input.deviceUpdates.locationId;
+    device.mountType === 'rack'
+      ? (assignedRack?.locationId ?? device.locationId)
+      : input.deviceUpdates.locationId;
   const nextDevice: Device = {
     ...device,
     name: input.deviceUpdates.name.trim(),
@@ -104,6 +104,11 @@ export function editDeviceInProject(
       portLabelPattern: edit.portLabelPattern,
     };
   });
+  const reorderedExistingGroups = reorderDevicePortGroups(
+    nextExistingGroups,
+    input.deviceId,
+    input.existingPortGroups.map((group) => group.id),
+  );
   const groupsById = new Map(nextExistingGroups.map((group) => [group.id, group] as const));
   const nextExistingPorts = project.ports.map((port) => {
     if (port.deviceId !== input.deviceId) {
@@ -131,7 +136,7 @@ export function editDeviceInProject(
   let nextProject: ProjectRoot = {
     ...project,
     devices: project.devices.map((candidate) => (candidate.id === nextDevice.id ? nextDevice : candidate)),
-    portGroups: nextExistingGroups,
+    portGroups: reorderedExistingGroups,
     ports: nextExistingPorts,
   };
   const newPortGroups: PortGroup[] = [];
@@ -262,7 +267,7 @@ function createPortsForDraft(device: Device, portGroupId: string, draft: DeviceP
       portGroupId,
       index,
       name: `${draft.name.trim()} ${index}`,
-      label: formatPortLabel(draft.portLabelPattern, device.labelPrefix, index),
+      label: formatPortLabel(draft.portLabelPattern, device.labelPrefix, index, draft.name.trim()),
       direction: draft.direction,
       categoryId: draft.categoryId,
       connectorTypeId: draft.connectorTypeId,
@@ -270,6 +275,35 @@ function createPortsForDraft(device: Device, portGroupId: string, draft: DeviceP
       notes: '',
     };
   });
+}
+
+function reorderDevicePortGroups(
+  groups: PortGroup[],
+  deviceId: string,
+  orderedGroupIds: string[],
+): PortGroup[] {
+  const orderedIds = new Set(orderedGroupIds);
+  const orderedDeviceGroups = orderedGroupIds
+    .map((id) => groups.find((group) => group.id === id && group.deviceId === deviceId))
+    .filter((group): group is PortGroup => Boolean(group));
+
+  const firstDeviceGroupIndex = groups.findIndex((group) => group.deviceId === deviceId);
+
+  if (firstDeviceGroupIndex < 0) {
+    return groups;
+  }
+
+  const withoutDeviceGroups = groups.filter(
+    (group) => group.deviceId !== deviceId || !orderedIds.has(group.id),
+  );
+  const insertIndex = withoutDeviceGroups.findIndex((_group, index) => index >= firstDeviceGroupIndex);
+  const boundedInsertIndex = insertIndex < 0 ? withoutDeviceGroups.length : insertIndex;
+
+  return [
+    ...withoutDeviceGroups.slice(0, boundedInsertIndex),
+    ...orderedDeviceGroups,
+    ...withoutDeviceGroups.slice(boundedInsertIndex),
+  ];
 }
 
 function makeUniquePortGroupId(project: ProjectRoot, deviceId: string, name: string): string {
@@ -300,7 +334,10 @@ function relabelCableEndpoints(cable: Cable, portLabelsById: Map<string, string>
     ...cable,
     sideAEndpoint,
     sideBEndpoint,
-    labelTop: sideAEndpoint.type === 'device_port' || sideAEndpoint.type === 'tb_port' ? sideAEndpoint.label : cable.labelTop,
+    labelTop:
+      sideAEndpoint.type === 'device_port' || sideAEndpoint.type === 'tb_port'
+        ? sideAEndpoint.label
+        : cable.labelTop,
     labelMiddle: cable.number,
     labelBottom:
       sideBEndpoint.type === 'device_port' || sideBEndpoint.type === 'tb_port'

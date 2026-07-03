@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
@@ -96,7 +96,7 @@ afterEach(() => {
 });
 
 describe('AddDeviceModal', () => {
-  it('shows an explicit No folder selector', () => {
+  it('shows general fields with helpers and an explicit No folder selector', () => {
     const project = createProject();
 
     contextHarness.current = createContext(project);
@@ -105,5 +105,31 @@ describe('AddDeviceModal', () => {
     );
 
     expect(screen.getByRole('combobox', { name: 'Folder' }).textContent).toContain('No folder');
+    expect(screen.getByLabelText('Device Label')).toBeTruthy();
+    expect(screen.getByLabelText('Device sub-label')).toBeTruthy();
+    expect(screen.getByText('This label will appear as device header.')).toBeTruthy();
+    expect(screen.getByText('This will appear as device 2nd line header.')).toBeTruthy();
+    expect(screen.queryByLabelText('Label Prefix')).toBeNull();
+    expect(screen.queryByLabelText('Role')).toBeNull();
+    expect(screen.queryByLabelText('Notes')).toBeNull();
+  });
+
+  it('switches to the I/O tab and collapses interface cards', () => {
+    const project = createProject();
+
+    contextHarness.current = createContext(project);
+    render(
+      <AddDeviceModal initialLocationId="location-machine-room" onClose={vi.fn()} onCreated={vi.fn()} />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'I/O' }));
+
+    expect(screen.getByRole('button', { name: 'Add I/O Interface' })).toBeTruthy();
+    expect(screen.getAllByDisplayValue('{NAME}-{000}')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI IN' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI OUT' }));
+
+    expect(screen.queryByLabelText('Label Pattern')).toBeNull();
   });
 });

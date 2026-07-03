@@ -328,7 +328,7 @@ function createPortsForDraft({
       portGroupId,
       index,
       name: `${draft.name} ${index}`,
-      label: formatPortLabel(draft.portLabelPattern, labelPrefix, index),
+      label: formatPortLabel(draft.portLabelPattern, labelPrefix, index, draft.name.trim()),
       direction: draft.direction,
       categoryId: draft.categoryId,
       connectorTypeId: draft.connectorTypeId,

@@ -60,11 +60,15 @@ describe('editDeviceInProject', () => {
       return;
     }
 
-    expect(result.project.portGroups.find((group) => group.id === 'port-group-router-outputs')).toMatchObject({
-      name: 'PROGRAM',
-      portLabelPattern: '{DEVICE}-PROGRAM-{000}',
-    });
-    expect(result.project.ports.find((port) => port.id === 'port-group-router-outputs-port-0001')).toMatchObject({
+    expect(result.project.portGroups.find((group) => group.id === 'port-group-router-outputs')).toMatchObject(
+      {
+        name: 'PROGRAM',
+        portLabelPattern: '{DEVICE}-PROGRAM-{000}',
+      },
+    );
+    expect(
+      result.project.ports.find((port) => port.id === 'port-group-router-outputs-port-0001'),
+    ).toMatchObject({
       name: 'PROGRAM 1',
       label: 'RTR1-PROGRAM-001',
     });
@@ -121,6 +125,40 @@ describe('editDeviceInProject', () => {
       to: 1,
       status: 'allocated',
     });
+  });
+
+  it('persists existing interface order without changing port or cable IDs', () => {
+    const project = structuredClone(sampleProject);
+    const monitorGroup = {
+      ...project.portGroups.find((group) => group.id === 'port-group-router-outputs')!,
+      id: 'port-group-router-monitor',
+      name: 'MONITOR',
+      portLabelPattern: '{DEVICE}-MON-{000}',
+      numberingRangeId: null,
+      firstCableNumber: null,
+      lastCableNumber: null,
+      createPlannedCables: false,
+    };
+
+    project.portGroups.splice(1, 0, monitorGroup);
+
+    const input = baseEdit(project);
+    input.existingPortGroups = [...input.existingPortGroups].reverse();
+
+    const result = editDeviceInProject(project, input, TEST_TIMESTAMP);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(
+      result.project.portGroups
+        .filter((group) => group.deviceId === 'device-router-1')
+        .map((group) => group.id),
+    ).toEqual(['port-group-router-monitor', 'port-group-router-outputs']);
+    expect(result.project.ports.map((port) => port.id)).toEqual(project.ports.map((port) => port.id));
+    expect(result.project.cables.map((cable) => cable.id)).toEqual(project.cables.map((cable) => cable.id));
   });
 
   it('rejects reserved-gap reuse and terminal-block edits', () => {
