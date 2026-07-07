@@ -109,7 +109,7 @@ describe('DeviceWorkspace', () => {
     expect(anchor.style.getPropertyValue('--device-port-color')).toBe('#ABCDEF');
   });
 
-  it('renders device rows in saved I/O interface order', () => {
+  it('starts input and output port rows from the top independently', () => {
     contextHarness.current = createContext();
     const project = contextHarness.current.project;
     const routerOutputIndex = project.portGroups.findIndex(
@@ -148,6 +148,7 @@ describe('DeviceWorkspace', () => {
     const rows = Array.from(document.querySelectorAll('.device-body-row')).map((row) => row.textContent);
 
     expect(rows[0]).toContain('RTR1-IN-001');
-    expect(rows[1]).toContain('RTR1-OUT-001');
+    expect(rows[0]).toContain('RTR1-OUT-001');
+    expect(rows[1]).toContain('RTR1-OUT-002');
   });
 });

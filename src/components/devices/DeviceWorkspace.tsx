@@ -319,9 +319,22 @@ function buildPortRowSlots(
   groups: ProjectRoot['portGroups'],
   ports: ProjectRoot['ports'],
 ): DevicePortRowSlot[] {
-  return groups.flatMap((group) => {
-    const side = group.direction === 'input' ? 'input' : 'output';
+  const inputRows: DevicePortRow[] = [];
+  const outputRows: DevicePortRow[] = [];
 
-    return buildPortRows(project, [group], ports).map((row) => ({ [side]: row }));
-  });
+  for (const group of groups) {
+    const side = group.direction === 'input' ? 'input' : 'output';
+    const rows = buildPortRows(project, [group], ports);
+
+    if (side === 'input') {
+      inputRows.push(...rows);
+    } else {
+      outputRows.push(...rows);
+    }
+  }
+
+  return Array.from({ length: Math.max(inputRows.length, outputRows.length) }, (_, index) => ({
+    input: inputRows[index],
+    output: outputRows[index],
+  }));
 }
