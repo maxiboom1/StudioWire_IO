@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from 'react';
+import { buildCrossLocationRackAssignmentPrompt } from '../../domain/prompts';
 import { analyzeRackPlacements } from '../../domain/rackDiagnostics';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot, Rack } from '../../domain/types';
@@ -30,10 +31,12 @@ export interface RackViewController {
 }
 
 export function useRackViewController({
+  confirmRackMove = defaultConfirmRackMove,
   project,
   selectedRack,
   moveMountedDevice,
 }: {
+  confirmRackMove?: (message: string) => boolean;
   project: ProjectRoot;
   selectedRack: Rack;
   moveMountedDevice: (input: MoveMountedDeviceInput) => void;
@@ -146,6 +149,13 @@ export function useRackViewController({
     });
 
     if (result.ok) {
+      const prompt = buildCrossLocationRackAssignmentPrompt(project, result.device, result.targetRack);
+
+      if (prompt && !confirmRackMove(prompt)) {
+        clearDragState();
+        return;
+      }
+
       moveMountedDevice({
         deviceId,
         targetRackId: targetRack.id,
@@ -171,4 +181,8 @@ export function useRackViewController({
     handleRackDrop,
     removeRackFromView,
   };
+}
+
+function defaultConfirmRackMove(message: string): boolean {
+  return window.confirm(message);
 }

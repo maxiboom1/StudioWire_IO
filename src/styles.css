@@ -46,7 +46,7 @@ body {
 }
 
 button:not([data-ui]) {
-  border: 1px solid #c8d2d7;
+  /* border: 1px solid #c8d2d7; */
   border-radius: 6px;
   background: #ffffff;
   color: #172126;
@@ -1508,11 +1508,12 @@ textarea:not([data-ui]) {
 
 .device-header-inline-button,
 .device-header-inline-input {
+  appearance: none;
   display: block;
   width: 100%;
   min-width: 0;
-  border: 1px solid transparent;
-  border-radius: 3px;
+  border: 0;
+  border-radius: 0;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -1523,7 +1524,7 @@ textarea:not([data-ui]) {
 .device-header-inline-button {
   overflow: hidden;
   min-height: 1.1em;
-  padding: 1px 4px;
+  padding: 0 4px;
   cursor: text;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1531,12 +1532,15 @@ textarea:not([data-ui]) {
 
 .device-header-inline-button:hover,
 .device-header-inline-button:focus-visible {
-  border-color: #b8c8cf;
+  color: #1d4ed8;
   outline: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .device-header-inline-input {
-  padding: 1px 4px;
+  padding: 0 4px;
   outline: 2px solid #2563eb;
   outline-offset: 1px;
 }
