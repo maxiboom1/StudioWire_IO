@@ -351,7 +351,7 @@ describe('Add Device token normalization and submit shaping', () => {
         labelPrefix: 'MANUAL-CODE',
         mountType: 'virtual',
         rackId: null,
-        rackSizeRu: null,
+        rackSizeRu: 4,
         rackBottomRu: null,
         notes: '',
       },

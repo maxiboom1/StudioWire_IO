@@ -78,7 +78,7 @@ Once a version is declared a real released baseline, preserve import compatibili
 - Validation codes and CSS classes use kebab-case.
 - Current documents use stable, non-versioned filenames under `docs/`.
 - `README.md` is the single changelog source.
-- User-facing terminology for the same data field must be identical across the app. In UI copy, `Device.name` is always `Device Label`, `Device.code` is always `Device sub-label`, and `subLocations` / `subLocationId` are always `Folder`; reserve internal storage names for code, schema, and data-model docs only.
+- User-facing terminology for the same data field must be identical across the app. In UI copy, `Device.name` is always `Device Name`, `Device.code` is always `Device sub-name`, and `subLocations` / `subLocationId` are always `Folder`; reserve internal storage names for code, schema, and data-model docs only.
 
 ## Cleanup Hygiene
 

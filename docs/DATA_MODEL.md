@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.16`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.17`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.16`.
+- `schemaVersion`: current fixed string `0.2.8.17`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -125,7 +125,7 @@ Fields:
 - `heightRu`
 - `numberingDirection`: `bottom_to_top` or `top_to_bottom`
 
-New racks default to 28 RU unless the user changes the Add Rack form. Existing rack records keep their stored `heightRu` values and are not rewritten when defaults change.
+New racks default to 48 RU unless the user changes the Add Rack form. Existing rack records keep their stored `heightRu` values and are not rewritten when defaults change.
 
 ## LabelRules
 

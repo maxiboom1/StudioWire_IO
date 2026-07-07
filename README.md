@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.16 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.17 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -96,7 +96,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.16`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.17`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
 
 ## Release Gates
 
@@ -140,6 +140,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.17
+
+- Bumped app and project schema version to `0.2.8.17`.
+- Polished standard modal footers with a reusable CSS StudioWire IO mark.
+- Updated Add/Edit Device labels to Device Name and Device sub-name, moved helpers into labels, and added optional 1-48 RU mount height selection.
+- Tightened Add/Edit Device I/O cards by removing up/down reorder controls while preserving drag-and-drop ordering.
+- Standardized Add Rack modal spacing and changed new rack default height to 48 RU.
 
 ### v0.2.8.16
 

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, GripVertical, X } from 'lucide-react';
+import { ChevronDown, GripVertical, X } from 'lucide-react';
 import { normalizeHexColor } from '../../domain/colors';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
 import type { CablePrefix, Category, Settings } from '../../domain/types';
@@ -23,16 +23,12 @@ export function PortGroupEditor({
   group,
   lockedFields = false,
   settings,
-  canMoveDown = false,
-  canMoveUp = false,
   isCollapsed = false,
   onCategoryChange,
   onDragEnd,
   onDragOver,
   onDragStart,
   onDrop,
-  onMoveDown,
-  onMoveUp,
   onPlannedCablesToggle,
   onRemove,
   onToggleCollapsed,
@@ -43,16 +39,12 @@ export function PortGroupEditor({
   group: DevicePortGroupForm;
   lockedFields?: boolean;
   settings: Settings;
-  canMoveDown?: boolean;
-  canMoveUp?: boolean;
   isCollapsed?: boolean;
   onCategoryChange: (localId: string, categoryId: string) => void;
   onDragEnd?: () => void;
   onDragOver?: (localId: string) => void;
   onDragStart?: (localId: string) => void;
   onDrop?: (localId: string) => void;
-  onMoveDown?: (localId: string) => void;
-  onMoveUp?: (localId: string) => void;
   onPlannedCablesToggle: (localId: string, checked: boolean) => void;
   onRemove?: (localId: string) => void;
   onToggleCollapsed?: (localId: string) => void;
@@ -108,26 +100,6 @@ export function PortGroupEditor({
             style={{ backgroundColor: displayColor }}
           />
           <Badge>{formatPortGroupRange(group)}</Badge>
-          <Button
-            aria-label={`Move ${group.name || 'I/O interface'} up`}
-            disabled={!canMoveUp}
-            size="icon"
-            type="button"
-            variant="ghost"
-            onClick={() => onMoveUp?.(group.localId)}
-          >
-            <ChevronUp className="h-4 w-4" />
-          </Button>
-          <Button
-            aria-label={`Move ${group.name || 'I/O interface'} down`}
-            disabled={!canMoveDown}
-            size="icon"
-            type="button"
-            variant="ghost"
-            onClick={() => onMoveDown?.(group.localId)}
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
           <Button
             aria-expanded={!isCollapsed}
             aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${group.name || 'I/O interface'}`}

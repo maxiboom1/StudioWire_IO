@@ -75,14 +75,15 @@ afterEach(() => {
 });
 
 describe('AddRackModal', () => {
-  it('defaults new racks to 28 RU', async () => {
+  it('defaults new racks to 48 RU with the standardized footer', async () => {
     const addRack = vi.fn(() => 'rack-created');
     const onCreated = vi.fn();
 
     contextHarness.current = createContext(addRack);
     render(<AddRackModal locationId="location-machine-room" onClose={vi.fn()} onCreated={onCreated} />);
 
-    expect((screen.getByLabelText('Height RU') as HTMLInputElement).value).toBe('28');
+    expect(screen.getByRole('combobox', { name: 'Height RU' }).textContent).toContain('48 RU');
+    expect(screen.getByLabelText('StudioWire IO')).toBeTruthy();
 
     await userEvent.type(screen.getByLabelText('Name'), 'Rack B');
     await userEvent.click(screen.getByRole('button', { name: 'Add Rack' }));
@@ -91,7 +92,7 @@ describe('AddRackModal', () => {
       expect.objectContaining({
         locationId: 'location-machine-room',
         name: 'Rack B',
-        heightRu: 28,
+        heightRu: 48,
       }),
     );
     expect(onCreated).toHaveBeenCalledWith('rack-created');

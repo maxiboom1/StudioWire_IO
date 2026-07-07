@@ -18,7 +18,7 @@ describe('projectReducer core project actions', () => {
 
     expect(state.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(state.project.project.name).toBe('Untitled Project');
-    expect(state.project.settings.rackDefaults.heightRu).toBe(28);
+    expect(state.project.settings.rackDefaults.heightRu).toBe(48);
     expect(state.persistenceState).toBe('unsaved');
     expect(state.importError).toBeNull();
   });

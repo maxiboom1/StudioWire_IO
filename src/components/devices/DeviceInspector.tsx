@@ -114,7 +114,7 @@ export function DeviceInspector({
           ) : null}
           <form className="editor-form inspector-form" onSubmit={handleSubmit}>
             <div className="form-field">
-              <Label htmlFor="inspector-device-name">{isTerminalBlock ? 'Name' : 'Device Label'}</Label>
+              <Label htmlFor="inspector-device-name">{isTerminalBlock ? 'Name' : 'Device Name'}</Label>
               <Input
                 id="inspector-device-name"
                 value={form.name}
@@ -124,7 +124,7 @@ export function DeviceInspector({
             {!isTerminalBlock ? (
               <>
                 <div className="form-field">
-                  <Label htmlFor="inspector-device-code">Device sub-label</Label>
+                  <Label htmlFor="inspector-device-code">Device sub-name</Label>
                   <Input
                     id="inspector-device-code"
                     value={form.code}
@@ -132,7 +132,7 @@ export function DeviceInspector({
                   />
                 </div>
                 <div className="form-field">
-                  <Label htmlFor="inspector-device-model">Device Model</Label>
+                  <Label htmlFor="inspector-device-model">Device model</Label>
                   <Input
                     id="inspector-device-model"
                     value={form.model}
@@ -218,7 +218,7 @@ export function DeviceInspector({
               </dd>
             </div>
             <div>
-              <dt>{isTerminalBlock ? 'Label prefix' : 'Device sub-label'}</dt>
+              <dt>{isTerminalBlock ? 'Label prefix' : 'Device sub-name'}</dt>
               <dd>{isTerminalBlock ? device.labelPrefix || 'Not set' : device.code || 'Not set'}</dd>
             </div>
             <div>

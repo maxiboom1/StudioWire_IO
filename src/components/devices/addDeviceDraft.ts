@@ -363,7 +363,7 @@ export function getAddDeviceValidation(
   }
 
   if (!normalizeDeviceToken(device.code || device.name)) {
-    errors.push('A device sub-label or device label is required for generated port labels.');
+    errors.push('A device sub-name or device name is required for generated port labels.');
   }
 
   if (portGroups.length === 0) {
@@ -458,7 +458,7 @@ export function createAddDeviceCommandInput(
       labelPrefix: effectiveLabelPrefix,
       mountType: 'virtual',
       rackId: null,
-      rackSizeRu: null,
+      rackSizeRu: device.rackSizeRu,
       rackBottomRu: null,
       notes: '',
     },

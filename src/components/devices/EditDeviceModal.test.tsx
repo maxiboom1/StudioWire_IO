@@ -110,15 +110,16 @@ describe('EditDeviceModal', () => {
     render(<EditDeviceModal device={device} onClose={vi.fn()} onSaved={onSaved} />);
 
     expect(screen.getByRole('combobox', { name: 'Folder' }).textContent).toContain('No folder');
-    expect(screen.getByLabelText('Device Label')).toBeTruthy();
-    expect(screen.getByLabelText('Device sub-label')).toBeTruthy();
+    expect(screen.getByLabelText(/Device Name/)).toBeTruthy();
+    expect(screen.getByLabelText(/Device sub-name/)).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Mount height (RU)' }).textContent).toContain('2 RU');
     expect(screen.queryByLabelText('Label Prefix')).toBeNull();
     expect(screen.queryByLabelText('Role')).toBeNull();
     expect(screen.queryByLabelText('Notes')).toBeNull();
     expect(screen.queryByLabelText('Rack Height')).toBeNull();
 
     fireEvent.click(screen.getByRole('tab', { name: 'I/O' }));
-    expect(screen.getByRole('heading', { name: 'I/O Interfaces' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'I/O Interfaces' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'New I/O Interfaces' })).toBeNull();
 
     const existingCount = screen.getByLabelText('Count') as HTMLInputElement;
@@ -145,7 +146,21 @@ describe('EditDeviceModal', () => {
     fireEvent.change(screen.getAllByLabelText('Name').at(-1) as HTMLInputElement, {
       target: { value: 'MGMT' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Move MGMT up' }));
+    expect(screen.queryByRole('button', { name: /Move MGMT/ })).toBeNull();
+
+    const dataTransfer = {
+      effectAllowed: '',
+      setData: vi.fn(),
+    };
+    const existingCard = screen.getByText('PROGRAM').closest('.port-group-editor');
+    const newCard = screen.getByText('MGMT').closest('.port-group-editor');
+
+    if (!existingCard || !newCard) {
+      throw new Error('Expected interface cards');
+    }
+
+    fireEvent.dragStart(newCard, { dataTransfer });
+    fireEvent.drop(existingCard, { dataTransfer });
     fireEvent.click(screen.getByRole('button', { name: 'Save Device' }));
 
     expect(editDevice).toHaveBeenCalledTimes(1);

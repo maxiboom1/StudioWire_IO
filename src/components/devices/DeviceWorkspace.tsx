@@ -51,7 +51,7 @@ export function DeviceWorkspace({ device }: { device: Device }) {
             <div className="device-body-header">
               <strong>
                 <InlineDeviceHeaderField
-                  ariaLabel="Edit device label"
+                  ariaLabel="Edit device name"
                   required
                   value={device.name}
                   onCommit={(name) => commitHeaderEdit({ name })}
@@ -59,7 +59,7 @@ export function DeviceWorkspace({ device }: { device: Device }) {
               </strong>
               <span>
                 <InlineDeviceHeaderField
-                  ariaLabel="Edit device sub-label"
+                  ariaLabel="Edit device sub-name"
                   value={secondaryLabel}
                   onCommit={(code) => commitHeaderEdit({ code })}
                 />

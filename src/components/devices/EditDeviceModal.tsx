@@ -2,12 +2,13 @@ import { type FormEvent, useState } from 'react';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { HorizontalTabs } from '../common/AppTabs';
+import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
+import { RACK_RU_OPTIONS } from '../common/rackRuOptions';
+import { StandardModalFooter } from '../common/StandardModalFooter';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
-import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PortGroupEditor } from './PortGroupEditor';
 import { SubLocationSelect } from './SubLocationSelect';
@@ -79,10 +80,11 @@ export function EditDeviceModal({
         <div className="standard-modal-content device-modal-tab-content">
             {activeTab === 'general' ? (
               <section className="modal-section device-modal-tab-panel">
-                <h3>General</h3>
                 <div className="form-grid two">
                   <div className="form-field">
-                    <Label htmlFor="edit-device-name">Device Label</Label>
+                    <FieldLabel helper="appear as device header" htmlFor="edit-device-name">
+                      Device Name
+                    </FieldLabel>
                     <Input
                       autoFocus
                       id="edit-device-name"
@@ -90,28 +92,27 @@ export function EditDeviceModal({
                       value={form.device.name}
                       onChange={(event) => form.setDevice({ name: event.target.value })}
                     />
-                    <p className="form-help">This label will appear as device header.</p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="edit-device-code">Device sub-label</Label>
+                    <FieldLabel helper="appear as device 2nd line header" htmlFor="edit-device-code">
+                      Device sub-name
+                    </FieldLabel>
                     <Input
                       id="edit-device-code"
                       value={form.device.code}
                       onChange={(event) => form.setDevice({ code: event.target.value.toUpperCase() })}
                     />
-                    <p className="form-help">This will appear as device 2nd line header.</p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="edit-device-manufacturer">Manufacturer</Label>
+                    <FieldLabel htmlFor="edit-device-manufacturer">Manufacturer</FieldLabel>
                     <Input
                       id="edit-device-manufacturer"
                       value={form.device.manufacturer}
                       onChange={(event) => form.setDevice({ manufacturer: event.target.value })}
                     />
-                    <p className="form-help">Hardware vendor.</p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="edit-device-model">Device Model</Label>
+                    <FieldLabel htmlFor="edit-device-model">Device model</FieldLabel>
                     <Input
                       id="edit-device-model"
                       value={form.device.model}
@@ -119,7 +120,7 @@ export function EditDeviceModal({
                     />
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="edit-device-category">Category</Label>
+                    <FieldLabel htmlFor="edit-device-category">Category</FieldLabel>
                     <Select
                       value={form.device.categoryId}
                       onValueChange={(value) => form.setDevice({ categoryId: value })}
@@ -135,12 +136,9 @@ export function EditDeviceModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="form-help">
-                      Assign the device as video, audio, network, or another category.
-                    </p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="edit-device-location">Location</Label>
+                    <FieldLabel htmlFor="edit-device-location">Location</FieldLabel>
                     <Select
                       value={form.device.locationId}
                       onValueChange={(value) => form.setDevice({ locationId: value })}
@@ -164,19 +162,35 @@ export function EditDeviceModal({
                     value={form.device.subLocationId}
                     onChange={(value) => form.setDevice({ subLocationId: value })}
                   />
+                  <div className="form-field">
+                    <FieldLabel htmlFor="edit-device-rack-size">Mount height (RU)</FieldLabel>
+                    <Select
+                      value={form.device.rackSizeRu ? String(form.device.rackSizeRu) : 'none'}
+                      onValueChange={(value) =>
+                        form.setDevice({ rackSizeRu: value === 'none' ? null : Number(value) })
+                      }
+                    >
+                      <SelectTrigger id="edit-device-rack-size">
+                        <SelectValue placeholder="No mount height" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No mount height</SelectItem>
+                        {RACK_RU_OPTIONS.map((height) => (
+                          <SelectItem key={height} value={String(height)}>
+                            {height} RU
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </section>
             ) : (
               <section className="modal-section device-modal-tab-panel">
-                <div className="section-heading">
-                  <h3>I/O Interfaces</h3>
-                </div>
                 <div className="port-group-editor-list">
-                  {form.interfaceItems.map((item, index) => (
+                  {form.interfaceItems.map((item) => (
                     <PortGroupEditor
                       cablePrefixes={project.settings.cablePrefixes}
-                      canMoveDown={index < form.interfaceItems.length - 1}
-                      canMoveUp={index > 0}
                       categories={project.settings.categories}
                       group={item.group}
                       isCollapsed={collapsedInterfaceIds.has(item.group.localId)}
@@ -189,8 +203,6 @@ export function EditDeviceModal({
                       onDragEnd={() => setDraggingInterfaceId(null)}
                       onDragStart={setDraggingInterfaceId}
                       onDrop={dropInterface}
-                      onMoveDown={(localId) => form.moveInterfaceByOffset(localId, 1)}
-                      onMoveUp={(localId) => form.moveInterfaceByOffset(localId, -1)}
                       onPlannedCablesToggle={
                         item.kind === 'existing' ? () => undefined : form.toggleNewPortGroupPlannedCables
                       }
@@ -227,14 +239,14 @@ export function EditDeviceModal({
             )}
         </div>
 
-        <DialogFooter className="standard-modal-footer">
+        <StandardModalFooter>
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
           <Button disabled={form.validation.errors.length > 0} type="submit">
             Save Device
           </Button>
-        </DialogFooter>
+        </StandardModalFooter>
       </form>
     </ModalFrame>
   );

@@ -96,7 +96,7 @@ afterEach(() => {
 });
 
 describe('AddDeviceModal', () => {
-  it('shows general fields with helpers and an explicit No folder selector', () => {
+  it('shows standardized general fields with inline helpers and mount-height choices', () => {
     const project = createProject();
 
     contextHarness.current = createContext(project);
@@ -105,10 +105,17 @@ describe('AddDeviceModal', () => {
     );
 
     expect(screen.getByRole('combobox', { name: 'Folder' }).textContent).toContain('No folder');
-    expect(screen.getByLabelText('Device Label')).toBeTruthy();
-    expect(screen.getByLabelText('Device sub-label')).toBeTruthy();
-    expect(screen.getByText('This label will appear as device header.')).toBeTruthy();
-    expect(screen.getByText('This will appear as device 2nd line header.')).toBeTruthy();
+    expect(screen.getByLabelText(/Device Name/)).toBeTruthy();
+    expect(screen.getByLabelText(/Device sub-name/)).toBeTruthy();
+    expect(screen.getByText('(appear as device header)')).toBeTruthy();
+    expect(screen.getByText('(appear as device 2nd line header)')).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Mount height (RU)' }).textContent).toContain(
+      'No mount height',
+    );
+    expect(screen.queryByText('This label will appear as device header.')).toBeNull();
+    expect(screen.queryByText('This will appear as device 2nd line header.')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'General' })).toBeNull();
+    expect(screen.getByLabelText('StudioWire IO')).toBeTruthy();
     expect(screen.queryByLabelText('Label Prefix')).toBeNull();
     expect(screen.queryByLabelText('Role')).toBeNull();
     expect(screen.queryByLabelText('Notes')).toBeNull();
@@ -126,6 +133,9 @@ describe('AddDeviceModal', () => {
 
     expect(screen.getByRole('button', { name: 'Add I/O Interface' })).toBeTruthy();
     expect(screen.getAllByDisplayValue('{NAME}-{000}')).toHaveLength(2);
+    expect(screen.queryByRole('heading', { name: 'I/O Interfaces' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Move SDI IN/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Move SDI OUT/ })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI IN' }));
     fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI OUT' }));

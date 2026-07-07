@@ -40,7 +40,7 @@ export function createDeviceInProject(
     labelPrefix,
     mountType: payload.device.mountType,
     rackId: payload.device.mountType === 'rack' ? payload.device.rackId : null,
-    rackSizeRu: payload.device.mountType === 'rack' ? payload.device.rackSizeRu : null,
+    rackSizeRu: payload.device.rackSizeRu,
     rackBottomRu: payload.device.mountType === 'rack' ? payload.device.rackBottomRu : null,
     status: 'planned',
     notes: payload.device.notes,

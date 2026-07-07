@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { DEFAULT_RACK_DEFAULTS } from '../../domain/defaults';
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
+import { RACK_RU_OPTIONS } from '../common/rackRuOptions';
+import { StandardModalFooter } from '../common/StandardModalFooter';
 import { Button } from '../ui/button';
-import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 export function AddRackModal({
@@ -43,54 +44,65 @@ export function AddRackModal({
 
   return (
     <ModalFrame title="Add Rack" description="Create a rack inside the selected location." onClose={onClose}>
-      <form className="editor-form" onSubmit={handleSubmit}>
-        <div className="form-field">
-          <Label htmlFor="rack-name">Name</Label>
-          <Input
-            autoFocus
-            id="rack-name"
-            required
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
+      <form className="editor-form standard-modal-form add-rack-form" onSubmit={handleSubmit}>
+        <div className="standard-modal-content add-rack-modal-content">
+          <div className="form-grid two">
+            <div className="form-field">
+              <FieldLabel htmlFor="rack-name">Name</FieldLabel>
+              <Input
+                autoFocus
+                id="rack-name"
+                required
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
+            </div>
+            <div className="form-field">
+              <FieldLabel htmlFor="rack-height">Height RU</FieldLabel>
+              <Select
+                value={form.heightRu}
+                onValueChange={(value) => setForm({ ...form, heightRu: value })}
+              >
+                <SelectTrigger id="rack-height">
+                  <SelectValue placeholder="Select height" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RACK_RU_OPTIONS.map((height) => (
+                    <SelectItem key={height} value={String(height)}>
+                      {height} RU
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="form-field">
+              <FieldLabel htmlFor="rack-numbering-direction">Numbering direction</FieldLabel>
+              <Select
+                value={form.numberingDirection}
+                onValueChange={(value) =>
+                  setForm({
+                    ...form,
+                    numberingDirection: value as Rack['numberingDirection'],
+                  })
+                }
+              >
+                <SelectTrigger id="rack-numbering-direction">
+                  <SelectValue placeholder="Select direction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bottom_to_top">Bottom to top</SelectItem>
+                  <SelectItem value="top_to_bottom">Top to bottom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-        <div className="form-field">
-          <Label htmlFor="rack-height">Height RU</Label>
-          <Input
-            id="rack-height"
-            min="1"
-            required
-            type="number"
-            value={form.heightRu}
-            onChange={(event) => setForm({ ...form, heightRu: event.target.value })}
-          />
-        </div>
-        <div className="form-field">
-          <Label htmlFor="rack-numbering-direction">Numbering direction</Label>
-          <Select
-            value={form.numberingDirection}
-            onValueChange={(value) =>
-              setForm({
-                ...form,
-                numberingDirection: value as Rack['numberingDirection'],
-              })
-            }
-          >
-            <SelectTrigger id="rack-numbering-direction">
-              <SelectValue placeholder="Select direction" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bottom_to_top">Bottom to top</SelectItem>
-              <SelectItem value="top_to_bottom">Top to bottom</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <DialogFooter>
+        <StandardModalFooter>
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Add Rack</Button>
-        </DialogFooter>
+        </StandardModalFooter>
       </form>
     </ModalFrame>
   );

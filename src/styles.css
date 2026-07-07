@@ -978,6 +978,28 @@ textarea:not([data-ui]) {
   line-height: 1.4;
 }
 
+.field-label-with-helper {
+  display: flex !important;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.field-label-with-helper .field-label-main {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+}
+
+.field-label-with-helper .field-label-helper {
+  color: #607177;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .connector-icon {
   --connector-icon-color: #64748b;
   position: relative;
@@ -2343,8 +2365,48 @@ textarea:not([data-ui]) {
 }
 
 .standard-modal-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center;
+  gap: 14px;
   border-top: 1px solid #d7e0e4;
   padding: 14px 20px;
+}
+
+.standard-modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.studiowire-footer-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #172126;
+  font-size: 0.95rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.studiowire-footer-name {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.studiowire-footer-io {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: #ff815f;
+  color: #172126;
+  font-family: 'Courier New', monospace;
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 .device-modal-tabs {
@@ -2387,11 +2449,12 @@ textarea:not([data-ui]) {
 }
 
 .device-modal-tab-panel {
-  min-height: 420px;
+  min-height: 0;
 }
 
 .port-group-editor-list {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -2400,6 +2463,13 @@ textarea:not([data-ui]) {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  min-height: 58px;
+  padding: 14px 16px;
+}
+
+.port-group-editor.is-collapsed .port-group-editor-heading {
+  min-height: 50px;
+  padding: 10px 14px;
 }
 
 .interface-card-actions {
@@ -2412,6 +2482,12 @@ textarea:not([data-ui]) {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.interface-card-title > div {
+  display: grid;
+  align-content: center;
   min-width: 0;
 }
 
@@ -2447,6 +2523,14 @@ textarea:not([data-ui]) {
 .port-group-editor-content {
   display: grid;
   gap: 12px;
+}
+
+.add-rack-form {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.add-rack-modal-content {
+  align-content: start;
 }
 
 .port-group-color-content {

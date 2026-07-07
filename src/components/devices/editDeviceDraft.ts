@@ -142,7 +142,7 @@ export function getEditDeviceValidation(
   }
 
   if (!normalizeDeviceToken(device.code || device.name)) {
-    errors.push('A device sub-label or device label is required for generated port labels.');
+    errors.push('A device sub-name or device name is required for generated port labels.');
   }
 
   for (const group of existingGroups) {

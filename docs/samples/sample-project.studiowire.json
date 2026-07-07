@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.16",
+  "schemaVersion": "0.2.8.17",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -316,7 +316,7 @@
       }
     ],
     "rackDefaults": {
-      "heightRu": 28,
+      "heightRu": 48,
       "numberingDirection": "bottom_to_top"
     },
     "labelRules": {

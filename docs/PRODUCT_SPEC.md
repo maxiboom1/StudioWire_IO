@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.16
+# StudioWire IO Product Spec v0.2.8.17
 
-StudioWire IO v0.2.8.16 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.17 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -113,7 +113,7 @@ Each rack has:
 - Rack height in rack units.
 - Numbering direction.
 
-New racks default to 28 RU. Existing rack records keep their stored height.
+New racks default to 48 RU. Existing rack records keep their stored height.
 
 Rack placement validation checks device rack positions against rack height and detects rack unit overlap.
 
@@ -135,7 +135,7 @@ Each device has:
 
 Device creation can generate I/O interfaces, ports, planned cables, and ledger allocations in one workflow.
 
-Add/Edit Device uses General and I/O tabs. General exposes Device Label, Device sub-label, Manufacturer, Device Model, Category, Location, and Folder. Label Prefix, Role, Notes, and edit rack height are not shown in Add/Edit Device.
+Add/Edit Device uses General and I/O tabs. General exposes Device Name, Device sub-name, Manufacturer, Device model, Category, Location, Folder, and optional Mount height (RU). Label Prefix, Role, and Notes are not shown in Add/Edit Device.
 
 Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
 

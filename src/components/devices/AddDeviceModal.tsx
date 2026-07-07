@@ -1,12 +1,13 @@
 import { type FormEvent, useState } from 'react';
 import { useProject } from '../../state/ProjectContext';
 import { HorizontalTabs } from '../common/AppTabs';
+import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
+import { RACK_RU_OPTIONS } from '../common/rackRuOptions';
+import { StandardModalFooter } from '../common/StandardModalFooter';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
-import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PortGroupEditor } from './PortGroupEditor';
 import { SubLocationSelect } from './SubLocationSelect';
@@ -62,7 +63,7 @@ export function AddDeviceModal({
   return (
     <ModalFrame
       title="Add Device"
-      description="Create a virtual device with generated ports and optional planned cables."
+      description="Create a new device with generated ports and optional I/O interfaces."
       onClose={onClose}
     >
       <form className="editor-form standard-modal-form add-device-form" onSubmit={handleSubmit}>
@@ -78,10 +79,11 @@ export function AddDeviceModal({
         <div className="standard-modal-content device-modal-tab-content">
             {activeTab === 'general' ? (
               <section className="modal-section device-modal-tab-panel">
-                <h3>General</h3>
                 <div className="form-grid two">
                   <div className="form-field">
-                    <Label htmlFor="device-name">Device Label</Label>
+                    <FieldLabel helper="appear as device header" htmlFor="device-name">
+                      Device Name
+                    </FieldLabel>
                     <Input
                       autoFocus
                       id="device-name"
@@ -89,29 +91,28 @@ export function AddDeviceModal({
                       value={form.device.name}
                       onChange={(event) => form.setDevice({ name: event.target.value })}
                     />
-                    <p className="form-help">This label will appear as device header.</p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="device-code">Device sub-label</Label>
+                    <FieldLabel helper="appear as device 2nd line header" htmlFor="device-code">
+                      Device sub-name
+                    </FieldLabel>
                     <Input
                       id="device-code"
                       value={form.device.code}
                       placeholder={form.effectiveLabelPrefix}
                       onChange={(event) => form.setDevice({ code: event.target.value.toUpperCase() })}
                     />
-                    <p className="form-help">This will appear as device 2nd line header.</p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="device-manufacturer">Manufacturer</Label>
+                    <FieldLabel htmlFor="device-manufacturer">Manufacturer</FieldLabel>
                     <Input
                       id="device-manufacturer"
                       value={form.device.manufacturer}
                       onChange={(event) => form.setDevice({ manufacturer: event.target.value })}
                     />
-                    <p className="form-help">Hardware vendor.</p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="device-model">Device Model</Label>
+                    <FieldLabel htmlFor="device-model">Device model</FieldLabel>
                     <Input
                       id="device-model"
                       value={form.device.model}
@@ -119,7 +120,7 @@ export function AddDeviceModal({
                     />
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="device-category">Category</Label>
+                    <FieldLabel htmlFor="device-category">Category</FieldLabel>
                     <Select value={form.device.categoryId} onValueChange={form.updateDeviceCategory}>
                       <SelectTrigger id="device-category">
                         <SelectValue placeholder="Select category" />
@@ -132,12 +133,9 @@ export function AddDeviceModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="form-help">
-                      Assign the device as video, audio, network, or another category.
-                    </p>
                   </div>
                   <div className="form-field">
-                    <Label htmlFor="device-location">Location</Label>
+                    <FieldLabel htmlFor="device-location">Location</FieldLabel>
                     <Select
                       value={form.device.locationId}
                       onValueChange={(value) => form.setDevice({ locationId: value })}
@@ -161,19 +159,35 @@ export function AddDeviceModal({
                     value={form.device.subLocationId}
                     onChange={(value) => form.setDevice({ subLocationId: value })}
                   />
+                  <div className="form-field">
+                    <FieldLabel htmlFor="device-rack-size">Mount height (RU)</FieldLabel>
+                    <Select
+                      value={form.device.rackSizeRu ? String(form.device.rackSizeRu) : 'none'}
+                      onValueChange={(value) =>
+                        form.setDevice({ rackSizeRu: value === 'none' ? null : Number(value) })
+                      }
+                    >
+                      <SelectTrigger id="device-rack-size">
+                        <SelectValue placeholder="No mount height" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No mount height</SelectItem>
+                        {RACK_RU_OPTIONS.map((height) => (
+                          <SelectItem key={height} value={String(height)}>
+                            {height} RU
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </section>
             ) : (
               <section className="modal-section device-modal-tab-panel">
-                <div className="section-heading">
-                  <h3>I/O Interfaces</h3>
-                </div>
                 <div className="port-group-editor-list">
-                  {form.portGroups.map((group, index) => (
+                  {form.portGroups.map((group) => (
                     <PortGroupEditor
                       cablePrefixes={project.settings.cablePrefixes}
-                      canMoveDown={index < form.portGroups.length - 1}
-                      canMoveUp={index > 0}
                       categories={project.settings.categories}
                       group={group}
                       isCollapsed={collapsedInterfaceIds.has(group.localId)}
@@ -183,8 +197,6 @@ export function AddDeviceModal({
                       onDragEnd={() => setDraggingInterfaceId(null)}
                       onDragStart={setDraggingInterfaceId}
                       onDrop={dropInterface}
-                      onMoveDown={(localId) => form.movePortGroupByOffset(localId, 1)}
-                      onMoveUp={(localId) => form.movePortGroupByOffset(localId, -1)}
                       onPlannedCablesToggle={form.togglePlannedCables}
                       onRemove={form.removePortGroup}
                       onToggleCollapsed={toggleInterfaceCollapsed}
@@ -211,14 +223,14 @@ export function AddDeviceModal({
             )}
         </div>
 
-        <DialogFooter className="standard-modal-footer">
+        <StandardModalFooter>
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
           <Button disabled={form.validation.errors.length > 0} type="submit">
             Create Device
           </Button>
-        </DialogFooter>
+        </StandardModalFooter>
       </form>
     </ModalFrame>
   );

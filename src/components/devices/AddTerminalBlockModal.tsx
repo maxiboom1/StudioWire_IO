@@ -12,9 +12,9 @@ import { useProject } from '../../state/ProjectContext';
 import type { TerminalBlockDraft } from '../../state/projectTypes';
 import { HorizontalTabs } from '../common/AppTabs';
 import { ModalFrame } from '../common/ModalFrame';
+import { StandardModalFooter } from '../common/StandardModalFooter';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
-import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -311,14 +311,14 @@ export function AddTerminalBlockModal({
           ))}
         </div>
 
-        <DialogFooter className="standard-modal-footer">
+        <StandardModalFooter>
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
           <Button disabled={validation.errors.length > 0} type="submit">
             Create TB
           </Button>
-        </DialogFooter>
+        </StandardModalFooter>
       </form>
     </ModalFrame>
   );
