@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.17
+# StudioWire IO Product Spec v0.2.8.18
 
-StudioWire IO v0.2.8.17 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.18 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -33,7 +33,7 @@ The left tree is the primary project navigator. It shows the hierarchy of:
 
 Selecting an item in the tree opens it in the center workspace and exposes editable fields in the right inspector.
 
-The Locations section includes an Add Location action. Each location branch includes Add Rack, Add Device, Add Folder, and Add TB actions. Racks, devices, and terminal blocks can be dragged between folders or back to the parent location when the move is valid.
+The Locations section includes an Add Location action using the standard app modal layout. Each location branch includes Add Rack, Add Device, Add Folder, and Add TB actions. Racks, devices, and terminal blocks can be dragged between folders or back to the parent location when the move is valid.
 
 ### Center Workspace
 

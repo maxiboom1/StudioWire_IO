@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useProject } from '../../state/ProjectContext';
+import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
+import { StandardModalFooter } from '../common/StandardModalFooter';
 import { Button } from '../ui/button';
-import { DialogFooter } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 
 export function AddLocationModal({
@@ -38,39 +38,43 @@ export function AddLocationModal({
       description="Create a project location for racks and devices."
       onClose={onClose}
     >
-      <form className="editor-form" onSubmit={handleSubmit}>
-        <div className="form-field">
-          <Label htmlFor="location-name">Name</Label>
-          <Input
-            autoFocus
-            id="location-name"
-            required
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
+      <form className="editor-form standard-modal-form add-location-form" onSubmit={handleSubmit}>
+        <div className="standard-modal-content add-location-modal-content">
+          <div className="form-grid two">
+            <div className="form-field">
+              <FieldLabel htmlFor="location-name">Name</FieldLabel>
+              <Input
+                autoFocus
+                id="location-name"
+                required
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
+            </div>
+            <div className="form-field">
+              <FieldLabel htmlFor="location-type">Type</FieldLabel>
+              <Input
+                id="location-type"
+                value={form.type}
+                onChange={(event) => setForm({ ...form, type: event.target.value })}
+              />
+            </div>
+          </div>
+          <div className="form-field">
+            <FieldLabel htmlFor="location-description">Description</FieldLabel>
+            <Textarea
+              id="location-description"
+              value={form.description}
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
+            />
+          </div>
         </div>
-        <div className="form-field">
-          <Label htmlFor="location-type">Type</Label>
-          <Input
-            id="location-type"
-            value={form.type}
-            onChange={(event) => setForm({ ...form, type: event.target.value })}
-          />
-        </div>
-        <div className="form-field">
-          <Label htmlFor="location-description">Description</Label>
-          <Textarea
-            id="location-description"
-            value={form.description}
-            onChange={(event) => setForm({ ...form, description: event.target.value })}
-          />
-        </div>
-        <DialogFooter>
+        <StandardModalFooter>
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit">Add Location</Button>
-        </DialogFooter>
+        </StandardModalFooter>
       </form>
     </ModalFrame>
   );

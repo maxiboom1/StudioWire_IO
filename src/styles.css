@@ -2499,8 +2499,17 @@ textarea:not([data-ui]) {
 }
 
 .interface-drag-handle {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 28px;
   flex: 0 0 auto;
   color: #8b9aa1;
+  cursor: grab;
+}
+
+.interface-drag-handle:active {
+  cursor: grabbing;
 }
 
 .interface-color-dot {
@@ -2531,6 +2540,26 @@ textarea:not([data-ui]) {
 
 .add-rack-modal-content {
   align-content: start;
+}
+
+.folder-modal-form {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.folder-modal-content {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.add-location-form {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.add-location-modal-content {
+  display: grid;
+  align-content: start;
+  gap: 14px;
 }
 
 .port-group-color-content {

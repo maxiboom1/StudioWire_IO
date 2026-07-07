@@ -61,16 +61,9 @@ export function PortGroupEditor({
   return (
     <Card
       className={`port-group-editor${isCollapsed ? ' is-collapsed' : ''}`}
-      draggable
-      onDragEnd={onDragEnd}
       onDragOver={(event) => {
         event.preventDefault();
         onDragOver?.(group.localId);
-      }}
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', group.localId);
-        onDragStart?.(group.localId);
       }}
       onDrop={(event) => {
         event.preventDefault();
@@ -79,7 +72,22 @@ export function PortGroupEditor({
     >
       <CardHeader className="port-group-editor-heading">
         <div className="interface-card-title">
-          <GripVertical className="h-4 w-4 interface-drag-handle" aria-hidden="true" />
+          <span
+            aria-label={`Drag ${group.name || 'I/O interface'}`}
+            className="interface-drag-handle"
+            data-ui="interface-drag-handle"
+            draggable
+            role="button"
+            tabIndex={0}
+            onDragEnd={onDragEnd}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = 'move';
+              event.dataTransfer.setData('text/plain', group.localId);
+              onDragStart?.(group.localId);
+            }}
+          >
+            <GripVertical className="h-4 w-4" aria-hidden="true" />
+          </span>
           <ConnectorIcon
             color={displayColor}
             iconKey={iconKey}

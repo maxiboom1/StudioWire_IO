@@ -159,7 +159,16 @@ describe('EditDeviceModal', () => {
       throw new Error('Expected interface cards');
     }
 
-    fireEvent.dragStart(newCard, { dataTransfer });
+    const newDragHandle = newCard.querySelector('[data-ui="interface-drag-handle"]');
+
+    if (!(newDragHandle instanceof HTMLElement)) {
+      throw new Error('Expected interface drag handle');
+    }
+
+    expect((newCard as HTMLElement).draggable).toBe(false);
+    expect(newDragHandle.draggable).toBe(true);
+
+    fireEvent.dragStart(newDragHandle, { dataTransfer });
     fireEvent.drop(existingCard, { dataTransfer });
     fireEvent.click(screen.getByRole('button', { name: 'Save Device' }));
 

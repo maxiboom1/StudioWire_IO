@@ -270,38 +270,73 @@ describe('LeftTree', () => {
     expect(screen.queryByText('Machine Room')).toBeNull();
   });
 
-  it('adds folders from the location context menu', async () => {
+  it('adds folders from the location context menu with an app modal', async () => {
     const user = userEvent.setup();
     const addSubLocation = vi.fn();
+    const prompt = vi.spyOn(window, 'prompt').mockReturnValue('Browser Prompt');
 
-    vi.spyOn(window, 'prompt').mockReturnValue('Back Table');
     renderTree(projectFixture(), { addSubLocation });
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 5/ }));
     await user.click(await screen.findByText('Add Folder'));
+    expect(await screen.findByRole('heading', { name: 'Add Folder' })).toBeTruthy();
+    expect((screen.getByLabelText('Folder name') as HTMLInputElement).value).toBe('');
 
+    await user.type(screen.getByLabelText('Folder name'), '  Back Table  ');
+    await user.click(screen.getByRole('button', { name: 'Add Folder' }));
+
+    expect(prompt).not.toHaveBeenCalled();
     expect(addSubLocation).toHaveBeenCalledWith({
       locationId: 'location-machine-room',
       name: 'Back Table',
       description: '',
     });
+    expect(screen.queryByRole('heading', { name: 'Add Folder' })).toBeNull();
   });
 
-  it('renames folders from the folder context menu', async () => {
+  it('renames folders from the folder context menu with an app modal', async () => {
     const user = userEvent.setup();
     const updateSubLocation = vi.fn();
+    const prompt = vi.spyOn(window, 'prompt').mockReturnValue('Browser Prompt');
 
-    vi.spyOn(window, 'prompt').mockReturnValue('Back Table');
     renderTree(projectFixture(), { updateSubLocation });
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /Front Table 1/ }));
     await user.click(await screen.findByText('Rename Folder'));
+    expect(await screen.findByRole('heading', { name: 'Rename Folder' })).toBeTruthy();
+    expect((screen.getByLabelText('Folder name') as HTMLInputElement).value).toBe('Front Table');
 
-    expect(window.prompt).toHaveBeenCalledWith('Folder name', 'Front Table');
+    await user.clear(screen.getByLabelText('Folder name'));
+    await user.type(screen.getByLabelText('Folder name'), '  Back Table  ');
+    await user.click(screen.getByRole('button', { name: 'Rename Folder' }));
+
+    expect(prompt).not.toHaveBeenCalled();
     expect(updateSubLocation).toHaveBeenCalledWith('sub-location-front-table', {
       name: 'Back Table',
       description: '',
     });
+    expect(screen.queryByRole('heading', { name: 'Rename Folder' })).toBeNull();
+  });
+
+  it('validates blank folder modal submissions and cancels without dispatching', async () => {
+    const user = userEvent.setup();
+    const addSubLocation = vi.fn();
+    const prompt = vi.spyOn(window, 'prompt').mockReturnValue('Browser Prompt');
+
+    renderTree(projectFixture(), { addSubLocation });
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 5/ }));
+    await user.click(await screen.findByText('Add Folder'));
+    await user.click(screen.getByRole('button', { name: 'Add Folder' }));
+
+    expect(await screen.findByText('Folder name is required.')).toBeTruthy();
+    expect(addSubLocation).not.toHaveBeenCalled();
+    expect(prompt).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('heading', { name: 'Add Folder' })).toBeNull();
+    expect(addSubLocation).not.toHaveBeenCalled();
   });
 
   it('drops navigator devices and racks onto folders and parent locations', () => {
