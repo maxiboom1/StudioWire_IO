@@ -180,15 +180,15 @@ describe('useAddDeviceForm', () => {
     expect(controller().portGroups.map((group) => group.localId)).toEqual(['controller-1', 'controller-2']);
   });
 
-  it('blocks failed validation and does not dispatch or complete', () => {
+  it('blocks failed validation and does not dispatch or complete', async () => {
     const { addDevice, controller, onCreated } = renderController();
 
-    expect(controller().submit(() => true)).toBe(false);
+    await expect(controller().submit(async () => true)).resolves.toBe(false);
     expect(addDevice).not.toHaveBeenCalled();
     expect(onCreated).not.toHaveBeenCalled();
   });
 
-  it('dispatches exact payload and completes after successful validation', () => {
+  it('dispatches exact payload and completes after successful validation', async () => {
     const { addDevice, controller, onCreated } = renderController();
 
     act(() => {
@@ -197,8 +197,8 @@ describe('useAddDeviceForm', () => {
     });
 
     expect(controller().validation).toEqual({ errors: [], warnings: [] });
-    const confirm = vi.fn(() => true);
-    expect(controller().submit(confirm)).toBe(true);
+    const confirm = vi.fn(async () => true);
+    await expect(controller().submit(confirm)).resolves.toBe(true);
     expect(confirm).not.toHaveBeenCalled();
     expect(addDevice).toHaveBeenCalledWith({
       device: expect.objectContaining({

@@ -5,6 +5,7 @@
 :root {
   --app-footer-height: 52px;
   --app-topbar-height: 56px;
+  --inspector-width: 300px;
   --studio-bg: #f3f6f8;
   --studio-panel: #ffffff;
   --studio-border: #d8e1e6;
@@ -101,7 +102,7 @@ textarea:not([data-ui]) {
   position: relative;
   z-index: 20;
   display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) 324px;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--inspector-width);
   align-items: center;
   min-height: var(--app-topbar-height);
   border-bottom: 1px solid #cfd9de;
@@ -203,11 +204,11 @@ textarea:not([data-ui]) {
 
 .app-logo-zone {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   height: 100%;
-  padding: 0 30px;
+  padding: 0 18px;
   border-left: 1px solid var(--studio-border);
 }
 
@@ -360,7 +361,7 @@ textarea:not([data-ui]) {
   min-height: 0;
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) var(--inspector-width);
   grid-template-rows: minmax(0, 1fr) var(--app-footer-height);
   grid-template-areas:
     'workspace inspector'
@@ -2188,6 +2189,37 @@ textarea:not([data-ui]) {
   color: #526269;
 }
 
+.assigned-device-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assigned-device-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.assigned-device-name {
+  overflow: hidden;
+  min-width: 0;
+  color: #172126;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assigned-device-unassign {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  padding: 0;
+}
+
 .warning-list {
   color: #92400e;
 }
@@ -2206,7 +2238,7 @@ textarea:not([data-ui]) {
 .validation-panel {
   grid-area: validation;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  grid-template-columns: minmax(0, 1fr) var(--inspector-width);
   align-items: stretch;
   height: var(--app-footer-height);
   min-height: var(--app-footer-height);
@@ -2379,6 +2411,14 @@ textarea:not([data-ui]) {
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
+}
+
+.confirmation-dialog {
+  max-width: 420px;
+}
+
+.confirmation-dialog-message {
+  white-space: pre-line;
 }
 
 .studiowire-footer-mark {

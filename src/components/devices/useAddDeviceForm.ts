@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { buildCableReservationConfirmation, type ConfirmationCopy } from '../../domain/prompts';
 import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { ProjectRoot } from '../../domain/types';
 import type { AddDeviceInput } from '../../state/projectContextTypes';
@@ -29,7 +30,7 @@ export interface AddDeviceFormController {
   movePortGroup: (localId: string, targetLocalId: string) => void;
   movePortGroupByOffset: (localId: string, offset: -1 | 1) => void;
   setDevice: (updates: Partial<DeviceDraft>) => void;
-  submit: (confirmWarnings: (message: string) => boolean) => boolean;
+  submit: (confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>) => Promise<boolean>;
   updatePortGroup: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
   updatePortGroupCategory: (localId: string, categoryId: string) => void;
   updateDeviceCategory: (categoryId: string) => void;
@@ -111,15 +112,13 @@ export function useAddDeviceForm({
     setPortGroups((current) => moveByOffset(current, localId, offset, (group) => group.localId));
   }
 
-  function submit(confirmWarnings: (message: string) => boolean): boolean {
+  async function submit(confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>): Promise<boolean> {
     if (validation.errors.length > 0) {
       return false;
     }
 
     if (validation.warnings.length > 0) {
-      const confirmed = confirmWarnings(
-        `${validation.warnings.join('\n')}\n\nContinue and reserve these cable number gaps?`,
-      );
+      const confirmed = await confirmWarnings(buildCableReservationConfirmation(validation.warnings));
 
       if (!confirmed) {
         return false;

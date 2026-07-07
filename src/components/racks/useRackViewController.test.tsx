@@ -89,12 +89,22 @@ afterEach(() => {
   window.__studioWireDraggingDeviceId = undefined;
 });
 
+function allowRackMove() {
+  return vi.fn(async () => true);
+}
+
 describe('useRackViewController', () => {
   it('initializes from the selected rack, resets on selected rack change, and clears stale drag state', () => {
     const project = projectFixture();
     const moveMountedDevice = vi.fn();
     const { result, rerender } = renderHook(
-      ({ selectedRack }) => useRackViewController({ project, selectedRack, moveMountedDevice }),
+      ({ selectedRack }) =>
+        useRackViewController({
+          confirmRackMove: allowRackMove(),
+          project,
+          selectedRack,
+          moveMountedDevice,
+        }),
       { initialProps: { selectedRack: project.racks[0] } },
     );
 
@@ -115,7 +125,12 @@ describe('useRackViewController', () => {
   it('adds up to four unique racks, ignores duplicates, and preserves at least one viewed rack on removal', () => {
     const project = projectFixture();
     const { result } = renderHook(() =>
-      useRackViewController({ project, selectedRack: project.racks[0], moveMountedDevice: vi.fn() }),
+      useRackViewController({
+        confirmRackMove: allowRackMove(),
+        project,
+        selectedRack: project.racks[0],
+        moveMountedDevice: vi.fn(),
+      }),
     );
 
     act(() => {
@@ -151,7 +166,12 @@ describe('useRackViewController', () => {
       rackSizeRu: 2,
     });
     const { result } = renderHook(() =>
-      useRackViewController({ project, selectedRack: project.racks[0], moveMountedDevice: vi.fn() }),
+      useRackViewController({
+        confirmRackMove: allowRackMove(),
+        project,
+        selectedRack: project.racks[0],
+        moveMountedDevice: vi.fn(),
+      }),
     );
     const startTransfer = dataTransfer();
 
@@ -194,16 +214,16 @@ describe('useRackViewController', () => {
     expect(invalidTransfer.dropEffect).toBe('none');
   });
 
-  it('moves only after valid drop and clears drag data for valid, invalid, missing, and drag-end paths', () => {
+  it('moves only after valid drop and clears drag data for valid, invalid, missing, and drag-end paths', async () => {
     const project = projectFixture();
     const moveMountedDevice = vi.fn();
-    const confirmRackMove = vi.fn(() => true);
+    const confirmRackMove = vi.fn(async () => true);
     const { result } = renderHook(() =>
       useRackViewController({ confirmRackMove, project, selectedRack: project.racks[0], moveMountedDevice }),
     );
 
-    act(() => {
-      result.current.handleRackDrop(
+    await act(async () => {
+      await result.current.handleRackDrop(
         dragEvent({ transfer: dataTransfer() }),
         project.racks[1],
         [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
@@ -211,9 +231,9 @@ describe('useRackViewController', () => {
     });
     expect(moveMountedDevice).not.toHaveBeenCalled();
 
-    act(() => {
+    await act(async () => {
       result.current.handleDeviceDragStart(dragEvent({ transfer: dataTransfer() }), project.devices[0]);
-      result.current.handleRackDrop(
+      await result.current.handleRackDrop(
         dragEvent({ clientY: 90, transfer: dataTransfer() }),
         project.racks[1],
         [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
@@ -235,21 +255,21 @@ describe('useRackViewController', () => {
     expect(result.current.draggingDeviceId).toBeNull();
   });
 
-  it('confirms valid cross-location rack drops before moving the device', () => {
+  it('confirms valid cross-location rack drops before moving the device', async () => {
     const project = projectFixture();
     project.devices[0] = {
       ...project.devices[0],
       locationId: 'location-control-room',
     };
     const moveMountedDevice = vi.fn();
-    const confirmRackMove = vi.fn(() => true);
+    const confirmRackMove = vi.fn(async () => true);
     const { result } = renderHook(() =>
       useRackViewController({ confirmRackMove, project, selectedRack: project.racks[0], moveMountedDevice }),
     );
 
-    act(() => {
+    await act(async () => {
       result.current.handleDeviceDragStart(dragEvent({ transfer: dataTransfer() }), project.devices[0]);
-      result.current.handleRackDrop(
+      await result.current.handleRackDrop(
         dragEvent({ clientY: 90, transfer: dataTransfer() }),
         project.racks[1],
         [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
@@ -257,7 +277,10 @@ describe('useRackViewController', () => {
     });
 
     expect(confirmRackMove).toHaveBeenCalledWith(
-      'You are assigning "Router 1" from "Control Room" to rack "MCR Rack B" in "Machine Room". This will move the device to "Machine Room". Proceed?',
+      expect.objectContaining({
+        message:
+          'You are assigning "Router 1" from "Control Room" to rack "MCR Rack B" in "Machine Room". This will move the device to "Machine Room". Proceed?',
+      }),
     );
     expect(moveMountedDevice).toHaveBeenCalledWith({
       deviceId: 'device-router-1',
@@ -266,21 +289,21 @@ describe('useRackViewController', () => {
     });
   });
 
-  it('cancels cross-location rack drops when the user rejects the prompt', () => {
+  it('cancels cross-location rack drops when the user rejects the prompt', async () => {
     const project = projectFixture();
     project.devices[0] = {
       ...project.devices[0],
       locationId: 'location-control-room',
     };
     const moveMountedDevice = vi.fn();
-    const confirmRackMove = vi.fn(() => false);
+    const confirmRackMove = vi.fn(async () => false);
     const { result } = renderHook(() =>
       useRackViewController({ confirmRackMove, project, selectedRack: project.racks[0], moveMountedDevice }),
     );
 
-    act(() => {
+    await act(async () => {
       result.current.handleDeviceDragStart(dragEvent({ transfer: dataTransfer() }), project.devices[0]);
-      result.current.handleRackDrop(
+      await result.current.handleRackDrop(
         dragEvent({ clientY: 90, transfer: dataTransfer() }),
         project.racks[1],
         [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
@@ -294,7 +317,7 @@ describe('useRackViewController', () => {
     expect(window.__studioWireDraggingDeviceId).toBeUndefined();
   });
 
-  it('does not prompt for invalid rack drops', () => {
+  it('does not prompt for invalid rack drops', async () => {
     const project = projectFixture();
     project.devices[0] = {
       ...project.devices[0],
@@ -310,14 +333,14 @@ describe('useRackViewController', () => {
       rackSizeRu: 2,
     });
     const moveMountedDevice = vi.fn();
-    const confirmRackMove = vi.fn(() => true);
+    const confirmRackMove = vi.fn(async () => true);
     const { result } = renderHook(() =>
       useRackViewController({ confirmRackMove, project, selectedRack: project.racks[0], moveMountedDevice }),
     );
 
-    act(() => {
+    await act(async () => {
       result.current.handleDeviceDragStart(dragEvent({ transfer: dataTransfer() }), project.devices[0]);
-      result.current.handleRackDrop(
+      await result.current.handleRackDrop(
         dragEvent({ clientY: 20, transfer: dataTransfer() }),
         project.racks[1],
         [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],

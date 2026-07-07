@@ -164,11 +164,14 @@ export function getEditDeviceValidation(
   }
 
   for (const group of newGroups) {
+    const count = Number(group.count);
+    const hasValidCount = Number.isSafeInteger(count) && count > 0;
+
     if (!group.name.trim()) {
       errors.push('New interface name is required.');
     }
 
-    if (!Number.isSafeInteger(group.count) || group.count <= 0) {
+    if (!hasValidCount) {
       errors.push(`${group.name || 'New interface'} count must be positive.`);
     }
 
@@ -200,11 +203,15 @@ export function getEditDeviceValidation(
         continue;
       }
 
+      if (!hasValidCount) {
+        continue;
+      }
+
       const preview = previewCableRange(
         previewProject,
         group.cablePrefix,
         group.firstCableNumber,
-        group.count,
+        count,
       );
 
       for (const error of preview.errors) {
@@ -224,7 +231,7 @@ export function getEditDeviceValidation(
         previewProject = allocateCableRange(previewProject, {
           prefix: group.cablePrefix,
           firstCableNumber: group.firstCableNumber,
-          count: group.count,
+          count,
           ownerType: 'preview',
           ownerId: group.localId,
           reason: 'Preview edit device allocation',
@@ -271,6 +278,7 @@ export function createEditDeviceCommandInput(
     })),
     newPortGroups: newGroups.map((group) => ({
       ...group,
+      count: Number(group.count),
       name: group.name.trim(),
       firstCableNumber: group.createPlannedCables ? group.firstCableNumber : null,
     })),

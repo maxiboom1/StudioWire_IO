@@ -96,7 +96,7 @@ export function PortGroupEditor({
           <div>
             <CardTitle>{group.name || 'I/O Interface'}</CardTitle>
             <p>
-              {group.direction} / {group.count} ports
+              {group.direction} / {group.count || 'set count'} ports
             </p>
           </div>
         </div>
@@ -210,7 +210,11 @@ export function PortGroupEditor({
                   min="1"
                   type="number"
                   value={group.count}
-                  onChange={(event) => onUpdate(group.localId, { count: Number(event.target.value) })}
+                  onChange={(event) =>
+                    onUpdate(group.localId, {
+                      count: event.target.value === '' ? '' : Number(event.target.value),
+                    })
+                  }
                 />
               </div>
             </div>

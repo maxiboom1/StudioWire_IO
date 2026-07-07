@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Minus } from 'lucide-react';
+import { buildDeleteRackConfirmation, buildRackUnassignConfirmation } from '../../domain/prompts';
 import { analyzeRackPlacements } from '../../domain/rackDiagnostics';
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
@@ -10,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 export function RackInspector({ rack }: { rack: Rack }) {
   const { project, updateRack, deleteRack, unassignDeviceFromRack } = useProject();
+  const confirm = useConfirmation();
   const devices = project.devices.filter((device) => device.rackId === rack.id);
   const placementDiagnostics = analyzeRackPlacements(project).filter(
     (diagnostic) => diagnostic.rackId === rack.id,
@@ -37,13 +41,25 @@ export function RackInspector({ rack }: { rack: Rack }) {
     });
   }
 
-  function handleDelete() {
-    const confirmed = window.confirm(
-      `Delete rack "${rack.name}"?\n\nRacks with assigned devices will be blocked.`,
-    );
+  async function handleDelete() {
+    const confirmed = await confirm(buildDeleteRackConfirmation(rack));
 
     if (confirmed) {
       deleteRack(rack.id);
+    }
+  }
+
+  async function handleUnassign(deviceId: string) {
+    const device = devices.find((candidate) => candidate.id === deviceId);
+
+    if (!device) {
+      return;
+    }
+
+    const confirmed = await confirm(buildRackUnassignConfirmation(device, rack));
+
+    if (confirmed) {
+      unassignDeviceFromRack(device.id);
     }
   }
 
@@ -107,32 +123,24 @@ export function RackInspector({ rack }: { rack: Rack }) {
           {devices.length === 0 ? (
             <p>No devices assigned to this rack.</p>
           ) : (
-            <ul className="compact-list">
-              {devices.map((device) => {
-                const topRu =
-                  device.rackBottomRu && device.rackSizeRu
-                    ? device.rackBottomRu + device.rackSizeRu - 1
-                    : null;
-
-                return (
-                  <li key={device.id}>
-                    <span>
-                      {device.name}
-                      {device.rackBottomRu && topRu ? `, RU ${device.rackBottomRu}-${topRu}` : ''}
-                    </span>
+            <ul className="assigned-device-list">
+              {devices.map((device) => (
+                  <li className="assigned-device-row" key={device.id}>
+                    <span className="assigned-device-name">{device.name}</span>
                     {device.kind === 'device' ? (
                       <Button
-                        size="sm"
+                        aria-label={`Unassign ${device.name} from rack`}
+                        className="assigned-device-unassign"
+                        size="icon"
                         variant="outline"
                         type="button"
-                        onClick={() => unassignDeviceFromRack(device.id)}
+                        onClick={() => void handleUnassign(device.id)}
                       >
-                        Unassign
+                        <Minus aria-hidden="true" className="h-4 w-4" />
                       </Button>
                     ) : null}
                   </li>
-                );
-              })}
+                ))}
             </ul>
           )}
         </CardContent>

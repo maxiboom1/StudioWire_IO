@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from 'react';
-import { buildCrossLocationRackAssignmentPrompt } from '../../domain/prompts';
+import {
+  buildCrossLocationRackAssignmentConfirmation,
+  type ConfirmationCopy,
+} from '../../domain/prompts';
 import { analyzeRackPlacements } from '../../domain/rackDiagnostics';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot, Rack } from '../../domain/types';
@@ -26,17 +29,17 @@ export interface RackViewController {
   handleDeviceDragEnd: () => void;
   handleDeviceDragStart: (event: DragEvent<HTMLDivElement>, device: Device) => void;
   handleRackDragOver: (event: DragEvent<HTMLDivElement>, targetRack: Rack, displayRus: number[]) => void;
-  handleRackDrop: (event: DragEvent<HTMLDivElement>, targetRack: Rack, displayRus: number[]) => void;
+  handleRackDrop: (event: DragEvent<HTMLDivElement>, targetRack: Rack, displayRus: number[]) => Promise<void>;
   removeRackFromView: (rackId: string) => void;
 }
 
 export function useRackViewController({
-  confirmRackMove = defaultConfirmRackMove,
+  confirmRackMove,
   project,
   selectedRack,
   moveMountedDevice,
 }: {
-  confirmRackMove?: (message: string) => boolean;
+  confirmRackMove: (request: ConfirmationCopy) => Promise<boolean>;
   project: ProjectRoot;
   selectedRack: Rack;
   moveMountedDevice: (input: MoveMountedDeviceInput) => void;
@@ -131,7 +134,11 @@ export function useRackViewController({
     event.dataTransfer.dropEffect = preview.ok ? 'move' : 'none';
   }
 
-  function handleRackDrop(event: DragEvent<HTMLDivElement>, targetRack: Rack, displayRus: number[]) {
+  async function handleRackDrop(
+    event: DragEvent<HTMLDivElement>,
+    targetRack: Rack,
+    displayRus: number[],
+  ) {
     event.preventDefault();
     const deviceId = draggingDeviceId || readDeviceDragData(event);
     const rect = event.currentTarget.getBoundingClientRect();
@@ -149,9 +156,9 @@ export function useRackViewController({
     });
 
     if (result.ok) {
-      const prompt = buildCrossLocationRackAssignmentPrompt(project, result.device, result.targetRack);
+      const prompt = buildCrossLocationRackAssignmentConfirmation(project, result.device, result.targetRack);
 
-      if (prompt && !confirmRackMove(prompt)) {
+      if (prompt && !(await confirmRackMove(prompt))) {
         clearDragState();
         return;
       }
@@ -181,8 +188,4 @@ export function useRackViewController({
     handleRackDrop,
     removeRackFromView,
   };
-}
-
-function defaultConfirmRackMove(message: string): boolean {
-  return window.confirm(message);
 }

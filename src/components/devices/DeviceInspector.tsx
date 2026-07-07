@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { buildDeleteDeviceConfirmation, buildRackUnassignConfirmation } from '../../domain/prompts';
 import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -20,6 +22,7 @@ export function DeviceInspector({
   onEditDevice: (deviceId: string) => void;
 }) {
   const { project, updateDevice, editDevice, deleteDevice, unassignDeviceFromRack } = useProject();
+  const confirm = useConfirmation();
   const isTerminalBlock = device.kind === 'terminal_block';
   const category = project.settings.categories.find((candidate) => candidate.id === device.categoryId);
   const assignedRack = device.rackId
@@ -89,13 +92,19 @@ export function DeviceInspector({
     });
   }
 
-  function handleDelete() {
-    const confirmed = window.confirm(
-      `Delete device "${device.name}"?\n\nThis removes the device, ports, port groups, and device-owned cable numbers. Any active connections involving this device are disconnected.`,
-    );
+  async function handleDelete() {
+    const confirmed = await confirm(buildDeleteDeviceConfirmation(device));
 
     if (confirmed) {
       deleteDevice(device.id);
+    }
+  }
+
+  async function handleUnassignFromRack() {
+    const confirmed = await confirm(buildRackUnassignConfirmation(device, assignedRack));
+
+    if (confirmed) {
+      unassignDeviceFromRack(device.id);
     }
   }
 
@@ -270,7 +279,7 @@ export function DeviceInspector({
               : 'Port group cable allocation fields are locked in this release.'}
           </p>
           {!isTerminalBlock && device.mountType === 'rack' ? (
-            <Button variant="outline" type="button" onClick={() => unassignDeviceFromRack(device.id)}>
+            <Button variant="outline" type="button" onClick={handleUnassignFromRack}>
               Unassign From Rack
             </Button>
           ) : null}

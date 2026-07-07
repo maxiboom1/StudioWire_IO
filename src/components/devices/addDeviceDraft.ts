@@ -15,8 +15,11 @@ import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectTypes
 import type { AddDeviceInput } from '../../state/projectContextTypes';
 import type { AddDeviceLocalIdFactory } from './addDeviceLocalIds';
 
-export interface DevicePortGroupForm extends DevicePortGroupDraft {
+export type PortGroupCountFormValue = number | '';
+
+export interface DevicePortGroupForm extends Omit<DevicePortGroupDraft, 'count'> {
   localId: string;
+  count: PortGroupCountFormValue;
 }
 
 export interface AddDeviceValidation {
@@ -162,12 +165,7 @@ export function updatePortGroupDrafts(
         return group;
       }
 
-      const updated = { ...group, ...updates };
-
-      return {
-        ...updated,
-        count: Number(updated.count),
-      };
+      return { ...group, ...updates };
     }),
   );
 }
@@ -254,34 +252,40 @@ export function rebalancePlannedCableRanges(
 
   return groups.map((group) => {
     const count = Number(group.count);
+    const hasValidCount = Number.isSafeInteger(count) && count > 0;
 
     if (!group.createPlannedCables) {
       return {
         ...group,
-        count,
+        count: group.count === '' ? '' : count,
         firstCableNumber:
-          group.firstCableNumber ?? getNextSuggestedForPrefix(previewProject, group.cablePrefix),
+          hasValidCount && group.firstCableNumber === null
+            ? getNextSuggestedForPrefix(previewProject, group.cablePrefix)
+            : group.firstCableNumber,
       };
     }
 
-    const nextCableNumber =
-      Number.isSafeInteger(count) && count > 0
-        ? getNextSuggestedForPrefix(previewProject, group.cablePrefix, count)
-        : getNextSuggestedForPrefix(previewProject, group.cablePrefix);
+    if (!hasValidCount) {
+      return {
+        ...group,
+        count: group.count === '' ? '' : count,
+        firstCableNumber: null,
+      };
+    }
 
-    if (Number.isSafeInteger(count) && count > 0) {
-      const allocation = allocateCableRange(previewProject, {
-        prefix: group.cablePrefix,
-        firstCableNumber: nextCableNumber,
-        count,
-        ownerType: 'preview',
-        ownerId: group.localId,
-        reason: 'Preview device allocation',
-      });
+    const nextCableNumber = getNextSuggestedForPrefix(previewProject, group.cablePrefix, count);
 
-      if (allocation.preview.errors.length === 0) {
-        previewProject = allocation.project;
-      }
+    const allocation = allocateCableRange(previewProject, {
+      prefix: group.cablePrefix,
+      firstCableNumber: nextCableNumber,
+      count,
+      ownerType: 'preview',
+      ownerId: group.localId,
+      reason: 'Preview device allocation',
+    });
+
+    if (allocation.preview.errors.length === 0) {
+      previewProject = allocation.project;
     }
 
     return {
@@ -323,22 +327,26 @@ export function normalizeDeviceToken(value: string): string {
 }
 
 export function formatPortGroupRange(group: DevicePortGroupForm): string {
-  if (!group.firstCableNumber || !Number.isSafeInteger(group.count) || group.count <= 0) {
+  const count = Number(group.count);
+
+  if (!group.firstCableNumber || !Number.isSafeInteger(count) || count <= 0) {
     return group.createPlannedCables ? 'Set count' : 'Set first cable number';
   }
 
   return `${formatCableNumber(group.cablePrefix, group.firstCableNumber)} -> ${formatCableNumber(
     group.cablePrefix,
-    group.firstCableNumber + group.count - 1,
+    group.firstCableNumber + count - 1,
   )}`;
 }
 
 export function formatPortGroupLastCableNumber(group: DevicePortGroupForm): string {
-  if (!group.firstCableNumber || !Number.isSafeInteger(group.count) || group.count <= 0) {
+  const count = Number(group.count);
+
+  if (!group.firstCableNumber || !Number.isSafeInteger(count) || count <= 0) {
     return '';
   }
 
-  return formatCableNumber(group.cablePrefix, group.firstCableNumber + group.count - 1);
+  return formatCableNumber(group.cablePrefix, group.firstCableNumber + count - 1);
 }
 
 export function getAddDeviceValidation(
@@ -371,11 +379,14 @@ export function getAddDeviceValidation(
   }
 
   for (const group of portGroups) {
+    const count = Number(group.count);
+    const hasValidCount = Number.isSafeInteger(count) && count > 0;
+
     if (!group.name.trim()) {
       errors.push('I/O interface name is required.');
     }
 
-    if (!Number.isSafeInteger(group.count) || group.count <= 0) {
+    if (!hasValidCount) {
       errors.push(`${group.name || 'I/O interface'} count must be positive.`);
     }
 
@@ -403,11 +414,15 @@ export function getAddDeviceValidation(
         continue;
       }
 
+      if (!hasValidCount) {
+        continue;
+      }
+
       const preview = previewCableRange(
         previewProject,
         group.cablePrefix,
         group.firstCableNumber,
-        group.count,
+        count,
       );
 
       for (const error of preview.errors) {
@@ -427,7 +442,7 @@ export function getAddDeviceValidation(
         previewProject = allocateCableRange(previewProject, {
           prefix: group.cablePrefix,
           firstCableNumber: group.firstCableNumber,
-          count: group.count,
+          count,
           ownerType: 'preview',
           ownerId: group.localId,
           reason: 'Preview device allocation',
@@ -464,6 +479,7 @@ export function createAddDeviceCommandInput(
     },
     portGroups: portGroups.map(({ localId: _localId, ...group }) => ({
       ...group,
+      count: Number(group.count),
       firstCableNumber: group.createPlannedCables ? group.firstCableNumber : null,
     })),
   };

@@ -11,6 +11,7 @@ import {
   type SelectedObjectType,
   type SelectionState,
 } from '../common/selection';
+import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { SidebarInset, SidebarProvider } from '../ui/sidebar';
 import { CablesWorkspace } from './CablesWorkspace';
 import { Inspector } from './Inspector';
@@ -76,105 +77,107 @@ export function StudioWireShell() {
   }
 
   return (
-    <SidebarProvider className="app-frame">
-      <TopBar
-        activeView={activeView}
-        onSelectProject={selectProject}
-        onSelectSettings={selectSettings}
-        onViewChange={setActiveView}
-      />
-      <div className="app-body">
-        <LeftTree
-          selection={selection}
-          onSelectObject={selectObject}
-          onAddLocation={() => setModal({ type: 'location' })}
-          onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
-          onAddDevice={openAddDevice}
-          onEditDevice={openEditDevice}
-          onAddTerminalBlock={openAddTerminalBlock}
+    <ConfirmationProvider>
+      <SidebarProvider className="app-frame">
+        <TopBar
+          activeView={activeView}
+          onSelectProject={selectProject}
+          onSelectSettings={selectSettings}
+          onViewChange={setActiveView}
         />
-        <SidebarInset className="app-shell">
-          {importError ? (
-            <div className="app-alert" role="alert">
-              <span>{importError}</span>
-              <button type="button" onClick={dismissImportError}>
-                Dismiss
-              </button>
-            </div>
-          ) : null}
-          <section className="app-grid" aria-label={`${project.project.name} project editor`}>
-            {activeView === 'workspace' ? (
-              <Workspace
-                selection={selection}
-                onAddDevice={openAddDevice}
-                onAddTerminalBlock={openAddTerminalBlock}
-              />
-            ) : (
-              <CablesWorkspace />
-            )}
-            <Inspector selection={selection} onEditDevice={openEditDevice} />
-            <ValidationPanel
-              onSelectIssue={(issue) => {
-                const target = resolveIssueSelection(project, issue);
+        <div className="app-body">
+          <LeftTree
+            selection={selection}
+            onSelectObject={selectObject}
+            onAddLocation={() => setModal({ type: 'location' })}
+            onAddRack={(locationId) => setModal({ type: 'rack', locationId })}
+            onAddDevice={openAddDevice}
+            onEditDevice={openEditDevice}
+            onAddTerminalBlock={openAddTerminalBlock}
+          />
+          <SidebarInset className="app-shell">
+            {importError ? (
+              <div className="app-alert" role="alert">
+                <span>{importError}</span>
+                <button type="button" onClick={dismissImportError}>
+                  Dismiss
+                </button>
+              </div>
+            ) : null}
+            <section className="app-grid" aria-label={`${project.project.name} project editor`}>
+              {activeView === 'workspace' ? (
+                <Workspace
+                  selection={selection}
+                  onAddDevice={openAddDevice}
+                  onAddTerminalBlock={openAddTerminalBlock}
+                />
+              ) : (
+                <CablesWorkspace />
+              )}
+              <Inspector selection={selection} onEditDevice={openEditDevice} />
+              <ValidationPanel
+                onSelectIssue={(issue) => {
+                  const target = resolveIssueSelection(project, issue);
 
-                if (target) {
-                  setActiveView('workspace');
-                  selectObject(target.selectedObjectType, target.selectedObjectId);
-                }
-              }}
-            />
-          </section>
-        </SidebarInset>
-      </div>
-      {modal?.type === 'location' ? (
-        <AddLocationModal
-          onClose={() => setModal(null)}
-          onCreated={(id) => {
-            setModal(null);
-            selectObject('location', id);
-          }}
-        />
-      ) : null}
-      {modal?.type === 'rack' ? (
-        <AddRackModal
-          locationId={modal.locationId}
-          onClose={() => setModal(null)}
-          onCreated={(id) => {
-            setModal(null);
-            selectObject('rack', id);
-          }}
-        />
-      ) : null}
-      {modal?.type === 'device' ? (
-        <AddDeviceModal
-          initialLocationId={modal.locationId}
-          onClose={() => setModal(null)}
-          onCreated={(id) => {
-            setModal(null);
-            selectObject('device', id);
-          }}
-        />
-      ) : null}
-      {modal?.type === 'edit_device' ? (
-        <EditDeviceModal
-          device={project.devices.find((device) => device.id === modal.deviceId)!}
-          onClose={() => setModal(null)}
-          onSaved={(id) => {
-            setModal(null);
-            selectObject('device', id);
-          }}
-        />
-      ) : null}
-      {modal?.type === 'terminal_block' ? (
-        <AddTerminalBlockModal
-          initialLocationId={modal.locationId}
-          onClose={() => setModal(null)}
-          onCreated={(id) => {
-            setModal(null);
-            selectObject('device', id);
-          }}
-        />
-      ) : null}
-    </SidebarProvider>
+                  if (target) {
+                    setActiveView('workspace');
+                    selectObject(target.selectedObjectType, target.selectedObjectId);
+                  }
+                }}
+              />
+            </section>
+          </SidebarInset>
+        </div>
+        {modal?.type === 'location' ? (
+          <AddLocationModal
+            onClose={() => setModal(null)}
+            onCreated={(id) => {
+              setModal(null);
+              selectObject('location', id);
+            }}
+          />
+        ) : null}
+        {modal?.type === 'rack' ? (
+          <AddRackModal
+            locationId={modal.locationId}
+            onClose={() => setModal(null)}
+            onCreated={(id) => {
+              setModal(null);
+              selectObject('rack', id);
+            }}
+          />
+        ) : null}
+        {modal?.type === 'device' ? (
+          <AddDeviceModal
+            initialLocationId={modal.locationId}
+            onClose={() => setModal(null)}
+            onCreated={(id) => {
+              setModal(null);
+              selectObject('device', id);
+            }}
+          />
+        ) : null}
+        {modal?.type === 'edit_device' ? (
+          <EditDeviceModal
+            device={project.devices.find((device) => device.id === modal.deviceId)!}
+            onClose={() => setModal(null)}
+            onSaved={(id) => {
+              setModal(null);
+              selectObject('device', id);
+            }}
+          />
+        ) : null}
+        {modal?.type === 'terminal_block' ? (
+          <AddTerminalBlockModal
+            initialLocationId={modal.locationId}
+            onClose={() => setModal(null)}
+            onCreated={(id) => {
+              setModal(null);
+              selectObject('device', id);
+            }}
+          />
+        ) : null}
+      </SidebarProvider>
+    </ConfirmationProvider>
   );
 }

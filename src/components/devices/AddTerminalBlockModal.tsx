@@ -6,11 +6,13 @@ import {
   isConnectorAssignedToCategory,
 } from '../../domain/connectorCompatibility';
 import { makeId } from '../../domain/id';
+import { buildCableReservationConfirmation } from '../../domain/prompts';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import type { TerminalBlockDraft } from '../../state/projectTypes';
 import { HorizontalTabs } from '../common/AppTabs';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { ModalFrame } from '../common/ModalFrame';
 import { StandardModalFooter } from '../common/StandardModalFooter';
 import { Alert, AlertDescription } from '../ui/alert';
@@ -30,6 +32,7 @@ export function AddTerminalBlockModal({
   onCreated: (id: string) => void;
 }) {
   const { project, addTerminalBlock } = useProject();
+  const confirm = useConfirmation();
   const racks = useMemo(
     () =>
       initialLocationId
@@ -87,7 +90,7 @@ export function AddTerminalBlockModal({
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (validation.errors.length > 0) {
@@ -95,9 +98,7 @@ export function AddTerminalBlockModal({
     }
 
     if (validation.warnings.length > 0) {
-      const confirmed = window.confirm(
-        `${validation.warnings.join('\n')}\n\nContinue and reserve these cable number gaps?`,
-      );
+      const confirmed = await confirm(buildCableReservationConfirmation(validation.warnings));
 
       if (!confirmed) {
         return;

@@ -2,10 +2,12 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { AddDeviceModal } from './AddDeviceModal';
 
 const contextHarness = vi.hoisted(() => ({
@@ -89,6 +91,10 @@ function createContext(project: ProjectRoot): ProjectContextValue {
   };
 }
 
+function renderWithConfirmation(ui: ReactElement) {
+  return render(<ConfirmationProvider>{ui}</ConfirmationProvider>);
+}
+
 afterEach(() => {
   cleanup();
   contextHarness.current = null;
@@ -100,7 +106,7 @@ describe('AddDeviceModal', () => {
     const project = createProject();
 
     contextHarness.current = createContext(project);
-    render(
+    renderWithConfirmation(
       <AddDeviceModal initialLocationId="location-machine-room" onClose={vi.fn()} onCreated={vi.fn()} />,
     );
 
@@ -125,7 +131,7 @@ describe('AddDeviceModal', () => {
     const project = createProject();
 
     contextHarness.current = createContext(project);
-    render(
+    renderWithConfirmation(
       <AddDeviceModal initialLocationId="location-machine-room" onClose={vi.fn()} onCreated={vi.fn()} />,
     );
 

@@ -2,10 +2,12 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, screen } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { RackInspector } from './RackInspector';
 
 const contextHarness = vi.hoisted(() => ({
@@ -68,6 +70,10 @@ function createContext(unassignDeviceFromRack = vi.fn()): ProjectContextValue {
   };
 }
 
+function renderWithConfirmation(ui: ReactElement) {
+  return render(<ConfirmationProvider>{ui}</ConfirmationProvider>);
+}
+
 afterEach(() => {
   cleanup();
   contextHarness.current = null;
@@ -80,8 +86,11 @@ describe('RackInspector', () => {
     const project = structuredClone(sampleProject);
 
     contextHarness.current = createContext(unassignDeviceFromRack);
-    render(<RackInspector rack={project.racks[0]} />);
+    renderWithConfirmation(<RackInspector rack={project.racks[0]} />);
 
+    expect(screen.queryByText(/RU /)).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Unassign Router 1 from rack' }));
     await userEvent.click(screen.getByRole('button', { name: 'Unassign' }));
 
     expect(unassignDeviceFromRack).toHaveBeenCalledWith('device-router-1');

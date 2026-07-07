@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { buildCableReservationConfirmation, type ConfirmationCopy } from '../../domain/prompts';
 import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { Device, ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectContextTypes';
@@ -35,7 +36,7 @@ export interface EditDeviceFormController {
   moveNewPortGroup: (localId: string, targetLocalId: string) => void;
   moveNewPortGroupByOffset: (localId: string, offset: -1 | 1) => void;
   setDevice: (updates: Partial<DeviceDraft>) => void;
-  submit: (confirmWarnings: (message: string) => boolean) => boolean;
+  submit: (confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>) => Promise<boolean>;
   updateExistingPortGroup: (
     id: string,
     updates: Pick<Partial<ExistingPortGroupForm>, 'name' | 'portLabelPattern' | 'colorOverride'>,
@@ -160,15 +161,13 @@ export function useEditDeviceForm({
     setInterfaceOrder((current) => moveByOffset(current, localId, offset, getOrderLocalId));
   }
 
-  function submit(confirmWarnings: (message: string) => boolean): boolean {
+  async function submit(confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>): Promise<boolean> {
     if (validation.errors.length > 0) {
       return false;
     }
 
     if (validation.warnings.length > 0) {
-      const confirmed = confirmWarnings(
-        `${validation.warnings.join('\n')}\n\nContinue and reserve these cable number gaps?`,
-      );
+      const confirmed = await confirmWarnings(buildCableReservationConfirmation(validation.warnings));
 
       if (!confirmed) {
         return false;

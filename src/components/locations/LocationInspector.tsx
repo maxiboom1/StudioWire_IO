@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { buildDeleteLocationConfirmation } from '../../domain/prompts';
 import type { Location } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
@@ -9,6 +11,7 @@ import { Textarea } from '../ui/textarea';
 
 export function LocationInspector({ location }: { location: Location }) {
   const { project, updateLocation, deleteLocation } = useProject();
+  const confirm = useConfirmation();
   const rackCount = project.racks.filter((rack) => rack.locationId === location.id).length;
   const deviceCount = project.devices.filter((device) => device.locationId === location.id).length;
   const subLocationCount = project.subLocations.filter(
@@ -33,10 +36,8 @@ export function LocationInspector({ location }: { location: Location }) {
     updateLocation(location.id, form);
   }
 
-  function handleDelete() {
-    const confirmed = window.confirm(
-      `Delete location "${location.name}"?\n\nLocations with folders, racks, or devices will be blocked.`,
-    );
+  async function handleDelete() {
+    const confirmed = await confirm(buildDeleteLocationConfirmation(location));
 
     if (confirmed) {
       deleteLocation(location.id);

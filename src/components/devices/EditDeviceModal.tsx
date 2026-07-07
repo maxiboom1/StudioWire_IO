@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { HorizontalTabs } from '../common/AppTabs';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
 import { RACK_RU_OPTIONS } from '../common/rackRuOptions';
@@ -24,6 +25,7 @@ export function EditDeviceModal({
   onSaved: (id: string) => void;
 }) {
   const { project, editDevice } = useProject();
+  const confirm = useConfirmation();
   const [activeTab, setActiveTab] = useState<'general' | 'io'>('general');
   const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
   const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export function EditDeviceModal({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    form.submit((message) => window.confirm(message));
+    void form.submit(confirm);
   }
 
   function toggleInterfaceCollapsed(localId: string) {

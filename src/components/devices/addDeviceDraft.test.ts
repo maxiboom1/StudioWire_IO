@@ -243,11 +243,32 @@ describe('Add Device cable range formatting and validation', () => {
 
     expect(formatPortGroupRange(group)).toBe('V-0009 -> V-0012');
     expect(formatPortGroupLastCableNumber(group)).toBe('V-0012');
+    expect(formatPortGroupRange({ ...group, count: '' })).toBe('Set count');
+    expect(formatPortGroupLastCableNumber({ ...group, count: '' })).toBe('');
     expect(formatPortGroupRange({ ...group, count: 0 })).toBe('Set count');
     expect(formatPortGroupLastCableNumber({ ...group, count: 0 })).toBe('');
     expect(formatPortGroupRange({ ...group, createPlannedCables: false, firstCableNumber: null })).toBe(
       'Set first cable number',
     );
+  });
+
+  it('allows a blank count edit state without preview crashes and restores valid previews', () => {
+    const project = projectFixture();
+    const device = validDevice(project);
+    const [group] = validGroups(project);
+    const blankGroups = rebalancePlannedCableRanges(project, [{ ...group, count: '' }]);
+
+    expect(blankGroups[0].count).toBe('');
+    expect(blankGroups[0].firstCableNumber).toBeNull();
+    expect(formatPortGroupRange(blankGroups[0])).toBe('Set count');
+    expect(getAddDeviceValidation(project, device, blankGroups).errors).toContain(
+      'SDI IN count must be positive.',
+    );
+
+    const restoredGroups = rebalancePlannedCableRanges(project, [{ ...blankGroups[0], count: 2 }]);
+
+    expect(restoredGroups[0].firstCableNumber).toBe(9);
+    expect(formatPortGroupRange(restoredGroups[0])).toBe('V-0009 -> V-0010');
   });
 
   it('returns warnings for reserved gaps and errors for overlapping or invalid ranges', () => {

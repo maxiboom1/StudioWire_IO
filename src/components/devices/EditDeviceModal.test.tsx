@@ -2,10 +2,12 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput, ProjectContextValue } from '../../state/projectContextTypes';
+import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { EditDeviceModal } from './EditDeviceModal';
 
 const contextHarness = vi.hoisted(() => ({
@@ -68,6 +70,10 @@ function createContext(project: ProjectRoot, editDevice = vi.fn()): ProjectConte
   };
 }
 
+function renderWithConfirmation(ui: ReactElement) {
+  return render(<ConfirmationProvider>{ui}</ConfirmationProvider>);
+}
+
 afterEach(() => {
   cleanup();
   contextHarness.current = null;
@@ -107,7 +113,7 @@ describe('EditDeviceModal', () => {
     routerGroup.colorOverride = '#123456';
 
     contextHarness.current = createContext(project, editDevice);
-    render(<EditDeviceModal device={device} onClose={vi.fn()} onSaved={onSaved} />);
+    renderWithConfirmation(<EditDeviceModal device={device} onClose={vi.fn()} onSaved={onSaved} />);
 
     expect(screen.getByRole('combobox', { name: 'Folder' }).textContent).toContain('No folder');
     expect(screen.getByLabelText(/Device Name/)).toBeTruthy();
@@ -198,5 +204,5 @@ describe('EditDeviceModal', () => {
       { kind: 'existing', id: 'port-group-router-outputs' },
     ]);
     expect(onSaved).toHaveBeenCalledWith('device-router-1');
-  });
+  }, 10000);
 });

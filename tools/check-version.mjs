@@ -44,8 +44,8 @@ if (read('AGENTS.md').includes('V0_2_5') || read('README.md').includes('V0_2_5')
   failures.push('current instructions must not reference V0_2_5 document names');
 }
 
-if (expected !== '0.2.8.18') {
-  failures.push(`0.2.8.18 implementation target mismatch: package.json is ${expected}`);
+if (expected !== '0.2.8.19') {
+  failures.push(`0.2.8.19 implementation target mismatch: package.json is ${expected}`);
 }
 
 if (failures.length > 0) {

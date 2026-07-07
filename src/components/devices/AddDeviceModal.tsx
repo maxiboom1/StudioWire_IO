@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import { useProject } from '../../state/ProjectContext';
 import { HorizontalTabs } from '../common/AppTabs';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
 import { RACK_RU_OPTIONS } from '../common/rackRuOptions';
@@ -23,6 +24,7 @@ export function AddDeviceModal({
   onCreated: (id: string) => void;
 }) {
   const { project, addDevice } = useProject();
+  const confirm = useConfirmation();
   const [activeTab, setActiveTab] = useState<'general' | 'io'>('general');
   const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
   const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export function AddDeviceModal({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    form.submit((message) => window.confirm(message));
+    void form.submit(confirm);
   }
 
   function toggleInterfaceCollapsed(localId: string) {

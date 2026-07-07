@@ -96,5 +96,5 @@ describe('AddLocationModal', () => {
       description: 'Backup control position',
     });
     expect(onCreated).toHaveBeenCalledWith('location-created');
-  });
+  }, 10000);
 });

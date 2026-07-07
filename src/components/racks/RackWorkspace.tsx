@@ -1,6 +1,7 @@
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { CanvasViewport } from '../common/CanvasViewport';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { RackElevationCanvas } from './RackElevationCanvas';
 import { RackViewSelector } from './RackViewSelector';
 import { buildRackCanvasModel } from './rackCanvasModel';
@@ -8,7 +9,13 @@ import { useRackViewController } from './useRackViewController';
 
 export function RackWorkspace({ rack }: { rack: Rack }) {
   const { project, moveMountedDevice } = useProject();
-  const rackView = useRackViewController({ project, selectedRack: rack, moveMountedDevice });
+  const confirm = useConfirmation();
+  const rackView = useRackViewController({
+    confirmRackMove: confirm,
+    project,
+    selectedRack: rack,
+    moveMountedDevice,
+  });
 
   return (
     <section className="workspace rack-workspace" aria-label="Rack canvas">
@@ -47,7 +54,7 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
                     onRackDragOver={(event) =>
                       rackView.handleRackDragOver(event, viewedRack, canvasModel.displayRus)
                     }
-                    onRackDrop={(event) => rackView.handleRackDrop(event, viewedRack, canvasModel.displayRus)}
+                    onRackDrop={(event) => void rackView.handleRackDrop(event, viewedRack, canvasModel.displayRus)}
                     onRemove={() => rackView.removeRackFromView(viewedRack.id)}
                   />
                 </div>
