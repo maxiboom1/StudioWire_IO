@@ -1,16 +1,16 @@
 import { getInspectorRows, resolveSelection, type SelectionState } from '../common/selection';
 import { useProject } from '../../state/ProjectContext';
-import { DeviceInspector } from '../devices/DeviceInspector';
+import { DeviceInspector, type DeviceInspectorDirtyGuard } from '../devices/DeviceInspector';
 import { LocationInspector } from '../locations/LocationInspector';
 import { RackInspector } from '../racks/RackInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function Inspector({
+  onDeviceInspectorDirtyGuardChange,
   selection,
-  onEditDevice,
 }: {
+  onDeviceInspectorDirtyGuardChange?: (guard: DeviceInspectorDirtyGuard | null) => void;
   selection: SelectionState;
-  onEditDevice: (deviceId: string) => void;
 }) {
   const { project } = useProject();
   const selected = resolveSelection(project, selection);
@@ -39,7 +39,12 @@ export function Inspector({
   }
 
   if (selected.type === 'device') {
-    return <DeviceInspector device={selected.value} onEditDevice={onEditDevice} />;
+    return (
+      <DeviceInspector
+        device={selected.value}
+        onDirtyGuardChange={onDeviceInspectorDirtyGuardChange}
+      />
+    );
   }
 
   return (

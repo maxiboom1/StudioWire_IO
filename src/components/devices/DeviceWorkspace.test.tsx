@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
@@ -101,12 +102,35 @@ describe('DeviceWorkspace', () => {
 
     render(<DeviceWorkspace device={device} />);
 
+    expect(screen.getByText('Machine Room')).toBeTruthy();
+    expect(screen.getByText('Router 1')).toBeTruthy();
+    expect(screen.getByText('RTR1')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Edit device/ })).toBeNull();
+
     const label = screen.getByText('RTR1-OUT-001').closest('.device-port-label') as HTMLElement;
     const anchor = document.querySelector('.device-port-anchor.connector-icon-bnc') as HTMLElement;
 
     expect(label.style.getPropertyValue('--device-port-color')).toBe('#ABCDEF');
     expect(anchor).toBeTruthy();
     expect(anchor.style.getPropertyValue('--device-port-color')).toBe('#ABCDEF');
+  });
+
+  it('does not edit device header text from the canvas', async () => {
+    const user = userEvent.setup();
+    contextHarness.current = createContext();
+    const device = contextHarness.current.project.devices.find(
+      (candidate) => candidate.id === 'device-router-1',
+    );
+
+    if (!device) {
+      throw new Error('Expected router device');
+    }
+
+    render(<DeviceWorkspace device={device} />);
+
+    await user.click(screen.getByText('Router 1'));
+    expect(screen.queryByRole('textbox', { name: /Edit device/ })).toBeNull();
+    expect(contextHarness.current.editDevice).not.toHaveBeenCalled();
   });
 
   it('starts input and output port rows from the top independently', () => {

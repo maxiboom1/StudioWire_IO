@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { type CSSProperties } from 'react';
 import {
   describePortConnection,
   type PortConnectionChainPart,
@@ -9,7 +9,6 @@ import { useProject } from '../../state/ProjectContext';
 import { ConnectorIcon } from '../common/ConnectorIcon';
 import { getPortGroupColor, getPortGroupConnectorIconKey } from '../common/connectorVisuals';
 import { CrosspointPicker } from '../connections/CrosspointPicker';
-import { createDeviceMetadataEditInput } from './deviceMetadataEdit';
 
 interface DevicePortRow {
   port: Port;
@@ -24,7 +23,7 @@ interface DevicePortRowSlot {
 }
 
 export function DeviceWorkspace({ device }: { device: Device }) {
-  const { project, editDevice } = useProject();
+  const { project } = useProject();
   const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
   const ports = project.ports.filter((port) => port.deviceId === device.id);
   const rowSlots = buildPortRowSlots(project, portGroups, ports);
@@ -32,10 +31,10 @@ export function DeviceWorkspace({ device }: { device: Device }) {
   const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
   const secondaryLabel = device.code ?? '';
   const diagramStyle = { '--device-port-rows': rowCount } as CSSProperties;
-
-  function commitHeaderEdit(updates: { name?: string; code?: string }) {
-    editDevice(createDeviceMetadataEditInput(project, device, updates));
-  }
+  const assignedRack = device.rackId ? project.racks.find((rack) => rack.id === device.rackId) : null;
+  const effectiveLocationId = assignedRack?.locationId ?? device.locationId;
+  const locationName =
+    project.locations.find((location) => location.id === effectiveLocationId)?.name ?? 'No location';
 
   return (
     <section className="workspace device-workspace" aria-label="Device canvas">
@@ -49,21 +48,9 @@ export function DeviceWorkspace({ device }: { device: Device }) {
           </div>
           <div className="device-body">
             <div className="device-body-header">
-              <strong>
-                <InlineDeviceHeaderField
-                  ariaLabel="Edit device name"
-                  required
-                  value={device.name}
-                  onCommit={(name) => commitHeaderEdit({ name })}
-                />
-              </strong>
-              <span>
-                <InlineDeviceHeaderField
-                  ariaLabel="Edit device sub-name"
-                  value={secondaryLabel}
-                  onCommit={(code) => commitHeaderEdit({ code })}
-                />
-              </span>
+              <span className="device-location-badge">{locationName}</span>
+              <strong>{device.name}</strong>
+              <span>{secondaryLabel}</span>
             </div>
             {rowIndexes.map((index) => (
               <div className="device-body-row" key={`body-${index}`}>
@@ -81,86 +68,6 @@ export function DeviceWorkspace({ device }: { device: Device }) {
         </div>
       </div>
     </section>
-  );
-}
-
-function InlineDeviceHeaderField({
-  ariaLabel,
-  onCommit,
-  required = false,
-  value,
-}: {
-  ariaLabel: string;
-  onCommit: (value: string) => void;
-  required?: boolean;
-  value: string;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-
-  useEffect(() => {
-    if (!isEditing) {
-      setDraft(value);
-    }
-  }, [isEditing, value]);
-
-  function closeWithoutSaving() {
-    setDraft(value);
-    setIsEditing(false);
-  }
-
-  function commit() {
-    const nextValue = draft.trim();
-
-    if (required && !nextValue) {
-      closeWithoutSaving();
-      return;
-    }
-
-    setIsEditing(false);
-
-    if (nextValue !== value) {
-      onCommit(nextValue);
-    }
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      commit();
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeWithoutSaving();
-    }
-  }
-
-  if (isEditing) {
-    return (
-      <input
-        aria-label={ariaLabel}
-        autoFocus
-        className="device-header-inline-input"
-        value={draft}
-        onBlur={commit}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={handleKeyDown}
-      />
-    );
-  }
-
-  return (
-    <button
-      aria-label={ariaLabel}
-      className="device-header-inline-button"
-      title={ariaLabel}
-      type="button"
-      onClick={() => setIsEditing(true)}
-    >
-      {value}
-    </button>
   );
 }
 

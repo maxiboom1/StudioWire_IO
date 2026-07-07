@@ -97,3 +97,12 @@ export function buildCableReservationConfirmation(warnings: string[]): Confirmat
     cancelLabel: 'Cancel',
   };
 }
+
+export function buildUnsavedDeviceInspectorChangesConfirmation(): ConfirmationCopy {
+  return {
+    title: 'Unsaved device changes',
+    message: 'Save your inspector changes before leaving this device?',
+    confirmLabel: 'Save',
+    cancelLabel: 'Cancel',
+  };
+}
