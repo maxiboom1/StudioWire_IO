@@ -90,6 +90,7 @@ describe('editDeviceInProject', () => {
         categoryId: 'category-network',
         connectorTypeId: 'connector-rj45',
         count: 1,
+        localId: 'new-mgmt',
         portLabelPattern: '{DEVICE}-MGMT-{000}',
         cablePrefix: 'N',
         firstCableNumber: 1,
@@ -125,6 +126,41 @@ describe('editDeviceInProject', () => {
       to: 1,
       status: 'allocated',
     });
+  });
+
+  it('persists combined existing and new interface order', () => {
+    const input = baseEdit();
+    input.newPortGroups = [
+      {
+        name: 'MGMT',
+        direction: 'bidirectional',
+        categoryId: 'category-network',
+        connectorTypeId: 'connector-rj45',
+        count: 1,
+        localId: 'new-mgmt',
+        portLabelPattern: '{DEVICE}-MGMT-{000}',
+        cablePrefix: 'N',
+        firstCableNumber: 1,
+        createPlannedCables: true,
+      },
+    ];
+    input.portGroupOrder = [
+      { kind: 'new', localId: 'new-mgmt' },
+      { kind: 'existing', id: 'port-group-router-outputs' },
+    ];
+
+    const result = editDeviceInProject(structuredClone(sampleProject), input, TEST_TIMESTAMP);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(
+      result.project.portGroups
+        .filter((group) => group.deviceId === 'device-router-1')
+        .map((group) => group.name),
+    ).toEqual(['MGMT', 'OUT']);
   });
 
   it('persists existing interface order without changing port or cable IDs', () => {
@@ -170,6 +206,7 @@ describe('editDeviceInProject', () => {
         categoryId: 'category-video',
         connectorTypeId: 'connector-bnc',
         count: 1,
+        localId: 'new-bad',
         portLabelPattern: '{DEVICE}-BAD-{000}',
         cablePrefix: 'V',
         firstCableNumber: 5,

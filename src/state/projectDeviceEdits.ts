@@ -202,6 +202,26 @@ export function editDeviceInProject(
     newPorts.push(...groupPorts);
   }
 
+  const newPortGroupsByLocalId = new Map(
+    input.newPortGroups.map((draft, index) => [draft.localId, newPortGroups[index]] as const),
+  );
+  const combinedPortGroupOrder = input.portGroupOrder
+    ?.map((item) =>
+      item.kind === 'existing'
+        ? item.id
+        : (newPortGroupsByLocalId.get(item.localId)?.id ?? null),
+    )
+    .filter((id): id is string => Boolean(id));
+  const orderedPortGroups = reorderDevicePortGroups(
+    [...nextProject.portGroups, ...newPortGroups],
+    input.deviceId,
+    combinedPortGroupOrder && combinedPortGroupOrder.length > 0
+      ? combinedPortGroupOrder
+      : [
+          ...input.existingPortGroups.map((group) => group.id),
+          ...newPortGroups.map((group) => group.id),
+        ],
+  );
   const portLabelsById = new Map(
     [...nextProject.ports, ...newPorts].map((port) => [port.id, port.label] as const),
   );
@@ -210,7 +230,7 @@ export function editDeviceInProject(
     ok: true,
     project: {
       ...nextProject,
-      portGroups: [...nextProject.portGroups, ...newPortGroups],
+      portGroups: orderedPortGroups,
       ports: [...nextProject.ports, ...newPorts],
       cables: [
         ...nextProject.cables.map((cable) =>

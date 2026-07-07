@@ -5,6 +5,7 @@ import type {
   ConnectorGroupMemberInput,
   ConnectorGroupUpdates,
 } from '../../state/projectContextTypes';
+import { VerticalTabs } from '../common/AppTabs';
 
 export function ConnectorGroupsPanel({
   activeCategoryId,
@@ -74,20 +75,6 @@ export function ConnectorGroupsPanel({
           <h2>Connector Groups</h2>
           <span>{totalGroupCount}</span>
         </div>
-        <div className="settings-inner-tabs" role="tablist" aria-label="Connector group categories">
-          {categories.map((category) => (
-            <button
-              aria-selected={category.id === activeCategoryId}
-              className={category.id === activeCategoryId ? 'active' : ''}
-              key={category.id}
-              role="tab"
-              type="button"
-              onClick={() => onActiveCategoryChange(category.id)}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
         <form className="inline-form" onSubmit={handleAddConnectorGroup}>
           <input
             placeholder="New connector group"
@@ -99,83 +86,83 @@ export function ConnectorGroupsPanel({
       </section>
 
       <section className="settings-section">
-        <div className="settings-inner-tabs" role="tablist" aria-label="Connector groups">
-          {groupsForCategory.length === 0 ? (
-            <span className="settings-empty-inline">No groups yet.</span>
-          ) : null}
-          {groupsForCategory.map((group) => (
-            <button
-              aria-selected={group.id === activeGroupId}
-              className={group.id === activeGroupId ? 'active' : ''}
-              key={group.id}
-              role="tab"
-              type="button"
-              onClick={() => onActiveGroupChange(group.id)}
-            >
-              {group.name}
-            </button>
-          ))}
-        </div>
+        <div className="settings-side-layout settings-side-layout-nested">
+          <VerticalTabs
+            activeTab={activeCategoryId}
+            ariaLabel="Connector group categories"
+            tabs={categories.map((category) => ({ id: category.id, label: category.name }))}
+            onTabChange={onActiveCategoryChange}
+          />
+          <div className="settings-side-layout">
+            <VerticalTabs
+              activeTab={activeGroupId}
+              ariaLabel="Connector groups"
+              emptyLabel="No groups yet."
+              tabs={groupsForCategory.map((group) => ({ id: group.id, label: group.name }))}
+              onTabChange={onActiveGroupChange}
+            />
 
-        {selectedGroup ? (
-          <>
-            <div className="settings-detail-grid">
-              <label>
-                <span>Group name</span>
-                <input
-                  defaultValue={selectedGroup.name}
-                  onBlur={(event) => {
-                    const name = event.target.value.trim();
+            {selectedGroup ? (
+              <div className="settings-detail-panel">
+                <div className="settings-detail-grid">
+                  <label>
+                    <span>Group name</span>
+                    <input
+                      defaultValue={selectedGroup.name}
+                      onBlur={(event) => {
+                        const name = event.target.value.trim();
 
-                    if (name && name !== selectedGroup.name) {
-                      onUpdateConnectorGroup(selectedGroup.id, { name });
-                    }
-                  }}
-                />
-              </label>
-            </div>
-            <div className="settings-token-list">
-              {groupConnectors.length === 0 ? (
-                <span className="settings-empty-inline">No connectors in this group.</span>
-              ) : (
-                groupConnectors.map((connectorType) => (
-                  <button
-                    key={connectorType.id}
-                    type="button"
-                    onClick={() =>
-                      onRemoveConnectorFromGroup({
-                        groupId: selectedGroup.id,
-                        connectorTypeId: connectorType.id,
-                      })
-                    }
+                        if (name && name !== selectedGroup.name) {
+                          onUpdateConnectorGroup(selectedGroup.id, { name });
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="settings-token-list">
+                  {groupConnectors.length === 0 ? (
+                    <span className="settings-empty-inline">No connectors in this group.</span>
+                  ) : (
+                    groupConnectors.map((connectorType) => (
+                      <button
+                        key={connectorType.id}
+                        type="button"
+                        onClick={() =>
+                          onRemoveConnectorFromGroup({
+                            groupId: selectedGroup.id,
+                            connectorTypeId: connectorType.id,
+                          })
+                        }
+                      >
+                        {connectorType.name}
+                        <span>Remove</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+                <form className="inline-form" onSubmit={handleAddConnectorToGroup}>
+                  <select
+                    disabled={groupConnectorOptions.length === 0}
+                    value={connectorToGroup || groupConnectorOptions[0]?.id || ''}
+                    onChange={(event) => setConnectorToGroup(event.target.value)}
                   >
-                    {connectorType.name}
-                    <span>Remove</span>
+                    {groupConnectorOptions.length === 0 ? (
+                      <option value="">No available connectors</option>
+                    ) : null}
+                    {groupConnectorOptions.map((connectorType) => (
+                      <option key={connectorType.id} value={connectorType.id}>
+                        {connectorType.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button disabled={groupConnectorOptions.length === 0} type="submit">
+                    Add Connector
                   </button>
-                ))
-              )}
-            </div>
-            <form className="inline-form" onSubmit={handleAddConnectorToGroup}>
-              <select
-                disabled={groupConnectorOptions.length === 0}
-                value={connectorToGroup || groupConnectorOptions[0]?.id || ''}
-                onChange={(event) => setConnectorToGroup(event.target.value)}
-              >
-                {groupConnectorOptions.length === 0 ? (
-                  <option value="">No available connectors</option>
-                ) : null}
-                {groupConnectorOptions.map((connectorType) => (
-                  <option key={connectorType.id} value={connectorType.id}>
-                    {connectorType.name}
-                  </option>
-                ))}
-              </select>
-              <button disabled={groupConnectorOptions.length === 0} type="submit">
-                Add Connector
-              </button>
-            </form>
-          </>
-        ) : null}
+                </form>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </section>
     </div>
   );

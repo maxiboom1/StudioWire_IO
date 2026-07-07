@@ -117,7 +117,9 @@ describe('EditDeviceModal', () => {
     expect(screen.queryByLabelText('Notes')).toBeNull();
     expect(screen.queryByLabelText('Rack Height')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'I/O' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'I/O' }));
+    expect(screen.getByRole('heading', { name: 'I/O Interfaces' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'New I/O Interfaces' })).toBeNull();
 
     const existingCount = screen.getByLabelText('Count') as HTMLInputElement;
     expect(existingCount.value).toBe('4');
@@ -143,6 +145,7 @@ describe('EditDeviceModal', () => {
     fireEvent.change(screen.getAllByLabelText('Name').at(-1) as HTMLInputElement, {
       target: { value: 'MGMT' },
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Move MGMT up' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save Device' }));
 
     expect(editDevice).toHaveBeenCalledTimes(1);
@@ -166,6 +169,10 @@ describe('EditDeviceModal', () => {
       count: 1,
       createPlannedCables: true,
     });
+    expect(payload.portGroupOrder).toEqual([
+      { kind: 'new', localId: payload.newPortGroups[0].localId },
+      { kind: 'existing', id: 'port-group-router-outputs' },
+    ]);
     expect(onSaved).toHaveBeenCalledWith('device-router-1');
   });
 });

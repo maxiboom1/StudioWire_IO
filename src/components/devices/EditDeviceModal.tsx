@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
+import { HorizontalTabs } from '../common/AppTabs';
 import { ModalFrame } from '../common/ModalFrame';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -24,8 +25,7 @@ export function EditDeviceModal({
   const { project, editDevice } = useProject();
   const [activeTab, setActiveTab] = useState<'general' | 'io'>('general');
   const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
-  const [draggingExistingInterfaceId, setDraggingExistingInterfaceId] = useState<string | null>(null);
-  const [draggingNewInterfaceId, setDraggingNewInterfaceId] = useState<string | null>(null);
+  const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
   const form = useEditDeviceForm({
     device,
     editDevice,
@@ -52,20 +52,12 @@ export function EditDeviceModal({
     });
   }
 
-  function dropExistingInterface(targetId: string) {
-    if (draggingExistingInterfaceId) {
-      form.moveExistingPortGroup(draggingExistingInterfaceId, targetId);
+  function dropInterface(targetLocalId: string) {
+    if (draggingInterfaceId) {
+      form.moveInterface(draggingInterfaceId, targetLocalId);
     }
 
-    setDraggingExistingInterfaceId(null);
-  }
-
-  function dropNewInterface(targetLocalId: string) {
-    if (draggingNewInterfaceId) {
-      form.moveNewPortGroup(draggingNewInterfaceId, targetLocalId);
-    }
-
-    setDraggingNewInterfaceId(null);
+    setDraggingInterfaceId(null);
   }
 
   return (
@@ -74,25 +66,17 @@ export function EditDeviceModal({
       description="Edit device metadata, relabel existing interfaces, and add new interfaces."
       onClose={onClose}
     >
-      <form className="editor-form add-device-form" onSubmit={handleSubmit}>
-        <div className="device-modal-tabs">
-          <nav className="device-modal-tabbar" aria-label="Device edit sections">
-            <button
-              aria-current={activeTab === 'general' ? 'page' : undefined}
-              type="button"
-              onClick={() => setActiveTab('general')}
-            >
-              General
-            </button>
-            <button
-              aria-current={activeTab === 'io' ? 'page' : undefined}
-              type="button"
-              onClick={() => setActiveTab('io')}
-            >
-              I/O
-            </button>
-          </nav>
-          <div className="device-modal-tab-content">
+      <form className="editor-form standard-modal-form add-device-form" onSubmit={handleSubmit}>
+        <HorizontalTabs
+          activeTab={activeTab}
+          ariaLabel="Device edit sections"
+          tabs={[
+            { id: 'general', label: 'General' },
+            { id: 'io', label: 'I/O' },
+          ]}
+          onTabChange={setActiveTab}
+        />
+        <div className="standard-modal-content device-modal-tab-content">
             {activeTab === 'general' ? (
               <section className="modal-section device-modal-tab-panel">
                 <h3>General</h3>
@@ -188,59 +172,39 @@ export function EditDeviceModal({
                   <h3>I/O Interfaces</h3>
                 </div>
                 <div className="port-group-editor-list">
-                  {form.existingPortGroups.map((group, index) => (
+                  {form.interfaceItems.map((item, index) => (
                     <PortGroupEditor
                       cablePrefixes={project.settings.cablePrefixes}
-                      canMoveDown={index < form.existingPortGroups.length - 1}
+                      canMoveDown={index < form.interfaceItems.length - 1}
                       canMoveUp={index > 0}
                       categories={project.settings.categories}
-                      group={group}
-                      isCollapsed={collapsedInterfaceIds.has(group.localId)}
-                      key={group.id}
-                      lockedFields
+                      group={item.group}
+                      isCollapsed={collapsedInterfaceIds.has(item.group.localId)}
+                      key={item.group.localId}
+                      lockedFields={item.kind === 'existing'}
                       settings={project.settings}
-                      onCategoryChange={() => undefined}
-                      onDragEnd={() => setDraggingExistingInterfaceId(null)}
-                      onDragStart={setDraggingExistingInterfaceId}
-                      onDrop={dropExistingInterface}
-                      onMoveDown={(id) => form.moveExistingPortGroupByOffset(id, 1)}
-                      onMoveUp={(id) => form.moveExistingPortGroupByOffset(id, -1)}
-                      onPlannedCablesToggle={() => undefined}
-                      onToggleCollapsed={toggleInterfaceCollapsed}
-                      onUpdate={(id, updates) =>
-                        form.updateExistingPortGroup(id, {
-                          name: updates.name,
-                          portLabelPattern: updates.portLabelPattern,
-                          colorOverride: updates.colorOverride,
-                        })
+                      onCategoryChange={
+                        item.kind === 'existing' ? () => undefined : form.updateNewPortGroupCategory
                       }
-                    />
-                  ))}
-                </div>
-                <div className="section-heading">
-                  <h3>New I/O Interfaces</h3>
-                </div>
-                <div className="port-group-editor-list">
-                  {form.newPortGroups.map((group, index) => (
-                    <PortGroupEditor
-                      cablePrefixes={project.settings.cablePrefixes}
-                      canMoveDown={index < form.newPortGroups.length - 1}
-                      canMoveUp={index > 0}
-                      categories={project.settings.categories}
-                      group={group}
-                      isCollapsed={collapsedInterfaceIds.has(group.localId)}
-                      key={group.localId}
-                      settings={project.settings}
-                      onCategoryChange={form.updateNewPortGroupCategory}
-                      onDragEnd={() => setDraggingNewInterfaceId(null)}
-                      onDragStart={setDraggingNewInterfaceId}
-                      onDrop={dropNewInterface}
-                      onMoveDown={(localId) => form.moveNewPortGroupByOffset(localId, 1)}
-                      onMoveUp={(localId) => form.moveNewPortGroupByOffset(localId, -1)}
-                      onPlannedCablesToggle={form.toggleNewPortGroupPlannedCables}
-                      onRemove={form.removeNewPortGroup}
+                      onDragEnd={() => setDraggingInterfaceId(null)}
+                      onDragStart={setDraggingInterfaceId}
+                      onDrop={dropInterface}
+                      onMoveDown={(localId) => form.moveInterfaceByOffset(localId, 1)}
+                      onMoveUp={(localId) => form.moveInterfaceByOffset(localId, -1)}
+                      onPlannedCablesToggle={
+                        item.kind === 'existing' ? () => undefined : form.toggleNewPortGroupPlannedCables
+                      }
+                      onRemove={item.kind === 'existing' ? undefined : form.removeNewPortGroup}
                       onToggleCollapsed={toggleInterfaceCollapsed}
-                      onUpdate={form.updateNewPortGroup}
+                      onUpdate={(localId, updates) =>
+                        item.kind === 'existing'
+                          ? form.updateExistingPortGroup(localId, {
+                              name: updates.name,
+                              portLabelPattern: updates.portLabelPattern,
+                              colorOverride: updates.colorOverride,
+                            })
+                          : form.updateNewPortGroup(localId, updates)
+                      }
                     />
                   ))}
                 </div>
@@ -261,10 +225,9 @@ export function EditDeviceModal({
                 </div>
               </section>
             )}
-          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="standard-modal-footer">
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>

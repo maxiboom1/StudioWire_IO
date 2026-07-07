@@ -21,8 +21,8 @@ export function ModalFrame({
         }
       }}
     >
-      <DialogContent className="max-w-5xl">
-        <DialogHeader>
+      <DialogContent className="standard-modal-frame">
+        <DialogHeader className="standard-modal-header">
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>

@@ -136,7 +136,7 @@ describe('SettingsWorkspace tabs and accessibility', () => {
       'Connector Groups',
     ]);
     expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false', 'false']);
-    expect(tabs[1].className).toBe('active');
+    expect(tabs[1].className).toContain('active');
     expect(screen.getByText(`v${STUDIOWIRE_CURRENT_VERSION}`)).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Connector Catalog' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Project' })).toBeNull();

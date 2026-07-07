@@ -5,6 +5,7 @@ import type {
   CategoryInput,
   CategoryUpdates,
 } from '../../state/projectContextTypes';
+import { VerticalTabs } from '../common/AppTabs';
 import type { NewCategoryFormValue } from './settingsTypes';
 
 export function CategoriesPanel({
@@ -87,20 +88,6 @@ export function CategoriesPanel({
           <h2>Categories</h2>
           <span>{categories.length}</span>
         </div>
-        <div className="settings-inner-tabs" role="tablist" aria-label="Categories">
-          {categories.map((category) => (
-            <button
-              aria-selected={category.id === activeCategoryId}
-              className={category.id === activeCategoryId ? 'active' : ''}
-              key={category.id}
-              role="tab"
-              type="button"
-              onClick={() => onActiveCategoryChange(category.id)}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
         <form className="inline-form" onSubmit={handleAddCategory}>
           <input
             placeholder="New category"
@@ -122,93 +109,101 @@ export function CategoriesPanel({
       </section>
 
       {selectedCategory ? (
-        <section className="settings-section">
-          <div className="section-heading">
-            <h2>{selectedCategory.name}</h2>
-            <span>{categoryConnectors.length} connectors</span>
-          </div>
-          <div className="settings-detail-grid">
-            <label>
-              <span>Name</span>
-              <input
-                defaultValue={selectedCategory.name}
-                onBlur={(event) => {
-                  const name = event.target.value.trim();
+        <div className="settings-side-layout">
+          <VerticalTabs
+            activeTab={activeCategoryId}
+            ariaLabel="Categories"
+            tabs={categories.map((category) => ({ id: category.id, label: category.name }))}
+            onTabChange={onActiveCategoryChange}
+          />
+          <section className="settings-section settings-detail-panel">
+            <div className="section-heading">
+              <h2>{selectedCategory.name}</h2>
+              <span>{categoryConnectors.length} connectors</span>
+            </div>
+            <div className="settings-detail-grid">
+              <label>
+                <span>Name</span>
+                <input
+                  defaultValue={selectedCategory.name}
+                  onBlur={(event) => {
+                    const name = event.target.value.trim();
 
-                  if (name && name !== selectedCategory.name) {
+                    if (name && name !== selectedCategory.name) {
+                      onUpdateCategory(selectedCategory.id, {
+                        name,
+                      });
+                    }
+                  }}
+                />
+              </label>
+              <label>
+                <span>Default prefix</span>
+                <select
+                  value={selectedCategory.defaultCablePrefix}
+                  onChange={(event) =>
                     onUpdateCategory(selectedCategory.id, {
-                      name,
-                    });
-                  }
-                }}
-              />
-            </label>
-            <label>
-              <span>Default prefix</span>
-              <select
-                value={selectedCategory.defaultCablePrefix}
-                onChange={(event) =>
-                  onUpdateCategory(selectedCategory.id, {
-                    defaultCablePrefix: event.target.value,
-                  })
-                }
-              >
-                {cablePrefixes.map((prefix) => (
-                  <option key={prefix.id} value={prefix.prefix}>
-                    {prefix.prefix}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Color</span>
-              <input
-                aria-label={`${selectedCategory.name} color picker`}
-                type="color"
-                value={selectedCategory.color}
-                onChange={(event) => updateSelectedCategoryColor(event.target.value)}
-              />
-            </label>
-          </div>
-          <div className="settings-token-list">
-            {categoryConnectors.length === 0 ? (
-              <span className="settings-empty-inline">No connectors assigned.</span>
-            ) : (
-              categoryConnectors.map((connectorType) => (
-                <button
-                  key={connectorType.id}
-                  type="button"
-                  onClick={() =>
-                    onRemoveAssignment({
-                      categoryId: selectedCategory.id,
-                      connectorTypeId: connectorType.id,
+                      defaultCablePrefix: event.target.value,
                     })
                   }
                 >
-                  {connectorType.name}
-                  <span>Remove</span>
-                </button>
-              ))
-            )}
-          </div>
-          <form className="inline-form" onSubmit={handleAssignConnector}>
-            <select
-              disabled={unassignedConnectors.length === 0}
-              value={connectorToAssign || unassignedConnectors[0]?.id || ''}
-              onChange={(event) => setConnectorToAssign(event.target.value)}
-            >
-              {unassignedConnectors.length === 0 ? <option value="">All connectors assigned</option> : null}
-              {unassignedConnectors.map((connectorType) => (
-                <option key={connectorType.id} value={connectorType.id}>
-                  {connectorType.name}
-                </option>
-              ))}
-            </select>
-            <button disabled={unassignedConnectors.length === 0} type="submit">
-              Assign Connector
-            </button>
-          </form>
-        </section>
+                  {cablePrefixes.map((prefix) => (
+                    <option key={prefix.id} value={prefix.prefix}>
+                      {prefix.prefix}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Color</span>
+                <input
+                  aria-label={`${selectedCategory.name} color picker`}
+                  type="color"
+                  value={selectedCategory.color}
+                  onChange={(event) => updateSelectedCategoryColor(event.target.value)}
+                />
+              </label>
+            </div>
+            <div className="settings-token-list">
+              {categoryConnectors.length === 0 ? (
+                <span className="settings-empty-inline">No connectors assigned.</span>
+              ) : (
+                categoryConnectors.map((connectorType) => (
+                  <button
+                    key={connectorType.id}
+                    type="button"
+                    onClick={() =>
+                      onRemoveAssignment({
+                        categoryId: selectedCategory.id,
+                        connectorTypeId: connectorType.id,
+                      })
+                    }
+                  >
+                    {connectorType.name}
+                    <span>Remove</span>
+                  </button>
+                ))
+              )}
+            </div>
+            <form className="inline-form" onSubmit={handleAssignConnector}>
+              <select
+                disabled={unassignedConnectors.length === 0}
+                value={connectorToAssign || unassignedConnectors[0]?.id || ''}
+                onChange={(event) => setConnectorToAssign(event.target.value)}
+              >
+                {unassignedConnectors.length === 0 ? <option value="">All connectors assigned</option> : null}
+                {unassignedConnectors.map((connectorType) => (
+                  <option key={connectorType.id} value={connectorType.id}>
+                    {connectorType.name}
+                  </option>
+                ))}
+              </select>
+              <button disabled={unassignedConnectors.length === 0} type="submit">
+                Assign Connector
+              </button>
+            </form>
+          </section>
+        </div>
       ) : null}
     </div>
   );

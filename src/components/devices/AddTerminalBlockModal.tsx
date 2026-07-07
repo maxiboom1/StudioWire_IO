@@ -10,6 +10,7 @@ import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import type { TerminalBlockDraft } from '../../state/projectTypes';
+import { HorizontalTabs } from '../common/AppTabs';
 import { ModalFrame } from '../common/ModalFrame';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -58,6 +59,7 @@ export function AddTerminalBlockModal({
     createPlannedCables: true,
     notes: '',
   });
+  const [activeTab, setActiveTab] = useState<'general' | 'front'>('general');
   const effectiveLabelPrefix = normalizeDeviceToken(draft.labelPrefix || draft.name || 'TB');
   const validation = getAddTerminalBlockValidation(project, draft, effectiveLabelPrefix);
   const connectorTypes = getConnectorsForCategory(project.settings, draft.categoryId);
@@ -118,181 +120,198 @@ export function AddTerminalBlockModal({
       description="Create a 1RU rack terminal block with rear and front port faces."
       onClose={onClose}
     >
-      <form className="editor-form add-terminal-block-form" onSubmit={handleSubmit}>
-        <section className="modal-section">
-          <h3>Terminal Block</h3>
-          <div className="form-grid two">
-            <div className="form-field">
-              <Label htmlFor="tb-name">Name</Label>
-              <Input
-                autoFocus
-                id="tb-name"
-                required
-                value={draft.name}
-                placeholder="TB-A"
-                onChange={(event) => updateDraft({ name: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-label-prefix">Label Prefix</Label>
-              <Input
-                id="tb-label-prefix"
-                value={draft.labelPrefix}
-                placeholder={draft.name ? normalizeDeviceToken(draft.name) : 'TB-A'}
-                onChange={(event) => updateDraft({ labelPrefix: event.target.value.toUpperCase() })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-category">Category</Label>
-              <Select value={draft.categoryId} onValueChange={(value) => updateDraft({ categoryId: value })}>
-                <SelectTrigger id="tb-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {project.settings.categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-connector">Connector</Label>
-              <Select
-                value={draft.connectorTypeId}
-                onValueChange={(value) => updateDraft({ connectorTypeId: value })}
-              >
-                <SelectTrigger id="tb-connector">
-                  <SelectValue placeholder="Select connector" />
-                </SelectTrigger>
-                <SelectContent>
-                  {connectorTypes.map((connectorType) => (
-                    <SelectItem key={connectorType.id} value={connectorType.id}>
-                      {connectorType.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-count">Connector Count</Label>
-              <Input
-                id="tb-count"
-                min="1"
-                type="number"
-                value={draft.count}
-                onChange={(event) => updateDraft({ count: Number(event.target.value) })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-rack">Rack</Label>
-              <Select value={draft.rackId} onValueChange={(value) => updateDraft({ rackId: value })}>
-                <SelectTrigger id="tb-rack">
-                  <SelectValue placeholder="Select rack" />
-                </SelectTrigger>
-                <SelectContent>
-                  {racks.map((rack) => (
-                    <SelectItem key={rack.id} value={rack.id}>
-                      {rack.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-bottom-ru">Bottom RU</Label>
-              <Input
-                id="tb-bottom-ru"
-                min="1"
-                type="number"
-                value={draft.rackBottomRu}
-                onChange={(event) => updateDraft({ rackBottomRu: Number(event.target.value) })}
-              />
-            </div>
-            <div className="form-field">
-              <Label>Mount</Label>
-              <Input readOnly value="Rackmount, 1 RU" />
-            </div>
-          </div>
-        </section>
+      <form className="editor-form standard-modal-form add-terminal-block-form" onSubmit={handleSubmit}>
+        <HorizontalTabs
+          activeTab={activeTab}
+          ariaLabel="Terminal block sections"
+          tabs={[
+            { id: 'general', label: 'General' },
+            { id: 'front', label: 'Front Cables' },
+          ]}
+          onTabChange={setActiveTab}
+        />
+        <div className="standard-modal-content">
+          {activeTab === 'general' ? (
+            <section className="modal-section">
+              <h3>Terminal Block</h3>
+              <div className="form-grid two">
+                <div className="form-field">
+                  <Label htmlFor="tb-name">Name</Label>
+                  <Input
+                    autoFocus
+                    id="tb-name"
+                    required
+                    value={draft.name}
+                    placeholder="TB-A"
+                    onChange={(event) => updateDraft({ name: event.target.value })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-label-prefix">Label Prefix</Label>
+                  <Input
+                    id="tb-label-prefix"
+                    value={draft.labelPrefix}
+                    placeholder={draft.name ? normalizeDeviceToken(draft.name) : 'TB-A'}
+                    onChange={(event) => updateDraft({ labelPrefix: event.target.value.toUpperCase() })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-category">Category</Label>
+                  <Select
+                    value={draft.categoryId}
+                    onValueChange={(value) => updateDraft({ categoryId: value })}
+                  >
+                    <SelectTrigger id="tb-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {project.settings.categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-connector">Connector</Label>
+                  <Select
+                    value={draft.connectorTypeId}
+                    onValueChange={(value) => updateDraft({ connectorTypeId: value })}
+                  >
+                    <SelectTrigger id="tb-connector">
+                      <SelectValue placeholder="Select connector" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {connectorTypes.map((connectorType) => (
+                        <SelectItem key={connectorType.id} value={connectorType.id}>
+                          {connectorType.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-count">Connector Count</Label>
+                  <Input
+                    id="tb-count"
+                    min="1"
+                    type="number"
+                    value={draft.count}
+                    onChange={(event) => updateDraft({ count: Number(event.target.value) })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-rack">Rack</Label>
+                  <Select value={draft.rackId} onValueChange={(value) => updateDraft({ rackId: value })}>
+                    <SelectTrigger id="tb-rack">
+                      <SelectValue placeholder="Select rack" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {racks.map((rack) => (
+                        <SelectItem key={rack.id} value={rack.id}>
+                          {rack.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-bottom-ru">Bottom RU</Label>
+                  <Input
+                    id="tb-bottom-ru"
+                    min="1"
+                    type="number"
+                    value={draft.rackBottomRu}
+                    onChange={(event) => updateDraft({ rackBottomRu: Number(event.target.value) })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label>Mount</Label>
+                  <Input readOnly value="Rackmount, 1 RU" />
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="modal-section">
+              <h3>Front Planned Cables</h3>
+              <div className="form-grid three">
+                <div className="form-field">
+                  <Label>Mode</Label>
+                  <Button
+                    aria-pressed={draft.createPlannedCables}
+                    className="interface-auto-toggle"
+                    type="button"
+                    variant={draft.createPlannedCables ? 'default' : 'outline'}
+                    onClick={() => updateDraft({ createPlannedCables: !draft.createPlannedCables })}
+                  >
+                    {draft.createPlannedCables ? 'AUTO' : 'NONE'}
+                  </Button>
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-cable-prefix">Cable Prefix</Label>
+                  <Select
+                    value={draft.cablePrefix}
+                    onValueChange={(value) => updateDraft({ cablePrefix: value })}
+                  >
+                    <SelectTrigger id="tb-cable-prefix">
+                      <SelectValue placeholder="Select prefix" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {project.settings.cablePrefixes.map((prefix) => (
+                        <SelectItem key={prefix.id} value={prefix.prefix}>
+                          {prefix.prefix}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="tb-first-cable">First Cable Number</Label>
+                  <Input
+                    id="tb-first-cable"
+                    min="1"
+                    readOnly={draft.createPlannedCables}
+                    type="number"
+                    value={draft.firstCableNumber ?? ''}
+                    onChange={(event) =>
+                      updateDraft({
+                        firstCableNumber: event.target.value ? Number(event.target.value) : null,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <p className="form-help">
+                Planned numbers are assigned to FRONT ports only. REAR ports stay unnumbered until
+                connection logic exists.
+              </p>
+              <div className="form-field">
+                <Label htmlFor="tb-notes">Notes</Label>
+                <Textarea
+                  id="tb-notes"
+                  value={draft.notes}
+                  onChange={(event) => updateDraft({ notes: event.target.value })}
+                />
+              </div>
+            </section>
+          )}
+        </div>
 
-        <section className="modal-section">
-          <h3>Front Planned Cables</h3>
-          <div className="form-grid three">
-            <div className="form-field">
-              <Label>Mode</Label>
-              <Button
-                aria-pressed={draft.createPlannedCables}
-                className="interface-auto-toggle"
-                type="button"
-                variant={draft.createPlannedCables ? 'default' : 'outline'}
-                onClick={() => updateDraft({ createPlannedCables: !draft.createPlannedCables })}
-              >
-                {draft.createPlannedCables ? 'AUTO' : 'NONE'}
-              </Button>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-cable-prefix">Cable Prefix</Label>
-              <Select
-                value={draft.cablePrefix}
-                onValueChange={(value) => updateDraft({ cablePrefix: value })}
-              >
-                <SelectTrigger id="tb-cable-prefix">
-                  <SelectValue placeholder="Select prefix" />
-                </SelectTrigger>
-                <SelectContent>
-                  {project.settings.cablePrefixes.map((prefix) => (
-                    <SelectItem key={prefix.id} value={prefix.prefix}>
-                      {prefix.prefix}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-field">
-              <Label htmlFor="tb-first-cable">First Cable Number</Label>
-              <Input
-                id="tb-first-cable"
-                min="1"
-                readOnly={draft.createPlannedCables}
-                type="number"
-                value={draft.firstCableNumber ?? ''}
-                onChange={(event) =>
-                  updateDraft({
-                    firstCableNumber: event.target.value ? Number(event.target.value) : null,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <p className="form-help">
-            Planned numbers are assigned to FRONT ports only. REAR ports stay unnumbered until connection
-            logic exists.
-          </p>
-          <div className="form-field">
-            <Label htmlFor="tb-notes">Notes</Label>
-            <Textarea
-              id="tb-notes"
-              value={draft.notes}
-              onChange={(event) => updateDraft({ notes: event.target.value })}
-            />
-          </div>
-          <div className="form-messages">
-            {validation.warnings.map((warning) => (
-              <Alert className="border-amber-200 bg-amber-50 text-amber-800" key={warning}>
-                <AlertDescription>{warning}</AlertDescription>
-              </Alert>
-            ))}
-            {validation.errors.map((error) => (
-              <Alert className="border-red-200 bg-red-50 text-red-800" key={error}>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            ))}
-          </div>
-        </section>
+        <div className="form-messages standard-modal-messages">
+          {validation.warnings.map((warning) => (
+            <Alert className="border-amber-200 bg-amber-50 text-amber-800" key={warning}>
+              <AlertDescription>{warning}</AlertDescription>
+            </Alert>
+          ))}
+          {validation.errors.map((error) => (
+            <Alert className="border-red-200 bg-red-50 text-red-800" key={error}>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ))}
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="standard-modal-footer">
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>

@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react';
 import { useProject } from '../../state/ProjectContext';
+import { HorizontalTabs } from '../common/AppTabs';
 import { ModalFrame } from '../common/ModalFrame';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -64,25 +65,17 @@ export function AddDeviceModal({
       description="Create a virtual device with generated ports and optional planned cables."
       onClose={onClose}
     >
-      <form className="editor-form add-device-form" onSubmit={handleSubmit}>
-        <div className="device-modal-tabs">
-          <nav className="device-modal-tabbar" aria-label="Device edit sections">
-            <button
-              aria-current={activeTab === 'general' ? 'page' : undefined}
-              type="button"
-              onClick={() => setActiveTab('general')}
-            >
-              General
-            </button>
-            <button
-              aria-current={activeTab === 'io' ? 'page' : undefined}
-              type="button"
-              onClick={() => setActiveTab('io')}
-            >
-              I/O
-            </button>
-          </nav>
-          <div className="device-modal-tab-content">
+      <form className="editor-form standard-modal-form add-device-form" onSubmit={handleSubmit}>
+        <HorizontalTabs
+          activeTab={activeTab}
+          ariaLabel="Device edit sections"
+          tabs={[
+            { id: 'general', label: 'General' },
+            { id: 'io', label: 'I/O' },
+          ]}
+          onTabChange={setActiveTab}
+        />
+        <div className="standard-modal-content device-modal-tab-content">
             {activeTab === 'general' ? (
               <section className="modal-section device-modal-tab-panel">
                 <h3>General</h3>
@@ -216,10 +209,9 @@ export function AddDeviceModal({
                 </div>
               </section>
             )}
-          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="standard-modal-footer">
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>

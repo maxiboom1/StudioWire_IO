@@ -3,6 +3,7 @@ import { isHexColor } from '../../domain/colors';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
 import type { Device, PortGroup, ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectContextTypes';
+import type { EditDevicePortGroupOrderItem } from '../../state/projectTypes';
 import type { DeviceDraft } from '../../state/projectTypes';
 import {
   addPortGroupDraft,
@@ -78,8 +79,9 @@ export function addNewEditPortGroup(
   groups: DevicePortGroupForm[],
   device: DeviceDraft,
   makeLocalId: AddDeviceLocalIdFactory,
+  localId?: string,
 ): DevicePortGroupForm[] {
-  return addPortGroupDraft(project, groups, device, makeLocalId);
+  return addPortGroupDraft(project, groups, device, makeLocalId, localId);
 }
 
 export function removeNewEditPortGroup(
@@ -241,6 +243,7 @@ export function createEditDeviceCommandInput(
   device: DeviceDraft,
   existingGroups: ExistingPortGroupForm[],
   newGroups: DevicePortGroupForm[],
+  portGroupOrder?: EditDevicePortGroupOrderItem[],
 ): EditDeviceInput {
   const deviceSubLabel = normalizeDeviceToken(device.code || device.name);
   const effectiveLabelPrefix = normalizeDeviceToken(device.code || device.name);
@@ -266,11 +269,12 @@ export function createEditDeviceCommandInput(
       portLabelPattern: group.portLabelPattern,
       colorOverride: group.colorOverride,
     })),
-    newPortGroups: newGroups.map(({ localId: _localId, ...group }) => ({
+    newPortGroups: newGroups.map((group) => ({
       ...group,
       name: group.name.trim(),
       firstCableNumber: group.createPlannedCables ? group.firstCableNumber : null,
     })),
+    portGroupOrder,
   };
 }
 

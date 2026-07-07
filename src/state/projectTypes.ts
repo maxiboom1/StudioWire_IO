@@ -93,11 +93,20 @@ export interface ExistingDevicePortGroupEdit {
   colorOverride?: string | null;
 }
 
+export interface NewDevicePortGroupEdit extends DevicePortGroupDraft {
+  localId: string;
+}
+
+export type EditDevicePortGroupOrderItem =
+  | { kind: 'existing'; id: string }
+  | { kind: 'new'; localId: string };
+
 export interface EditDeviceInput {
   deviceId: string;
   deviceUpdates: DeviceEditUpdate;
   existingPortGroups: ExistingDevicePortGroupEdit[];
-  newPortGroups: DevicePortGroupDraft[];
+  newPortGroups: NewDevicePortGroupEdit[];
+  portGroupOrder?: EditDevicePortGroupOrderItem[];
 }
 
 export type ProjectAction =

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.8.15",
+  "title": "StudioWire IO Project v0.2.8.16",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,7 +21,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.8.15"
+      "const": "0.2.8.16"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"

@@ -213,13 +213,14 @@ export function addPortGroupDraft(
   groups: DevicePortGroupForm[],
   device: DeviceDraft,
   makeLocalId: AddDeviceLocalIdFactory,
+  localId?: string,
 ): DevicePortGroupForm[] {
   const prefix = getDefaultPrefixForCategory(project, device.categoryId);
 
   return rebalancePlannedCableRanges(project, [
     ...groups,
     {
-      localId: makeLocalId(),
+      localId: localId ?? makeLocalId(),
       name: 'PORTS',
       direction: 'bidirectional',
       categoryId: device.categoryId,

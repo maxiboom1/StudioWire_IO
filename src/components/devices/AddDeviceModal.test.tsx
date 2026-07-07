@@ -122,7 +122,7 @@ describe('AddDeviceModal', () => {
       <AddDeviceModal initialLocationId="location-machine-room" onClose={vi.fn()} onCreated={vi.fn()} />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'I/O' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'I/O' }));
 
     expect(screen.getByRole('button', { name: 'Add I/O Interface' })).toBeTruthy();
     expect(screen.getAllByDisplayValue('{NAME}-{000}')).toHaveLength(2);
