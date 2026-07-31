@@ -1,15 +1,17 @@
 import { getInspectorRows, resolveSelection, type SelectionState } from '../common/selection';
 import { useProject } from '../../state/ProjectContext';
-import { DeviceInspector, type DeviceInspectorDirtyGuard } from '../devices/DeviceInspector';
+import { DeviceInspector } from '../devices/DeviceInspector';
+import type { InspectorDirtyGuard } from '../common/inspectorDirtyGuard';
+import { FolderInspector } from '../locations/FolderInspector';
 import { LocationInspector } from '../locations/LocationInspector';
 import { RackInspector } from '../racks/RackInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function Inspector({
-  onDeviceInspectorDirtyGuardChange,
+  onInspectorDirtyGuardChange,
   selection,
 }: {
-  onDeviceInspectorDirtyGuardChange?: (guard: DeviceInspectorDirtyGuard | null) => void;
+  onInspectorDirtyGuardChange?: (guard: InspectorDirtyGuard | null) => void;
   selection: SelectionState;
 }) {
   const { project } = useProject();
@@ -31,20 +33,19 @@ export function Inspector({
   }
 
   if (selected.type === 'location') {
-    return <LocationInspector location={selected.value} />;
+    return <LocationInspector location={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
+  }
+
+  if (selected.type === 'folder') {
+    return <FolderInspector folder={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
   }
 
   if (selected.type === 'rack') {
-    return <RackInspector rack={selected.value} />;
+    return <RackInspector rack={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
   }
 
   if (selected.type === 'device') {
-    return (
-      <DeviceInspector
-        device={selected.value}
-        onDirtyGuardChange={onDeviceInspectorDirtyGuardChange}
-      />
-    );
+    return <DeviceInspector device={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
   }
 
   return (

@@ -3,6 +3,7 @@ import { getConnectorsForCategory } from '../domain/connectorCompatibility';
 import { makeId, makeIndexedId } from '../domain/id';
 import { formatPortLabel } from '../domain/portLabels';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../domain/projectItemNames';
 import { normalizeSubLocationForLocation } from '../domain/subLocations';
 import type { Cable, Device, Endpoint, Port, PortGroup, ProjectRoot } from '../domain/types';
 import type { EditDeviceInput, DevicePortGroupDraft } from './projectTypes';
@@ -20,6 +21,18 @@ export function editDeviceInProject(
 
   if (device.kind === 'terminal_block') {
     return { ok: false, error: 'Device edit blocked: terminal blocks use the TB workflow.' };
+  }
+
+  const nameConflict = findProjectItemNameConflict(project, input.deviceUpdates.name, {
+    id: device.id,
+    type: 'device',
+  });
+
+  if (nameConflict) {
+    return {
+      ok: false,
+      error: `Device edit blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+    };
   }
 
   const locationExists = project.locations.some((location) => location.id === input.deviceUpdates.locationId);
@@ -207,9 +220,7 @@ export function editDeviceInProject(
   );
   const combinedPortGroupOrder = input.portGroupOrder
     ?.map((item) =>
-      item.kind === 'existing'
-        ? item.id
-        : (newPortGroupsByLocalId.get(item.localId)?.id ?? null),
+      item.kind === 'existing' ? item.id : (newPortGroupsByLocalId.get(item.localId)?.id ?? null),
     )
     .filter((id): id is string => Boolean(id));
   const orderedPortGroups = reorderDevicePortGroups(
@@ -217,10 +228,7 @@ export function editDeviceInProject(
     input.deviceId,
     combinedPortGroupOrder && combinedPortGroupOrder.length > 0
       ? combinedPortGroupOrder
-      : [
-          ...input.existingPortGroups.map((group) => group.id),
-          ...newPortGroups.map((group) => group.id),
-        ],
+      : [...input.existingPortGroups.map((group) => group.id), ...newPortGroups.map((group) => group.id)],
   );
   const portLabelsById = new Map(
     [...nextProject.ports, ...newPorts].map((port) => [port.id, port.label] as const),

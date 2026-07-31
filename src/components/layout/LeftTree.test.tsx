@@ -126,6 +126,8 @@ function createContext(
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
     ...commands,
   };
 }
@@ -137,6 +139,7 @@ function renderTree(project = projectFixture(), commands: Partial<ProjectContext
     onAddRack: vi.fn(),
     onAddDevice: vi.fn(),
     onEditDevice: vi.fn(),
+    onEditTerminalBlock: vi.fn(),
     onAddTerminalBlock: vi.fn(),
   };
 
@@ -146,6 +149,7 @@ function renderTree(project = projectFixture(), commands: Partial<ProjectContext
       selection={{ selectedObjectType: 'device', selectedObjectId: 'device-router-1' }}
       onAddDevice={callbacks.onAddDevice}
       onEditDevice={callbacks.onEditDevice}
+      onEditTerminalBlock={callbacks.onEditTerminalBlock}
       onAddLocation={callbacks.onAddLocation}
       onAddRack={callbacks.onAddRack}
       onAddTerminalBlock={callbacks.onAddTerminalBlock}
@@ -260,6 +264,7 @@ describe('LeftTree', () => {
         selection={{ selectedObjectType: 'project', selectedObjectId: project.project.id }}
         onAddDevice={callbacks.onAddDevice}
         onEditDevice={callbacks.onEditDevice}
+        onEditTerminalBlock={callbacks.onEditTerminalBlock}
         onAddLocation={callbacks.onAddLocation}
         onAddRack={callbacks.onAddRack}
         onAddTerminalBlock={callbacks.onAddTerminalBlock}
@@ -327,9 +332,8 @@ describe('LeftTree', () => {
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /Machine Room 5/ }));
     await user.click(await screen.findByText('Add Folder'));
-    await user.click(screen.getByRole('button', { name: 'Add Folder' }));
 
-    expect(await screen.findByText('Folder name is required.')).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Add Folder' }) as HTMLButtonElement).disabled).toBe(true);
     expect(addSubLocation).not.toHaveBeenCalled();
     expect(prompt).not.toHaveBeenCalled();
 

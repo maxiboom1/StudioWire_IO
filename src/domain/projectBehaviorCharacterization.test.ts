@@ -62,13 +62,13 @@ describe('project behavior characterization', () => {
         objectId: 'cable-v-0001',
       },
       {
-        severity: 'warning',
+        severity: 'error',
         code: 'duplicate-location-name',
         objectType: 'location',
         objectId: 'location-control-room',
       },
       {
-        severity: 'warning',
+        severity: 'error',
         code: 'duplicate-location-name',
         objectType: 'location',
         objectId: 'location-machine-room',

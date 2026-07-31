@@ -80,6 +80,8 @@ function createContext(): ProjectContextValue {
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 
@@ -102,7 +104,7 @@ describe('DeviceWorkspace', () => {
 
     render(<DeviceWorkspace device={device} />);
 
-    expect(screen.getByText('Machine Room')).toBeTruthy();
+    expect(screen.queryByText('Machine Room')).toBeNull();
     expect(screen.getByText('Router 1')).toBeTruthy();
     expect(screen.getByText('RTR1')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Edit device/ })).toBeNull();

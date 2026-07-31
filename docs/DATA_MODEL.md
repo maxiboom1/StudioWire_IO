@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.20`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.21`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.20`.
+- `schemaVersion`: current fixed string `0.2.8.21`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -140,7 +140,6 @@ Fields:
 
 - `id`
 - `name`
-- `type`
 - `description`
 
 ## SubLocation
@@ -154,7 +153,7 @@ Fields:
 
 Sub-locations are the stored data records for user-facing folders inside one main location. A rack, device, or terminal block may reference a folder in its assigned location or may leave `subLocationId` as `null`.
 
-Folder deletion removes the folder and clears matching `subLocationId` values from racks, devices, and terminal blocks. Location changes preserve `subLocationId` only when the folder belongs to the new location; otherwise `subLocationId` is reset to `null`.
+Folders, racks, standard devices, and terminal blocks share one trimmed, case-insensitive project-item name namespace. Locations use a separate trimmed, case-insensitive namespace. Folder deletion is allowed only when no rack, standard device, or terminal block references it. Location changes preserve `subLocationId` only when the folder belongs to the new location; otherwise `subLocationId` is reset to `null`.
 
 ## Rack
 
@@ -205,6 +204,8 @@ Standard devices use `kind: "device"` and may be virtual, non-rack, or rack-moun
 
 Terminal blocks use `kind: "terminal_block"` and are stored in the same `devices` array. They omit `code`, `manufacturer`, `model`, and `role`; current-version imports reject those standard-device fields on terminal blocks. Terminal blocks are always rack-mounted, must reference a rack and bottom RU, and must have `rackSizeRu: 1`.
 
+Terminal block edits preserve existing port IDs by rear/front face and connector index. Increasing count appends matching ports. Reducing count is blocked while a removed port is referenced by a cable. TB deletion removes the TB, its groups, and its ports while restoring any surviving standard-device planned cable owner affected by a connection.
+
 ## PortGroup
 
 Fields:
@@ -228,6 +229,8 @@ Fields:
 `portLabelPattern` supports `{NAME}`, `{DEVICE}`, `{00}`, and `{000}`. `{NAME}` resolves to the current I/O interface name. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits.
 
 Standard devices use `input`, `output`, or `bidirectional` groups. Terminal blocks use exactly one `rear` group and one `front` group with matching count, category, and exact connector type.
+
+Both terminal-block groups always use `createPlannedCables: false`, null allocation fields, and ports with `plannedCableId: null`.
 
 PortGroup allocation semantics are mode-specific:
 
@@ -278,7 +281,7 @@ Planned cable labels use this rule:
 
 Output and bidirectional planned cables use the device port as the source and unknown destination. Input planned cables use unknown source and the device port as the destination.
 
-Terminal block rear ports do not generate planned cables. Terminal block front ports may optionally generate planned cables; those planned cables use the front port as a `tb_port` side A endpoint and an unknown side B endpoint.
+Terminal block ports never generate planned cables or reserve numbering ranges. Connecting two TB front ports allocates one cable number from the category default prefix at connection time. Disconnecting that patch retires the connection-owned number so it is not reused.
 
 Connected cables use `sideAEndpoint` and `sideBEndpoint` as neutral physical ends. When two ports are connected, the selected/clicked port is written to side A and the chosen target is written to side B. If both ports have planned cable numbers, the lower cable number becomes `connected` and the higher cable becomes `retired`.
 

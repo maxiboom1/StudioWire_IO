@@ -27,7 +27,7 @@ import type {
   SubLocationInput,
   SubLocationUpdates,
 } from './projectContextTypes';
-import type { ProjectAction, TerminalBlockDraft, DeviceUpdate } from './projectTypes';
+import type { ProjectAction, TerminalBlockDraft, TerminalBlockEditInput, DeviceUpdate } from './projectTypes';
 
 export type ProjectDispatch = (action: ProjectAction) => void;
 
@@ -161,7 +161,6 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
         payload: {
           id,
           name: input.name,
-          type: input.type,
           description: input.description,
         },
       });
@@ -224,6 +223,9 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
 
       return id;
     },
+    editTerminalBlock: (input: TerminalBlockEditInput) =>
+      dispatch({ type: 'EDIT_TERMINAL_BLOCK', payload: input }),
+    deleteTerminalBlock: (id: string) => dispatch({ type: 'DELETE_TERMINAL_BLOCK', payload: { id } }),
     connectPorts: (input: ConnectPortsInput) => dispatch({ type: 'CONNECT_PORTS', payload: input }),
     disconnectPort: (input: DisconnectPortInput) => dispatch({ type: 'DISCONNECT_PORT', payload: input }),
     moveMountedDevice: (input: MoveMountedDeviceInput) =>

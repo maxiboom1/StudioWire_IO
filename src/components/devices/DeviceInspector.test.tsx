@@ -9,7 +9,7 @@ import type { ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectTypes';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
 import { ConfirmationProvider } from '../common/ConfirmationDialog';
-import { DeviceInspector, type DeviceInspectorDirtyGuard } from './DeviceInspector';
+import { DeviceInspector, type InspectorDirtyGuard } from './DeviceInspector';
 
 const contextHarness = vi.hoisted(() => ({
   current: null as ProjectContextValue | null,
@@ -25,7 +25,11 @@ vi.mock('../../state/ProjectContext', () => ({
   },
 }));
 
-function createContext(project: ProjectRoot, editDevice = vi.fn(), deleteDevice = vi.fn()): ProjectContextValue {
+function createContext(
+  project: ProjectRoot,
+  editDevice = vi.fn(),
+  deleteDevice = vi.fn(),
+): ProjectContextValue {
   return {
     project,
     statusMessage: '',
@@ -68,6 +72,8 @@ function createContext(project: ProjectRoot, editDevice = vi.fn(), deleteDevice 
     updateDevice: vi.fn(),
     editDevice,
     deleteDevice,
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 
@@ -82,7 +88,7 @@ describe('DeviceInspector', () => {
     const user = userEvent.setup();
     const project = structuredClone(sampleProject);
     const editDevice = vi.fn();
-    const guardRef: { current: DeviceInspectorDirtyGuard | null } = { current: null };
+    const guardRef: { current: InspectorDirtyGuard | null } = { current: null };
     const device = project.devices.find((candidate) => candidate.id === 'device-router-1');
 
     if (!device) {
@@ -111,7 +117,10 @@ describe('DeviceInspector', () => {
     expect(guardRef.current?.isDirty).toBe(true);
 
     await user.click(screen.getByRole('button', { name: 'I/O' }));
-    await user.clear(screen.getByLabelText('Name', { selector: '#inspector-io-name-port-group-router-outputs' }));
+    await user.click(screen.getByRole('button', { name: 'OUT' }));
+    await user.clear(
+      screen.getByLabelText('Name', { selector: '#inspector-io-name-port-group-router-outputs' }),
+    );
     await user.type(
       screen.getByLabelText('Name', { selector: '#inspector-io-name-port-group-router-outputs' }),
       'PROGRAM',

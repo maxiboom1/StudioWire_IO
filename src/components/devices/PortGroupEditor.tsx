@@ -1,7 +1,7 @@
 import { ChevronDown, GripVertical, X } from 'lucide-react';
 import { normalizeHexColor } from '../../domain/colors';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
-import type { CablePrefix, Category, Settings } from '../../domain/types';
+import type { Category, Settings } from '../../domain/types';
 import type { DevicePortGroupDraft } from '../../state/projectTypes';
 import { ConnectorIcon } from '../common/ConnectorIcon';
 import { resolveConnectorIconKey } from '../common/connectorVisuals';
@@ -18,7 +18,6 @@ import {
 } from './addDeviceDraft';
 
 export function PortGroupEditor({
-  cablePrefixes,
   categories,
   group,
   lockedFields = false,
@@ -34,7 +33,6 @@ export function PortGroupEditor({
   onToggleCollapsed,
   onUpdate,
 }: {
-  cablePrefixes: CablePrefix[];
   categories: Category[];
   group: DevicePortGroupForm;
   lockedFields?: boolean;
@@ -231,29 +229,6 @@ export function PortGroupEditor({
                 >
                   AUTO
                 </Button>
-              </div>
-              <div className="form-field">
-                <Label htmlFor={`port-group-prefix-${group.localId}`}>Cable Prefix</Label>
-                <Select
-                  disabled={lockedFields}
-                  value={group.cablePrefix}
-                  onValueChange={(value) =>
-                    onUpdate(group.localId, {
-                      cablePrefix: value,
-                    })
-                  }
-                >
-                  <SelectTrigger id={`port-group-prefix-${group.localId}`}>
-                    <SelectValue placeholder="Select prefix" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cablePrefixes.map((prefix) => (
-                      <SelectItem key={prefix.id} value={prefix.prefix}>
-                        {prefix.prefix}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
               <div className="form-field">
                 <Label htmlFor={`port-group-pattern-${group.localId}`}>Label Pattern</Label>

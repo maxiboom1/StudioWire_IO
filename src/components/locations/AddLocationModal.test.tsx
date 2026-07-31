@@ -65,6 +65,8 @@ function createContext(addLocation = vi.fn(() => 'location-created')): ProjectCo
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 
@@ -86,13 +88,11 @@ describe('AddLocationModal', () => {
     expect(screen.getByLabelText('StudioWire IO')).toBeTruthy();
 
     await user.type(screen.getByLabelText('Name'), '  Control B  ');
-    await user.type(screen.getByLabelText('Type'), '  Control room  ');
     await user.type(screen.getByLabelText('Description'), '  Backup control position  ');
     await user.click(screen.getByRole('button', { name: 'Add Location' }));
 
     expect(addLocation).toHaveBeenCalledWith({
       name: 'Control B',
-      type: 'Control room',
       description: 'Backup control position',
     });
     expect(onCreated).toHaveBeenCalledWith('location-created');

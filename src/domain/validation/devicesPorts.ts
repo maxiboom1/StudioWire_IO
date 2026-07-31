@@ -1,4 +1,3 @@
-import { endpointReferencesPort } from '../connections';
 import type { Cable, Device, Port, ProjectRoot, ValidationIssue } from '../types';
 import { endpointIdInSet, type ValidationIssueBuilder } from './shared';
 
@@ -332,16 +331,23 @@ function validateTerminalBlockPortGroups(
   const rearGroup = rearGroups[0];
   const frontGroup = frontGroups[0];
 
-  if (rearGroup && rearGroup.createPlannedCables) {
-    issues.push(
-      issue(
-        'error',
-        'terminal-block-rear-planned-cables',
-        `Terminal block rear group ${rearGroup.name} must not create planned cables.`,
-        'portGroup',
-        rearGroup.id,
-      ),
-    );
+  for (const portGroup of [...rearGroups, ...frontGroups]) {
+    if (
+      portGroup.createPlannedCables ||
+      portGroup.firstCableNumber !== null ||
+      portGroup.lastCableNumber !== null ||
+      portGroup.numberingRangeId !== null
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'terminal-block-planned-cables',
+          `Terminal block group ${portGroup.name} must not allocate planned cable numbers.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
   }
 
   if (rearGroup && frontGroup) {
@@ -375,32 +381,16 @@ function validateTerminalBlockPortGroups(
       );
     }
 
-    if (port.direction === 'rear' && port.plannedCableId) {
+    if (port.plannedCableId) {
       issues.push(
         issue(
           'error',
-          'terminal-block-rear-planned-cables',
-          `Terminal block rear port ${port.label} must not link to a planned cable.`,
+          'terminal-block-planned-cables',
+          `Terminal block port ${port.label} must not link to a planned cable.`,
           'port',
           port.id,
         ),
       );
-    }
-
-    if (port.direction === 'front' && port.plannedCableId) {
-      const cable = project.cables.find((candidate) => candidate.id === port.plannedCableId);
-
-      if (cable && cable.status === 'planned' && !endpointReferencesPort(cable.sideAEndpoint, port.id)) {
-        issues.push(
-          issue(
-            'error',
-            'terminal-block-front-cable-source-mismatch',
-            `Terminal block front port ${port.label} must be the planned cable source.`,
-            'port',
-            port.id,
-          ),
-        );
-      }
     }
   }
 

@@ -1,4 +1,5 @@
 import type { ProjectRoot, ValidationIssue } from '../types';
+import { normalizeProjectItemName } from '../projectItemNames';
 import { countBy, isPositiveInteger, isRackPositionValid, type ValidationIssueBuilder } from './shared';
 
 export function validateLocationsAndRacks(
@@ -8,16 +9,33 @@ export function validateLocationsAndRacks(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const locationNameCounts = countBy(project.locations, (location) => location.name.trim().toLowerCase());
-  const subLocationNameCounts = countBy(
-    project.subLocations,
-    (subLocation) => `${subLocation.locationId}:${subLocation.name.trim().toLowerCase()}`,
-  );
+  const projectItems = [
+    ...project.devices.map((device) => ({
+      id: device.id,
+      name: device.name,
+      objectType: 'device',
+      typeLabel: device.kind === 'terminal_block' ? 'TB' : 'Device',
+    })),
+    ...project.racks.map((rack) => ({
+      id: rack.id,
+      name: rack.name,
+      objectType: 'rack',
+      typeLabel: 'Rack',
+    })),
+    ...project.subLocations.map((folder) => ({
+      id: folder.id,
+      name: folder.name,
+      objectType: 'subLocation',
+      typeLabel: 'Folder',
+    })),
+  ];
+  const projectItemNameCounts = countBy(projectItems, (item) => normalizeProjectItemName(item.name));
 
   for (const location of project.locations) {
     if ((locationNameCounts.get(location.name.trim().toLowerCase()) ?? 0) > 1) {
       issues.push(
         issue(
-          'warning',
+          'error',
           'duplicate-location-name',
           `Location name "${location.name}" is used more than once.`,
           'location',
@@ -51,18 +69,17 @@ export function validateLocationsAndRacks(
         ),
       );
     }
+  }
 
-    if (
-      (subLocationNameCounts.get(`${subLocation.locationId}:${subLocation.name.trim().toLowerCase()}`) ?? 0) >
-      1
-    ) {
+  for (const item of projectItems) {
+    if ((projectItemNameCounts.get(normalizeProjectItemName(item.name)) ?? 0) > 1) {
       issues.push(
         issue(
-          'warning',
-          'duplicate-sub-location-name',
-          `Folder name "${subLocation.name}" is used more than once in one location.`,
-          'subLocation',
-          subLocation.id,
+          'error',
+          'duplicate-project-item-name',
+          `${item.typeLabel} name "${item.name}" is already used by another project item.`,
+          item.objectType,
+          item.id,
         ),
       );
     }

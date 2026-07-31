@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.20
+# StudioWire IO Product Spec v0.2.8.21
 
-StudioWire IO v0.2.8.20 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.21 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -54,13 +54,13 @@ The right inspector edits properties for the selected object. It should show onl
 Examples:
 
 - Project metadata and settings.
-- Location name, type, and description.
-- Location folder list, including add, edit, and delete actions.
+- Location name and description.
+- Folder name, description, contained-item counts, and guarded deletion.
 - Rack name, height, numbering direction, assigned device list, and standard-device rack unassign controls.
 - Device name, code, manufacturer, model, role, notes, location, folder, rack placement, and rack units.
 - Locked cable range note for device port groups.
 
-The inspector includes guarded deletion actions. Locations and racks are only deleted when no child objects reference them. Standard devices can be deleted; deletion removes device-owned ports, port groups, planned cables, rack placement, connections, and owned allocated cable-number ranges so released cable numbers may be reused. Reserved gaps remain unavailable.
+Object inspectors use one compact, continuous accordion. One parent section is open at a time, nested Device I/O sections may be opened independently, content scrolls within the inspector, and Save/Delete actions remain visible. Dirty inspector navigation is guarded by Save, Discard, and Cancel. Locations, folders, and racks are deleted only when no child objects reference them. Device and TB deletion safely removes owned topology while preserving surviving planned cable slots.
 
 The inspector must not invent fields that are not documented in `DATA_MODEL.md`.
 
@@ -96,7 +96,7 @@ Connector icons are fixed CSS-drawn in-app symbols selected by `iconKey`; users 
 
 Locations represent physical places such as rooms, control rooms, machine rooms, studios, or equipment areas.
 
-Each location has a stable ID, display name, type, and description. Every device and terminal block must reference a valid location, including virtual and non-rack devices.
+Each location has a stable ID, display name, and description. Every device and terminal block must reference a valid location, including virtual and non-rack devices.
 
 Folders are organizational containers inside one location, such as a front table, back table, sound room, CCU/VTR room, or a rack group inside a control room. Racks, devices, and terminal blocks may be assigned to a folder or left directly under the parent location.
 
@@ -141,7 +141,7 @@ Normal devices can be edited after creation. Existing I/O interface count, direc
 
 Rack-mounted standard devices can be unassigned from their rack without deleting the device. This clears rack assignment and RU placement, preserves mount height, and keeps the device in the rack's location. Terminal blocks are not unassigned through this workflow.
 
-As of v0.2.5.1, terminal blocks are modeled as a device kind with fixed 1RU rack placement, rear/front port faces, optional planned cable numbers on FRONT ports only, and connection-chain drawing through rear/front connector pairs.
+Terminal blocks are modeled as a device kind with fixed 1RU rack placement and matching rear/front port faces. TB creation does not create planned cables or reserve cable numbers. A TB front-to-front patch receives a category-default cable number when the connection is made.
 
 ## Port Groups
 
@@ -166,6 +166,8 @@ Each port group has:
 Generated ports must match the declared count.
 
 New I/O interfaces default to `{NAME}-{000}` label patterns. `{NAME}` resolves to the current interface name; `{DEVICE}` remains supported for existing project data and resolves to the device label prefix.
+
+New Add/Edit Device interfaces derive their cable prefix from the selected category's `defaultCablePrefix`. Existing locked interfaces preserve their stored prefix.
 
 ## Cable Numbering
 

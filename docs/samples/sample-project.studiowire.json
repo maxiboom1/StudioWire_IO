@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.20",
+  "schemaVersion": "0.2.8.21",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -328,13 +328,11 @@
     {
       "id": "location-control-room",
       "name": "Control Room",
-      "type": "control_room",
       "description": "Primary production control room."
     },
     {
       "id": "location-machine-room",
       "name": "Machine Room",
-      "type": "machine_room",
       "description": "Central equipment rack area."
     }
   ],

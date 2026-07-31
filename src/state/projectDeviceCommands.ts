@@ -2,6 +2,7 @@ import { allocateCableRange } from '../domain/cableNumbers';
 import { makeId, makeIndexedId, makeUniqueId, nowIso } from '../domain/id';
 import { formatPortLabel } from '../domain/portLabels';
 import { createLinkedPlannedCablesForPorts } from '../domain/plannedCables';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../domain/projectItemNames';
 import { validateRackPlacement } from '../domain/rackPlacement';
 import { normalizeSubLocationForLocation } from '../domain/subLocations';
 import type { Cable, Device, Port, PortGroup, ProjectRoot } from '../domain/types';
@@ -12,6 +13,15 @@ export function createDeviceInProject(
   payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] },
 ): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
   const timestamp = nowIso();
+  const nameConflict = findProjectItemNameConflict(project, payload.device.name);
+
+  if (nameConflict) {
+    return {
+      ok: false,
+      error: `Device creation blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+    };
+  }
+
   const locationExists = project.locations.some((location) => location.id === payload.device.locationId);
 
   if (!locationExists) {
@@ -157,6 +167,15 @@ export function createTerminalBlockInProject(
   draft: TerminalBlockDraft,
 ): { ok: true; project: ProjectRoot } | { ok: false; error: string } {
   const timestamp = nowIso();
+  const nameConflict = findProjectItemNameConflict(project, draft.name);
+
+  if (nameConflict) {
+    return {
+      ok: false,
+      error: `Terminal block creation blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+    };
+  }
+
   const rack = project.racks.find((candidate) => candidate.id === draft.rackId);
 
   if (!rack) {
@@ -199,6 +218,10 @@ export function createTerminalBlockInProject(
   const labelPrefix = draft.labelPrefix || draft.name;
   const rearGroupId = makeId('port-group', `${deviceId}-rear`);
   const frontGroupId = makeId('port-group', `${deviceId}-front`);
+  const cablePrefix =
+    project.settings.categories.find((category) => category.id === draft.categoryId)?.defaultCablePrefix ??
+    project.settings.cablePrefixes[0]?.prefix ??
+    'V';
   const rearDraft: DevicePortGroupDraft = {
     name: 'REAR',
     direction: 'rear',
@@ -206,11 +229,10 @@ export function createTerminalBlockInProject(
     connectorTypeId: draft.connectorTypeId,
     count: draft.count,
     portLabelPattern: '{DEVICE} (R)-{00}',
-    cablePrefix: draft.cablePrefix,
+    cablePrefix,
     firstCableNumber: null,
     createPlannedCables: false,
   };
-  const frontFirstCableNumber = draft.createPlannedCables ? draft.firstCableNumber : null;
   const frontDraft: DevicePortGroupDraft = {
     name: 'FRONT',
     direction: 'front',
@@ -218,37 +240,14 @@ export function createTerminalBlockInProject(
     connectorTypeId: draft.connectorTypeId,
     count: draft.count,
     portLabelPattern: '{DEVICE} (F)-{00}',
-    cablePrefix: draft.cablePrefix,
-    firstCableNumber: frontFirstCableNumber,
-    createPlannedCables: draft.createPlannedCables,
+    cablePrefix,
+    firstCableNumber: null,
+    createPlannedCables: false,
   };
-  let nextProject: ProjectRoot = {
+  const nextProject: ProjectRoot = {
     ...project,
     devices: [...project.devices, placementProbe],
   };
-  let numberingRangeId: string | null = null;
-
-  if (draft.createPlannedCables && frontFirstCableNumber === null) {
-    return { ok: false, error: 'Terminal block creation blocked: missing first front cable number.' };
-  }
-
-  if (draft.createPlannedCables && frontFirstCableNumber !== null) {
-    const allocation = allocateCableRange(nextProject, {
-      prefix: draft.cablePrefix,
-      firstCableNumber: frontFirstCableNumber,
-      count: draft.count,
-      ownerType: 'portGroup',
-      ownerId: frontGroupId,
-      reason: `Planned front cables for ${placementProbe.name}`,
-    });
-
-    if (allocation.preview.errors.length > 0 || !allocation.allocatedRange) {
-      return { ok: false, error: 'Terminal block creation blocked: front cable allocation failed.' };
-    }
-
-    nextProject = allocation.project;
-    numberingRangeId = allocation.allocatedRange.id;
-  }
 
   const rearPorts = createPortsForDraft({
     device: placementProbe,
@@ -262,18 +261,6 @@ export function createTerminalBlockInProject(
     draft: frontDraft,
     labelPrefix,
   });
-  const linkedFront =
-    draft.createPlannedCables && frontFirstCableNumber !== null
-      ? createLinkedPlannedCablesForPorts(frontPorts, draft.cablePrefix, frontFirstCableNumber)
-      : { ports: frontPorts, cables: [] };
-
-  if (
-    draft.createPlannedCables &&
-    (linkedFront.cables.length !== frontPorts.length ||
-      linkedFront.ports.some((port) => !port.plannedCableId))
-  ) {
-    return { ok: false, error: 'Terminal block creation blocked: front planned cable creation failed.' };
-  }
 
   const rearGroup: PortGroup = {
     id: rearGroupId,
@@ -288,11 +275,8 @@ export function createTerminalBlockInProject(
     id: frontGroupId,
     deviceId,
     ...frontDraft,
-    lastCableNumber:
-      draft.createPlannedCables && frontFirstCableNumber !== null
-        ? frontFirstCableNumber + draft.count - 1
-        : null,
-    numberingRangeId,
+    lastCableNumber: null,
+    numberingRangeId: null,
     locked: true,
     colorOverride: null,
   };
@@ -302,8 +286,7 @@ export function createTerminalBlockInProject(
     project: {
       ...nextProject,
       portGroups: [...nextProject.portGroups, rearGroup, frontGroup],
-      ports: [...nextProject.ports, ...rearPorts, ...linkedFront.ports],
-      cables: [...nextProject.cables, ...linkedFront.cables],
+      ports: [...nextProject.ports, ...rearPorts, ...frontPorts],
     },
   };
 }

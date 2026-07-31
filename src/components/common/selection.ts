@@ -1,6 +1,14 @@
-import type { Device, Location, ProjectInfo, ProjectRoot, Rack, ValidationIssue } from '../../domain/types';
+import type {
+  Device,
+  Location,
+  ProjectInfo,
+  ProjectRoot,
+  Rack,
+  SubLocation,
+  ValidationIssue,
+} from '../../domain/types';
 
-export type SelectedObjectType = 'project' | 'settings' | 'location' | 'rack' | 'device';
+export type SelectedObjectType = 'project' | 'settings' | 'location' | 'folder' | 'rack' | 'device';
 
 export interface SelectionState {
   selectedObjectType: SelectedObjectType | null;
@@ -11,6 +19,7 @@ export type ResolvedSelection =
   | { type: 'project'; value: ProjectInfo }
   | { type: 'settings'; value: ProjectRoot['settings'] }
   | { type: 'location'; value: Location }
+  | { type: 'folder'; value: SubLocation }
   | { type: 'rack'; value: Rack }
   | { type: 'device'; value: Device };
 
@@ -28,6 +37,11 @@ export function resolveSelection(project: ProjectRoot, selection: SelectionState
       const value = project.locations.find((location) => location.id === selection.selectedObjectId);
 
       return value ? { type: 'location' as const, value } : null;
+    }
+    case 'folder': {
+      const value = project.subLocations.find((folder) => folder.id === selection.selectedObjectId);
+
+      return value ? { type: 'folder' as const, value } : null;
     }
     case 'rack': {
       const value = project.racks.find((rack) => rack.id === selection.selectedObjectId);
@@ -55,6 +69,13 @@ export function resolveIssueSelection(
     project.locations.some((location) => location.id === issue.objectId)
   ) {
     return { selectedObjectType: 'location', selectedObjectId: issue.objectId };
+  }
+
+  if (
+    issue.objectType === 'subLocation' &&
+    project.subLocations.some((folder) => folder.id === issue.objectId)
+  ) {
+    return { selectedObjectType: 'folder', selectedObjectId: issue.objectId };
   }
 
   if (issue.objectType === 'rack' && project.racks.some((rack) => rack.id === issue.objectId)) {
@@ -119,9 +140,19 @@ export function getInspectorRows(project: ProjectRoot, selected: ResolvedSelecti
         ['Type', 'Location'],
         ['ID', selected.value.id],
         ['Name', selected.value.name],
-        ['Location type', selected.value.type || 'Not set'],
         ['Description', selected.value.description || 'Not set'],
       ];
+    case 'folder': {
+      const location = project.locations.find((candidate) => candidate.id === selected.value.locationId);
+
+      return [
+        ['Type', 'Folder'],
+        ['ID', selected.value.id],
+        ['Name', selected.value.name],
+        ['Location', location?.name ?? selected.value.locationId],
+        ['Description', selected.value.description || 'Not set'],
+      ];
+    }
     case 'rack': {
       const location = project.locations.find((candidate) => candidate.id === selected.value.locationId);
 

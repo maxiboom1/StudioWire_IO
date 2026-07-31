@@ -159,7 +159,6 @@ describe('projectReducer core project actions', () => {
       payload: {
         id: 'location-test',
         name: 'Test Location',
-        type: 'room',
         description: 'Temporary test location',
       },
     });
@@ -167,7 +166,7 @@ describe('projectReducer core project actions', () => {
       type: 'UPDATE_LOCATION',
       payload: {
         id: 'location-test',
-        updates: { name: 'Test Location Updated', type: 'room', description: 'Updated' },
+        updates: { name: 'Test Location Updated', description: 'Updated' },
       },
     });
     state = projectReducer(state, {
@@ -214,7 +213,7 @@ describe('projectReducer core project actions', () => {
     expect(state.project.locations.some((location) => location.id === 'location-test')).toBe(false);
   });
 
-  it('adds, updates, deletes, and clears referenced folders', () => {
+  it('adds and updates folders, and blocks deletion while referenced', () => {
     let state = createState();
 
     state = projectReducer(state, {
@@ -253,14 +252,16 @@ describe('projectReducer core project actions', () => {
       payload: { id: 'sub-location-front-table' },
     });
 
-    expect(state.statusMessage).toBe('Folder deleted');
-    expect(state.project.racks.find((rack) => rack.id === 'rack-mcr-a')?.subLocationId).toBeNull();
-    expect(
-      state.project.devices.find((device) => device.id === 'device-multiviewer-1')?.subLocationId,
-    ).toBeNull();
+    expect(state.statusMessage).toBe('Folder deletion blocked: move all racks, devices, and TBs out first');
+    expect(state.project.racks.find((rack) => rack.id === 'rack-mcr-a')?.subLocationId).toBe(
+      'sub-location-front-table',
+    );
+    expect(state.project.devices.find((device) => device.id === 'device-multiviewer-1')?.subLocationId).toBe(
+      'sub-location-front-table',
+    );
     expect(
       state.project.subLocations.some((subLocation) => subLocation.id === 'sub-location-front-table'),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('retains status text when persistence is updated without a message and dismisses import errors', () => {
@@ -379,7 +380,7 @@ describe('projectReducer ADD_DEVICE safety', () => {
 });
 
 describe('projectReducer ADD_TERMINAL_BLOCK', () => {
-  it('creates rear/front ports and planned cables only for front ports', () => {
+  it('creates rear/front ports without planned cables or allocations', () => {
     const state = createState();
     const result = projectReducer(state, {
       type: 'ADD_TERMINAL_BLOCK',
@@ -394,9 +395,6 @@ describe('projectReducer ADD_TERMINAL_BLOCK', () => {
           rackBottomRu: 1,
           connectorTypeId: 'connector-bnc',
           count: 2,
-          cablePrefix: 'V',
-          firstCableNumber: 9,
-          createPlannedCables: true,
           notes: '',
         },
       },
@@ -408,9 +406,6 @@ describe('projectReducer ADD_TERMINAL_BLOCK', () => {
     );
     const frontPorts = result.project.ports.filter(
       (port) => port.deviceId === 'device-tb-a' && port.direction === 'front',
-    );
-    const frontCables = frontPorts.map((port) =>
-      port.plannedCableId ? result.project.cables.find((cable) => cable.id === port.plannedCableId) : null,
     );
 
     expect(terminalBlock).toMatchObject({
@@ -425,15 +420,11 @@ describe('projectReducer ADD_TERMINAL_BLOCK', () => {
     expect(rearPorts).toHaveLength(2);
     expect(frontPorts).toHaveLength(2);
     expect(rearPorts.every((port) => port.plannedCableId === null)).toBe(true);
-    expect(frontCables.map((cable) => cable?.number)).toEqual(['V-0009', 'V-0010']);
-    expect(frontCables.every((cable) => cable?.sideAEndpoint.type === 'tb_port')).toBe(true);
-    expect(result.project.numberingLedgers[0].ranges).toContainEqual(
-      expect.objectContaining({
-        from: 9,
-        to: 10,
-        ownerId: expect.stringContaining('device-tb-a-front'),
-      }),
-    );
+    expect(frontPorts.every((port) => port.plannedCableId === null)).toBe(true);
+    expect(portGroups.every((group) => group.createPlannedCables === false)).toBe(true);
+    expect(portGroups.every((group) => group.numberingRangeId === null)).toBe(true);
+    expect(result.project.cables).toHaveLength(state.project.cables.length);
+    expect(result.project.numberingLedgers).toEqual(state.project.numberingLedgers);
   });
 
   it('creates rear/front ports without cables when front planned numbering is disabled', () => {
@@ -451,9 +442,6 @@ describe('projectReducer ADD_TERMINAL_BLOCK', () => {
           rackBottomRu: 1,
           connectorTypeId: 'connector-bnc',
           count: 2,
-          cablePrefix: 'V',
-          firstCableNumber: null,
-          createPlannedCables: false,
           notes: '',
         },
       },

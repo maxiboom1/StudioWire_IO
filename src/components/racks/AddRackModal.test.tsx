@@ -65,6 +65,8 @@ function createContext(addRack = vi.fn(() => 'rack-created')): ProjectContextVal
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 

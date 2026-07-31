@@ -63,9 +63,18 @@ export interface TerminalBlockDraft {
   rackBottomRu: number;
   connectorTypeId: string;
   count: number;
-  cablePrefix: string;
-  firstCableNumber: number | null;
-  createPlannedCables: boolean;
+  notes: string;
+}
+
+export interface TerminalBlockEditInput {
+  deviceId: string;
+  name: string;
+  labelPrefix: string;
+  categoryId: string;
+  connectorTypeId: string;
+  count: number;
+  rackId: string;
+  rackBottomRu: number;
   notes: string;
 }
 
@@ -145,7 +154,7 @@ export type ProjectAction =
   | { type: 'ADD_LOCATION'; payload: Location }
   | {
       type: 'UPDATE_LOCATION';
-      payload: { id: string; updates: Pick<Location, 'name' | 'type' | 'description'> };
+      payload: { id: string; updates: Pick<Location, 'name' | 'description'> };
     }
   | { type: 'ADD_SUB_LOCATION'; payload: SubLocation }
   | {
@@ -160,6 +169,8 @@ export type ProjectAction =
     }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'ADD_TERMINAL_BLOCK'; payload: { terminalBlock: TerminalBlockDraft } }
+  | { type: 'EDIT_TERMINAL_BLOCK'; payload: TerminalBlockEditInput }
+  | { type: 'DELETE_TERMINAL_BLOCK'; payload: { id: string } }
   | { type: 'CONNECT_PORTS'; payload: { fromPortId: string; toPortId: string } }
   | { type: 'DISCONNECT_PORT'; payload: { portId: string } }
   | { type: 'UPDATE_DEVICE'; payload: { id: string; updates: DeviceUpdate } }

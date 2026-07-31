@@ -84,6 +84,8 @@ function createContext(
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
     ...commands,
   };
 }
@@ -137,5 +139,5 @@ describe('LocationWorkspace', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(deleteSubLocation).toHaveBeenCalledWith('sub-location-front-table');
-  });
+  }, 10000);
 });

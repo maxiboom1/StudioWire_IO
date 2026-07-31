@@ -184,7 +184,7 @@ describe('validateProject sub-location rules', () => {
     const codes = validateProject(project).map((issue) => issue.code);
 
     expect(codes).toContain('sub-location-name-required');
-    expect(codes).toContain('duplicate-sub-location-name');
+    expect(codes).toContain('duplicate-project-item-name');
     expect(codes).toContain('sub-location-without-location');
     expect(codes).toContain('device-sub-location-missing');
     expect(codes).toContain('device-sub-location-location-mismatch');
@@ -409,9 +409,6 @@ describe('validateProject terminal block rules', () => {
           rackBottomRu: 1,
           connectorTypeId: 'connector-bnc',
           count: 2,
-          cablePrefix: 'V',
-          firstCableNumber: 9,
-          createPlannedCables: true,
           notes: '',
         },
       },
@@ -427,7 +424,7 @@ describe('validateProject terminal block rules', () => {
     expect(codes).not.toContain('terminal-block-front-cable-source-mismatch');
   });
 
-  it('reports invalid terminal block rack size and rear planned cables', () => {
+  it('reports invalid terminal block rack size and planned cable state', () => {
     const project = createProjectWithTerminalBlock();
     const terminalBlock = project.devices.find((device) => device.id === 'device-tb-validation');
     const rearGroup = project.portGroups.find(
@@ -444,7 +441,7 @@ describe('validateProject terminal block rules', () => {
     const codes = validateProject(project).map((issue) => issue.code);
 
     expect(codes).toContain('terminal-block-size-fixed');
-    expect(codes).toContain('terminal-block-rear-planned-cables');
+    expect(codes).toContain('terminal-block-planned-cables');
   });
 
   it('reports mismatched terminal block rear/front face counts', () => {

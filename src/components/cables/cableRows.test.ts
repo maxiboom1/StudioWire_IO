@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { connectPorts } from '../../domain/connections';
 import { createPlannedCableForPort } from '../../domain/plannedCables';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
@@ -55,8 +56,8 @@ describe('buildCableTableRows', () => {
     });
   });
 
-  it('resolves terminal block front planned cable source and unknown destination', () => {
-    const result = projectReducer(createState(), {
+  it('resolves the cable allocated by a TB front-to-front patch', () => {
+    const firstResult = projectReducer(createState(), {
       type: 'ADD_TERMINAL_BLOCK',
       payload: {
         terminalBlock: {
@@ -69,22 +70,53 @@ describe('buildCableTableRows', () => {
           rackBottomRu: 1,
           connectorTypeId: 'connector-bnc',
           count: 1,
-          cablePrefix: 'V',
-          firstCableNumber: 9,
-          createPlannedCables: true,
           notes: '',
         },
       },
     });
-    const row = buildCableTableRows(result.project).find((candidate) => candidate.cableNumber === 'V-0009');
+    const secondResult = projectReducer(createState(firstResult.project), {
+      type: 'ADD_TERMINAL_BLOCK',
+      payload: {
+        terminalBlock: {
+          id: 'device-tb-cable-row-b',
+          name: 'TB Cable Row B',
+          categoryId: 'category-video',
+          locationId: 'location-machine-room',
+          labelPrefix: 'TB-B',
+          rackId: 'rack-mcr-a',
+          rackBottomRu: 2,
+          connectorTypeId: 'connector-bnc',
+          count: 1,
+          notes: '',
+        },
+      },
+    });
+    const frontPorts = secondResult.project.ports.filter(
+      (port) =>
+        (port.deviceId === 'device-tb-cable-row' || port.deviceId === 'device-tb-cable-row-b') &&
+        port.direction === 'front',
+    );
+    const connected = connectPorts(secondResult.project, {
+      fromPortId: frontPorts[0].id,
+      toPortId: frontPorts[1].id,
+    });
+
+    expect(connected.ok).toBe(true);
+    if (!connected.ok) {
+      return;
+    }
+
+    const row = buildCableTableRows(connected.project).find(
+      (candidate) => candidate.cableNumber === 'V-0009',
+    );
 
     expect(row).toMatchObject({
       sideALabel: 'TB-CR (F)-01',
-      sideBLabel: 'N/C',
+      sideBLabel: 'TB-B (F)-01',
       locationA: 'Machine Room',
-      locationB: 'N/C',
+      locationB: 'Machine Room',
       connectorA: 'BNC',
-      connectorB: 'N/C',
+      connectorB: 'BNC',
     });
   });
 

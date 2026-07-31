@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { buildUnsavedDeviceInspectorChangesConfirmation } from '../../domain/prompts';
+import { buildUnsavedInspectorChangesConfirmation } from '../../domain/prompts';
 import { useProject } from '../../state/ProjectContext';
 import { AddDeviceModal } from '../devices/AddDeviceModal';
 import { AddTerminalBlockModal } from '../devices/AddTerminalBlockModal';
 import { EditDeviceModal } from '../devices/EditDeviceModal';
-import type { DeviceInspectorDirtyGuard } from '../devices/DeviceInspector';
+import { EditTerminalBlockModal } from '../devices/EditTerminalBlockModal';
+import type { InspectorDirtyGuard } from '../common/inspectorDirtyGuard';
 import { AddLocationModal } from '../locations/AddLocationModal';
 import { AddRackModal } from '../racks/AddRackModal';
 import { ConfirmationProvider, useConfirmationChoice } from '../common/ConfirmationDialog';
@@ -28,6 +29,7 @@ type ModalState =
   | { type: 'rack'; locationId: string }
   | { type: 'device'; locationId: string }
   | { type: 'edit_device'; deviceId: string }
+  | { type: 'edit_terminal_block'; deviceId: string }
   | { type: 'terminal_block'; locationId: string | null };
 
 export function StudioWireShell() {
@@ -47,18 +49,16 @@ function StudioWireShellContent() {
   });
   const [activeView, setActiveView] = useState<AppView>('workspace');
   const [modal, setModal] = useState<ModalState>(null);
-  const [deviceInspectorGuard, setDeviceInspectorGuard] = useState<DeviceInspectorDirtyGuard | null>(
-    null,
-  );
+  const [inspectorGuard, setInspectorGuard] = useState<InspectorDirtyGuard | null>(null);
 
   const runWithUnsavedGuard = useCallback(
     async (action: () => void) => {
-      if (!deviceInspectorGuard?.isDirty) {
+      if (!inspectorGuard?.isDirty) {
         action();
         return;
       }
 
-      const copy = buildUnsavedDeviceInspectorChangesConfirmation();
+      const copy = buildUnsavedInspectorChangesConfirmation();
       const choice = await chooseConfirmation({
         title: copy.title,
         message: copy.message,
@@ -70,7 +70,7 @@ function StudioWireShellContent() {
       });
 
       if (choice === 'save') {
-        if (!deviceInspectorGuard.save()) {
+        if (!inspectorGuard.save()) {
           return;
         }
 
@@ -79,11 +79,11 @@ function StudioWireShellContent() {
       }
 
       if (choice === 'discard') {
-        deviceInspectorGuard.discard();
+        inspectorGuard.discard();
         action();
       }
     },
-    [chooseConfirmation, deviceInspectorGuard],
+    [chooseConfirmation, inspectorGuard],
   );
 
   useEffect(() => {
@@ -125,6 +125,10 @@ function StudioWireShellContent() {
     void runWithUnsavedGuard(() => setModal({ type: 'edit_device', deviceId }));
   }
 
+  function openEditTerminalBlock(deviceId: string) {
+    void runWithUnsavedGuard(() => setModal({ type: 'edit_terminal_block', deviceId }));
+  }
+
   function openAddTerminalBlock(locationId: string | null) {
     void runWithUnsavedGuard(() => setModal({ type: 'terminal_block', locationId }));
   }
@@ -145,6 +149,7 @@ function StudioWireShellContent() {
           onAddRack={(locationId) => void runWithUnsavedGuard(() => setModal({ type: 'rack', locationId }))}
           onAddDevice={openAddDevice}
           onEditDevice={openEditDevice}
+          onEditTerminalBlock={openEditTerminalBlock}
           onAddTerminalBlock={openAddTerminalBlock}
         />
         <SidebarInset className="app-shell">
@@ -166,10 +171,7 @@ function StudioWireShellContent() {
             ) : (
               <CablesWorkspace />
             )}
-            <Inspector
-              selection={selection}
-              onDeviceInspectorDirtyGuardChange={setDeviceInspectorGuard}
-            />
+            <Inspector selection={selection} onInspectorDirtyGuardChange={setInspectorGuard} />
             <ValidationPanel
               onSelectIssue={(issue) => {
                 const target = resolveIssueSelection(project, issue);
@@ -229,6 +231,16 @@ function StudioWireShellContent() {
           initialLocationId={modal.locationId}
           onClose={() => setModal(null)}
           onCreated={(id) => {
+            setModal(null);
+            selectObjectImmediately('device', id);
+          }}
+        />
+      ) : null}
+      {modal?.type === 'edit_terminal_block' ? (
+        <EditTerminalBlockModal
+          device={project.devices.find((device) => device.id === modal.deviceId)!}
+          onClose={() => setModal(null)}
+          onSaved={(id) => {
             setModal(null);
             selectObjectImmediately('device', id);
           }}

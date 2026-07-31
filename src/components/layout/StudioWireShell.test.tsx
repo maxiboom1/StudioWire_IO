@@ -67,6 +67,8 @@ function createContext(editDevice = vi.fn()): ProjectContextValue {
     updateDevice: vi.fn(),
     editDevice,
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 

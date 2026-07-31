@@ -1,4 +1,9 @@
 import { validateRackPlacement } from '../../domain/rackPlacement';
+import {
+  findLocationNameConflict,
+  findProjectItemNameConflict,
+  formatProjectItemNameConflict,
+} from '../../domain/projectItemNames';
 import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import { stampProject } from '../projectStamping';
 import type { ProjectState } from '../projectTypes';
@@ -9,6 +14,14 @@ export function handleAddLocation(
   action: ActionOf<'ADD_LOCATION'>,
   context: ProjectHandlerContext,
 ): ProjectState {
+  if (findLocationNameConflict(state.project, action.payload.name)) {
+    return {
+      ...state,
+      statusMessage: `Location creation blocked: name "${action.payload.name.trim()}" is already used.`,
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {
@@ -28,6 +41,14 @@ export function handleUpdateLocation(
   action: ActionOf<'UPDATE_LOCATION'>,
   context: ProjectHandlerContext,
 ): ProjectState {
+  if (findLocationNameConflict(state.project, action.payload.updates.name, action.payload.id)) {
+    return {
+      ...state,
+      statusMessage: `Location update blocked: name "${action.payload.updates.name.trim()}" is already used.`,
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {
@@ -101,6 +122,16 @@ export function handleAddSubLocation(
     };
   }
 
+  const nameConflict = findProjectItemNameConflict(state.project, action.payload.name);
+
+  if (nameConflict) {
+    return {
+      ...state,
+      statusMessage: `Folder creation blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {
@@ -128,6 +159,19 @@ export function handleUpdateSubLocation(
     };
   }
 
+  const nameConflict = findProjectItemNameConflict(state.project, action.payload.updates.name, {
+    id: action.payload.id,
+    type: 'folder',
+  });
+
+  if (nameConflict) {
+    return {
+      ...state,
+      statusMessage: `Folder update blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {
@@ -149,18 +193,23 @@ export function handleDeleteSubLocation(
   action: ActionOf<'DELETE_SUB_LOCATION'>,
   context: ProjectHandlerContext,
 ): ProjectState {
+  const hasRacks = state.project.racks.some((rack) => rack.subLocationId === action.payload.id);
+  const hasDevices = state.project.devices.some((device) => device.subLocationId === action.payload.id);
+
+  if (hasRacks || hasDevices) {
+    return {
+      ...state,
+      statusMessage: 'Folder deletion blocked: move all racks, devices, and TBs out first',
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {
         ...state.project,
         subLocations: state.project.subLocations.filter(
           (subLocation) => subLocation.id !== action.payload.id,
-        ),
-        racks: state.project.racks.map((rack) =>
-          rack.subLocationId === action.payload.id ? { ...rack, subLocationId: null } : rack,
-        ),
-        devices: state.project.devices.map((device) =>
-          device.subLocationId === action.payload.id ? { ...device, subLocationId: null } : device,
         ),
       },
       `Folder deleted: ${action.payload.id}`,
@@ -176,6 +225,16 @@ export function handleAddRack(
   action: ActionOf<'ADD_RACK'>,
   context: ProjectHandlerContext,
 ): ProjectState {
+  const nameConflict = findProjectItemNameConflict(state.project, action.payload.name);
+
+  if (nameConflict) {
+    return {
+      ...state,
+      statusMessage: `Rack creation blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {
@@ -195,6 +254,19 @@ export function handleUpdateRack(
   action: ActionOf<'UPDATE_RACK'>,
   context: ProjectHandlerContext,
 ): ProjectState {
+  const nameConflict = findProjectItemNameConflict(state.project, action.payload.updates.name, {
+    id: action.payload.id,
+    type: 'rack',
+  });
+
+  if (nameConflict) {
+    return {
+      ...state,
+      statusMessage: `Rack update blocked: ${formatProjectItemNameConflict(nameConflict)}`,
+      importError: null,
+    };
+  }
+
   return {
     project: stampProject(
       {

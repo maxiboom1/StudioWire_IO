@@ -1,4 +1,4 @@
-import type { Device, Location, ProjectRoot, Rack } from './types';
+import type { Device, Location, ProjectRoot, Rack, SubLocation } from './types';
 
 export type ConfirmationTone = 'default' | 'danger';
 
@@ -69,6 +69,16 @@ export function buildDeleteDeviceConfirmation(device: Device): ConfirmationCopy 
   };
 }
 
+export function buildDeleteTerminalBlockConfirmation(device: Device): ConfirmationCopy {
+  return {
+    title: 'Delete terminal block?',
+    message: `Delete TB "${device.name}"?\n\nThis removes its rear/front ports and disconnects cables that reference them.`,
+    confirmLabel: 'Delete TB',
+    cancelLabel: 'Cancel',
+    tone: 'danger',
+  };
+}
+
 export function buildDeleteRackConfirmation(rack: Rack): ConfirmationCopy {
   return {
     title: 'Delete rack?',
@@ -89,6 +99,16 @@ export function buildDeleteLocationConfirmation(location: Location): Confirmatio
   };
 }
 
+export function buildDeleteFolderConfirmation(folder: SubLocation): ConfirmationCopy {
+  return {
+    title: 'Delete folder?',
+    message: `Delete folder "${folder.name}"?\n\nOnly empty folders can be deleted.`,
+    confirmLabel: 'Delete Folder',
+    cancelLabel: 'Cancel',
+    tone: 'danger',
+  };
+}
+
 export function buildCableReservationConfirmation(warnings: string[]): ConfirmationCopy {
   return {
     title: 'Reserve cable number gaps?',
@@ -98,11 +118,13 @@ export function buildCableReservationConfirmation(warnings: string[]): Confirmat
   };
 }
 
-export function buildUnsavedDeviceInspectorChangesConfirmation(): ConfirmationCopy {
+export function buildUnsavedInspectorChangesConfirmation(): ConfirmationCopy {
   return {
-    title: 'Unsaved device changes',
-    message: 'Save your inspector changes before leaving this device?',
+    title: 'Unsaved inspector changes',
+    message: 'Save your inspector changes before leaving this item?',
     confirmLabel: 'Save',
     cancelLabel: 'Cancel',
   };
 }
+
+export const buildUnsavedDeviceInspectorChangesConfirmation = buildUnsavedInspectorChangesConfirmation;

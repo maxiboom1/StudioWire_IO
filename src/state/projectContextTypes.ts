@@ -18,6 +18,7 @@ import type {
   EditDeviceInput,
   ProjectState,
   TerminalBlockDraft,
+  TerminalBlockEditInput,
 } from './projectTypes';
 
 export type ProjectInfoUpdates = Pick<ProjectInfo, 'name' | 'customer' | 'revision'>;
@@ -36,8 +37,8 @@ export type ConnectorGroupMemberInput = Pick<
 export type ConnectorTypeInput = Pick<ConnectorType, 'name'>;
 export type ConnectorTypeUpdates = Partial<Pick<ConnectorType, 'name' | 'iconKey'>>;
 export type CablePrefixInput = Pick<CablePrefix, 'prefix' | 'name'>;
-export type LocationInput = Pick<Location, 'name' | 'type' | 'description'>;
-export type LocationUpdates = Pick<Location, 'name' | 'type' | 'description'>;
+export type LocationInput = Pick<Location, 'name' | 'description'>;
+export type LocationUpdates = Pick<Location, 'name' | 'description'>;
 export type SubLocationInput = Pick<SubLocation, 'locationId' | 'name' | 'description'>;
 export type SubLocationUpdates = Pick<SubLocation, 'name' | 'description'>;
 export type RackInput = Pick<Rack, 'locationId' | 'name' | 'heightRu' | 'numberingDirection'> &
@@ -85,6 +86,8 @@ export interface ProjectCommands {
   deleteRack: (id: string) => void;
   addDevice: (input: AddDeviceInput) => string;
   addTerminalBlock: (input: TerminalBlockDraft) => string;
+  editTerminalBlock: (input: TerminalBlockEditInput) => void;
+  deleteTerminalBlock: (id: string) => void;
   connectPorts: (input: ConnectPortsInput) => void;
   disconnectPort: (input: DisconnectPortInput) => void;
   moveMountedDevice: (input: MoveMountedDeviceInput) => void;

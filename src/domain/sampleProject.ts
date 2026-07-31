@@ -27,14 +27,12 @@ const project = createEmptyProject({
 const controlRoom = createLocation({
   id: 'location-control-room',
   name: 'Control Room',
-  type: 'control_room',
   description: 'Primary production control room.',
 });
 
 const machineRoom = createLocation({
   id: 'location-machine-room',
   name: 'Machine Room',
-  type: 'machine_room',
   description: 'Central equipment rack area.',
 });
 

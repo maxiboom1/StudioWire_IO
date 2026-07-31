@@ -31,10 +31,6 @@ export function DeviceWorkspace({ device }: { device: Device }) {
   const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
   const secondaryLabel = device.code ?? '';
   const diagramStyle = { '--device-port-rows': rowCount } as CSSProperties;
-  const assignedRack = device.rackId ? project.racks.find((rack) => rack.id === device.rackId) : null;
-  const effectiveLocationId = assignedRack?.locationId ?? device.locationId;
-  const locationName =
-    project.locations.find((location) => location.id === effectiveLocationId)?.name ?? 'No location';
 
   return (
     <section className="workspace device-workspace" aria-label="Device canvas">
@@ -48,7 +44,6 @@ export function DeviceWorkspace({ device }: { device: Device }) {
           </div>
           <div className="device-body">
             <div className="device-body-header">
-              <span className="device-location-badge">{locationName}</span>
               <strong>{device.name}</strong>
               <span>{secondaryLabel}</span>
             </div>

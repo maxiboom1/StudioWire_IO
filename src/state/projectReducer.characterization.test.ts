@@ -50,9 +50,6 @@ function addTerminalBlock(state: ProjectState) {
         rackBottomRu: 1,
         connectorTypeId: 'connector-bnc',
         count: 1,
-        cablePrefix: 'V',
-        firstCableNumber: null,
-        createPlannedCables: false,
         notes: '',
       },
     },
@@ -221,7 +218,7 @@ describe('projectReducer action characterization', () => {
       name: 'ADD_LOCATION',
       action: {
         type: 'ADD_LOCATION',
-        payload: { id: 'location-char', name: 'Char Location', type: 'room', description: 'desc' },
+        payload: { id: 'location-char', name: 'Char Location', description: 'desc' },
       },
       expectedStatus: 'Location created',
       expectedChange: 'Location created: Char Location',
@@ -232,7 +229,7 @@ describe('projectReducer action characterization', () => {
         type: 'UPDATE_LOCATION',
         payload: {
           id: 'location-machine-room',
-          updates: { name: 'MCR Updated', type: 'machine_room', description: 'u' },
+          updates: { name: 'MCR Updated', description: 'u' },
         },
       },
       expectedStatus: 'Location updated',
@@ -385,7 +382,7 @@ describe('projectReducer action characterization', () => {
     });
     const withEmptyLocation = reduce(createState(), {
       type: 'ADD_LOCATION',
-      payload: { id: 'location-empty', name: 'Empty', type: 'room', description: '' },
+      payload: { id: 'location-empty', name: 'Empty', description: '' },
     });
     const deletedLocation = reduce(withEmptyLocation, {
       type: 'DELETE_LOCATION',
@@ -489,9 +486,6 @@ describe('projectReducer action characterization', () => {
           rackBottomRu: 1,
           connectorTypeId: 'connector-bnc',
           count: 1,
-          cablePrefix: 'V',
-          firstCableNumber: null,
-          createPlannedCables: false,
           notes: '',
         },
       },

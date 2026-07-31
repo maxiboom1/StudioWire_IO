@@ -19,9 +19,7 @@ import { useCollapsedTree } from './useCollapsedTree';
 
 const APP_VERSION = STUDIOWIRE_CURRENT_VERSION;
 
-type FolderModalState =
-  | { mode: 'add'; locationId: string }
-  | { mode: 'rename'; subLocationId: string };
+type FolderModalState = { mode: 'add'; locationId: string } | { mode: 'rename'; subLocationId: string };
 
 export function LeftTree({
   selection,
@@ -30,6 +28,7 @@ export function LeftTree({
   onAddRack,
   onAddDevice,
   onEditDevice,
+  onEditTerminalBlock,
   onAddTerminalBlock,
 }: {
   selection: SelectionState;
@@ -38,6 +37,7 @@ export function LeftTree({
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string) => void;
   onEditDevice: (deviceId: string) => void;
+  onEditTerminalBlock: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
   const { project, addSubLocation, moveNavigatorItemToFolder, updateSubLocation } = useProject();
@@ -74,11 +74,11 @@ export function LeftTree({
       }
 
       if (name !== subLocation.name) {
-      updateSubLocation(subLocation.id, {
-        name,
-        description: subLocation.description,
-      });
-    }
+        updateSubLocation(subLocation.id, {
+          name,
+          description: subLocation.description,
+        });
+      }
 
       setFolderModal(null);
     }
@@ -125,6 +125,7 @@ export function LeftTree({
                         onAddDevice={onAddDevice}
                         onAddSubLocation={handleAddSubLocation}
                         onEditDevice={onEditDevice}
+                        onEditTerminalBlock={onEditTerminalBlock}
                         onAddRack={onAddRack}
                         onAddTerminalBlock={onAddTerminalBlock}
                         onMoveNavigatorItemToFolder={moveNavigatorItemToFolder}
@@ -159,6 +160,7 @@ export function LeftTree({
       </Sidebar>
       {folderModal ? (
         <FolderModal
+          folderId={renamingSubLocation?.id}
           initialName={renamingSubLocation?.name ?? ''}
           mode={folderModal.mode}
           onClose={() => setFolderModal(null)}

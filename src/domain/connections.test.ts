@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  connectPorts,
-  describePortConnection,
-  disconnectPort,
-} from './connections';
+import { connectPorts, describePortConnection, disconnectPort } from './connections';
 import { sampleProject } from './sampleProject';
 import { validateProject } from './validators';
 import { projectReducer, type ProjectState } from '../state/projectReducer';
@@ -63,10 +59,7 @@ function addDevicePort(
   }).project;
 }
 
-function addTerminalBlock(
-  project: ProjectRoot,
-  input: { id: string; labelPrefix: string; firstCableNumber: number; ru: number },
-) {
+function addTerminalBlock(project: ProjectRoot, input: { id: string; labelPrefix: string; ru: number }) {
   return projectReducer(createState(project), {
     type: 'ADD_TERMINAL_BLOCK',
     payload: {
@@ -80,9 +73,6 @@ function addTerminalBlock(
         rackBottomRu: input.ru,
         connectorTypeId: 'connector-bnc',
         count: 1,
-        cablePrefix: 'V',
-        firstCableNumber: input.firstCableNumber,
-        createPlannedCables: true,
         notes: '',
       },
     },
@@ -212,7 +202,6 @@ describe('connectPorts', () => {
     project = addTerminalBlock(project, {
       id: 'device-tb-a',
       labelPrefix: 'TB-A',
-      firstCableNumber: 9,
       ru: 1,
     });
     project = addDevicePort(project, {
@@ -262,21 +251,19 @@ describe('connectPorts', () => {
       entryPortId: tbRear.id,
       exitPortId: tbFront.id,
     });
-    expect(tbPart?.continuationCable?.number).toBe('V-0009');
+    expect(tbPart?.continuationCable?.number).toBe('V-0010');
   });
 
-  it('supports TB front to TB front patching with lower-number-wins', () => {
+  it('allocates a cable only when two TB front ports are patched', () => {
     let project = structuredClone(sampleProject);
     project = addTerminalBlock(project, {
       id: 'device-tb-a',
       labelPrefix: 'TB-A',
-      firstCableNumber: 9,
       ru: 1,
     });
     project = addTerminalBlock(project, {
       id: 'device-tb-b',
       labelPrefix: 'TB-B',
-      firstCableNumber: 10,
       ru: 2,
     });
     const tbAFront = getPort(project, 'device-tb-a', 'front');
@@ -289,7 +276,13 @@ describe('connectPorts', () => {
     }
 
     expect(getCableByNumber(result.project, 'V-0009').status).toBe('connected');
-    expect(getCableByNumber(result.project, 'V-0010').status).toBe('retired');
+    expect(result.project.numberingLedgers[0].ranges).toContainEqual(
+      expect.objectContaining({
+        from: 9,
+        to: 9,
+        ownerType: 'connection',
+      }),
+    );
   });
 
   it('replaces existing connections and restores previous cable slots', () => {
@@ -412,5 +405,4 @@ describe('connectPorts', () => {
 
     expect(result.ok).toBe(false);
   });
-
 });

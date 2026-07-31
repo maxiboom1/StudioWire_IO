@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../../domain/projectItemNames';
+import { useProject } from '../../state/ProjectContext';
 import { FieldLabel } from '../common/FieldLabel';
 import { ModalFrame } from '../common/ModalFrame';
 import { StandardModalFooter } from '../common/StandardModalFooter';
@@ -8,18 +10,26 @@ import { Input } from '../ui/input';
 
 export function FolderModal({
   initialName = '',
+  folderId,
   mode,
   onClose,
   onSubmit,
 }: {
   initialName?: string;
+  folderId?: string;
   mode: 'add' | 'rename';
   onClose: () => void;
   onSubmit: (name: string) => void;
 }) {
+  const { project } = useProject();
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string | null>(null);
   const title = mode === 'add' ? 'Add Folder' : 'Rename Folder';
+  const conflict = findProjectItemNameConflict(
+    project,
+    name,
+    folderId ? { id: folderId, type: 'folder' } : undefined,
+  );
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,6 +38,11 @@ export function FolderModal({
 
     if (!trimmedName) {
       setError('Folder name is required.');
+      return;
+    }
+
+    if (conflict) {
+      setError(formatProjectItemNameConflict(conflict));
       return;
     }
 
@@ -50,9 +65,11 @@ export function FolderModal({
               }}
             />
           </div>
-          {error ? (
+          {error || conflict ? (
             <Alert className="border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error ?? (conflict ? formatProjectItemNameConflict(conflict) : '')}
+              </AlertDescription>
             </Alert>
           ) : null}
         </div>
@@ -60,7 +77,9 @@ export function FolderModal({
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">{title}</Button>
+          <Button disabled={!name.trim() || Boolean(conflict)} type="submit">
+            {title}
+          </Button>
         </StandardModalFooter>
       </form>
     </ModalFrame>

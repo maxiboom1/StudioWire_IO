@@ -20,9 +20,7 @@ describe('deleteNormalDeviceFromProject', () => {
     expect(result.project.portGroups.some((group) => group.deviceId === 'device-router-1')).toBe(false);
     expect(result.project.ports.some((port) => port.deviceId === 'device-router-1')).toBe(false);
     expect(result.project.cables).toHaveLength(0);
-    expect(result.project.numberingLedgers[0].ranges.map((range) => range.status)).toEqual([
-      'reserved_gap',
-    ]);
+    expect(result.project.numberingLedgers[0].ranges.map((range) => range.status)).toEqual(['reserved_gap']);
     expect(result.project.numberingLedgers[0].nextSuggested).toBe(1);
   });
 
@@ -100,7 +98,7 @@ describe('deleteNormalDeviceFromProject', () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error).toBe('Device deletion blocked: terminal block delete is not in this iteration.');
+      expect(result.error).toBe('Device deletion blocked: terminal blocks use the TB workflow.');
     }
   });
 });

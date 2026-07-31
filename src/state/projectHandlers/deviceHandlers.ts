@@ -3,7 +3,9 @@ import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { ProjectState } from '../projectTypes';
 import { createDeviceInProject, createTerminalBlockInProject } from '../projectDeviceCommands';
 import { editDeviceInProject } from '../projectDeviceEdits';
-import { deleteNormalDeviceFromProject } from '../../domain/deviceDeletion';
+import { deleteNormalDeviceFromProject, deleteTerminalBlockFromProject } from '../../domain/deviceDeletion';
+import { editTerminalBlockInProject } from '../../domain/terminalBlockOperations';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../../domain/projectItemNames';
 import type { ActionOf, ProjectHandlerContext } from './shared';
 
 export function handleAddDevice(
@@ -69,6 +71,19 @@ export function handleUpdateDevice(
     return {
       ...state,
       statusMessage: 'Device update blocked: selected device no longer exists',
+      importError: null,
+    };
+  }
+
+  const nameConflict = findProjectItemNameConflict(state.project, action.payload.updates.name, {
+    id: currentDevice.id,
+    type: currentDevice.kind === 'terminal_block' ? 'terminal block' : 'device',
+  });
+
+  if (nameConflict) {
+    return {
+      ...state,
+      statusMessage: `Device update blocked: ${formatProjectItemNameConflict(nameConflict)}`,
       importError: null,
     };
   }
@@ -151,12 +166,34 @@ export function handleEditDevice(
   }
 
   return {
+    project: stampProject(result.project, `Device edited: ${action.payload.deviceId}`, context.dependencies),
+    statusMessage: 'Device edited',
+    importError: null,
+  };
+}
+
+export function handleEditTerminalBlock(
+  state: ProjectState,
+  action: ActionOf<'EDIT_TERMINAL_BLOCK'>,
+  context: ProjectHandlerContext,
+): ProjectState {
+  const result = editTerminalBlockInProject(state.project, action.payload, context.dependencies.nowIso());
+
+  if (!result.ok) {
+    return {
+      ...state,
+      statusMessage: result.error,
+      importError: null,
+    };
+  }
+
+  return {
     project: stampProject(
       result.project,
-      `Device edited: ${action.payload.deviceId}`,
+      `Terminal block edited: ${action.payload.deviceId}`,
       context.dependencies,
     ),
-    statusMessage: 'Device edited',
+    statusMessage: 'Terminal block edited',
     importError: null,
   };
 }
@@ -177,12 +214,34 @@ export function handleDeleteDevice(
   }
 
   return {
+    project: stampProject(result.project, `Device deleted: ${action.payload.id}`, context.dependencies),
+    statusMessage: 'Device deleted; cable numbers released',
+    importError: null,
+  };
+}
+
+export function handleDeleteTerminalBlock(
+  state: ProjectState,
+  action: ActionOf<'DELETE_TERMINAL_BLOCK'>,
+  context: ProjectHandlerContext,
+): ProjectState {
+  const result = deleteTerminalBlockFromProject(state.project, action.payload.id);
+
+  if (!result.ok) {
+    return {
+      ...state,
+      statusMessage: result.error,
+      importError: null,
+    };
+  }
+
+  return {
     project: stampProject(
       result.project,
-      `Device deleted: ${action.payload.id}`,
+      `Terminal block deleted: ${action.payload.id}`,
       context.dependencies,
     ),
-    statusMessage: 'Device deleted; cable numbers released',
+    statusMessage: 'Terminal block deleted',
     importError: null,
   };
 }

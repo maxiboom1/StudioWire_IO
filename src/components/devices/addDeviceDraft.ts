@@ -10,6 +10,7 @@ import {
   isConnectorAssignedToCategory,
 } from '../../domain/connectorCompatibility';
 import { isHexColor } from '../../domain/colors';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../../domain/projectItemNames';
 import type { ProjectRoot } from '../../domain/types';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectTypes';
 import type { AddDeviceInput } from '../../state/projectContextTypes';
@@ -72,7 +73,6 @@ export function createQuickPortGroups(
     name: string;
     direction: DevicePortGroupDraft['direction'];
     connectorName: string;
-    prefix: string;
     pattern: string;
     count?: number;
   }): DevicePortGroupForm {
@@ -84,7 +84,7 @@ export function createQuickPortGroups(
       connectorTypeId: findConnectorTypeId(project, categoryId, input.connectorName),
       count: input.count ?? 4,
       portLabelPattern: input.pattern,
-      cablePrefix: input.prefix,
+      cablePrefix: defaultPrefix,
       firstCableNumber: null,
       createPlannedCables: true,
       colorOverride: null,
@@ -97,14 +97,12 @@ export function createQuickPortGroups(
         name: 'SDI IN',
         direction: 'input',
         connectorName: 'BNC',
-        prefix: 'V',
         pattern: '{NAME}-{000}',
       }),
       makeGroup({
         name: 'SDI OUT',
         direction: 'output',
         connectorName: 'BNC',
-        prefix: 'V',
         pattern: '{NAME}-{000}',
       }),
     ]);
@@ -116,14 +114,12 @@ export function createQuickPortGroups(
         name: 'AUDIO IN',
         direction: 'input',
         connectorName: 'XLR',
-        prefix: 'A',
         pattern: '{NAME}-{000}',
       }),
       makeGroup({
         name: 'AUDIO OUT',
         direction: 'output',
         connectorName: 'XLR',
-        prefix: 'A',
         pattern: '{NAME}-{000}',
       }),
     ]);
@@ -135,7 +131,6 @@ export function createQuickPortGroups(
         name: 'NETWORK',
         direction: 'bidirectional',
         connectorName: 'RJ45',
-        prefix: 'N',
         pattern: '{NAME}-{000}',
       }),
     ]);
@@ -146,7 +141,6 @@ export function createQuickPortGroups(
       name: 'PORTS',
       direction: 'bidirectional',
       connectorName: project.settings.connectorTypes[0]?.name ?? 'Other',
-      prefix: defaultPrefix,
       pattern: '{NAME}-{000}',
     }),
   ]);
@@ -362,6 +356,12 @@ export function getAddDeviceValidation(
     errors.push('Device name is required.');
   }
 
+  const nameConflict = findProjectItemNameConflict(project, device.name);
+
+  if (nameConflict) {
+    errors.push(formatProjectItemNameConflict(nameConflict));
+  }
+
   if (!device.categoryId) {
     errors.push('Device category is required.');
   }
@@ -418,12 +418,7 @@ export function getAddDeviceValidation(
         continue;
       }
 
-      const preview = previewCableRange(
-        previewProject,
-        group.cablePrefix,
-        group.firstCableNumber,
-        count,
-      );
+      const preview = previewCableRange(previewProject, group.cablePrefix, group.firstCableNumber, count);
 
       for (const error of preview.errors) {
         errors.push(`${group.name}: ${error.message}`);

@@ -1,5 +1,6 @@
 import { allocateCableRange, formatCableNumber, previewCableRange } from '../../domain/cableNumbers';
 import { isHexColor } from '../../domain/colors';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../../domain/projectItemNames';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
 import type { Device, PortGroup, ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectContextTypes';
@@ -133,6 +134,15 @@ export function getEditDeviceValidation(
     errors.push('Device name is required.');
   }
 
+  const nameConflict = findProjectItemNameConflict(project, device.name, {
+    id: device.id ?? '',
+    type: 'device',
+  });
+
+  if (nameConflict) {
+    errors.push(formatProjectItemNameConflict(nameConflict));
+  }
+
   if (!device.categoryId) {
     errors.push('Device category is required.');
   }
@@ -207,12 +217,7 @@ export function getEditDeviceValidation(
         continue;
       }
 
-      const preview = previewCableRange(
-        previewProject,
-        group.cablePrefix,
-        group.firstCableNumber,
-        count,
-      );
+      const preview = previewCableRange(previewProject, group.cablePrefix, group.firstCableNumber, count);
 
       for (const error of preview.errors) {
         errors.push(`${group.name}: ${error.message}`);

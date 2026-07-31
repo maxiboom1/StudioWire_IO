@@ -1,100 +1,150 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { findLocationNameConflict } from '../../domain/projectItemNames';
 import { buildDeleteLocationConfirmation } from '../../domain/prompts';
 import type { Location } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { useConfirmation } from '../common/ConfirmationDialog';
+import { InspectorAccordion, InspectorShell } from '../common/InspectorShell';
+import type { InspectorDirtyGuard } from '../common/inspectorDirtyGuard';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 
-export function LocationInspector({ location }: { location: Location }) {
+export function LocationInspector({
+  location,
+  onDirtyGuardChange,
+}: {
+  location: Location;
+  onDirtyGuardChange?: (guard: InspectorDirtyGuard | null) => void;
+}) {
   const { project, updateLocation, deleteLocation } = useProject();
   const confirm = useConfirmation();
+  const baseline = useMemo(
+    () => ({ name: location.name, description: location.description }),
+    [location.description, location.name],
+  );
+  const [form, setForm] = useState(baseline);
+  const [activeSection, setActiveSection] = useState<string | null>('edit');
   const rackCount = project.racks.filter((rack) => rack.locationId === location.id).length;
   const deviceCount = project.devices.filter((device) => device.locationId === location.id).length;
-  const subLocationCount = project.subLocations.filter(
-    (subLocation) => subLocation.locationId === location.id,
-  ).length;
-  const [form, setForm] = useState({
-    name: location.name,
-    type: location.type,
-    description: location.description,
-  });
+  const folderCount = project.subLocations.filter((folder) => folder.locationId === location.id).length;
+  const referenceCount = rackCount + deviceCount + folderCount;
+  const nameConflict = findLocationNameConflict(project, form.name, location.id);
+  const error = !form.name.trim()
+    ? 'Location name is required.'
+    : nameConflict
+      ? `Location name "${nameConflict.name}" is already used.`
+      : null;
+  const isDirty = JSON.stringify(form) !== JSON.stringify(baseline);
 
   useEffect(() => {
-    setForm({
-      name: location.name,
-      type: location.type,
-      description: location.description,
-    });
-  }, [location.description, location.name, location.type]);
+    setForm(baseline);
+    setActiveSection('edit');
+  }, [baseline, location.id]);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    updateLocation(location.id, form);
-  }
+  const discard = useCallback(() => setForm(baseline), [baseline]);
+  const save = useCallback(() => {
+    if (!form.name.trim() || nameConflict) {
+      return false;
+    }
+
+    updateLocation(location.id, {
+      name: form.name.trim(),
+      description: form.description.trim(),
+    });
+    return true;
+  }, [form, location.id, nameConflict, updateLocation]);
+
+  useEffect(() => {
+    onDirtyGuardChange?.({ isDirty, save, discard });
+    return () => onDirtyGuardChange?.(null);
+  }, [discard, isDirty, onDirtyGuardChange, save]);
 
   async function handleDelete() {
-    const confirmed = await confirm(buildDeleteLocationConfirmation(location));
-
-    if (confirmed) {
+    if (referenceCount === 0 && (await confirm(buildDeleteLocationConfirmation(location)))) {
       deleteLocation(location.id);
     }
   }
 
   return (
-    <aside className="inspector" aria-label="Right inspector">
-      <h2>Location Inspector</h2>
-      <Card className="inspector-card">
-        <CardHeader>
-          <CardTitle>Edit Location</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="editor-form inspector-form" onSubmit={handleSubmit}>
-            <div className="form-field">
-              <Label htmlFor="inspector-location-name">Name</Label>
-              <Input
-                id="inspector-location-name"
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-location-type">Type</Label>
-              <Input
-                id="inspector-location-type"
-                value={form.type}
-                onChange={(event) => setForm({ ...form, type: event.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="inspector-location-description">Description</Label>
-              <Textarea
-                id="inspector-location-description"
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-              />
-            </div>
-            <Button type="submit">Save Location</Button>
-          </form>
-        </CardContent>
-      </Card>
-      <Card className="inspector-card danger-zone">
-        <CardHeader>
-          <CardTitle>Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>
-            This location references {subLocationCount} folder(s), {rackCount} rack(s), and {deviceCount}{' '}
-            device(s). Deletion is allowed only when all counts are zero.
-          </p>
-          <Button variant="destructive" type="button" onClick={handleDelete}>
+    <InspectorShell
+      title="Location Inspector"
+      actions={
+        <>
+          <Button disabled={!isDirty || Boolean(error)} type="button" onClick={save}>
+            Save Location
+          </Button>
+          <Button
+            disabled={referenceCount > 0}
+            variant="destructive"
+            type="button"
+            onClick={() => void handleDelete()}
+          >
             Delete Location
           </Button>
-        </CardContent>
-      </Card>
-    </aside>
+        </>
+      }
+    >
+      <InspectorAccordion
+        activeSectionId={activeSection}
+        onActiveSectionChange={setActiveSection}
+        sections={[
+          {
+            id: 'edit',
+            title: 'Edit Location',
+            content: (
+              <div className="editor-form inspector-form">
+                <div className="form-field">
+                  <Label htmlFor="inspector-location-name">Name</Label>
+                  <Input
+                    id="inspector-location-name"
+                    value={form.name}
+                    onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label htmlFor="inspector-location-description">Description</Label>
+                  <Textarea
+                    id="inspector-location-description"
+                    value={form.description}
+                    onChange={(event) => setForm({ ...form, description: event.target.value })}
+                  />
+                </div>
+                {error ? <p className="inspector-form-error">{error}</p> : null}
+              </div>
+            ),
+          },
+          {
+            id: 'details',
+            title: 'Location Details',
+            content: (
+              <dl>
+                <Detail label="Folders" value={folderCount} />
+                <Detail label="Racks" value={rackCount} />
+                <Detail label="Devices and TBs" value={deviceCount} />
+                <Detail
+                  label="Deletion"
+                  value={
+                    referenceCount === 0
+                      ? 'Location is empty.'
+                      : 'Remove all folders, racks, devices, and TBs before deleting.'
+                  }
+                />
+              </dl>
+            ),
+          },
+        ]}
+      />
+    </InspectorShell>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }

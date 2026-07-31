@@ -35,6 +35,7 @@ export function LocationBranch({
   onAddDevice,
   onAddSubLocation,
   onEditDevice,
+  onEditTerminalBlock,
   onAddTerminalBlock,
   onMoveNavigatorItemToFolder,
   onRenameSubLocation,
@@ -49,6 +50,7 @@ export function LocationBranch({
   onAddDevice: (locationId: string) => void;
   onAddSubLocation: (locationId: string) => void;
   onEditDevice: (deviceId: string) => void;
+  onEditTerminalBlock: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
   onMoveNavigatorItemToFolder: (input: {
     itemType: NavigatorDragPayload['type'];
@@ -117,6 +119,7 @@ export function LocationBranch({
                 ]}
                 count={subLocationBranch.count}
                 emptyLabel="No items"
+                isActive={isSelected(selection, 'folder', subLocationBranch.subLocation.id)}
                 isOpen={isSubLocationOpen(subLocationBranch.key)}
                 key={subLocationBranch.subLocation.id}
                 label={subLocationBranch.subLocation.name}
@@ -128,12 +131,14 @@ export function LocationBranch({
                     targetFolderId: subLocationBranch.subLocation.id,
                   })
                 }
+                onSelect={() => onSelectObject('folder', subLocationBranch.subLocation.id)}
                 onToggle={() => onToggle(subLocationBranch.key)}
               >
                 <NavigatorItemList
                   items={subLocationBranch.items}
                   selection={selection}
                   onEditDevice={onEditDevice}
+                  onEditTerminalBlock={onEditTerminalBlock}
                   onSelectObject={onSelectObject}
                 />
               </FolderBranch>
@@ -143,6 +148,7 @@ export function LocationBranch({
               items={branch.items}
               selection={selection}
               onEditDevice={onEditDevice}
+              onEditTerminalBlock={onEditTerminalBlock}
               onSelectObject={onSelectObject}
             />
           </SidebarMenuSub>
@@ -157,18 +163,22 @@ export function FolderBranch({
   children,
   count,
   emptyLabel,
+  isActive,
   isOpen,
   label,
   onDropNavigatorItem,
+  onSelect,
   onToggle,
 }: {
   actions: ContextAction[];
   children: ReactNode;
   count: number;
   emptyLabel: string;
+  isActive: boolean;
   isOpen: boolean;
   label: string;
   onDropNavigatorItem?: (payload: NavigatorDragPayload) => void;
+  onSelect: () => void;
   onToggle: () => void;
 }) {
   return (
@@ -186,7 +196,11 @@ export function FolderBranch({
                 {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               </button>
             </CollapsibleTrigger>
-            <DropTargetSubButton onClick={onToggle} onDropNavigatorItem={onDropNavigatorItem}>
+            <DropTargetSubButton
+              isActive={isActive}
+              onClick={onSelect}
+              onDropNavigatorItem={onDropNavigatorItem}
+            >
               <Folder className="h-3.5 w-3.5" />
               <span className="min-w-0 flex-1 truncate">{label}</span>
               <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.66rem] font-semibold">
@@ -216,11 +230,13 @@ export function NavigatorItemList({
   items,
   selection,
   onEditDevice,
+  onEditTerminalBlock,
   onSelectObject,
 }: {
   items: NavigatorTreeItem[];
   selection: SelectionState;
   onEditDevice: (deviceId: string) => void;
+  onEditTerminalBlock: (deviceId: string) => void;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
 }) {
   return (
@@ -231,6 +247,7 @@ export function NavigatorItemList({
           item={item}
           key={`${item.type}-${item.id}`}
           onEditDevice={onEditDevice}
+          onEditTerminalBlock={onEditTerminalBlock}
           onSelect={() => onSelectObject(item.type, item.id)}
         />
       ))}
@@ -242,11 +259,13 @@ export function NavigatorItem({
   active,
   item,
   onEditDevice,
+  onEditTerminalBlock,
   onSelect,
 }: {
   active: boolean;
   item: NavigatorTreeItem;
   onEditDevice: (deviceId: string) => void;
+  onEditTerminalBlock: (deviceId: string) => void;
   onSelect: () => void;
 }) {
   const button = (
@@ -281,9 +300,15 @@ export function NavigatorItem({
     </SidebarMenuSubItem>
   );
 
-  if (item.type === 'device' && item.device.kind !== 'terminal_block') {
+  if (item.type === 'device') {
     return (
-      <ActionContextMenu actions={[{ label: 'Edit Device', onSelect: () => onEditDevice(item.id) }]}>
+      <ActionContextMenu
+        actions={[
+          item.device.kind === 'terminal_block'
+            ? { label: 'Edit TB', onSelect: () => onEditTerminalBlock(item.id) }
+            : { label: 'Edit Device', onSelect: () => onEditDevice(item.id) },
+        ]}
+      >
         {button}
       </ActionContextMenu>
     );
@@ -314,17 +339,19 @@ function DropTargetButton({
 
 function DropTargetSubButton({
   children,
+  isActive,
   onClick,
   onDropNavigatorItem,
 }: {
   children: ReactNode;
+  isActive: boolean;
   onClick: () => void;
   onDropNavigatorItem?: (payload: NavigatorDragPayload) => void;
 }) {
   const dragHandlers = useNavigatorDropTarget(onDropNavigatorItem);
 
   return (
-    <SidebarMenuSubButton onClick={onClick} {...dragHandlers}>
+    <SidebarMenuSubButton isActive={isActive} onClick={onClick} {...dragHandlers}>
       {children}
     </SidebarMenuSubButton>
   );

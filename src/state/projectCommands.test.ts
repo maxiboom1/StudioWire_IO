@@ -100,10 +100,8 @@ describe('project command factory', () => {
   it('centralizes location, rack, device, terminal-block, connection, and delete commands', () => {
     const { actions, commands, seeds } = createHarness();
 
-    expect(commands.addLocation({ name: 'MCR', type: 'machine_room', description: 'Main' })).toBe(
-      'location:MCR',
-    );
-    commands.updateLocation('location-a', { name: 'PCR', type: 'control_room', description: 'Prod' });
+    expect(commands.addLocation({ name: 'MCR', description: 'Main' })).toBe('location:MCR');
+    commands.updateLocation('location-a', { name: 'PCR', description: 'Prod' });
     commands.deleteLocation('location-a');
     expect(
       commands.addSubLocation({
@@ -175,9 +173,6 @@ describe('project command factory', () => {
         rackBottomRu: 1,
         connectorTypeId: 'connector-bnc',
         count: 2,
-        cablePrefix: 'V',
-        firstCableNumber: null,
-        createPlannedCables: false,
         notes: '',
       }),
     ).toBe('terminal-block:TB');

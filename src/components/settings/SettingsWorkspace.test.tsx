@@ -99,6 +99,8 @@ function createContext(project: ProjectRoot, commands = createCommands()): Proje
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 

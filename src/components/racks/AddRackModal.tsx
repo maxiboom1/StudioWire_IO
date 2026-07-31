@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { DEFAULT_RACK_DEFAULTS } from '../../domain/defaults';
+import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../../domain/projectItemNames';
 import type { Rack } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { FieldLabel } from '../common/FieldLabel';
@@ -19,17 +20,18 @@ export function AddRackModal({
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
-  const { addRack } = useProject();
+  const { project, addRack } = useProject();
   const [form, setForm] = useState({
     name: '',
     heightRu: String(DEFAULT_RACK_DEFAULTS.heightRu),
     numberingDirection: 'bottom_to_top' as Rack['numberingDirection'],
   });
+  const nameConflict = findProjectItemNameConflict(project, form.name);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form.name.trim()) {
+    if (!form.name.trim() || nameConflict) {
       return;
     }
 
@@ -59,10 +61,7 @@ export function AddRackModal({
             </div>
             <div className="form-field">
               <FieldLabel htmlFor="rack-height">Height RU</FieldLabel>
-              <Select
-                value={form.heightRu}
-                onValueChange={(value) => setForm({ ...form, heightRu: value })}
-              >
+              <Select value={form.heightRu} onValueChange={(value) => setForm({ ...form, heightRu: value })}>
                 <SelectTrigger id="rack-height">
                   <SelectValue placeholder="Select height" />
                 </SelectTrigger>
@@ -96,12 +95,17 @@ export function AddRackModal({
               </Select>
             </div>
           </div>
+          {nameConflict ? (
+            <p className="inspector-form-error">{formatProjectItemNameConflict(nameConflict)}</p>
+          ) : null}
         </div>
         <StandardModalFooter>
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Add Rack</Button>
+          <Button disabled={!form.name.trim() || Boolean(nameConflict)} type="submit">
+            Add Rack
+          </Button>
         </StandardModalFooter>
       </form>
     </ModalFrame>

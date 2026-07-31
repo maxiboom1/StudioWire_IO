@@ -55,7 +55,6 @@ describe('validation aggregate modules', () => {
     project.locations.push({
       id: project.project.id,
       name: 'Duplicate',
-      type: '',
       description: '',
     });
     const subject = codes(project);

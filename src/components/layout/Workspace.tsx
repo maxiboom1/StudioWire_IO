@@ -3,6 +3,7 @@ import { resolveSelection, type SelectionState } from '../common/selection';
 import { DeviceWorkspace } from '../devices/DeviceWorkspace';
 import { TerminalBlockWorkspace } from '../devices/TerminalBlockWorkspace';
 import { LocationWorkspace } from '../locations/LocationWorkspace';
+import { FolderWorkspace } from '../locations/FolderWorkspace';
 import { RackWorkspace } from '../racks/RackWorkspace';
 import { SettingsWorkspace } from '../settings/SettingsWorkspace';
 import { ProjectWorkspace } from './ProjectWorkspace';
@@ -45,6 +46,10 @@ export function Workspace({
         onAddTerminalBlock={onAddTerminalBlock}
       />
     );
+  }
+
+  if (selected.type === 'folder') {
+    return <FolderWorkspace folder={selected.value} />;
   }
 
   if (selected.type === 'rack') {

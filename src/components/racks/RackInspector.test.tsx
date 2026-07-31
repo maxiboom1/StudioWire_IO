@@ -67,6 +67,8 @@ function createContext(unassignDeviceFromRack = vi.fn()): ProjectContextValue {
     updateDevice: vi.fn(),
     editDevice: vi.fn(),
     deleteDevice: vi.fn(),
+    editTerminalBlock: vi.fn(),
+    deleteTerminalBlock: vi.fn(),
   };
 }
 
@@ -90,6 +92,7 @@ describe('RackInspector', () => {
 
     expect(screen.queryByText(/RU /)).toBeNull();
 
+    await userEvent.click(screen.getByRole('button', { name: 'Assigned Items' }));
     await userEvent.click(screen.getByRole('button', { name: 'Unassign Router 1 from rack' }));
     await userEvent.click(screen.getByRole('button', { name: 'Unassign' }));
 

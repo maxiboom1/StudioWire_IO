@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
 
-This repository contains the v0.2.8.20 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.8.21 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -85,9 +85,9 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 
 - Browser-only project editing with localStorage autosave.
 - Project settings for project info, connector catalog, category connector assignments, connector compatibility groups, and cable prefixes.
-- Location, folder, and rack creation/editing, plus guarded location/rack deletion.
+- Location, folder, rack, device, and terminal-block inspectors with buffered editing, guarded navigation, and safe deletion rules.
 - Device creation, metadata editing, folder assignment, interface relabeling, new-interface append, rack unassign, and standard-device hard delete.
-- Terminal block creation as fixed 1RU rack objects with rear/front port faces.
+- Terminal block creation and editing as fixed 1RU rack objects with unnumbered rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
 - Crosspoint creation from Device and TB views, including direct device links, device/TB segments, and TB front-to-front patches.
@@ -96,7 +96,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.20`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
+- JSON import/export: current exports use schema version `0.2.8.21`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
 
 ## Release Gates
 
@@ -140,6 +140,15 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.8.21
+
+- Bumped app and project schema version to `0.2.8.21` and removed `Location.type`.
+- Standardized device, TB, rack, location, and folder inspectors around compact tree-style accordions with shared dirty-navigation protection.
+- Added first-class folder selection, inspector editing, guarded non-empty deletion, and folder workspace summaries.
+- Added full TB edit/delete workflows, project-wide cross-type name uniqueness, and rack-required TB creation messaging.
+- Removed TB planned-cable creation; TB front patch cables now receive category-default cable numbers only when connected.
+- Removed manual cable-prefix selection for new device interfaces and derive prefixes from category defaults.
 
 ### v0.2.8.20
 

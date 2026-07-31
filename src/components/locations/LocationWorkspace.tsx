@@ -33,11 +33,10 @@ export function LocationWorkspace({
 
   return (
     <section className="workspace" aria-label="Location summary">
-      <WorkspaceHeader eyebrow="Location" title={location.name} badge={location.type || 'Location'} />
+      <WorkspaceHeader eyebrow="Location" title={location.name} badge="Location" />
       <SummaryGrid
         items={[
           ['Location ID', location.id],
-          ['Type', location.type || 'Not set'],
           ['Folders', String(subLocations.length)],
           ['Racks', String(racks.length)],
           ['Devices', String(devices.length)],

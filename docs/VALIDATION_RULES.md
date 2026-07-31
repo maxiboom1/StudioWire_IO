@@ -35,8 +35,8 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `port-group-connector-not-assigned-to-category`: port group connector types must be assigned to the port group category.
 - `port-connector-not-assigned-to-category`: port connector types must be assigned to the port category.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
-- `duplicate-location-name`: duplicate location names are reported as warnings.
-- `duplicate-sub-location-name`: duplicate folder names inside one location are reported as warnings.
+- `duplicate-location-name`: location names must be unique after trimming and case folding.
+- `duplicate-project-item-name`: folders, racks, standard devices, and terminal blocks share one unique trimmed, case-insensitive name namespace.
 - `sub-location-without-location`: folders must reference an existing location.
 - `sub-location-name-required`: folder names are required.
 - `rack-without-location`: rack `locationId` must reference an existing location.
@@ -65,8 +65,7 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 - `terminal-block-face-groups-required`: terminal blocks must have exactly one rear and one front group.
 - `terminal-block-invalid-port-direction`: terminal block groups and ports must use rear or front.
 - `terminal-block-face-mismatch`: terminal block rear and front groups must have matching count, category, and connector type.
-- `terminal-block-rear-planned-cables`: terminal block rear ports/groups must not create or link planned cables.
-- `terminal-block-front-cable-source-mismatch`: terminal block front planned cables must use the front port as source.
+- `terminal-block-planned-cables`: neither terminal-block face may allocate planned cables or retain planned numbering fields.
 - `port-without-parent-device`: each port must reference an existing parent device.
 - `port-without-parent-port-group`: each port must reference an existing parent port group.
 - `port-group-numbering-range-missing`: locked port group numbering range references must resolve to a ledger range.

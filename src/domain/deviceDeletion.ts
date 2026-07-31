@@ -18,18 +18,39 @@ export type DeleteDeviceResult =
     }
   | { ok: false; error: string };
 
-export function deleteNormalDeviceFromProject(
+export function deleteNormalDeviceFromProject(project: ProjectRoot, deviceId: string): DeleteDeviceResult {
+  return deleteDeviceRecordFromProject(project, deviceId, 'device');
+}
+
+export function deleteTerminalBlockFromProject(project: ProjectRoot, deviceId: string): DeleteDeviceResult {
+  return deleteDeviceRecordFromProject(project, deviceId, 'terminal_block');
+}
+
+function deleteDeviceRecordFromProject(
   project: ProjectRoot,
   deviceId: string,
+  expectedKind: 'device' | 'terminal_block',
 ): DeleteDeviceResult {
   const device = project.devices.find((candidate) => candidate.id === deviceId);
 
   if (!device) {
-    return { ok: false, error: 'Device deletion blocked: selected device no longer exists.' };
+    return {
+      ok: false,
+      error:
+        expectedKind === 'terminal_block'
+          ? 'TB deletion blocked: selected terminal block no longer exists.'
+          : 'Device deletion blocked: selected device no longer exists.',
+    };
   }
 
-  if (device.kind === 'terminal_block') {
-    return { ok: false, error: 'Device deletion blocked: terminal block delete is not in this iteration.' };
+  if (device.kind !== expectedKind) {
+    return {
+      ok: false,
+      error:
+        expectedKind === 'terminal_block'
+          ? 'TB deletion blocked: selected item is not a terminal block.'
+          : 'Device deletion blocked: terminal blocks use the TB workflow.',
+    };
   }
 
   const devicePortGroups = project.portGroups.filter((portGroup) => portGroup.deviceId === deviceId);

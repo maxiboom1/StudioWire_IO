@@ -81,7 +81,6 @@ export function createEmptyProject(input: ProjectInfoInput): ProjectRoot {
 export interface LocationInput {
   id?: string;
   name: string;
-  type?: string;
   description?: string;
 }
 
@@ -89,7 +88,6 @@ export function createLocation(input: LocationInput): Location {
   return {
     id: input.id ?? makeUniqueId('location', input.name),
     name: input.name,
-    type: input.type ?? '',
     description: input.description ?? '',
   };
 }

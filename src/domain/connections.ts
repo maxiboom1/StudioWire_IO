@@ -3,6 +3,8 @@ import {
   createConnectorCompatibilityLookup,
   type ConnectorCompatibilityLookup,
 } from './connectorCompatibility';
+import { allocateCableRange, formatCableNumber, getNextSuggestedForPrefix } from './cableNumbers';
+import { makeId } from './id';
 import type { Cable, Device, Endpoint, Port, ProjectRoot } from './types';
 
 const UNKNOWN_ENDPOINT: Endpoint = {
@@ -60,7 +62,58 @@ export function connectPorts(
     return { ok: false, error: targetStatus.reason };
   }
 
-  const nextProject = structuredClone(project);
+  let nextProject = structuredClone(project);
+  let connectionCableId: string | null = null;
+  const sourceFromPort = project.ports.find((port) => port.id === input.fromPortId);
+  const sourceToPort = project.ports.find((port) => port.id === input.toPortId);
+
+  if (
+    sourceFromPort &&
+    sourceToPort &&
+    !sourceFromPort.plannedCableId &&
+    !sourceToPort.plannedCableId &&
+    isTerminalBlockFrontPair(project, sourceFromPort, sourceToPort)
+  ) {
+    const category = project.settings.categories.find(
+      (candidate) => candidate.id === sourceFromPort.categoryId,
+    );
+
+    if (!category) {
+      return { ok: false, error: 'Connection blocked: port category is missing.' };
+    }
+
+    const index = getNextSuggestedForPrefix(project, category.defaultCablePrefix);
+    const number = formatCableNumber(category.defaultCablePrefix, index);
+    connectionCableId = makeId('cable', number);
+    const allocation = allocateCableRange(project, {
+      prefix: category.defaultCablePrefix,
+      firstCableNumber: index,
+      count: 1,
+      ownerType: 'connection',
+      ownerId: connectionCableId,
+      reason: `TB front patch ${sourceFromPort.label} to ${sourceToPort.label}`,
+    });
+
+    if (!allocation.allocatedRange) {
+      return { ok: false, error: 'Connection blocked: cable number allocation failed.' };
+    }
+
+    nextProject = allocation.project;
+    nextProject.cables.push({
+      id: connectionCableId,
+      number,
+      prefix: category.defaultCablePrefix,
+      index,
+      status: 'planned',
+      sideAEndpoint: UNKNOWN_ENDPOINT,
+      sideBEndpoint: UNKNOWN_ENDPOINT,
+      labelTop: '',
+      labelMiddle: number,
+      labelBottom: '',
+      notes: '',
+    });
+  }
+
   const portsById = new Map(nextProject.ports.map((port) => [port.id, port]));
   const cablesById = new Map(nextProject.cables.map((cable) => [cable.id, cable]));
   const fromPort = portsById.get(input.fromPortId);
@@ -110,6 +163,11 @@ export function connectPorts(
   const slots = [fromPort, toPort]
     .map((port) => (port.plannedCableId ? (cablesById.get(port.plannedCableId) ?? null) : null))
     .filter((cable): cable is Cable => cable !== null);
+  const connectionCable = connectionCableId ? (cablesById.get(connectionCableId) ?? null) : null;
+
+  if (connectionCable) {
+    slots.push(connectionCable);
+  }
 
   if (slots.length === 0) {
     return {
@@ -182,7 +240,7 @@ export function disconnectPort(
     if (ownerPort) {
       resetCableToPortSlot(nextCable, ownerPort, 'planned');
     } else {
-      resetCableToUnknownSlot(nextCable, 'planned');
+      resetCableToUnknownSlot(nextCable, 'retired');
     }
   }
 
@@ -241,7 +299,7 @@ export function getConnectionTargetStatus(
       (toPort.plannedCableId && effectiveLookup.cablesById.has(toPort.plannedCableId)),
   );
 
-  if (!hasCableSlot) {
+  if (!hasCableSlot && !isTerminalBlockFrontPair(project, fromPort, toPort, effectiveLookup)) {
     return { ok: false, reason: 'No planned cable number is available for this pair.' };
   }
 
@@ -333,6 +391,21 @@ export function isTerminalBlockPort(
   return (
     (lookup?.devicesById.get(port.deviceId) ?? project.devices.find((device) => device.id === port.deviceId))
       ?.kind === 'terminal_block'
+  );
+}
+
+function isTerminalBlockFrontPair(
+  project: ProjectRoot,
+  fromPort: Port,
+  toPort: Port,
+  lookup?: Pick<ConnectionTargetLookup, 'devicesById'>,
+): boolean {
+  return (
+    fromPort.direction === 'front' &&
+    toPort.direction === 'front' &&
+    fromPort.categoryId === toPort.categoryId &&
+    isTerminalBlockPort(project, fromPort, lookup) &&
+    isTerminalBlockPort(project, toPort, lookup)
   );
 }
 
