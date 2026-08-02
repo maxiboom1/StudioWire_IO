@@ -15,7 +15,7 @@ describe('connection candidate builders', () => {
     const candidates = buildConnectionCandidates(sampleProject, routerOutput.id);
     const grouped = groupConnectionCandidates(candidates);
 
-    expect(candidates.map((candidate) => candidate.port.label)).toContain('MV1-IN-001');
+    expect(candidates.map((candidate) => candidate.port.label)).toContain('IN-001');
     expect(candidates.every((candidate) => candidate.searchText === candidate.searchText.toLowerCase())).toBe(
       true,
     );

@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.21`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.22`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -10,7 +10,7 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.21`.
+- `schemaVersion`: current fixed string `0.2.8.22`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -226,7 +226,7 @@ Fields:
 - `locked`
 - `colorOverride`
 
-`portLabelPattern` supports `{NAME}`, `{DEVICE}`, `{00}`, and `{000}`. `{NAME}` resolves to the current I/O interface name. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits.
+`portLabelPattern` supports `{I/O NAME}`, `{NAME}`, `{DEVICE}`, `{00}`, and `{000}`. `{I/O NAME}` is the canonical token for the parent I/O interface name. `{NAME}` remains a supported alias for existing patterns and resolves identically. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits. Relabeling an existing interface must always resolve the interface-name tokens from `PortGroup.name`, never from the device sub-name.
 
 Standard devices use `input`, `output`, or `bidirectional` groups. Terminal blocks use exactly one `rear` group and one `front` group with matching count, category, and exact connector type.
 

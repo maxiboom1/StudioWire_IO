@@ -1,6 +1,7 @@
 import { ChevronDown, GripVertical, X } from 'lucide-react';
 import { normalizeHexColor } from '../../domain/colors';
 import { getConnectorsForCategory } from '../../domain/connectorCompatibility';
+import { DEFAULT_IO_PORT_LABEL_PATTERN } from '../../domain/portLabels';
 import type { Category, Settings } from '../../domain/types';
 import type { DevicePortGroupDraft } from '../../state/projectTypes';
 import { ConnectorIcon } from '../common/ConnectorIcon';
@@ -134,7 +135,7 @@ export function PortGroupEditor({
           <CardContent className="port-group-editor-content">
             <div className="port-group-row port-group-row-primary">
               <div className="form-field">
-                <Label htmlFor={`port-group-name-${group.localId}`}>Name</Label>
+                <Label htmlFor={`port-group-name-${group.localId}`}>I/O Name</Label>
                 <Input
                   id={`port-group-name-${group.localId}`}
                   value={group.name}
@@ -234,6 +235,7 @@ export function PortGroupEditor({
                 <Label htmlFor={`port-group-pattern-${group.localId}`}>Label Pattern</Label>
                 <Input
                   id={`port-group-pattern-${group.localId}`}
+                  placeholder={DEFAULT_IO_PORT_LABEL_PATTERN}
                   value={group.portLabelPattern}
                   onChange={(event) => onUpdate(group.localId, { portLabelPattern: event.target.value })}
                 />
@@ -261,10 +263,6 @@ export function PortGroupEditor({
                   value={formatPortGroupLastCableNumber(group)}
                 />
               </div>
-            </div>
-          </CardContent>
-          <CardContent className="port-group-color-content">
-            <div className="port-group-color-row">
               <div className="form-field">
                 <Label htmlFor={`port-group-color-picker-${group.localId}`}>Color</Label>
                 <input

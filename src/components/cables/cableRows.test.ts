@@ -20,7 +20,7 @@ describe('buildCableTableRows', () => {
     const row = rows.find((candidate) => candidate.cableNumber === 'V-0001');
 
     expect(row).toMatchObject({
-      sideALabel: 'RTR1-OUT-001',
+      sideALabel: 'OUT-001',
       sideBLabel: 'N/C',
       locationA: 'Machine Room',
       locationB: 'N/C',
@@ -48,7 +48,7 @@ describe('buildCableTableRows', () => {
 
     expect(row).toMatchObject({
       sideALabel: 'N/C',
-      sideBLabel: 'MV1-IN-001',
+      sideBLabel: 'IN-001',
       locationA: 'N/C',
       locationB: 'Control Room',
       connectorA: 'N/C',

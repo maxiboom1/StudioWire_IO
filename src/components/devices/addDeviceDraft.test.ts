@@ -92,7 +92,7 @@ describe('Add Device initial draft and presets', () => {
         direction: 'input',
         connectorTypeId: 'connector-bnc',
         count: 4,
-        portLabelPattern: '{NAME}-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
         cablePrefix: 'V',
         firstCableNumber: 9,
         createPlannedCables: true,
@@ -103,7 +103,7 @@ describe('Add Device initial draft and presets', () => {
         direction: 'output',
         connectorTypeId: 'connector-bnc',
         count: 4,
-        portLabelPattern: '{NAME}-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
         cablePrefix: 'V',
         firstCableNumber: 13,
         createPlannedCables: true,
@@ -117,7 +117,7 @@ describe('Add Device initial draft and presets', () => {
         connectorTypeId: 'connector-xlr',
         cablePrefix: 'A',
         firstCableNumber: 1,
-        portLabelPattern: '{NAME}-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
       }),
       expect.objectContaining({
         localId: 'audio-2',
@@ -126,7 +126,7 @@ describe('Add Device initial draft and presets', () => {
         connectorTypeId: 'connector-xlr',
         cablePrefix: 'A',
         firstCableNumber: 5,
-        portLabelPattern: '{NAME}-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
       }),
     ]);
     expect(createQuickPortGroups(project, 'category-network', ids('network'))).toEqual([
@@ -137,7 +137,7 @@ describe('Add Device initial draft and presets', () => {
         connectorTypeId: 'connector-rj45',
         cablePrefix: 'N',
         firstCableNumber: 1,
-        portLabelPattern: '{NAME}-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
       }),
     ]);
     expect(createQuickPortGroups(project, 'category-reference', ids('fallback'))).toEqual([
@@ -148,7 +148,7 @@ describe('Add Device initial draft and presets', () => {
         connectorTypeId: 'connector-bnc',
         cablePrefix: 'R',
         firstCableNumber: 1,
-        portLabelPattern: '{NAME}-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
       }),
     ]);
   });
@@ -296,7 +296,7 @@ describe('Add Device cable range formatting and validation', () => {
     );
     expect(getAddDeviceValidation(project, device, invalidGroups).errors).toEqual(
       expect.arrayContaining([
-        'I/O interface name is required.',
+        'I/O Name is required.',
         'I/O interface count must be positive.',
         'I/O interface uses an unknown cable prefix.',
         'I/O interface uses an unknown connector.',
@@ -383,7 +383,7 @@ describe('Add Device token normalization and submit shaping', () => {
           categoryId: 'category-video',
           connectorTypeId: 'connector-bnc',
           count: 4,
-          portLabelPattern: '{NAME}-{000}',
+          portLabelPattern: '{I/O NAME}-{000}',
           cablePrefix: 'V',
           firstCableNumber: 9,
           createPlannedCables: true,
@@ -395,7 +395,7 @@ describe('Add Device token normalization and submit shaping', () => {
           categoryId: 'category-video',
           connectorTypeId: 'connector-bnc',
           count: 4,
-          portLabelPattern: '{NAME}-{000}',
+          portLabelPattern: '{I/O NAME}-{000}',
           cablePrefix: 'V',
           firstCableNumber: null,
           createPlannedCables: false,

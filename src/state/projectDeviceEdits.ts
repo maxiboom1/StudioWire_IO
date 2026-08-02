@@ -56,7 +56,7 @@ export function editDeviceInProject(
     }
 
     if (!group.name.trim()) {
-      return { ok: false, error: 'Device edit blocked: interface name is required.' };
+      return { ok: false, error: 'Device edit blocked: I/O Name is required.' };
     }
 
     if (!group.portLabelPattern.trim()) {
@@ -135,7 +135,7 @@ export function editDeviceInProject(
       return port;
     }
 
-    const nextLabel = formatPortLabel(group.portLabelPattern, nextDevice.labelPrefix, port.index);
+    const nextLabel = formatPortLabel(group.portLabelPattern, nextDevice.labelPrefix, port.index, group.name);
 
     if (nextLabel !== port.label) {
       relabeledPortIds.add(port.id);
@@ -252,7 +252,7 @@ export function editDeviceInProject(
 
 function validateNewPortGroup(project: ProjectRoot, draft: DevicePortGroupDraft): string | null {
   if (!draft.name.trim()) {
-    return 'new interface name is required.';
+    return 'new I/O Name is required.';
   }
 
   if (!Number.isSafeInteger(draft.count) || draft.count <= 0) {

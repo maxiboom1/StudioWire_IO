@@ -50,7 +50,7 @@ describe('editDeviceInProject', () => {
     const input = baseEdit(connected.project);
     input.existingPortGroups = input.existingPortGroups.map((group) =>
       group.id === 'port-group-router-outputs'
-        ? { ...group, name: 'PROGRAM', portLabelPattern: '{DEVICE}-PROGRAM-{000}' }
+        ? { ...group, name: 'PROGRAM', portLabelPattern: '{I/O NAME}-{000}' }
         : group,
     );
     const result = editDeviceInProject(connected.project, input, TEST_TIMESTAMP);
@@ -63,22 +63,39 @@ describe('editDeviceInProject', () => {
     expect(result.project.portGroups.find((group) => group.id === 'port-group-router-outputs')).toMatchObject(
       {
         name: 'PROGRAM',
-        portLabelPattern: '{DEVICE}-PROGRAM-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
       },
     );
     expect(
       result.project.ports.find((port) => port.id === 'port-group-router-outputs-port-0001'),
     ).toMatchObject({
       name: 'PROGRAM 1',
-      label: 'RTR1-PROGRAM-001',
+      label: 'PROGRAM-001',
     });
     expect(result.project.cables.find((cable) => cable.id === 'cable-v-0001')).toMatchObject({
       status: 'connected',
-      sideAEndpoint: { id: 'port-group-router-outputs-port-0001', label: 'RTR1-PROGRAM-001' },
-      labelTop: 'RTR1-PROGRAM-001',
+      sideAEndpoint: { id: 'port-group-router-outputs-port-0001', label: 'PROGRAM-001' },
+      labelTop: 'PROGRAM-001',
       labelMiddle: 'V-0001',
-      labelBottom: 'MV1-IN-001',
+      labelBottom: 'IN-001',
     });
+  });
+
+  it('keeps I/O-name labels stable when the device sub-name changes', () => {
+    const input = baseEdit();
+    input.deviceUpdates.code = 'ROUTER-NEW';
+    input.deviceUpdates.labelPrefix = 'ROUTER-NEW';
+
+    const result = editDeviceInProject(structuredClone(sampleProject), input, TEST_TIMESTAMP);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(
+      result.project.ports.find((port) => port.id === 'port-group-router-outputs-port-0001')?.label,
+    ).toBe('OUT-001');
   });
 
   it('adds a new interface with ports, planned cables, and numbering ledger allocation', () => {
@@ -91,7 +108,7 @@ describe('editDeviceInProject', () => {
         connectorTypeId: 'connector-rj45',
         count: 1,
         localId: 'new-mgmt',
-        portLabelPattern: '{DEVICE}-MGMT-{000}',
+        portLabelPattern: '{I/O NAME}-{000}',
         cablePrefix: 'N',
         firstCableNumber: 1,
         createPlannedCables: true,
@@ -114,12 +131,12 @@ describe('editDeviceInProject', () => {
       numberingRangeId: expect.any(String),
     });
     expect(result.project.ports.find((port) => port.portGroupId === group?.id)).toMatchObject({
-      label: 'RTR1-MGMT-001',
+      label: 'MGMT-001',
       plannedCableId: 'cable-n-0001',
     });
     expect(result.project.cables.find((cable) => cable.id === 'cable-n-0001')).toMatchObject({
       number: 'N-0001',
-      labelTop: 'RTR1-MGMT-001',
+      labelTop: 'MGMT-001',
     });
     expect(result.project.numberingLedgers.find((ledger) => ledger.prefix === 'N')?.ranges[0]).toMatchObject({
       from: 1,

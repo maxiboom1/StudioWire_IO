@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.21
+# StudioWire IO Product Spec v0.2.8.22
 
-StudioWire IO v0.2.8.21 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.22 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -165,7 +165,7 @@ Each port group has:
 
 Generated ports must match the declared count.
 
-New I/O interfaces default to `{NAME}-{000}` label patterns. `{NAME}` resolves to the current interface name; `{DEVICE}` remains supported for existing project data and resolves to the device label prefix.
+New I/O interfaces default to `{I/O NAME}-{000}` label patterns. `{I/O NAME}` resolves to the parent interface name, and `{NAME}` remains a supported alias for existing patterns. `{DEVICE}` remains available for patterns that intentionally use the device sub-name. Add/Edit Device and Device Inspector label the interface field `I/O Name` so its relationship to the pattern token is explicit.
 
 New Add/Edit Device interfaces derive their cable prefix from the selected category's `defaultCablePrefix`. Existing locked interfaces preserve their stored prefix.
 

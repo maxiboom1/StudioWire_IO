@@ -47,7 +47,7 @@ describe('deleteNormalDeviceFromProject', () => {
       status: 'planned',
       sideAEndpoint: { id: 'port-group-router-outputs-port-0001' },
       sideBEndpoint: { type: 'unknown', id: null },
-      labelTop: 'RTR1-OUT-001',
+      labelTop: 'OUT-001',
       labelMiddle: 'V-0001',
       labelBottom: '',
     });

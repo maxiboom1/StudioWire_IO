@@ -10,6 +10,7 @@ import {
   isConnectorAssignedToCategory,
 } from '../../domain/connectorCompatibility';
 import { isHexColor } from '../../domain/colors';
+import { DEFAULT_IO_PORT_LABEL_PATTERN } from '../../domain/portLabels';
 import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../../domain/projectItemNames';
 import type { ProjectRoot } from '../../domain/types';
 import type { DeviceDraft, DevicePortGroupDraft } from '../../state/projectTypes';
@@ -97,13 +98,13 @@ export function createQuickPortGroups(
         name: 'SDI IN',
         direction: 'input',
         connectorName: 'BNC',
-        pattern: '{NAME}-{000}',
+        pattern: DEFAULT_IO_PORT_LABEL_PATTERN,
       }),
       makeGroup({
         name: 'SDI OUT',
         direction: 'output',
         connectorName: 'BNC',
-        pattern: '{NAME}-{000}',
+        pattern: DEFAULT_IO_PORT_LABEL_PATTERN,
       }),
     ]);
   }
@@ -114,13 +115,13 @@ export function createQuickPortGroups(
         name: 'AUDIO IN',
         direction: 'input',
         connectorName: 'XLR',
-        pattern: '{NAME}-{000}',
+        pattern: DEFAULT_IO_PORT_LABEL_PATTERN,
       }),
       makeGroup({
         name: 'AUDIO OUT',
         direction: 'output',
         connectorName: 'XLR',
-        pattern: '{NAME}-{000}',
+        pattern: DEFAULT_IO_PORT_LABEL_PATTERN,
       }),
     ]);
   }
@@ -131,7 +132,7 @@ export function createQuickPortGroups(
         name: 'NETWORK',
         direction: 'bidirectional',
         connectorName: 'RJ45',
-        pattern: '{NAME}-{000}',
+        pattern: DEFAULT_IO_PORT_LABEL_PATTERN,
       }),
     ]);
   }
@@ -141,7 +142,7 @@ export function createQuickPortGroups(
       name: 'PORTS',
       direction: 'bidirectional',
       connectorName: project.settings.connectorTypes[0]?.name ?? 'Other',
-      pattern: '{NAME}-{000}',
+      pattern: DEFAULT_IO_PORT_LABEL_PATTERN,
     }),
   ]);
 }
@@ -218,7 +219,7 @@ export function addPortGroupDraft(
       categoryId: device.categoryId,
       connectorTypeId: getDefaultConnectorForCategory(project.settings, device.categoryId)?.id ?? '',
       count: 1,
-      portLabelPattern: '{NAME}-{000}',
+      portLabelPattern: DEFAULT_IO_PORT_LABEL_PATTERN,
       cablePrefix: prefix,
       firstCableNumber: null,
       createPlannedCables: true,
@@ -370,10 +371,6 @@ export function getAddDeviceValidation(
     errors.push('Device location is required.');
   }
 
-  if (!normalizeDeviceToken(device.code || device.name)) {
-    errors.push('A device sub-name or device name is required for generated port labels.');
-  }
-
   if (portGroups.length === 0) {
     errors.push('At least one I/O interface is required.');
   }
@@ -383,7 +380,7 @@ export function getAddDeviceValidation(
     const hasValidCount = Number.isSafeInteger(count) && count > 0;
 
     if (!group.name.trim()) {
-      errors.push('I/O interface name is required.');
+      errors.push('I/O Name is required.');
     }
 
     if (!hasValidCount) {

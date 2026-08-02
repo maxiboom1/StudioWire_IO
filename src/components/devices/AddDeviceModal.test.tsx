@@ -140,7 +140,13 @@ describe('AddDeviceModal', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'I/O' }));
 
     expect(screen.getByRole('button', { name: 'Add I/O Interface' })).toBeTruthy();
-    expect(screen.getAllByDisplayValue('{NAME}-{000}')).toHaveLength(2);
+    expect(screen.getAllByDisplayValue('{I/O NAME}-{000}')).toHaveLength(2);
+    expect(screen.getAllByLabelText('I/O Name')).toHaveLength(2);
+    const colorPicker = screen.getAllByLabelText('Color')[0];
+    const lastCableNumber = screen.getAllByLabelText('Last Cable Number')[0];
+    expect(colorPicker.closest('.port-group-row-secondary')).toBe(
+      lastCableNumber.closest('.port-group-row-secondary'),
+    );
     expect(screen.queryByRole('heading', { name: 'I/O Interfaces' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Move SDI IN/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Move SDI OUT/ })).toBeNull();

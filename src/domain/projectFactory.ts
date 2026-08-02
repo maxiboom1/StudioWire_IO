@@ -1,6 +1,6 @@
 import { createDefaultSettings, DEFAULT_RACK_DEFAULTS } from './defaults';
 import { makeId, makeIndexedId, makeUniqueId, nowIso } from './id';
-import { formatPortLabel } from './portLabels';
+import { DEFAULT_IO_PORT_LABEL_PATTERN, formatPortLabel } from './portLabels';
 import { createLinkedPlannedCablesForPorts } from './plannedCables';
 import { STUDIOWIRE_SCHEMA_VERSION } from './types';
 import type {
@@ -241,7 +241,7 @@ export function createPortGroup(input: PortGroupInput): PortGroup {
     categoryId: input.categoryId,
     connectorTypeId: input.connectorTypeId,
     count: input.count,
-    portLabelPattern: input.portLabelPattern ?? '{DEVICE}-{000}',
+    portLabelPattern: input.portLabelPattern ?? DEFAULT_IO_PORT_LABEL_PATTERN,
     cablePrefix: input.cablePrefix,
     firstCableNumber: input.firstCableNumber ?? null,
     lastCableNumber: input.lastCableNumber ?? null,

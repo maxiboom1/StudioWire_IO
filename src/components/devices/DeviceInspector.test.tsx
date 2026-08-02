@@ -119,10 +119,10 @@ describe('DeviceInspector', () => {
     await user.click(screen.getByRole('button', { name: 'I/O' }));
     await user.click(screen.getByRole('button', { name: 'OUT' }));
     await user.clear(
-      screen.getByLabelText('Name', { selector: '#inspector-io-name-port-group-router-outputs' }),
+      screen.getByLabelText('I/O Name', { selector: '#inspector-io-name-port-group-router-outputs' }),
     );
     await user.type(
-      screen.getByLabelText('Name', { selector: '#inspector-io-name-port-group-router-outputs' }),
+      screen.getByLabelText('I/O Name', { selector: '#inspector-io-name-port-group-router-outputs' }),
       'PROGRAM',
     );
     fireEvent.change(screen.getByLabelText('Color'), { target: { value: '#123456' } });

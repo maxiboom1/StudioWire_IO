@@ -151,13 +151,9 @@ export function getEditDeviceValidation(
     errors.push('Device location is required.');
   }
 
-  if (!normalizeDeviceToken(device.code || device.name)) {
-    errors.push('A device sub-name or device name is required for generated port labels.');
-  }
-
   for (const group of existingGroups) {
     if (!group.name.trim()) {
-      errors.push('Existing interface name is required.');
+      errors.push('Existing I/O Name is required.');
     }
 
     if (!group.portLabelPattern.trim()) {
@@ -178,7 +174,7 @@ export function getEditDeviceValidation(
     const hasValidCount = Number.isSafeInteger(count) && count > 0;
 
     if (!group.name.trim()) {
-      errors.push('New interface name is required.');
+      errors.push('New I/O Name is required.');
     }
 
     if (!hasValidCount) {

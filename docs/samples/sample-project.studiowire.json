@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.21",
+  "schemaVersion": "0.2.8.22",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -400,7 +400,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "count": 4,
-      "portLabelPattern": "{DEVICE}-OUT-{000}",
+      "portLabelPattern": "{I/O NAME}-{000}",
       "cablePrefix": "V",
       "firstCableNumber": 1,
       "lastCableNumber": 4,
@@ -417,7 +417,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "count": 4,
-      "portLabelPattern": "{DEVICE}-IN-{000}",
+      "portLabelPattern": "{I/O NAME}-{000}",
       "cablePrefix": "V",
       "firstCableNumber": null,
       "lastCableNumber": null,
@@ -434,7 +434,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 1,
       "name": "OUT 1",
-      "label": "RTR1-OUT-001",
+      "label": "OUT-001",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -447,7 +447,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 2,
       "name": "OUT 2",
-      "label": "RTR1-OUT-002",
+      "label": "OUT-002",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -460,7 +460,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 3,
       "name": "OUT 3",
-      "label": "RTR1-OUT-003",
+      "label": "OUT-003",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -473,7 +473,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 4,
       "name": "OUT 4",
-      "label": "RTR1-OUT-004",
+      "label": "OUT-004",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -486,7 +486,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 1,
       "name": "IN 1",
-      "label": "MV1-IN-001",
+      "label": "IN-001",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -499,7 +499,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 2,
       "name": "IN 2",
-      "label": "MV1-IN-002",
+      "label": "IN-002",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -512,7 +512,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 3,
       "name": "IN 3",
-      "label": "MV1-IN-003",
+      "label": "IN-003",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -525,7 +525,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 4,
       "name": "IN 4",
-      "label": "MV1-IN-004",
+      "label": "IN-004",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -543,14 +543,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
-        "label": "RTR1-OUT-001"
+        "label": "OUT-001"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-001",
+      "labelTop": "OUT-001",
       "labelMiddle": "V-0001",
       "labelBottom": "",
       "notes": ""
@@ -564,14 +564,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0002",
-        "label": "RTR1-OUT-002"
+        "label": "OUT-002"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-002",
+      "labelTop": "OUT-002",
       "labelMiddle": "V-0002",
       "labelBottom": "",
       "notes": ""
@@ -585,14 +585,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0003",
-        "label": "RTR1-OUT-003"
+        "label": "OUT-003"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-003",
+      "labelTop": "OUT-003",
       "labelMiddle": "V-0003",
       "labelBottom": "",
       "notes": ""
@@ -606,14 +606,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0004",
-        "label": "RTR1-OUT-004"
+        "label": "OUT-004"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-004",
+      "labelTop": "OUT-004",
       "labelMiddle": "V-0004",
       "labelBottom": "",
       "notes": ""

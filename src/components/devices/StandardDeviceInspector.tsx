@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DEFAULT_IO_PORT_LABEL_PATTERN } from '../../domain/portLabels';
 import { buildDeleteDeviceConfirmation, buildRackUnassignConfirmation } from '../../domain/prompts';
 import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
@@ -188,7 +189,7 @@ export function StandardDeviceInspector({
             title={group.name || 'I/O Interface'}
             onToggle={() => toggleIoGroup(group.id)}
           >
-            <Field label="Name" id={`inspector-io-name-${group.id}`}>
+            <Field label="I/O Name" id={`inspector-io-name-${group.id}`}>
               <Input
                 id={`inspector-io-name-${group.id}`}
                 value={group.name}
@@ -198,6 +199,7 @@ export function StandardDeviceInspector({
             <Field label="Label pattern" id={`inspector-io-pattern-${group.id}`}>
               <Input
                 id={`inspector-io-pattern-${group.id}`}
+                placeholder={DEFAULT_IO_PORT_LABEL_PATTERN}
                 value={group.portLabelPattern}
                 onChange={(event) =>
                   updateIoGroup(group.id, {

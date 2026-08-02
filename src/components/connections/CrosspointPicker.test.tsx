@@ -90,8 +90,8 @@ describe('CrosspointPicker command payloads', () => {
   it('filters visible candidates and dispatches the selected target port payload', async () => {
     const user = userEvent.setup();
     const project = projectFixture();
-    const originPort = project.ports.find((port) => port.label === 'RTR1-OUT-001')!;
-    const targetPort = project.ports.find((port) => port.label === 'MV1-IN-001')!;
+    const originPort = project.ports.find((port) => port.label === 'OUT-001')!;
+    const targetPort = project.ports.find((port) => port.label === 'IN-001')!;
     const connectPortsCommand = vi.fn();
 
     contextHarness.current = createContext(project, { connectPorts: connectPortsCommand });
@@ -100,8 +100,8 @@ describe('CrosspointPicker command payloads', () => {
     );
 
     await user.click(screen.getByLabelText('Connect router output'));
-    await user.type(screen.getByLabelText('Search ports'), 'MV1-IN-001');
-    await user.click(await screen.findByText('MV1-IN-001'));
+    await user.type(screen.getByLabelText('Search ports'), 'IN-001');
+    await user.click(await screen.findByText('IN-001'));
 
     expect(connectPortsCommand).toHaveBeenCalledWith({
       fromPortId: originPort.id,
@@ -112,8 +112,8 @@ describe('CrosspointPicker command payloads', () => {
   it('dispatches the clear-connection payload for a connected origin port', async () => {
     const user = userEvent.setup();
     const project = projectFixture();
-    const originPort = project.ports.find((port) => port.label === 'RTR1-OUT-001')!;
-    const targetPort = project.ports.find((port) => port.label === 'MV1-IN-001')!;
+    const originPort = project.ports.find((port) => port.label === 'OUT-001')!;
+    const targetPort = project.ports.find((port) => port.label === 'IN-001')!;
     const connected = connectPorts(project, { fromPortId: originPort.id, toPortId: targetPort.id });
     const disconnectPort = vi.fn();
 

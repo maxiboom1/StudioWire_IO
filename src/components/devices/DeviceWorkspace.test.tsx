@@ -109,7 +109,7 @@ describe('DeviceWorkspace', () => {
     expect(screen.getByText('RTR1')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Edit device/ })).toBeNull();
 
-    const label = screen.getByText('RTR1-OUT-001').closest('.device-port-label') as HTMLElement;
+    const label = screen.getByText('OUT-001').closest('.device-port-label') as HTMLElement;
     const anchor = document.querySelector('.device-port-anchor.connector-icon-bnc') as HTMLElement;
 
     expect(label.style.getPropertyValue('--device-port-color')).toBe('#ABCDEF');
@@ -174,7 +174,7 @@ describe('DeviceWorkspace', () => {
     const rows = Array.from(document.querySelectorAll('.device-body-row')).map((row) => row.textContent);
 
     expect(rows[0]).toContain('RTR1-IN-001');
-    expect(rows[0]).toContain('RTR1-OUT-001');
-    expect(rows[1]).toContain('RTR1-OUT-002');
+    expect(rows[0]).toContain('OUT-001');
+    expect(rows[1]).toContain('OUT-002');
   });
 });

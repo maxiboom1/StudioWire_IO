@@ -2722,20 +2722,7 @@ textarea:not([data-ui]) {
   gap: 14px;
 }
 
-.port-group-color-content {
-  padding-top: 0;
-}
-
-.port-group-color-row {
-  display: grid;
-  grid-template-columns: 90px 140px;
-  gap: 10px;
-  align-items: end;
-  border-top: 1px solid #e6edf0;
-  padding-top: 12px;
-}
-
-.port-group-color-row input[type='color'] {
+.port-group-row-secondary input[type='color'] {
   width: 100%;
   min-width: 56px;
   height: 36px;
@@ -2753,7 +2740,7 @@ textarea:not([data-ui]) {
 }
 
 .port-group-row-secondary {
-  grid-template-columns: 84px minmax(180px, 1fr) 130px 130px;
+  grid-template-columns: 84px minmax(180px, 1fr) 130px 130px 90px 140px;
 }
 
 .interface-auto-toggle {

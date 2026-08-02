@@ -140,7 +140,7 @@ describe('EditDeviceModal', () => {
     expect(screen.queryByRole('button', { name: /Remove OUT/ })).toBeNull();
 
     fireEvent.change(
-      screen.getByLabelText('Name', { selector: '#port-group-name-port-group-router-outputs' }),
+      screen.getByLabelText('I/O Name', { selector: '#port-group-name-port-group-router-outputs' }),
       { target: { value: 'PROGRAM' } },
     );
     fireEvent.change(
@@ -151,7 +151,7 @@ describe('EditDeviceModal', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Clear override' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add I/O Interface' }));
-    fireEvent.change(screen.getAllByLabelText('Name').at(-1) as HTMLInputElement, {
+    fireEvent.change(screen.getAllByLabelText('I/O Name').at(-1) as HTMLInputElement, {
       target: { value: 'MGMT' },
     });
     expect(screen.queryByRole('button', { name: /Move MGMT/ })).toBeNull();
