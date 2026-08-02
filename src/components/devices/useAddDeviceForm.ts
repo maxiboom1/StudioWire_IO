@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { buildCableReservationConfirmation, type ConfirmationCopy } from '../../domain/prompts';
+import type { DeviceTemplate, DeviceTemplateCompatibility } from '../../domain/deviceTemplates/types';
+import { mapDeviceTemplateToFormDraft } from '../../domain/deviceTemplates/templateMapping';
 import { normalizeSubLocationForLocation } from '../../domain/subLocations';
 import type { ProjectRoot } from '../../domain/types';
 import type { AddDeviceInput } from '../../state/projectContextTypes';
@@ -23,12 +25,14 @@ import { moveByOffset, reorderById } from './portGroupOrdering';
 export interface AddDeviceFormController {
   device: DeviceDraft;
   effectiveLabelPrefix: string;
+  hasUnsavedChanges: boolean;
   portGroups: DevicePortGroupForm[];
   validation: ReturnType<typeof getAddDeviceValidation>;
   addPortGroup: () => void;
   removePortGroup: (localId: string) => void;
   movePortGroup: (localId: string, targetLocalId: string) => void;
   movePortGroupByOffset: (localId: string, offset: -1 | 1) => void;
+  loadTemplate: (template: DeviceTemplate, compatibility: DeviceTemplateCompatibility) => boolean;
   setDevice: (updates: Partial<DeviceDraft>) => void;
   submit: (confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>) => Promise<boolean>;
   updatePortGroup: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
@@ -59,6 +63,14 @@ export function useAddDeviceForm({
   const [portGroups, setPortGroups] = useState<DevicePortGroupForm[]>(() =>
     createInitialPortGroups(project, project.settings.categories[0]?.id ?? '', localIdFactory.current),
   );
+  const baselineFingerprint = useRef<string | null>(null);
+  const currentFingerprint = createFormFingerprint(device, portGroups);
+
+  if (baselineFingerprint.current === null) {
+    baselineFingerprint.current = currentFingerprint;
+  }
+
+  const hasUnsavedChanges = baselineFingerprint.current !== currentFingerprint;
   const validation = useMemo(
     () => getAddDeviceValidation(project, device, portGroups),
     [device, portGroups, project],
@@ -112,6 +124,19 @@ export function useAddDeviceForm({
     setPortGroups((current) => moveByOffset(current, localId, offset, (group) => group.localId));
   }
 
+  function loadTemplate(template: DeviceTemplate, compatibility: DeviceTemplateCompatibility): boolean {
+    const draft = mapDeviceTemplateToFormDraft(project, template, compatibility, localIdFactory.current);
+
+    if (!draft) {
+      return false;
+    }
+
+    setDeviceState(draft.device);
+    setPortGroups(draft.portGroups);
+    baselineFingerprint.current = createFormFingerprint(draft.device, draft.portGroups);
+    return true;
+  }
+
   async function submit(confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>): Promise<boolean> {
     if (validation.errors.length > 0) {
       return false;
@@ -134,12 +159,14 @@ export function useAddDeviceForm({
   return {
     device,
     effectiveLabelPrefix,
+    hasUnsavedChanges,
     portGroups,
     validation,
     addPortGroup,
     removePortGroup,
     movePortGroup,
     movePortGroupByOffset,
+    loadTemplate,
     setDevice,
     submit,
     updateDeviceCategory,
@@ -147,4 +174,8 @@ export function useAddDeviceForm({
     updatePortGroupCategory: handlePortGroupCategoryChange,
     togglePlannedCables,
   };
+}
+
+function createFormFingerprint(device: DeviceDraft, portGroups: DevicePortGroupForm[]): string {
+  return JSON.stringify({ device, portGroups });
 }

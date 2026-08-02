@@ -2729,6 +2729,245 @@ textarea:not([data-ui]) {
   padding: 2px;
 }
 
+.device-collection-panel {
+  height: 100%;
+}
+
+.device-collection-browser {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr);
+  min-height: 430px;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #d7e0e4;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.device-collection-tree {
+  min-width: 0;
+  overflow: auto;
+  border-right: 1px solid #d7e0e4;
+  padding: 8px;
+  background: #f7f9fa;
+}
+
+.device-collection-tree-level {
+  margin-left: 16px;
+}
+
+.device-collection-folder-row,
+.device-collection-model-row {
+  display: flex;
+  width: 100%;
+  min-height: 30px;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #27343a;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.device-collection-folder-row {
+  padding: 4px 7px;
+  font-weight: 700;
+}
+
+.device-collection-folder-row svg,
+.device-collection-model-row > svg:first-child {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+
+.device-collection-model-row {
+  padding: 4px 7px 4px 24px;
+}
+
+.device-collection-folder-row:hover,
+.device-collection-model-row:hover {
+  background: #edf2f4;
+}
+
+.device-collection-model-row[data-selected='true'] {
+  background: #172126;
+  color: #fff;
+}
+
+.device-collection-preview {
+  min-width: 0;
+  overflow: auto;
+  padding: 18px;
+}
+
+.device-collection-preview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #d7e0e4;
+}
+
+.device-collection-preview-header h3,
+.device-collection-preview-header p {
+  margin: 0;
+}
+
+.device-collection-preview-header h3 {
+  font-size: 1rem;
+}
+
+.device-collection-preview-header p {
+  margin-top: 4px;
+  color: #607177;
+  font-size: 0.78rem;
+}
+
+.device-collection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.device-collection-status svg {
+  width: 14px;
+  height: 14px;
+}
+
+.device-collection-status.compatible {
+  color: #087f5b;
+}
+
+.device-collection-status.incompatible,
+.device-collection-error {
+  color: #c92a2a;
+}
+
+.device-collection-device-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 16px 0;
+}
+
+.device-collection-device-summary div {
+  min-width: 0;
+}
+
+.device-collection-device-summary dt {
+  color: #607177;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.device-collection-device-summary dd {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+}
+
+.device-collection-io-list {
+  border-top: 1px solid #d7e0e4;
+}
+
+.device-collection-io-row {
+  display: grid;
+  grid-template-columns: 12px minmax(90px, 1fr) 100px 90px 70px;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border-bottom: 1px solid #e5ebee;
+  font-size: 0.76rem;
+}
+
+.device-collection-color {
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(23, 33, 38, 0.24);
+  border-radius: 50%;
+}
+
+.device-collection-issues {
+  margin-top: 16px;
+  border: 1px solid #ffc9c9;
+  border-radius: 4px;
+  background: #fff5f5;
+  padding: 10px 12px;
+  color: #a51111;
+  font-size: 0.76rem;
+}
+
+.device-collection-issues ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.device-collection-load-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+
+.device-collection-empty,
+.device-collection-error {
+  margin: 0;
+  padding: 18px;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 760px) {
+  .device-collection-browser {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .device-collection-tree {
+    max-height: 190px;
+    border-right: 0;
+    border-bottom: 1px solid #d7e0e4;
+  }
+
+  .device-collection-io-row {
+    grid-template-columns: 12px minmax(80px, 1fr) 82px 70px;
+  }
+
+  .device-collection-io-row span:last-child {
+    display: none;
+  }
+}
+
+.device-template-export-dialog {
+  max-width: 540px;
+}
+
+.device-template-export-path {
+  display: block;
+  overflow-wrap: anywhere;
+  border: 1px solid #d7e0e4;
+  border-radius: 4px;
+  background: #f7f9fa;
+  padding: 10px 12px;
+  color: #27343a;
+  font-size: 0.78rem;
+}
+
+.device-template-export-issues {
+  margin: 0;
+  padding: 10px 12px 10px 30px;
+  border: 1px solid #ffc9c9;
+  border-radius: 4px;
+  background: #fff5f5;
+  color: #a51111;
+  font-size: 0.8rem;
+}
+
 .port-group-row {
   display: grid;
   gap: 10px;

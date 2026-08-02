@@ -1,0 +1,50 @@
+{
+  "templateSchemaVersion": "0.1.0",
+  "templateType": "device",
+  "device": {
+    "name": "ACID Camera",
+    "subName": "CAM-1",
+    "manufacturer": "Ross",
+    "model": "AC H200-UCHR",
+    "categoryName": "Video",
+    "rackSizeRu": null
+  },
+  "ioInterfaces": [
+    {
+      "name": "REF IN",
+      "direction": "input",
+      "categoryName": "Reference",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#7C3AED"
+    },
+    {
+      "name": "SDI OUT",
+      "direction": "output",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "UC OUT",
+      "direction": "output",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "ETH",
+      "direction": "bidirectional",
+      "categoryName": "Network",
+      "connectorName": "RJ45",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#059669"
+    }
+  ]
+}

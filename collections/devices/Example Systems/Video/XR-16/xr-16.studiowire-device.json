@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": "0.1.0",
+  "templateType": "device",
+  "device": {
+    "name": "Router 1",
+    "subName": "RTR1",
+    "manufacturer": "Example Systems",
+    "model": "XR-16",
+    "categoryName": "Video",
+    "rackSizeRu": 2
+  },
+  "ioInterfaces": [
+    {
+      "name": "IN",
+      "direction": "input",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 8,
+      "portLabelPattern": "IN-{000}",
+      "color": "#EF4444"
+    },
+    {
+      "name": "OUT",
+      "direction": "output",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 8,
+      "portLabelPattern": "OUT-{000}",
+      "color": "#3B5BDB"
+    }
+  ]
+}

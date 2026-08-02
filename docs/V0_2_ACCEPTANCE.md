@@ -14,6 +14,7 @@ v0.2 is complete around:
 - Guarded location/rack deletion and standard-device hard delete with connection cleanup and released cable-number reuse.
 - Safe JSON import/export with supported legacy migration.
 - Resilient local browser persistence and recovery.
+- Bundled, validated device templates that populate Add Device without bypassing project validation.
 
 v0.2 does not support prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
 
@@ -27,7 +28,7 @@ npm run clean
 npm run clean:check
 ```
 
-`npm run check:dev` validates the normal product-development path without release packaging, clean extraction, Playwright browser installation, or mandatory E2E.
+`npm run check:dev` validates the normal product-development path, including bundled device collections, without release packaging, clean extraction, Playwright browser installation, or mandatory E2E.
 
 For stabilization or release acceptance, run these from a clean checkout or clean source package extraction:
 
@@ -61,7 +62,7 @@ Release packaging, clean-extraction verification, and Playwright E2E are not req
 | New, open, load sample, import, export flows                     | Playwright lifecycle and import/export tests in `tests/e2e/studiowire.spec.ts`; export/import compares complete project-domain JSON with only volatile download path excluded                    |
 | Local save, reload, unavailable storage, corrupt-record fallback | Playwright storage tests plus `src/state/projectStorage.test.ts` and `src/state/projectAutosave.test.ts`; quota/write failure after a user edit is covered by unit tests, not browser injection  |
 | Settings and connector compatibility                             | Playwright settings test plus `src/domain/connectorCompatibility.test.ts`                                                                                                                        |
-| Location, rack, device, and terminal-block creation              | Playwright lifecycle tests plus reducer and domain command tests; editing proof is limited to settings edits, rack movement, device deletion, and reducer-level update behavior                    |
+| Location, rack, device, and terminal-block creation              | Playwright lifecycle tests plus reducer and domain command tests; editing proof is limited to settings edits, rack movement, device deletion, and reducer-level update behavior                  |
 | Rack placement and movement                                      | `src/domain/rackPlacement.test.ts`, `src/domain/rackDiagnostics.test.ts`, `src/state/projectReducer.test.ts`, and focused rack canvas/controller tests under `src/components/racks`              |
 | Cable allocation, skipped reserved gaps, and uniqueness          | `src/domain/cableNumbers.test.ts`, validator tests, and Playwright lifecycle export inspection                                                                                                   |
 | Direct device connections                                        | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |

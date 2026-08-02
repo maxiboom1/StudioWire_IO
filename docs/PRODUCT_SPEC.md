@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.22
+# StudioWire IO Product Spec v0.2.8.23
 
-StudioWire IO v0.2.8.22 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.23 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -136,6 +136,10 @@ Each device has:
 Device creation can generate I/O interfaces, ports, planned cables, and ledger allocations in one workflow.
 
 Add/Edit Device uses General and I/O tabs. General exposes Device Name, Device sub-name, Manufacturer, Device model, Category, Location, Folder, and optional Mount height (RU). Label Prefix, Role, and Notes are not shown in Add/Edit Device.
+
+Add Device also includes a Device Collection tab. The bundled collection follows Manufacturer, Category, and Model folders. Selecting a model displays its hardware and ordered I/O summary plus complete compatibility results for the current project. Loading a compatible template replaces the Add Device draft, selects the first project location with no folder, proposes fresh project cable ranges, and returns to General for review. Loading never creates a device directly.
+
+Standard devices can be exported as device-template JSON from the navigator. Export resolves project IDs to semantic names, stores effective interface colors, excludes placement and cable allocation data, and reports the intended `collections/devices` path. Bundled collection additions require an application restart or rebuild.
 
 Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
 

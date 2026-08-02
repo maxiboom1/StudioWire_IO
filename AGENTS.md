@@ -12,6 +12,7 @@ These instructions apply to future Codex sessions working in this repository.
 8. Keep the import/export format stable and documented.
 9. Cable numbers must be unique per project.
 10. Skipped cable number gaps are reserved and cannot be reused.
+11. Device collection templates use semantic category/connector names and must never store project IDs, placement, or cable-allocation data.
 
 ## Engineering Boundaries
 
@@ -88,7 +89,7 @@ Before finishing a task, remove or verify absence of `dist`, `coverage`, `.vite`
 
 Release gates are layered and must remain non-recursive:
 
-- `npm run check:dev` is the normal feature-development gate: typecheck, unit/contract tests, build, sample validation, cleanup, and cleanliness check.
+- `npm run check:dev` is the normal feature-development gate: typecheck, unit/contract tests, bundled collection validation, build, sample validation, cleanup, and cleanliness check.
 - `npm run check` is a stabilization gate: script hierarchy guard, format check, lint, typecheck, build, coverage-backed tests, fixture validation, version synchronization, cleanup, and cleanliness check.
 - `npm run check:release` adds scale validation, Chromium browser bootstrap, and Playwright E2E.
 - `npm run package:source` creates and verifies the ZIP from a clean extraction and runs `check:release` inside that extraction; it must not call `check:full`.

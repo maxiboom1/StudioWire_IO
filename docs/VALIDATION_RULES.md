@@ -6,6 +6,14 @@ Current-version JSON imports are structurally validated exactly as supplied befo
 
 Port label generation resolves `{I/O NAME}` and its supported `{NAME}` alias from the parent `PortGroup.name`. Device metadata changes must not alter labels that use either interface-name token. `{DEVICE}` remains the explicit token for patterns that use the device label prefix.
 
+## Device Collection Rules
+
+Bundled device templates are validated independently from project JSON. Every file must match device-template schema `0.1.0`, and its path must be `collections/devices/<Manufacturer>/<Category>/<Model>/*.studiowire-device.json`. Path manufacturer, category, and model segments must match the template metadata after trimming and case folding. A collection may contain only one entry for each normalized manufacturer/category/model combination.
+
+Template objects reject unknown properties. This prevents project IDs, placement data, cable prefixes, cable numbers, allocations, planned cable references, and cable records from entering the collection format.
+
+Compatibility validation reports all mismatches before a template can fill Add Device. Category and connector names are matched after trimming and case folding. A template is incompatible when a required category or connector is missing or ambiguous, when a connector is not assigned to the required category, or when the matched category has no configured project cable prefix. Compatibility validation does not modify project settings and does not partially load templates.
+
 ## Implemented Rules
 
 - `duplicate-object-id`: object IDs must not collide across project data objects.

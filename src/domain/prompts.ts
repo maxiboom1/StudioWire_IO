@@ -118,6 +118,16 @@ export function buildCableReservationConfirmation(warnings: string[]): Confirmat
   };
 }
 
+export function buildReplaceDeviceDraftConfirmation(): ConfirmationCopy {
+  return {
+    title: 'Replace device draft?',
+    message:
+      'Loading this template will replace the current Device Name, hardware details, placement defaults, and I/O interfaces.',
+    confirmLabel: 'Load Template',
+    cancelLabel: 'Keep Current Draft',
+  };
+}
+
 export function buildUnsavedInspectorChangesConfirmation(): ConfirmationCopy {
   return {
     title: 'Unsaved inspector changes',

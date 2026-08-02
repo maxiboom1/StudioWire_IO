@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
 import { STUDIOWIRE_CURRENT_VERSION } from '../../domain/version';
+import { exportDeviceTemplate } from '../../domain/deviceTemplates/templateExport';
+import type { DeviceTemplateExportResult } from '../../domain/deviceTemplates/types';
+import { downloadDeviceTemplate } from '../../deviceCollection/downloadDeviceTemplate';
 import { useProject } from '../../state/ProjectContext';
 import { type SelectedObjectType, type SelectionState } from '../common/selection';
 import {
@@ -13,6 +16,7 @@ import {
   SidebarMenuItem,
 } from '../ui/sidebar';
 import { ActionContextMenu, LocationBranch } from './LeftTreeBranches';
+import { DeviceTemplateExportDialog } from '../devices/DeviceTemplateExportDialog';
 import { FolderModal } from './FolderModal';
 import { buildLeftTreeModel } from './leftTreeModel';
 import { useCollapsedTree } from './useCollapsedTree';
@@ -42,6 +46,7 @@ export function LeftTree({
 }) {
   const { project, addSubLocation, moveNavigatorItemToFolder, updateSubLocation } = useProject();
   const [folderModal, setFolderModal] = useState<FolderModalState | null>(null);
+  const [templateExportResult, setTemplateExportResult] = useState<DeviceTemplateExportResult | null>(null);
   const tree = useMemo(() => buildLeftTreeModel(project), [project]);
   const collapsedTree = useCollapsedTree();
   const rootActions = [
@@ -82,6 +87,22 @@ export function LeftTree({
 
       setFolderModal(null);
     }
+  }
+
+  function handleExportDeviceTemplate(deviceId: string) {
+    const device = project.devices.find((candidate) => candidate.id === deviceId);
+
+    if (!device || device.kind !== 'device') {
+      return;
+    }
+
+    const result = exportDeviceTemplate(project, device);
+
+    if (result.template && result.fileName) {
+      downloadDeviceTemplate(result.template, result.fileName);
+    }
+
+    setTemplateExportResult(result);
   }
 
   const renamingSubLocation =
@@ -126,6 +147,7 @@ export function LeftTree({
                         onAddSubLocation={handleAddSubLocation}
                         onEditDevice={onEditDevice}
                         onEditTerminalBlock={onEditTerminalBlock}
+                        onExportDeviceTemplate={handleExportDeviceTemplate}
                         onAddRack={onAddRack}
                         onAddTerminalBlock={onAddTerminalBlock}
                         onMoveNavigatorItemToFolder={moveNavigatorItemToFolder}
@@ -167,6 +189,10 @@ export function LeftTree({
           onSubmit={handleFolderModalSubmit}
         />
       ) : null}
+      <DeviceTemplateExportDialog
+        result={templateExportResult}
+        onClose={() => setTemplateExportResult(null)}
+      />
     </>
   );
 }

@@ -1,4 +1,7 @@
 import { type FormEvent, useState } from 'react';
+import { bundledDeviceTemplateRepository } from '../../deviceCollection/bundledDeviceTemplateRepository';
+import { buildReplaceDeviceDraftConfirmation } from '../../domain/prompts';
+import type { DeviceTemplateRepository } from '../../domain/deviceTemplates/types';
 import { useProject } from '../../state/ProjectContext';
 import { HorizontalTabs } from '../common/AppTabs';
 import { useConfirmation } from '../common/ConfirmationDialog';
@@ -11,6 +14,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PortGroupEditor } from './PortGroupEditor';
+import { DeviceCollectionBrowser } from './DeviceCollectionBrowser';
 import { SubLocationSelect } from './SubLocationSelect';
 import { useAddDeviceForm } from './useAddDeviceForm';
 
@@ -18,14 +22,16 @@ export function AddDeviceModal({
   initialLocationId,
   onClose,
   onCreated,
+  deviceTemplateRepository = bundledDeviceTemplateRepository,
 }: {
   initialLocationId: string | null;
   onClose: () => void;
   onCreated: (id: string) => void;
+  deviceTemplateRepository?: DeviceTemplateRepository;
 }) {
   const { project, addDevice } = useProject();
   const confirm = useConfirmation();
-  const [activeTab, setActiveTab] = useState<'general' | 'io'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'io' | 'collection'>('general');
   const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
   const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
   const form = useAddDeviceForm({
@@ -62,6 +68,25 @@ export function AddDeviceModal({
     setDraggingInterfaceId(null);
   }
 
+  async function loadTemplate(
+    template: Parameters<typeof form.loadTemplate>[0],
+    compatibility: Parameters<typeof form.loadTemplate>[1],
+  ) {
+    if (form.hasUnsavedChanges) {
+      const confirmed = await confirm(buildReplaceDeviceDraftConfirmation());
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    if (form.loadTemplate(template, compatibility)) {
+      setCollapsedInterfaceIds(new Set());
+      setDraggingInterfaceId(null);
+      setActiveTab('general');
+    }
+  }
+
   return (
     <ModalFrame
       title="Add Device"
@@ -75,6 +100,7 @@ export function AddDeviceModal({
           tabs={[
             { id: 'general', label: 'General' },
             { id: 'io', label: 'I/O' },
+            { id: 'collection', label: 'Device Collection' },
           ]}
           onTabChange={setActiveTab}
         />
@@ -184,7 +210,7 @@ export function AddDeviceModal({
                 </div>
               </div>
             </section>
-          ) : (
+          ) : activeTab === 'io' ? (
             <section className="modal-section device-modal-tab-panel">
               <div className="port-group-editor-list">
                 {form.portGroups.map((group) => (
@@ -220,6 +246,18 @@ export function AddDeviceModal({
                   </Alert>
                 ))}
               </div>
+            </section>
+          ) : (
+            <section className="modal-section device-modal-tab-panel device-collection-panel">
+              <DeviceCollectionBrowser
+                project={project}
+                repository={deviceTemplateRepository}
+                onLoadTemplate={(entry, compatibility) => {
+                  if (entry.template) {
+                    void loadTemplate(entry.template, compatibility);
+                  }
+                }}
+              />
             </section>
           )}
         </div>

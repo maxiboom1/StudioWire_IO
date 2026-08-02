@@ -1,7 +1,7 @@
 {
   "name": "studiowire-io",
   "private": true,
-  "version": "0.2.8.22",
+  "version": "0.2.8.23",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,6 +18,7 @@
     "test:e2e:install": "playwright install chromium",
     "validate:project": "tsx tools/validate-project.ts",
     "validate:fixtures": "tsx tools/validate-fixtures.ts",
+    "validate:collections": "tsx tools/validate-device-collection.ts",
     "check:scale": "tsx tools/check-scale.ts",
     "summary": "tsx tools/print-project-summary.ts",
     "version:check": "node tools/check-version.mjs",
@@ -25,7 +26,7 @@
     "clean:check": "node tools/check-clean.mjs",
     "package:source": "node tools/package-source.mjs",
     "check:scripts": "node tools/check-scripts.mjs",
-    "check:dev": "npm run typecheck && npm run test:run && npm run build && npm run validate:project -- docs/samples/sample-project.studiowire.json && npm run clean && npm run clean:check",
+    "check:dev": "npm run typecheck && npm run test:run && npm run validate:collections && npm run build && npm run validate:project -- docs/samples/sample-project.studiowire.json && npm run clean && npm run clean:check",
     "check": "npm run check:scripts && npm run format:check && npm run lint && npm run typecheck && npm run build && npm run coverage && npm run validate:fixtures && npm run version:check && npm run clean && npm run clean:check",
     "check:release": "npm run check && npm run check:scale && npm run test:e2e:install && npm run test:e2e",
     "check:full": "npm run check:release && npm run package:source && npm run clean && npm run clean:check"
@@ -35,6 +36,7 @@
     "src",
     "docs",
     "schema",
+    "collections",
     "tests",
     "tools",
     "index.html",

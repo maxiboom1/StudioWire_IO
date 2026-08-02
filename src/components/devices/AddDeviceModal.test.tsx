@@ -1,11 +1,13 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
+import type { DeviceTemplateRepository } from '../../domain/deviceTemplates/types';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
 import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { AddDeviceModal } from './AddDeviceModal';
@@ -155,5 +157,65 @@ describe('AddDeviceModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI OUT' }));
 
     expect(screen.queryByLabelText('Label Pattern')).toBeNull();
+  });
+
+  it('loads a compatible collection template into the form without creating a device', async () => {
+    const user = userEvent.setup();
+    const project = createProject();
+    const repository: DeviceTemplateRepository = {
+      list: vi.fn(async () => [
+        {
+          path: 'collections/devices/Example Systems/Video/XR-32/xr-32.studiowire-device.json',
+          value: {
+            templateSchemaVersion: '0.1.0',
+            templateType: 'device',
+            device: {
+              name: 'Library Router',
+              subName: 'LIB-RTR',
+              manufacturer: 'Example Systems',
+              model: 'XR-32',
+              categoryName: 'Video',
+              rackSizeRu: 3,
+            },
+            ioInterfaces: [
+              {
+                name: 'SDI OUT',
+                direction: 'output',
+                categoryName: 'Video',
+                connectorName: 'BNC',
+                count: 2,
+                portLabelPattern: '{I/O NAME}-{000}',
+                color: '#123456',
+              },
+            ],
+          },
+        },
+      ]),
+    };
+
+    contextHarness.current = createContext(project);
+    renderWithConfirmation(
+      <AddDeviceModal
+        deviceTemplateRepository={repository}
+        initialLocationId="location-machine-room"
+        onClose={vi.fn()}
+        onCreated={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('tab', { name: 'Device Collection' }));
+    await user.click(await screen.findByRole('button', { name: 'Load Template' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { name: 'General' }).getAttribute('aria-selected')).toBe('true'),
+    );
+    expect((screen.getByLabelText(/Device Name/) as HTMLInputElement).value).toBe('Library Router');
+    expect((screen.getByLabelText(/Device sub-name/) as HTMLInputElement).value).toBe('LIB-RTR');
+    expect((screen.getByLabelText('Device model') as HTMLInputElement).value).toBe('XR-32');
+    expect(contextHarness.current?.addDevice).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('tab', { name: 'I/O' }));
+    expect((screen.getByLabelText('I/O Name') as HTMLInputElement).value).toBe('SDI OUT');
+    expect((screen.getByLabelText('Color') as HTMLInputElement).value).toBe('#123456');
   });
 });

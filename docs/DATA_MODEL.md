@@ -1,16 +1,24 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.22`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.23`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
 IDs are stable strings. References use IDs, not display names. Dates use ISO 8601 strings.
 
+## Device Templates
+
+Device templates are bundled application catalog data, not part of `ProjectRoot`. They use the independent template schema version `0.1.0` and live under `collections/devices/<Manufacturer>/<Category>/<Model>/*.studiowire-device.json`.
+
+A template contains Device Name, Device sub-name, manufacturer, model, primary category name, optional rack height, and ordered I/O interfaces. Each I/O interface contains I/O Name, direction, category name, connector name, count, label pattern, and an effective `#RRGGBB` color.
+
+Templates use semantic category and connector names because project IDs are local to one project. They never store object IDs, locations, folders, rack placement, cable prefixes, cable numbers, numbering ranges, planned cable IDs, or cable records. Loading a template resolves names against project settings, derives cable prefixes from matched categories, allocates fresh proposed ranges through the normal Add Device workflow, and populates the form without creating a device.
+
 ## ProjectRoot
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.22`.
+- `schemaVersion`: current fixed string `0.2.8.23`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.

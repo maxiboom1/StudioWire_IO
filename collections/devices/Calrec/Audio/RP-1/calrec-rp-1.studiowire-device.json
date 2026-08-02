@@ -1,0 +1,140 @@
+{
+  "templateSchemaVersion": "0.1.0",
+  "templateType": "device",
+  "device": {
+    "name": "Mixer RP1",
+    "subName": "MIX",
+    "manufacturer": "Calrec",
+    "model": "RP-1",
+    "categoryName": "Audio",
+    "rackSizeRu": 2
+  },
+  "ioInterfaces": [
+    {
+      "name": "MIX A.IN",
+      "direction": "input",
+      "categoryName": "Audio",
+      "connectorName": "DB25",
+      "count": 8,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#DC2626"
+    },
+    {
+      "name": "MIX A.OUT",
+      "direction": "output",
+      "categoryName": "Audio",
+      "connectorName": "XLR",
+      "count": 8,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#DC2626"
+    },
+    {
+      "name": "MIX EMB-1 IN",
+      "direction": "input",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "MIX EMB-1 OUT",
+      "direction": "output",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "MIX EMB-2 IN",
+      "direction": "input",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "MIX EMB-2OUT",
+      "direction": "output",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}-{000}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "MIX W/C",
+      "direction": "input",
+      "categoryName": "Reference",
+      "connectorName": "BNC",
+      "count": 2,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#7C3AED"
+    },
+    {
+      "name": "MIX AES3",
+      "direction": "input",
+      "categoryName": "Reference",
+      "connectorName": "BNC",
+      "count": 2,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#7C3AED"
+    },
+    {
+      "name": "MIX REF",
+      "direction": "input",
+      "categoryName": "Reference",
+      "connectorName": "BNC",
+      "count": 2,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#7C3AED"
+    },
+    {
+      "name": "MIX ETH",
+      "direction": "bidirectional",
+      "categoryName": "Network",
+      "connectorName": "RJ45",
+      "count": 2,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#059669"
+    },
+    {
+      "name": "MIX METERS",
+      "direction": "output",
+      "categoryName": "AV",
+      "connectorName": "DVI",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "MIX GUI",
+      "direction": "output",
+      "categoryName": "AV",
+      "connectorName": "DVI",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "HYDRA PRI",
+      "direction": "bidirectional",
+      "categoryName": "Audio",
+      "connectorName": "SFP",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#DC2626"
+    },
+    {
+      "name": "HYDRA SEC",
+      "direction": "bidirectional",
+      "categoryName": "Audio",
+      "connectorName": "SFP",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME}",
+      "color": "#DC2626"
+    }
+  ]
+}

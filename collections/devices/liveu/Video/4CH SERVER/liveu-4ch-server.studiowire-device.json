@@ -1,0 +1,41 @@
+{
+  "templateSchemaVersion": "0.1.0",
+  "templateType": "device",
+  "device": {
+    "name": "LIVE-U SERVER",
+    "subName": "LU",
+    "manufacturer": "LIVEU",
+    "model": "4CH SERVER",
+    "categoryName": "Video",
+    "rackSizeRu": 1
+  },
+  "ioInterfaces": [
+    {
+      "name": "LU IN",
+      "direction": "input",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 4,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "LU OUT",
+      "direction": "output",
+      "categoryName": "Video",
+      "connectorName": "BNC",
+      "count": 4,
+      "portLabelPattern": "{I/O NAME}-{00}",
+      "color": "#2563EB"
+    },
+    {
+      "name": "LU REF",
+      "direction": "input",
+      "categoryName": "Reference",
+      "connectorName": "BNC",
+      "count": 1,
+      "portLabelPattern": "{I/O NAME} IN",
+      "color": "#7C3AED"
+    }
+  ]
+}
