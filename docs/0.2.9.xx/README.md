@@ -6,7 +6,7 @@ This folder is the implementation sequence for the first StudioWire IO multi-obj
 
 Creating this prompt folder does not change the application version. The first product implementation starts at `0.2.9.00` from the current `0.2.8.25` repository.
 
-Implementation status: prompt 01 (`0.2.9.00` model and compatibility foundation) is complete. Prompts 02 through 05 remain intentionally unimplemented and must still be applied in order.
+Implementation status: prompts 01 (`0.2.9.00` model and compatibility foundation) and 02 (`0.2.9.01` navigation and page workspace) are complete. Prompts 03 through 05 remain intentionally unimplemented and must still be applied in order.
 
 The feature is a local, frontend-only presentation layer over project data:
 

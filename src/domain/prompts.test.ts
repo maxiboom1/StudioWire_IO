@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { sampleProject } from './sampleProject';
 import type { Device, Rack } from './types';
-import { buildCrossLocationRackAssignmentPrompt, buildDeleteDeviceConfirmation } from './prompts';
+import {
+  buildCrossLocationRackAssignmentPrompt,
+  buildDeleteDeviceConfirmation,
+  buildDeleteViewConfirmation,
+  buildViewFormatChangeConfirmation,
+} from './prompts';
 
 describe('confirmation prompts', () => {
   it('does not build a rack assignment prompt when device and rack are in the same location', () => {
@@ -50,5 +55,46 @@ describe('confirmation prompts', () => {
 
     expect(confirmation.message).toContain('Affected Views: "Signal Overview"');
     expect(confirmation.message).toContain('1 placement(s) and 2 attached line(s)');
+  });
+
+  it('reports exact View-local deletion counts and protects source objects', () => {
+    const confirmation = buildDeleteViewConfirmation({
+      id: 'view-a',
+      name: 'Signal Overview',
+      description: '',
+      pageSize: 'a3',
+      orientation: 'portrait',
+      placements: [
+        {
+          id: 'placement-a',
+          sourceType: 'device',
+          sourceId: 'device-router-1',
+          xMm: 0,
+          yMm: 0,
+          scale: 1,
+          labelOverride: null,
+        },
+      ],
+      lines: [],
+      annotations: [],
+    });
+
+    expect(confirmation.message).toContain('1 placement(s), 0 line(s), and 0 annotation(s)');
+    expect(confirmation.message).toContain('Source devices and racks are not affected.');
+  });
+
+  it('warns that populated format changes retain coordinates', () => {
+    const confirmation = buildViewFormatChangeConfirmation({
+      id: 'view-a',
+      name: 'Signal Overview',
+      description: '',
+      pageSize: 'a3',
+      orientation: 'portrait',
+      placements: [],
+      lines: [],
+      annotations: [],
+    });
+
+    expect(confirmation.message).toContain('Existing coordinates are retained.');
   });
 });

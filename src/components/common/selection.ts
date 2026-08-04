@@ -3,12 +3,13 @@ import type {
   Location,
   ProjectInfo,
   ProjectRoot,
+  ProjectView,
   Rack,
   SubLocation,
   ValidationIssue,
 } from '../../domain/types';
 
-export type SelectedObjectType = 'project' | 'settings' | 'location' | 'folder' | 'rack' | 'device';
+export type SelectedObjectType = 'project' | 'settings' | 'location' | 'folder' | 'rack' | 'device' | 'view';
 
 export interface SelectionState {
   selectedObjectType: SelectedObjectType | null;
@@ -21,7 +22,8 @@ export type ResolvedSelection =
   | { type: 'location'; value: Location }
   | { type: 'folder'; value: SubLocation }
   | { type: 'rack'; value: Rack }
-  | { type: 'device'; value: Device };
+  | { type: 'device'; value: Device }
+  | { type: 'view'; value: ProjectView };
 
 export function resolveSelection(project: ProjectRoot, selection: SelectionState): ResolvedSelection | null {
   if (!selection.selectedObjectType) {
@@ -53,6 +55,11 @@ export function resolveSelection(project: ProjectRoot, selection: SelectionState
 
       return value ? { type: 'device' as const, value } : null;
     }
+    case 'view': {
+      const value = project.views.find((view) => view.id === selection.selectedObjectId);
+
+      return value ? { type: 'view' as const, value } : null;
+    }
   }
 }
 
@@ -80,6 +87,10 @@ export function resolveIssueSelection(
 
   if (issue.objectType === 'rack' && project.racks.some((rack) => rack.id === issue.objectId)) {
     return { selectedObjectType: 'rack', selectedObjectId: issue.objectId };
+  }
+
+  if (issue.objectType === 'view' && project.views.some((view) => view.id === issue.objectId)) {
+    return { selectedObjectType: 'view', selectedObjectId: issue.objectId };
   }
 
   if (issue.objectType === 'device' && project.devices.some((device) => device.id === issue.objectId)) {
@@ -197,6 +208,14 @@ export function getInspectorRows(project: ProjectRoot, selected: ResolvedSelecti
         ['Status', selected.value.status],
       ];
     }
+    case 'view':
+      return [
+        ['Type', 'View'],
+        ['ID', selected.value.id],
+        ['Name', selected.value.name],
+        ['Page size', selected.value.pageSize.toUpperCase()],
+        ['Orientation', selected.value.orientation],
+      ];
   }
 }
 

@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.00`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version migrates it to `0.2.9.00` by adding `views: []` without changing existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.01`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the shape-preserving `0.2.9.00 -> 0.2.9.01` migration. Neither step changes existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.00`.
+- `schemaVersion`: current fixed string `0.2.9.01`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -429,6 +429,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection before current structural validation.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous-stage `0.2.9.00` data then advances unchanged to `0.2.9.01` before current structural validation.
 
 Views are stored in the normal project JSON and the same compact autosave under `studiowire.io.project.current`; no separate View file or storage key exists. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. A restored `0.2.8.25` autosave is migrated to the current schema in memory and written back through the normal autosave lifecycle. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.00 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.01 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -96,8 +96,10 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations. This version provides the model, validation, migration, reducer, and persistence foundation; View navigation and canvas UI begin in `0.2.9.01`.
-- JSON import/export: current exports use schema version `0.2.9.00`. Version `0.2.8.25` is the retained compatibility baseline and migrates by adding `views: []` without changing engineering data.
+- Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations.
+- A flat, location-independent Views navigator with Add, Rename, guarded Delete, buffered metadata/page settings, and View validation-issue routing.
+- An exact ISO A3/A4 portrait/landscape page workspace with a 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, and Fit Width controls. Live placement rendering begins in `0.2.9.02`.
+- JSON import/export: current exports use schema version `0.2.9.01`. Version `0.2.8.25` migrates by adding `views: []`, and `0.2.9.00` advances through an identity migration; neither path changes engineering data.
 
 ## Release Gates
 
@@ -120,7 +122,7 @@ Run release/stabilization gates from a clean checkout or clean source-package ex
 - Authentication or user accounts.
 - Backend services or database storage.
 - Multi-user collaboration.
-- Interactive View navigation/canvas editing, View printing, and View document export in this model-foundation version.
+- Live View placement/rendering, drawing tools, View printing, and View document export.
 
 ## Screenshots
 
@@ -142,6 +144,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.01
+
+- Added an always-visible, location-independent Views navigator with A3/A4 metadata, next-name creation defaults, rename, guarded deletion counts, selection, and validation-issue navigation.
+- Added the View Inspector for buffered name/description and page-format editing, including confirmation before populated format changes while retaining all stored coordinates.
+- Added the exact ISO page workspace shell with a clipped 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, Fit Width, and per-View transient viewport reset.
+- Preserved `0.2.8.25` compatibility and added a shape-preserving `0.2.9.00 -> 0.2.9.01` identity migration. Device/rack placement and drawing tools remain deferred to the following stages.
 
 ### v0.2.9.00
 

@@ -144,6 +144,9 @@ function renderTree(project = projectFixture(), commands: Partial<ProjectContext
     onEditDevice: vi.fn(),
     onEditTerminalBlock: vi.fn(),
     onAddTerminalBlock: vi.fn(),
+    onAddView: vi.fn(),
+    onRenameView: vi.fn(),
+    onDeleteView: vi.fn(),
   };
 
   contextHarness.current = createContext(project, commands);
@@ -157,6 +160,9 @@ function renderTree(project = projectFixture(), commands: Partial<ProjectContext
       onAddLocation={callbacks.onAddLocation}
       onAddRack={callbacks.onAddRack}
       onAddTerminalBlock={callbacks.onAddTerminalBlock}
+      onAddView={callbacks.onAddView}
+      onDeleteView={callbacks.onDeleteView}
+      onRenameView={callbacks.onRenameView}
       onSelectObject={callbacks.onSelectObject}
     />,
   );
@@ -174,6 +180,32 @@ afterEach(() => {
 });
 
 describe('LeftTree', () => {
+  it('keeps the independent Views section visible when the location navigator is empty', () => {
+    const project = projectFixture();
+    project.locations = [];
+    project.subLocations = [];
+    project.racks = [];
+    project.devices = [];
+    project.views = [
+      {
+        id: 'view-only',
+        name: 'Only View',
+        description: '',
+        pageSize: 'a4',
+        orientation: 'landscape',
+        placements: [],
+        lines: [],
+        annotations: [],
+      },
+    ];
+
+    renderTree(project);
+
+    expect(screen.getByText('Create a location')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Only View/ })).toBeTruthy();
+    expect(screen.getByText('A4 · Landscape')).toBeTruthy();
+  });
+
   it('renders version header, flat item rows, folders, active selection, and stable attributes', () => {
     renderTree();
 
@@ -281,6 +313,9 @@ describe('LeftTree', () => {
         onAddLocation={callbacks.onAddLocation}
         onAddRack={callbacks.onAddRack}
         onAddTerminalBlock={callbacks.onAddTerminalBlock}
+        onAddView={callbacks.onAddView}
+        onDeleteView={callbacks.onDeleteView}
+        onRenameView={callbacks.onRenameView}
         onSelectObject={callbacks.onSelectObject}
       />,
     );

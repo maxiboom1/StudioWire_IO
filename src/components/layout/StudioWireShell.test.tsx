@@ -3,9 +3,10 @@
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import type { ProjectView } from '../../domain/types';
 import { noopViewCommands } from '../../test/projectContextStubs';
 import { StudioWireShell } from './StudioWireShell';
 
@@ -23,7 +24,29 @@ vi.mock('../../state/ProjectContext', () => ({
   },
 }));
 
-function createContext(editDevice = vi.fn()): ProjectContextValue {
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
+    configurable: true,
+    value: () => false,
+  });
+  Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+    configurable: true,
+    value: () => undefined,
+  });
+  Object.defineProperty(HTMLElement.prototype, 'releasePointerCapture', {
+    configurable: true,
+    value: () => undefined,
+  });
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: () => undefined,
+  });
+});
+
+function createContext(
+  editDevice = vi.fn(),
+  viewCommands: Partial<Pick<ProjectContextValue, 'addView' | 'updateView' | 'deleteView'>> = {},
+): ProjectContextValue {
   const project = structuredClone(sampleProject);
 
   return {
@@ -71,6 +94,7 @@ function createContext(editDevice = vi.fn()): ProjectContextValue {
     deleteDevice: vi.fn(),
     editTerminalBlock: vi.fn(),
     deleteTerminalBlock: vi.fn(),
+    ...viewCommands,
   };
 }
 
@@ -81,6 +105,120 @@ afterEach(() => {
 });
 
 describe('StudioWireShell dirty device inspector navigation guard', () => {
+  it('creates an A3 portrait View with the next default name', async () => {
+    const user = userEvent.setup();
+    const addView = vi.fn(() => 'view-created');
+
+    contextHarness.current = createContext(vi.fn(), { addView });
+    render(<StudioWireShell />);
+
+    await user.click(screen.getByRole('button', { name: 'Add View' }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect((within(dialog).getByLabelText('View Name') as HTMLInputElement).value).toBe('View 1');
+    expect(within(dialog).getByRole('combobox', { name: 'Page Size' }).textContent).toContain('A3');
+    expect(within(dialog).getByRole('combobox', { name: 'Orientation' }).textContent).toContain('Portrait');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Add View' }));
+    expect(addView).toHaveBeenCalledWith({
+      name: 'View 1',
+      description: '',
+      pageSize: 'a3',
+      orientation: 'portrait',
+    });
+  });
+
+  it('opens a View workspace and supports rename and guarded View-only deletion', async () => {
+    const user = userEvent.setup();
+    const updateView = vi.fn();
+    const deleteView = vi.fn();
+    const view: ProjectView = {
+      id: 'view-signal-overview',
+      name: 'Signal Overview',
+      description: '',
+      pageSize: 'a3',
+      orientation: 'portrait',
+      placements: [],
+      lines: [],
+      annotations: [],
+    };
+
+    contextHarness.current = createContext(vi.fn(), { updateView, deleteView });
+    contextHarness.current.project.views = [view];
+    render(<StudioWireShell />);
+
+    await user.click(screen.getByRole('button', { name: /Signal Overview/ }));
+    expect(screen.getByRole('region', { name: 'Signal Overview View workspace' })).toBeTruthy();
+    expect(screen.getByText('Add a device or rack to start this View.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'View Inspector' })).toBeTruthy();
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Signal Overview/ }));
+    await user.click(await screen.findByText('Rename View'));
+    const renameDialog = await screen.findByRole('dialog');
+    const nameInput = within(renameDialog).getByLabelText('View Name');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Core View');
+    await user.click(within(renameDialog).getByRole('button', { name: 'Rename View' }));
+
+    expect(updateView).toHaveBeenCalledWith(view.id, { name: 'Core View' });
+
+    await user.click(screen.getByRole('button', { name: 'Delete View' }));
+    const deleteDialog = await screen.findByRole('dialog');
+    expect(deleteDialog.textContent).toContain('0 placement(s), 0 line(s), and 0 annotation(s)');
+    expect(deleteDialog.textContent).toContain('Source devices and racks are not affected.');
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Delete View' }));
+    expect(deleteView).toHaveBeenCalledWith(view.id);
+  }, 10000);
+
+  it('confirms populated page-format changes and preserves View canvas collections', async () => {
+    const user = userEvent.setup();
+    const updateView = vi.fn();
+    const view: ProjectView = {
+      id: 'view-populated',
+      name: 'Populated View',
+      description: 'Existing layout',
+      pageSize: 'a3',
+      orientation: 'portrait',
+      placements: [
+        {
+          id: 'placement-router',
+          sourceType: 'device',
+          sourceId: 'device-router-1',
+          xMm: 20,
+          yMm: 20,
+          scale: 1,
+          labelOverride: null,
+        },
+      ],
+      lines: [],
+      annotations: [],
+    };
+
+    contextHarness.current = createContext(vi.fn(), { updateView });
+    contextHarness.current.project.views = [view];
+    render(<StudioWireShell />);
+
+    await user.click(screen.getByRole('button', { name: /Populated View/ }));
+    await user.click(screen.getByRole('button', { name: 'Page Format' }));
+    await user.click(screen.getByRole('combobox', { name: 'Page Size' }));
+    await user.click(await screen.findByRole('option', { name: 'A4' }));
+    await user.click(screen.getByRole('button', { name: 'Save View' }));
+
+    const confirmation = await screen.findByRole('dialog');
+    expect(confirmation.textContent).toContain('Existing coordinates are retained.');
+    await user.click(within(confirmation).getByRole('button', { name: 'Change Format' }));
+
+    expect(updateView).toHaveBeenCalledWith(view.id, {
+      name: 'Populated View',
+      description: 'Existing layout',
+      pageSize: 'a4',
+      orientation: 'portrait',
+    });
+    expect(updateView.mock.calls[0][1]).not.toHaveProperty('placements');
+    expect(updateView.mock.calls[0][1]).not.toHaveProperty('lines');
+    expect(updateView.mock.calls[0][1]).not.toHaveProperty('annotations');
+  }, 10000);
+
   it('opens Clone and Edit as a prefilled Add Device draft with fresh cable allocation', async () => {
     const user = userEvent.setup();
 

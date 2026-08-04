@@ -6,6 +6,7 @@ import { LocationWorkspace } from '../locations/LocationWorkspace';
 import { FolderWorkspace } from '../locations/FolderWorkspace';
 import { RackWorkspace } from '../racks/RackWorkspace';
 import { SettingsWorkspace } from '../settings/SettingsWorkspace';
+import { ViewWorkspace } from '../views/ViewWorkspace';
 import { ProjectWorkspace } from './ProjectWorkspace';
 
 export function Workspace({
@@ -25,7 +26,10 @@ export function Workspace({
       <section className="workspace welcome-workspace" aria-label="Center workspace">
         <p className="eyebrow">StudioWire IO</p>
         <h1>Open a project object from the tree.</h1>
-        <p>Select the project root, a location, a rack, or a device to inspect the current project data.</p>
+        <p>
+          Select the project root, a location, a rack, a device, or a View to inspect the current project
+          data.
+        </p>
       </section>
     );
   }
@@ -54,6 +58,10 @@ export function Workspace({
 
   if (selected.type === 'rack') {
     return <RackWorkspace rack={selected.value} />;
+  }
+
+  if (selected.type === 'view') {
+    return <ViewWorkspace view={selected.value} />;
   }
 
   if (selected.value.kind === 'terminal_block') {

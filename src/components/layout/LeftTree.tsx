@@ -20,6 +20,7 @@ import { DeviceTemplateExportDialog } from '../devices/DeviceTemplateExportDialo
 import { FolderModal } from './FolderModal';
 import { buildLeftTreeModel } from './leftTreeModel';
 import { useCollapsedTree } from './useCollapsedTree';
+import { ViewTreeSection } from '../views/ViewTreeSection';
 
 const APP_VERSION = STUDIOWIRE_CURRENT_VERSION;
 
@@ -35,6 +36,9 @@ export function LeftTree({
   onEditDevice,
   onEditTerminalBlock,
   onAddTerminalBlock,
+  onAddView,
+  onRenameView,
+  onDeleteView,
 }: {
   selection: SelectionState;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
@@ -45,6 +49,9 @@ export function LeftTree({
   onEditDevice: (deviceId: string) => void;
   onEditTerminalBlock: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
+  onAddView: () => void;
+  onRenameView: (viewId: string) => void;
+  onDeleteView: (viewId: string) => void;
 }) {
   const { project, addSubLocation, moveNavigatorItemToFolder, updateSubLocation } = useProject();
   const [folderModal, setFolderModal] = useState<FolderModalState | null>(null);
@@ -175,6 +182,14 @@ export function LeftTree({
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          <ViewTreeSection
+            onAddView={onAddView}
+            onDeleteView={onDeleteView}
+            onRenameView={onRenameView}
+            onSelectObject={onSelectObject}
+            selection={selection}
+            views={tree.views}
+          />
         </SidebarContent>
 
         <SidebarFooter className="app-sidebar-footer">

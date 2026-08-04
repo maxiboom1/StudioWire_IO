@@ -1,4 +1,4 @@
-import type { Device, Location, ProjectRoot, Rack, SubLocation } from './types';
+import type { Device, Location, ProjectRoot, ProjectView, Rack, SubLocation } from './types';
 import type { ViewSourceImpact } from './viewOperations';
 
 export type ConfirmationTone = 'default' | 'danger';
@@ -116,6 +116,25 @@ export function buildDeleteFolderConfirmation(folder: SubLocation): Confirmation
     confirmLabel: 'Delete Folder',
     cancelLabel: 'Cancel',
     tone: 'danger',
+  };
+}
+
+export function buildDeleteViewConfirmation(view: ProjectView): ConfirmationCopy {
+  return {
+    title: 'Delete View?',
+    message: `Delete View "${view.name}"?\n\nThis removes ${view.placements.length} placement(s), ${view.lines.length} line(s), and ${view.annotations.length} annotation(s) from this View only. Source devices and racks are not affected.`,
+    confirmLabel: 'Delete View',
+    cancelLabel: 'Cancel',
+    tone: 'danger',
+  };
+}
+
+export function buildViewFormatChangeConfirmation(view: ProjectView): ConfirmationCopy {
+  return {
+    title: 'Change populated View format?',
+    message: `Change the page format for "${view.name}"?\n\nExisting coordinates are retained. Content outside the new page boundary will be reported rather than scaled or moved.`,
+    confirmLabel: 'Change Format',
+    cancelLabel: 'Cancel',
   };
 }
 

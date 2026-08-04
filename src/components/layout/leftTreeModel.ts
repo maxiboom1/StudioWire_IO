@@ -1,4 +1,5 @@
-import type { Device, ProjectRoot, Rack, Location, SubLocation } from '../../domain/types';
+import type { Device, ProjectRoot, ProjectView, Rack, Location, SubLocation } from '../../domain/types';
+import { formatViewPageMeta } from '../views/viewUiModel';
 
 export type NavigatorTreeItem =
   | { type: 'rack'; id: string; rack: Rack; label: string; meta: string }
@@ -21,7 +22,14 @@ export interface LocationTreeBranchModel {
 
 export interface LeftTreeModel {
   locations: LocationTreeBranchModel[];
+  views: ViewTreeItemModel[];
   isNavigatorEmpty: boolean;
+}
+
+export interface ViewTreeItemModel {
+  view: ProjectView;
+  label: string;
+  meta: string;
 }
 
 export function buildLeftTreeModel(project: ProjectRoot): LeftTreeModel {
@@ -60,6 +68,7 @@ export function buildLeftTreeModel(project: ProjectRoot): LeftTreeModel {
 
   return {
     locations: locationBranches,
+    views: project.views.map((view) => ({ view, label: view.name, meta: formatViewPageMeta(view) })),
     isNavigatorEmpty: locationBranches.length === 0,
   };
 }

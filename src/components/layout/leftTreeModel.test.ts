@@ -94,6 +94,37 @@ describe('leftTreeModel', () => {
     ]);
   });
 
+  it('builds a flat View section in project array order with page metadata', () => {
+    const project = projectFixture();
+    project.views = [
+      {
+        id: 'view-first',
+        name: 'Signal Overview',
+        description: '',
+        pageSize: 'a3',
+        orientation: 'portrait',
+        placements: [],
+        lines: [],
+        annotations: [],
+      },
+      {
+        id: 'view-second',
+        name: 'Rack Detail',
+        description: '',
+        pageSize: 'a4',
+        orientation: 'landscape',
+        placements: [],
+        lines: [],
+        annotations: [],
+      },
+    ];
+
+    expect(buildLeftTreeModel(project).views.map(({ label, meta }) => ({ label, meta }))).toEqual([
+      { label: 'Signal Overview', meta: 'A3 · Portrait' },
+      { label: 'Rack Detail', meta: 'A4 · Landscape' },
+    ]);
+  });
+
   it('detects empty navigator, creates stable keys, and formats device title/meta labels', () => {
     const emptyProject = {
       ...projectFixture(),

@@ -5,6 +5,7 @@ import type { InspectorDirtyGuard } from '../common/inspectorDirtyGuard';
 import { FolderInspector } from '../locations/FolderInspector';
 import { LocationInspector } from '../locations/LocationInspector';
 import { RackInspector } from '../racks/RackInspector';
+import { ViewInspector } from '../views/ViewInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function Inspector({
@@ -46,6 +47,10 @@ export function Inspector({
 
   if (selected.type === 'device') {
     return <DeviceInspector device={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
+  }
+
+  if (selected.type === 'view') {
+    return <ViewInspector view={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
   }
 
   return (

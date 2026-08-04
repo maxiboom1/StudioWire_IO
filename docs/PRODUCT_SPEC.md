@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.00
+# StudioWire IO Product Spec v0.2.9.01
 
-StudioWire IO v0.2.9.00 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.01 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. The `0.2.9.00` foundation defines and validates View metadata, live device/rack placements, neutral manual lines, and View-only annotations. It intentionally does not expose a View navigator or canvas editor until the staged `0.2.9.01` through `0.2.9.04` work.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.01` exposes View discovery, CRUD, metadata/page settings, and the exact A3/A4 page workspace shell over the `0.2.9.00` model. Live device/rack placement and drawing tools remain staged for `0.2.9.02` and `0.2.9.03`.
 
 ## Application Layout
 
@@ -32,10 +32,11 @@ The left tree is the primary project navigator. It shows the hierarchy of:
 - Locations.
 - Folders within locations.
 - A flat mixed list of racks, devices, and terminal blocks under each location or folder.
+- A separate flat Views section that is independent from Locations and remains visible when no locations exist.
 
 Selecting an item in the tree opens it in the center workspace and exposes editable fields in the right inspector.
 
-The Locations section includes an Add Location action using the standard app modal layout. Each location branch includes Add Rack, Add Device, Add Folder, and Add TB actions. Racks, devices, and terminal blocks can be dragged between folders or back to the parent location when the move is valid.
+The Locations section includes an Add Location action using the standard app modal layout. Each location branch includes Add Rack, Add Device, Add Folder, and Add TB actions. Racks, devices, and terminal blocks can be dragged between folders or back to the parent location when the move is valid. The Views section provides Add View plus per-View Rename and Delete actions without participating in location drag/drop.
 
 ### Center Workspace
 
@@ -46,6 +47,7 @@ The center workspace is the main editing area. It presents the currently selecte
 - Location summary.
 - Rack layout summary.
 - Canvas-first rack, device, terminal-block, cable, and project views over structured project data.
+- A page-bound View workspace with exact A3/A4 portrait or landscape dimensions, a fixed 2.5 mm grid, and zoom, reset, Fit Page, and Fit Width controls.
 
 The workspace should prefer structured tables, forms, and generated technical views over freeform drawing source documents.
 
@@ -61,6 +63,7 @@ Examples:
 - Rack name, height, numbering direction, assigned device list, and standard-device rack unassign controls.
 - Device name, code, manufacturer, model, role, notes, location, folder, rack placement, and rack units.
 - Locked cable range note for device port groups.
+- View ID, name, description, page size, orientation, canvas counts, and guarded deletion.
 
 Object inspectors use one compact, continuous accordion. One parent section is open at a time, nested Device I/O sections may be opened independently, content scrolls within the inspector, and Save/Delete actions remain visible. Dirty inspector navigation is guarded by Save, Discard, and Cancel. Locations, folders, and racks are deleted only when no child objects reference them. Device and TB deletion safely removes owned topology while preserving surviving planned cable slots.
 
@@ -193,6 +196,8 @@ Views do not copy source devices or racks. They never create, remove, renumber, 
 
 View names are trimmed and case-insensitively unique among Views only. Dangling imported source references remain structurally loadable and are relational validation errors. Out-of-page content remains stored and is reported as a warning. Views use the normal project export and local autosave; no separate View file or storage service exists.
 
+The left navigator lists Views in project array order with their page format. Add View defaults to the next available `View N` name and A3 portrait, selects the created View, and opens its page workspace. The View Inspector buffers name/description and format edits; populated page-format changes require confirmation and retain all coordinates. Deleting a View reports placement, line, and annotation counts and does not delete source devices or racks. Version `0.2.9.01` intentionally renders only the page shell and existing-content notice; live device, terminal-block, and rack blocks begin in `0.2.9.02`.
+
 ## Cable Numbering
 
 Cable numbering is planned through project data, not inferred from drawings.
@@ -210,4 +215,4 @@ StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB 
 
 ## Explicit Exclusions
 
-The current app intentionally excludes the interactive View navigator/canvas UI until the following staged versions, as well as View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline, and leaves the in-memory project exportable after autosave failure.
+The current app intentionally excludes live View placement/rendering, drawing tools, View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline and the previous `0.2.9.00` stage, and leaves the in-memory project exportable after autosave failure.

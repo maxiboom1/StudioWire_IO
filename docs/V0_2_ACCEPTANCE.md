@@ -16,9 +16,10 @@ v0.2 is complete around:
 - Resilient local browser persistence and recovery.
 - Bundled, validated device templates that populate Add Device without bypassing project validation.
 - Persistent project-level View metadata, live source references, neutral manual lines, and View-only annotations that cannot modify connectivity, numbering, rack assignment, or location hierarchy.
+- Flat View navigation and CRUD, buffered View metadata/page settings, validation-issue routing, and exact A3/A4 portrait/landscape page workspace behavior.
 - Retained `0.2.8.25` import/autosave migration that adds `views: []` without changing existing project engineering data.
 
-Version `0.2.9.00` provides the View domain and persistence foundation only. It does not yet support View navigation/canvas editing, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
+Version `0.2.9.01` provides View discovery, CRUD, inspector metadata/page settings, and the page workspace shell. It does not yet support live View placement/rendering, drawing tools, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
 
 ## Development And Release Commands
 
@@ -76,6 +77,7 @@ Release packaging, clean-extraction verification, and Playwright E2E are not req
 | Device deletion and cable-number release                          | Reducer/domain tests plus Playwright lifecycle coverage for removed reconnection candidates                                                                                                            |
 | Cable register and filtering                                      | `src/components/cables/cableRows.test.ts`, `src/components/layout/CablesWorkspace.test.ts`, and Playwright exported cable assertions                                                                   |
 | Navigator grouping and interaction boundaries                     | Pure tree model/collapse tests and rendered navigator tests under `src/components/layout`, plus Playwright lifecycle navigation coverage                                                               |
+| View CRUD, selection, page formats, and viewport controls         | `src/components/layout/StudioWireShell.test.tsx`, `src/components/common/selection.test.ts`, and focused tests under `src/components/views`                                                            |
 | Unsupported export/auth/backend features absent                   | README, `docs/PRODUCT_SPEC.md`, `docs/ROADMAP.md`, this acceptance doc, and UI/E2E coverage with no unsupported controls expected                                                                      |
 | Synthetic multi-thousand-port persistence/import/export check     | `npm run check:scale`                                                                                                                                                                                  |
 | Chromium browser availability                                     | `npm run test:e2e:install` installs the lockfile-compatible Chromium browser used by Playwright for release/E2E checkpoints                                                                            |
@@ -88,5 +90,7 @@ Automated tests cover behavior and data equivalence. Before publishing, a human 
 - App shell layout with tree, workspace, inspector, and validation panel.
 - Device and terminal-block connection views.
 - Add Device and Add TB dialogs.
+- The Views section with no Locations, Add/Rename/Delete flows, and the selected View Inspector.
+- A4 and A3 pages in portrait and landscape at 100%, Fit Page, and Fit Width zoom.
 
 This visual check is not a substitute for the automated gates.

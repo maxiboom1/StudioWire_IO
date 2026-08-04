@@ -45,7 +45,7 @@ Project-level View authoring remains presentation-only and does not change the e
 Staged scope:
 
 - `0.2.9.00` complete: persistent View types and JSON Schema, A4/A3 millimetre geometry, pure View operations, reducer/context commands, relational validation, source-deletion cleanup, normal autosave/export persistence, and retained `0.2.8.25` migration compatibility.
-- `0.2.9.01` planned: flat Views navigation, CRUD, View selection/inspector metadata, and the page workspace shell.
+- `0.2.9.01` complete: flat location-independent Views navigation, CRUD and selection, validation-issue routing, buffered View Inspector metadata/page settings, guarded populated format changes, and the exact A3/A4 page workspace shell with grid and viewport controls.
 - `0.2.9.02` planned: live device, terminal-block, and rack placement and compact technical rendering.
 - `0.2.9.03` planned: neutral labeled lines, route editing, text headings, and visual group rectangles.
 - `0.2.9.04` planned: View-local undo/redo, accessibility and lifecycle hardening, sample content, and final editor acceptance.
