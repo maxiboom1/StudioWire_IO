@@ -78,7 +78,7 @@ describe('ViewWorkspace', () => {
     });
   });
 
-  it('commits pointer movement once, cancels cleanly, and supports keyboard nudge/delete', () => {
+  it('commits move-only pointer gestures once, cancels cleanly, and supports keyboard nudge/delete', () => {
     Object.defineProperty(window, 'PointerEvent', {
       configurable: true,
       value: MouseEvent,
@@ -113,6 +113,7 @@ describe('ViewWorkspace', () => {
     const header = block.querySelector('.device-body-header.is-draggable');
     const page = screen.getByLabelText('Move View A3 portrait page');
     if (!header) throw new Error('Technical device drag header missing.');
+    expect(screen.queryByRole('button', { name: /Resize Router 1 placement/ })).toBeNull();
 
     fireEvent.pointerDown(header, { button: 0, pointerId: 1, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(page, { pointerId: 1, clientX: 15, clientY: 0 });
@@ -123,15 +124,6 @@ describe('ViewWorkspace', () => {
       xMm: 15,
       yMm: 10,
     });
-
-    updateViewPlacement.mockClear();
-    const resize = screen.getByRole('button', { name: 'Resize Router 1 placement' });
-    fireEvent.pointerDown(resize, { button: 0, pointerId: 3, clientX: 0, clientY: 0 });
-    fireEvent.pointerMove(page, { pointerId: 3, clientX: 276, clientY: 0 });
-    expect(updateViewPlacement).not.toHaveBeenCalled();
-    fireEvent.pointerUp(page, { pointerId: 3, clientX: 276, clientY: 0 });
-    expect(updateViewPlacement).toHaveBeenCalledTimes(1);
-    expect(updateViewPlacement).toHaveBeenLastCalledWith('view-move', placement.id, { scale: 2 });
 
     updateViewPlacement.mockClear();
     fireEvent.pointerDown(header, { button: 0, pointerId: 2, clientX: 0, clientY: 0 });

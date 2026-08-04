@@ -15,7 +15,7 @@ import { ViewPlacementInspector } from './ViewPlacementInspector';
 afterEach(cleanup);
 
 describe('ViewPlacementInspector', () => {
-  it('normalizes display and geometry updates and removes only the placement', async () => {
+  it('normalizes move-only display and position updates and removes only the placement', async () => {
     const user = userEvent.setup();
     const placement: ViewPlacement = {
       id: 'placement-router',
@@ -50,8 +50,8 @@ describe('ViewPlacementInspector', () => {
 
     const label = screen.getByLabelText('Display Label');
     await user.type(label, '  Core Router  ');
-    await user.clear(screen.getByLabelText('Scale (%)'));
-    await user.type(screen.getByLabelText('Scale (%)'), '50');
+    expect(screen.queryByLabelText('Scale (%)')).toBeNull();
+    expect(screen.getByText(/Placement size is fixed/)).toBeTruthy();
     await user.clear(screen.getByLabelText('X (mm)'));
     await user.type(screen.getByLabelText('X (mm)'), '12.4');
     await user.clear(screen.getByLabelText('Y (mm)'));
@@ -60,7 +60,6 @@ describe('ViewPlacementInspector', () => {
 
     expect(updateViewPlacement).toHaveBeenCalledWith('view-main', placement.id, {
       labelOverride: 'Core Router',
-      scale: 0.5,
       xMm: 12.5,
       yMm: 20,
     });

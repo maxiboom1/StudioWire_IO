@@ -1,7 +1,7 @@
 import type { CSSProperties, PointerEvent } from 'react';
 import { AlertTriangle, Grip } from 'lucide-react';
 import type { ProjectRoot, ProjectView, ViewPlacement } from '../../domain/types';
-import { getPlacementNaturalSize } from '../../domain/viewGeometry';
+import { DEVICE_DIAGRAM_SOURCE_WIDTH_PX, getPlacementNaturalSize } from '../../domain/viewGeometry';
 import { isPlacementOutsidePage } from '../../domain/viewPlacement';
 import type { ViewEditorController } from './useViewEditorController';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
@@ -43,10 +43,11 @@ export function ViewPlacementBlock({
     width: natural.widthMm * VIEW_PIXELS_PER_MM,
     height: natural.heightMm * VIEW_PIXELS_PER_MM,
     transform: `scale(${preview.scale})`,
+    '--view-device-diagram-scale': (natural.widthMm * VIEW_PIXELS_PER_MM) / DEVICE_DIAGRAM_SOURCE_WIDTH_PX,
   } as CSSProperties;
 
-  function begin(event: PointerEvent<HTMLElement>, mode: 'move' | 'resize') {
-    controller.beginGesture(event, placement, mode);
+  function begin(event: PointerEvent<HTMLElement>) {
+    controller.beginGesture(event, placement);
   }
 
   return (
@@ -79,7 +80,7 @@ export function ViewPlacementBlock({
           outsidePage={outsidePage}
           source={source}
           sourceType={placement.sourceType}
-          onPointerDown={(event) => begin(event, 'move')}
+          onPointerDown={begin}
         />
       ) : outsidePage ? (
         <span className="view-placement-warning" aria-label="Placement is outside the View page">
@@ -97,19 +98,10 @@ export function ViewPlacementBlock({
           project={project}
           device={source}
           displayName={label}
-          onHeaderPointerDown={isTechnicalDevice ? (event) => begin(event, 'move') : undefined}
+          onHeaderPointerDown={isTechnicalDevice ? begin : undefined}
         />
       ) : placement.sourceType === 'rack' && 'heightRu' in source ? (
         <ViewRackBlockBody project={project} rack={source} />
-      ) : null}
-      {selected ? (
-        <button
-          aria-label={`Resize ${label} placement`}
-          className="view-placement-resize"
-          type="button"
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => begin(event, 'resize')}
-        />
       ) : null}
     </article>
   );

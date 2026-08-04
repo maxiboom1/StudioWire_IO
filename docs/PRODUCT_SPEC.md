@@ -4,7 +4,7 @@ StudioWire IO v0.2.9.02 is the current local, frontend-only broadcast engineerin
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.02` adds live device, terminal-block, and rack placement, movement, scale, display labels, and compact read-only technical rendering over the existing View model. Manual line/text/group drawing tools remain staged for `0.2.9.03`.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.02` adds live device, terminal-block, and rack placement, movement, display labels, and read-only technical rendering over the existing View model. The `0.2.9.02-fix-2` maintenance UI is move-only and does not expose placement resizing. Manual line/text/group drawing tools remain staged for `0.2.9.03`.
 
 ## Application Layout
 
@@ -63,7 +63,7 @@ Examples:
 - Rack name, height, numbering direction, assigned device list, and standard-device rack unassign controls.
 - Device name, code, manufacturer, model, role, notes, location, folder, rack placement, and rack units.
 - Locked cable range note for device port groups.
-- View ID, name, description, page size, orientation, canvas counts, and guarded deletion. When a View placement is selected, the same Inspector switches to its presentation label, scale, coordinates, live source context, and source-safe removal.
+- View ID, name, description, page size, orientation, canvas counts, and guarded deletion. When a View placement is selected, the same Inspector switches to its presentation label, coordinates, fixed-size note, live source context, and source-safe removal.
 
 Object inspectors use one compact, continuous accordion. One parent section is open at a time, nested Device I/O sections may be opened independently, content scrolls within the inspector, and Save/Delete actions remain visible. Dirty inspector navigation is guarded by Save, Discard, and Cancel. Locations, folders, and racks are deleted only when no child objects reference them. Device and TB deletion safely removes owned topology while preserving surviving planned cable slots.
 
@@ -198,9 +198,9 @@ View names are trimmed and case-insensitively unique among Views only. Dangling 
 
 The left navigator lists Views in project array order with their page format. Add View defaults to the next available `View N` name and A3 portrait, selects the created View, and opens its page workspace. The View Inspector buffers name/description and format edits; populated page-format changes require confirmation and retain all coordinates. Deleting a View reports placement, line, and annotation counts and does not delete source devices or racks.
 
-Version `0.2.9.02` adds existing objects through a compact searchable picker grouped by Location and Folder or by dropping the existing navigator payload onto the paper. Picker insertion scans deterministically for the first non-overlapping position; direct drop and movement use the 2.5 mm grid unless Alt bypasses snapping. Exact duplicate sources focus their current placement instead of creating another record. Pointer movement and uniform resize use local previews and commit once at interaction end; arrow keys nudge and Delete removes only the placement plus attached View lines.
+Version `0.2.9.02` adds existing objects through a compact searchable picker grouped by Location and Folder or by dropping the existing navigator payload onto the paper. Picker insertion scans deterministically for the first non-overlapping position; direct drop and movement use the 2.5 mm grid unless Alt bypasses snapping. Exact duplicate sources focus their current placement instead of creating another record. Pointer movement uses a local preview and commits once at interaction end; arrow keys nudge and Delete removes only the placement plus attached View lines. The `0.2.9.02-fix-2` editor removes resize gestures and scale editing so placements retain the renderer's fixed proportions.
 
-The `0.2.9.02-fix1` maintenance UI makes standard-device blocks use the same technical diagram composition as Device Workspace within the established View placement bounds: a centered device body, ordered left/right I/O, connector/color anchors, cable routes and numbers, terminal-block chain markers, remote destination labels, and passive endpoint stubs. The renderer is shared, so the Device Workspace and View cannot drift into different port ordering or connection-summary rules. The View variant is read-only and never exposes crosspoint controls.
+The `0.2.9.02-fix-2` maintenance UI renders standard-device blocks by uniformly reducing the complete Device Workspace diagram: a centered device body, ordered left/right I/O, connector/color anchors, cable routes and numbers, terminal-block chain markers, remote destination labels, and passive endpoint stubs. Connector internals and row geometry therefore retain exactly the same relative alignment instead of receiving separate compact overrides. The renderer is shared, read-only in a View, and never exposes crosspoint controls.
 
 Terminal blocks use a compact rear/front representation. Rack blocks use the current numbering direction, mounted source names/RU spans, and existing placement diagnostics. These blocks expose no patch, rack-assignment, source drag, or other engineering-data editing controls. Missing imported sources remain selectable and removable placeholders. Placement growth or movement outside the paper is highlighted and reported without scaling or rewriting coordinates. Devices and racks can be dropped from the existing navigator directly onto the View paper; duplicate sources focus the existing placement.
 

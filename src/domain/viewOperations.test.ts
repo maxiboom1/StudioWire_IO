@@ -18,7 +18,12 @@ import {
   updateViewLine,
   updateViewPlacement,
 } from './viewOperations';
-import { getPlacementBounds, getViewPageDimensions, VIEW_GRID_MM } from './viewGeometry';
+import {
+  getPlacementBounds,
+  getStandardDeviceDiagramHeightMm,
+  getViewPageDimensions,
+  VIEW_GRID_MM,
+} from './viewGeometry';
 
 function projectFixture(): ProjectRoot {
   return structuredClone(sampleProject);
@@ -277,7 +282,11 @@ describe('View domain operations', () => {
       placementFixture('placement-missing', 'device-missing'),
     );
 
-    expect(deviceBounds).toMatchObject({ widthMm: 46, heightMm: 9.8, sourceMissing: false });
+    expect(deviceBounds).toMatchObject({
+      widthMm: 46,
+      heightMm: getStandardDeviceDiagramHeightMm(4) * 0.5,
+      sourceMissing: false,
+    });
     expect(rackBounds).toMatchObject({ widthMm: 58, heightMm: 134, sourceMissing: false });
     expect(missingBounds).toMatchObject({ widthMm: 60, heightMm: 30, sourceMissing: true });
   });

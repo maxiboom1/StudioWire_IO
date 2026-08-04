@@ -99,7 +99,7 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations.
 - A flat, location-independent Views navigator with Add, Rename, guarded Delete, buffered metadata/page settings, and View validation-issue routing.
 - An exact ISO A3/A4 portrait/landscape View workspace with a 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, and Fit Width controls.
-- Searchable live device, terminal-block, and rack placement with deterministic insertion, navigator drop, selection, drag, uniform scale, keyboard nudge/delete, missing-source and out-of-page diagnostics, and a placement Inspector.
+- Searchable live device, terminal-block, and rack placement with deterministic insertion, navigator drop, selection, move-only drag, keyboard nudge/delete, missing-source and out-of-page diagnostics, and a placement Inspector.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
 - JSON import/export: current exports use schema version `0.2.9.02`. Version `0.2.8.25` migrates by adding `views: []`, then `0.2.9.00` and `0.2.9.01` advance through identity migrations; the chain does not change engineering data.
 
@@ -146,6 +146,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.02-fix-2
+
+- Replaced the compact per-element View overrides with one uniform reduction of the complete Device Workspace diagram, keeping complex connector icons, anchors, cable lines, labels, and row spacing in their original relative alignment.
+- Updated standard-device View geometry to use the same `940 × (82 + rows × 50)` source ratio at a fixed 92 mm width; terminal-block and rack renderers retain their dedicated compact geometry.
+- Disabled placement resizing in the current View editor: resize handles, resize pointer gestures, and the Inspector Scale field are removed. Move, keyboard nudge, Display Label, coordinates, selection, and source-safe removal remain available.
+- This is a UI/geometry maintenance label over schema/app version `0.2.9.02`. The persisted `scale` field remains structurally compatible and is preserved for imported projects, but the editor no longer changes it.
 
 ### v0.2.9.02-fix1
 

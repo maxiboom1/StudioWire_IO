@@ -2,12 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import type { ProjectView, ViewPlacement } from '../../domain/types';
 import { getPlacementNaturalSize } from '../../domain/viewGeometry';
-import {
-  clampPlacementPosition,
-  clampPlacementScale,
-  getPlacementPage,
-  snapViewPosition,
-} from '../../domain/viewPlacement';
+import { clampPlacementPosition, getPlacementPage, snapViewPosition } from '../../domain/viewPlacement';
 import { useProject } from '../../state/ProjectContext';
 import { InspectorAccordion, InspectorShell } from '../common/InspectorShell';
 import { Button } from '../ui/button';
@@ -16,7 +11,6 @@ import { Label } from '../ui/label';
 
 interface PlacementForm {
   label: string;
-  scalePercent: string;
   xMm: string;
   yMm: string;
 }
@@ -55,7 +49,6 @@ export function ViewPlacementInspector({
   }, [baseline]);
 
   function apply() {
-    const scale = clampPlacementScale(parseNumber(form.scalePercent, placement.scale * 100) / 100);
     const position = snapViewPosition({
       xMm: parseNumber(form.xMm, placement.xMm),
       yMm: parseNumber(form.yMm, placement.yMm),
@@ -63,13 +56,15 @@ export function ViewPlacementInspector({
     const natural = getPlacementNaturalSize(project, placement);
     const clamped = clampPlacementPosition(
       position,
-      { widthMm: natural.widthMm * scale, heightMm: natural.heightMm * scale },
+      {
+        widthMm: natural.widthMm * placement.scale,
+        heightMm: natural.heightMm * placement.scale,
+      },
       getPlacementPage(project, view),
     );
 
     updateViewPlacement(view.id, placement.id, {
       labelOverride: form.label.trim() || null,
-      scale,
       ...clamped,
     });
   }
@@ -115,17 +110,6 @@ export function ViewPlacementInspector({
                     onChange={(event) => setForm({ ...form, label: event.target.value })}
                   />
                 </Field>
-                <Field label="Scale (%)" id="view-placement-scale">
-                  <Input
-                    id="view-placement-scale"
-                    inputMode="decimal"
-                    max={300}
-                    min={25}
-                    type="number"
-                    value={form.scalePercent}
-                    onChange={(event) => setForm({ ...form, scalePercent: event.target.value })}
-                  />
-                </Field>
                 <div className="form-grid-two">
                   <Field label="X (mm)" id="view-placement-x">
                     <Input
@@ -146,7 +130,9 @@ export function ViewPlacementInspector({
                     />
                   </Field>
                 </div>
-                <p className="view-inspector-note">Coordinates snap to the 2.5 mm View grid.</p>
+                <p className="view-inspector-note">
+                  Placement size is fixed. Coordinates snap to the 2.5 mm View grid.
+                </p>
               </div>
             ),
           },
@@ -175,7 +161,6 @@ export function ViewPlacementInspector({
 function createForm(placement: ViewPlacement): PlacementForm {
   return {
     label: placement.labelOverride ?? '',
-    scalePercent: String(Math.round(placement.scale * 10000) / 100),
     xMm: String(placement.xMm),
     yMm: String(placement.yMm),
   };

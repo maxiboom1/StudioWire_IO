@@ -14,9 +14,14 @@ export const VIEW_GRID_MM = 2.5;
 export const VIEW_PLACEMENT_MIN_SCALE = 0.25;
 export const VIEW_PLACEMENT_MAX_SCALE = 3;
 
-const DEVICE_WIDTH_MM = 92;
-const DEVICE_HEADER_HEIGHT_MM = 10;
-const DEVICE_ROW_HEIGHT_MM = 2.4;
+export const VIEW_DEVICE_WIDTH_MM = 92;
+export const DEVICE_DIAGRAM_SOURCE_WIDTH_PX = 940;
+export const DEVICE_DIAGRAM_SOURCE_HEADER_HEIGHT_PX = 82;
+export const DEVICE_DIAGRAM_SOURCE_ROW_HEIGHT_PX = 50;
+
+const DEVICE_DIAGRAM_MM_PER_SOURCE_PX = VIEW_DEVICE_WIDTH_MM / DEVICE_DIAGRAM_SOURCE_WIDTH_PX;
+const TERMINAL_BLOCK_HEADER_HEIGHT_MM = 10;
+const TERMINAL_BLOCK_ROW_HEIGHT_MM = 2.4;
 const RACK_WIDTH_MM = 58;
 const RACK_HEADER_HEIGHT_MM = 8;
 const RACK_RU_HEIGHT_MM = 3;
@@ -74,10 +79,20 @@ export function getPlacementNaturalSize(
   const rowCount = getDeviceViewRowCount(project, device);
 
   return {
-    widthMm: DEVICE_WIDTH_MM,
-    heightMm: DEVICE_HEADER_HEIGHT_MM + rowCount * DEVICE_ROW_HEIGHT_MM,
+    widthMm: VIEW_DEVICE_WIDTH_MM,
+    heightMm:
+      device.kind === 'terminal_block'
+        ? TERMINAL_BLOCK_HEADER_HEIGHT_MM + rowCount * TERMINAL_BLOCK_ROW_HEIGHT_MM
+        : getStandardDeviceDiagramHeightMm(rowCount),
     sourceMissing: false,
   };
+}
+
+export function getStandardDeviceDiagramHeightMm(rowCount: number): number {
+  return (
+    (DEVICE_DIAGRAM_SOURCE_HEADER_HEIGHT_PX + rowCount * DEVICE_DIAGRAM_SOURCE_ROW_HEIGHT_PX) *
+    DEVICE_DIAGRAM_MM_PER_SOURCE_PX
+  );
 }
 
 export function getPlacementBounds(project: ProjectRoot, placement: ViewPlacement): ViewPlacementBounds {

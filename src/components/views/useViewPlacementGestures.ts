@@ -1,18 +1,12 @@
 import { useEffect, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { ProjectRoot, ProjectView, ViewPlacement } from '../../domain/types';
 import { getPlacementNaturalSize } from '../../domain/viewGeometry';
-import {
-  clampPlacementPosition,
-  clampPlacementScale,
-  getPlacementPage,
-  snapViewPosition,
-} from '../../domain/viewPlacement';
+import { clampPlacementPosition, getPlacementPage, snapViewPosition } from '../../domain/viewPlacement';
 import type { ViewPlacementUpdates } from '../../state/projectContextTypes';
 import type { ViewPlacementPreview } from './viewEditorTypes';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
 
 interface GestureDraft {
-  mode: 'move' | 'resize';
   placement: ViewPlacement;
   pointerId: number;
   startClientX: number;
@@ -51,11 +45,7 @@ export function useViewPlacementGestures({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [gesture]);
 
-  function beginGesture(
-    event: PointerEvent<HTMLElement>,
-    placement: ViewPlacement,
-    mode: GestureDraft['mode'],
-  ) {
+  function beginGesture(event: PointerEvent<HTMLElement>, placement: ViewPlacement) {
     if (event.button !== 0 && event.button !== undefined) return;
     event.preventDefault();
     event.stopPropagation();
@@ -63,7 +53,6 @@ export function useViewPlacementGestures({
     event.currentTarget.closest<HTMLElement>('[data-view-placement-id]')?.focus();
     selectPlacement(placement.id);
     setGesture({
-      mode,
       placement,
       pointerId: event.pointerId,
       startClientX: event.clientX,
@@ -81,52 +70,34 @@ export function useViewPlacementGestures({
     if (!gesture || event.pointerId !== gesture.pointerId) return;
     const deltaX = (event.clientX - gesture.startClientX) / zoom / VIEW_PIXELS_PER_MM;
     const deltaY = (event.clientY - gesture.startClientY) / zoom / VIEW_PIXELS_PER_MM;
-    const natural = getPlacementNaturalSize(project, gesture.placement);
-
     setGesture({
       ...gesture,
-      preview:
-        gesture.mode === 'move'
-          ? {
-              placementId: gesture.placement.id,
-              xMm: gesture.placement.xMm + deltaX,
-              yMm: gesture.placement.yMm + deltaY,
-              scale: gesture.placement.scale,
-            }
-          : {
-              placementId: gesture.placement.id,
-              xMm: gesture.placement.xMm,
-              yMm: gesture.placement.yMm,
-              scale: clampPlacementScale(
-                gesture.placement.scale + Math.max(deltaX / natural.widthMm, deltaY / natural.heightMm),
-              ),
-            },
+      preview: {
+        placementId: gesture.placement.id,
+        xMm: gesture.placement.xMm + deltaX,
+        yMm: gesture.placement.yMm + deltaY,
+        scale: gesture.placement.scale,
+      },
     });
   }
 
   function finishGesture(event: PointerEvent<HTMLElement>) {
     if (!gesture || event.pointerId !== gesture.pointerId) return;
 
-    if (gesture.mode === 'resize') {
-      if (gesture.preview.scale !== gesture.placement.scale) {
-        commitPlacement(gesture.placement.id, { scale: gesture.preview.scale });
-      }
-    } else {
-      const position = event.altKey
-        ? { xMm: gesture.preview.xMm, yMm: gesture.preview.yMm }
-        : snapViewPosition(gesture.preview);
-      const natural = getPlacementNaturalSize(project, gesture.placement);
-      const clamped = clampPlacementPosition(
-        position,
-        {
-          widthMm: natural.widthMm * gesture.placement.scale,
-          heightMm: natural.heightMm * gesture.placement.scale,
-        },
-        page,
-      );
-      if (clamped.xMm !== gesture.placement.xMm || clamped.yMm !== gesture.placement.yMm) {
-        commitPlacement(gesture.placement.id, clamped);
-      }
+    const position = event.altKey
+      ? { xMm: gesture.preview.xMm, yMm: gesture.preview.yMm }
+      : snapViewPosition(gesture.preview);
+    const natural = getPlacementNaturalSize(project, gesture.placement);
+    const clamped = clampPlacementPosition(
+      position,
+      {
+        widthMm: natural.widthMm * gesture.placement.scale,
+        heightMm: natural.heightMm * gesture.placement.scale,
+      },
+      page,
+    );
+    if (clamped.xMm !== gesture.placement.xMm || clamped.yMm !== gesture.placement.yMm) {
+      commitPlacement(gesture.placement.id, clamped);
     }
     setGesture(null);
   }

@@ -73,6 +73,10 @@ describe('ViewPlacementBlock', () => {
     expect(screen.queryByRole('button', { name: /Connect/ })).toBeNull();
     expect(document.querySelector('[data-canvas-draggable="true"]')).toBeNull();
     expect(document.querySelector('.device-diagram-view')).toBeTruthy();
+    expect(document.querySelector('.device-diagram-view-frame')).toBeTruthy();
+    const block = screen.getByRole('button', { name: 'Core Router placement' });
+    expect(Number(block.style.getPropertyValue('--view-device-diagram-scale'))).toBeCloseTo(276 / 940);
+    expect(block.style.height).toBe('82.80000000000001px');
     expect(document.querySelectorAll('.device-body-row')).toHaveLength(4);
     expect(document.querySelectorAll('.device-wire-row-output .device-cable-line').length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.device-wire-row-output .device-port-anchor').length).toBeGreaterThan(
@@ -116,6 +120,6 @@ describe('ViewPlacementBlock', () => {
       />,
     );
     expect(screen.getAllByText('Missing rack')).toHaveLength(2);
-    expect(screen.getByRole('button', { name: /Resize Missing rack placement/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Resize Missing rack placement/ })).toBeNull();
   });
 });

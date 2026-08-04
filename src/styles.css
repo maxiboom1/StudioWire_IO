@@ -1116,22 +1116,6 @@ textarea:not([data-ui]) {
   height: 8px;
 }
 
-.view-placement-resize {
-  position: absolute;
-  z-index: 3;
-  right: -5px;
-  bottom: -5px;
-  width: 10px;
-  height: 10px;
-  border: 2px solid #fff;
-  border-radius: 1px;
-  background: #138f8d;
-  box-shadow: 0 0 0 1px #126d6c;
-  padding: 0;
-  cursor: nwse-resize;
-  touch-action: none;
-}
-
 .view-tb-rows {
   display: grid;
 }
@@ -2602,20 +2586,15 @@ textarea:not([data-ui]) {
   transform-origin: left center;
 }
 
+.device-diagram-view-frame {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .device-diagram-view {
-  --device-header-height: 30px;
-  --device-row-height: 7.2px;
-  --device-body-width: 96px;
-  --device-side-width: 90px;
-}
-
-.device-diagram-view .device-body {
-  border-width: 1px;
-}
-
-.device-diagram-view .device-body-header {
-  border-bottom-width: 1px;
-  padding: 2px 4px 3px;
+  transform: scale(var(--view-device-diagram-scale));
+  transform-origin: top left;
 }
 
 .device-diagram-view .device-body-header.is-draggable {
@@ -2627,123 +2606,9 @@ textarea:not([data-ui]) {
   cursor: grabbing;
 }
 
-.device-diagram-view .device-body-header strong {
-  font-size: 7px;
-}
-
-.device-diagram-view .device-body-header span {
-  margin-top: 1px;
-  font-size: 5px;
-}
-
-.device-diagram-view .device-body-row {
-  padding: 0 5px;
-}
-
-.device-diagram-view .device-port-label {
-  font-size: 4.5px;
-}
-
-.device-diagram-view .device-port-label-input,
-.device-diagram-view .device-port-label-output {
-  padding-right: 1px;
-  padding-left: 1px;
-}
-
-.device-diagram-view .device-cable-line {
-  min-width: 12px;
-  height: 1px;
-}
-
-.device-diagram-view .device-port-anchor.connector-icon-bnc,
-.device-diagram-view .device-port-anchor.connector-icon-xlr,
-.device-diagram-view .device-port-anchor.connector-icon-generic {
-  width: 7.8px;
-  height: 7.8px;
-}
-
-.device-diagram-view .device-wire-row-input .device-port-anchor {
-  margin-right: -4.2px;
-}
-
-.device-diagram-view .device-wire-row-output .device-port-anchor {
-  margin-left: -4.2px;
-}
-
-.device-diagram-view .device-cable-picker {
-  width: 5.5px;
-  height: 5.5px;
-  flex-basis: 5.5px;
-  border-width: 1px;
-  border-radius: 2px;
+.device-diagram-view .device-cable-picker.is-read-only {
   cursor: default;
-}
-
-.device-diagram-view .device-cable-picker:hover {
-  border-color: #c5d3da;
-  box-shadow: none;
-}
-
-.device-diagram-view .device-cable-picker::after {
-  width: 1.4px;
-  height: 1.4px;
-}
-
-.device-diagram-view .device-chain-label {
-  top: calc(50% - 4px);
-  max-width: 38px;
-  font-size: 3.2px;
-}
-
-.device-diagram-view .device-cable-number {
-  top: calc(50% + 1px);
-  font-size: 3.6px;
-}
-
-.device-diagram-view .device-wire-row-input .device-chain-label,
-.device-diagram-view .device-wire-row-input .device-cable-number-secondary {
-  left: 8px;
-}
-
-.device-diagram-view .device-wire-row-output .device-chain-label,
-.device-diagram-view .device-wire-row-output .device-cable-number-secondary {
-  right: 8px;
-}
-
-.device-diagram-view .device-wire-row-input .device-cable-number-primary {
-  right: 8px;
-}
-
-.device-diagram-view .device-wire-row-output .device-cable-number-primary {
-  left: 8px;
-}
-
-.device-diagram-view .device-inline-tb-marker {
-  height: 8px;
-  margin: 0 1px;
-  font-size: 4px;
-}
-
-.device-diagram-view .device-inline-tb-label {
-  padding: 0 1px;
-}
-
-.device-diagram-view .device-inline-tb-rear-bar {
-  width: 1px;
-  height: 9px;
-  flex-basis: 1px;
-}
-
-.device-diagram-view .device-inline-tb-arrow {
-  width: 5px;
-  height: 8px;
-  flex-basis: 5px;
-}
-
-.device-diagram-view .device-inline-tb-arrow::before,
-.device-diagram-view .device-inline-tb-arrow::after {
-  width: 6px;
-  height: 1px;
+  pointer-events: none;
 }
 
 .terminal-block-workspace {

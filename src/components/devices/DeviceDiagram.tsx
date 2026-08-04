@@ -24,7 +24,7 @@ export function DeviceDiagram({
   const rowIndexes = Array.from({ length: model.rowCount }, (_, index) => index);
   const diagramStyle = { '--device-port-rows': model.rowCount } as CSSProperties;
 
-  return (
+  const diagram = (
     <div
       aria-label={`${displayName} connections`}
       className={`device-diagram${variant === 'view' ? ' device-diagram-view' : ''}`}
@@ -69,6 +69,8 @@ export function DeviceDiagram({
       </div>
     </div>
   );
+
+  return variant === 'view' ? <div className="device-diagram-view-frame">{diagram}</div> : diagram;
 }
 
 function DevicePortLabel({
