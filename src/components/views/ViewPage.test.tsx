@@ -128,12 +128,14 @@ describe('ViewPage navigator drop', () => {
 });
 
 function Harness({ view }: { view: ProjectView }) {
-  const [selectedPlacementId, setSelectedPlacementId] = useState<string | null>(null);
+  const [canvasSelection, setCanvasSelection] = useState<
+    import('./viewEditorTypes').ViewCanvasSelection | null
+  >(null);
   const controller = useViewEditorController({
     view,
     zoom: 1,
-    selectedPlacementId,
-    onSelectPlacement: setSelectedPlacementId,
+    canvasSelection,
+    onCanvasSelectionChange: setCanvasSelection,
   });
 
   return <ViewPage controller={controller} page={{ widthMm: 297, heightMm: 420 }} view={view} zoom={1} />;

@@ -18,7 +18,7 @@ export const VIEW_PAGE_SIZE_VALUES = ['a4', 'a3'] as const;
 export const VIEW_ORIENTATION_VALUES = ['portrait', 'landscape'] as const;
 export const VIEW_SOURCE_TYPE_VALUES = ['device', 'rack'] as const;
 export const VIEW_LINE_SIDE_VALUES = ['top', 'right', 'bottom', 'left'] as const;
-export const VIEW_ANNOTATION_KIND_VALUES = ['text', 'group'] as const;
+export const VIEW_ANNOTATION_KIND_VALUES = ['text', 'group', 'port_range'] as const;
 export const VIEW_TEXT_SIZE_VALUES = ['small', 'medium', 'large'] as const;
 export const CONNECTOR_ICON_KEY_VALUES = [
   'bnc',
@@ -198,7 +198,7 @@ export interface ViewPoint {
   yMm: number;
 }
 
-export type ViewAnnotation = ViewTextAnnotation | ViewGroupAnnotation;
+export type ViewAnnotation = ViewTextAnnotation | ViewGroupAnnotation | ViewPortRangeAnnotation;
 
 export interface ViewTextAnnotation {
   id: string;
@@ -217,6 +217,16 @@ export interface ViewGroupAnnotation {
   yMm: number;
   widthMm: number;
   heightMm: number;
+  label: string;
+}
+
+export interface ViewPortRangeAnnotation {
+  id: string;
+  kind: 'port_range';
+  placementId: string;
+  side: 'left' | 'right';
+  startPortId: string;
+  endPortId: string;
   label: string;
 }
 

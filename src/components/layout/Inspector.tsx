@@ -8,18 +8,21 @@ import { RackInspector } from '../racks/RackInspector';
 import { ViewInspector } from '../views/ViewInspector';
 import { ViewPlacementInspector } from '../views/ViewPlacementInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import type { ViewCanvasSelection } from '../views/viewEditorTypes';
+import { ViewElementInspector } from '../views/ViewElementInspector';
+import { ViewSelectionInspector } from '../views/ViewSelectionInspector';
 
 export function Inspector({
   onInspectorDirtyGuardChange,
-  selectedViewPlacementId,
-  onSelectViewPlacement,
+  viewCanvasSelection,
+  onViewCanvasSelectionChange,
   onOpenObject,
   selection,
 }: {
   onInspectorDirtyGuardChange?: (guard: InspectorDirtyGuard | null) => void;
   selection: SelectionState;
-  selectedViewPlacementId: string | null;
-  onSelectViewPlacement: (placementId: string | null) => void;
+  viewCanvasSelection: ViewCanvasSelection | null;
+  onViewCanvasSelectionChange: (selection: ViewCanvasSelection | null) => void;
   onOpenObject: (type: 'device' | 'rack', id: string) => void;
 }) {
   const { project } = useProject();
@@ -57,14 +60,37 @@ export function Inspector({
   }
 
   if (selected.type === 'view') {
-    const placement = selected.value.placements.find((candidate) => candidate.id === selectedViewPlacementId);
+    const movable = viewCanvasSelection?.kind === 'movable' ? viewCanvasSelection.value : null;
+    if (movable && movable.items.length > 1) {
+      return (
+        <ViewSelectionInspector
+          selection={movable}
+          view={selected.value}
+          onRemoved={() => onViewCanvasSelectionChange(null)}
+        />
+      );
+    }
+    const placement =
+      movable?.primary.kind === 'placement'
+        ? selected.value.placements.find((candidate) => candidate.id === movable.primary.id)
+        : null;
     if (placement) {
       return (
         <ViewPlacementInspector
           placement={placement}
           view={selected.value}
           onOpenSource={onOpenObject}
-          onRemoved={() => onSelectViewPlacement(null)}
+          onRemoved={() => onViewCanvasSelectionChange(null)}
+        />
+      );
+    }
+    if (viewCanvasSelection) {
+      return (
+        <ViewElementInspector
+          selection={viewCanvasSelection}
+          view={selected.value}
+          onOpenSource={onOpenObject}
+          onRemoved={() => onViewCanvasSelectionChange(null)}
         />
       );
     }

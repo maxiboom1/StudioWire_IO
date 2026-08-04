@@ -18,6 +18,8 @@ import { ValidationPanel } from './ValidationPanel';
 import { Workspace } from './Workspace';
 import { useViewShellController } from '../views/useViewShellController';
 import { StudioWireObjectModals, type ObjectModalState } from './StudioWireObjectModals';
+import type { ViewCanvasSelection } from '../views/viewEditorTypes';
+import { normalizeViewMovableSelection } from '../../domain/viewSelection';
 
 export function StudioWireShell() {
   return (
@@ -37,7 +39,7 @@ function StudioWireShellContent() {
   const [activeView, setActiveView] = useState<AppView>('workspace');
   const [modal, setModal] = useState<ObjectModalState>(null);
   const [inspectorGuard, setInspectorGuard] = useState<InspectorDirtyGuard | null>(null);
-  const [selectedViewPlacementId, setSelectedViewPlacementId] = useState<string | null>(null);
+  const [viewCanvasSelection, setViewCanvasSelection] = useState<ViewCanvasSelection | null>(null);
 
   const runWithUnsavedGuard = useCallback(
     async (action: () => void) => {
@@ -98,18 +100,28 @@ function StudioWireShellContent() {
 
   useEffect(() => {
     if (selection.selectedObjectType !== 'view' || !selection.selectedObjectId) {
-      setSelectedViewPlacementId(null);
+      setViewCanvasSelection(null);
       return;
     }
 
     const currentView = project.views.find((view) => view.id === selection.selectedObjectId);
-    if (
-      selectedViewPlacementId &&
-      !currentView?.placements.some((placement) => placement.id === selectedViewPlacementId)
-    ) {
-      setSelectedViewPlacementId(null);
+    if (!viewCanvasSelection || !currentView) return;
+    if (viewCanvasSelection.kind === 'movable') {
+      const normalized = normalizeViewMovableSelection(currentView, viewCanvasSelection.value);
+      if (!normalized) setViewCanvasSelection(null);
+      else if (JSON.stringify(normalized) !== JSON.stringify(viewCanvasSelection.value)) {
+        setViewCanvasSelection({ kind: 'movable', value: normalized });
+      }
+      return;
     }
-  }, [project, selectedViewPlacementId, selection]);
+    const exists =
+      viewCanvasSelection.kind === 'line'
+        ? currentView.lines.some((item) => item.id === viewCanvasSelection.id)
+        : currentView.annotations.some(
+            (item) => item.kind === 'port_range' && item.id === viewCanvasSelection.id,
+          );
+    if (!exists) setViewCanvasSelection(null);
+  }, [project, viewCanvasSelection, selection]);
 
   function selectObject(selectedObjectType: SelectedObjectType, selectedObjectId: string) {
     void runWithUnsavedGuard(() => {
@@ -117,13 +129,13 @@ function StudioWireShellContent() {
         setActiveView('workspace');
       }
       setSelection({ selectedObjectType, selectedObjectId });
-      setSelectedViewPlacementId(null);
+      setViewCanvasSelection(null);
     });
   }
 
   function selectObjectImmediately(selectedObjectType: SelectedObjectType, selectedObjectId: string) {
     setSelection({ selectedObjectType, selectedObjectId });
-    setSelectedViewPlacementId(null);
+    setViewCanvasSelection(null);
   }
 
   function selectProject() {
@@ -202,8 +214,8 @@ function StudioWireShellContent() {
             {activeView === 'workspace' ? (
               <Workspace
                 selection={selection}
-                selectedViewPlacementId={selectedViewPlacementId}
-                onSelectViewPlacement={setSelectedViewPlacementId}
+                viewCanvasSelection={viewCanvasSelection}
+                onViewCanvasSelectionChange={setViewCanvasSelection}
                 onAddDevice={openAddDevice}
                 onAddTerminalBlock={openAddTerminalBlock}
               />
@@ -212,8 +224,8 @@ function StudioWireShellContent() {
             )}
             <Inspector
               selection={selection}
-              selectedViewPlacementId={selectedViewPlacementId}
-              onSelectViewPlacement={setSelectedViewPlacementId}
+              viewCanvasSelection={viewCanvasSelection}
+              onViewCanvasSelectionChange={setViewCanvasSelection}
               onOpenObject={(type, id) => selectObject(type, id)}
               onInspectorDirtyGuardChange={setInspectorGuard}
             />

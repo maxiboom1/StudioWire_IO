@@ -50,11 +50,13 @@ describe('confirmation prompts', () => {
         viewName: 'Signal Overview',
         placementCount: 1,
         attachedLineCount: 2,
+        attachedPortRangeCount: 1,
       },
     ]);
 
     expect(confirmation.message).toContain('Affected Views: 1 ("Signal Overview")');
-    expect(confirmation.message).toContain('1 direct placement(s) and 2 attached manual line(s)');
+    expect(confirmation.message).toContain('1 direct placement(s), 2 attached manual line(s)');
+    expect(confirmation.message).toContain('1 attached I/O Range(s)');
   });
 
   it('reports exact View-local deletion counts and protects source objects', () => {

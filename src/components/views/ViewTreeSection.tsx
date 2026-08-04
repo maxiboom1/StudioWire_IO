@@ -38,8 +38,8 @@ export function ViewTreeSection({
           </button>
         </div>
       </ActionContextMenu>
-      <SidebarGroupContent>
-        <SidebarMenu>
+      <SidebarGroupContent className="view-tree-content">
+        <SidebarMenu className="view-tree-list">
           {views.length === 0 ? (
             <SidebarMenuItem>
               <button className="view-tree-empty" type="button" onClick={onAddView}>

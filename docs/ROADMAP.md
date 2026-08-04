@@ -51,8 +51,10 @@ Staged scope:
 - `0.2.9.02-fix-2` complete maintenance pass: standard-device diagrams use one uniform source-to-View scale so every connector remains aligned, and the current editor is move-only with no resize handle or Scale field. Persisted scale data remains compatible but is not operator-editable.
 - `0.2.9.02-fix-3` complete maintenance pass: an invisible scale-aware virtual grid aligns placement columns and device I/O-row levels while the subtle paper grid remains the only visible guide, and one View-wide 70/80/90/100% Device Size control proportionally updates all device/TB renderers without adding project fields.
 - `0.2.9.02-fix-4` complete maintenance pass: the virtual grid uses the same fine I/O-row pitch on both axes; the View header and Inspectors retain only essential controls; placement creation is navigator drag-and-drop only; selected placement emphasis remains stable on hover; and Views/add-View controls align with the navigator and modal layout system.
-- `0.2.9.03` planned: neutral labeled lines, route editing, text headings, and visual group rectangles.
-- `0.2.9.04` planned: View-local undo/redo, accessibility and lifecycle hardening, sample content, and final editor acceptance.
+- `0.2.9.03` complete: neutral labeled orthogonal lines and route editing, text headings, visual Area rectangles stored as `kind: 'group'`, unified single-element canvas selection/Inspectors, and standard-device-attached I/O Range braces with live row anchors and no engineering semantics.
+- `0.2.9.04` complete: top-aligned/fixed navigator regions, user-facing Area terminology over the compatible `group` annotation, transient modifier/marquee multi-selection, atomic collective movement/removal, and refined I/O Range presentation.
+- `0.2.9.05` planned: standard-device port/I/O Range anchored View lines with restrained color/width presets and route-constrained label positioning.
+- `0.2.9.06` planned: View-local undo/redo, accessibility and lifecycle hardening, sample content, and final editor acceptance.
 
 View printing, title blocks, PDF/SVG generation, and document export remain v0.3 work.
 

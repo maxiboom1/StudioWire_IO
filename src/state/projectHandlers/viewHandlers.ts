@@ -102,7 +102,7 @@ export function handleRemoveViewPlacement(
     state,
     removeViewPlacement(state.project, action.payload.viewId, action.payload.placementId),
     `View placement removed: ${action.payload.placementId}`,
-    'View placement and attached lines removed',
+    'View placement and attached drawing items removed',
     context,
   );
 }

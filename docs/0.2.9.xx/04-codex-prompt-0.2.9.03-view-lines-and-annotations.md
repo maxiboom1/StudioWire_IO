@@ -2,9 +2,9 @@
 
 ## Assignment
 
-Implement only the StudioWire IO `0.2.9.03` manual View-line, text, and grouping-rectangle drawing tools.
+Implement the StudioWire IO `0.2.9.03` manual View-line, text, grouping-rectangle, and device-attached I/O Range drawing tools.
 
-This is a feature-development task. Read `AGENTS.md` and `docs/0.2.9.xx/README.md` completely. The repository must start at completed, passing `0.2.9.02` with live placement rendering. Do not implement the final undo/redo/accessibility hardening prompt yet.
+This is a feature-development task. Read `AGENTS.md` and `docs/0.2.9.xx/README.md` completely. The repository must start at completed, passing `0.2.9.02-fix-4` with live placement rendering. Preserve its 50 px header, simplified Inspectors, navigator-only drag/drop, move-only placements, equal-axis virtual grid, View-wide Device Size control, and bottom-anchored Views section. Do not implement the final undo/redo/accessibility hardening prompt yet.
 
 ## Target version and compatibility
 
@@ -13,7 +13,7 @@ Bump every synchronized app/schema/version surface to `0.2.9.03`.
 - Keep `0.2.8.25`, `0.2.9.00`, `0.2.9.01`, and `0.2.9.02` supported.
 - Add an identity migration `0.2.9.02 -> 0.2.9.03`.
 - Preserve the additive `0.2.8.25` migration and all staged chains.
-- Do not change the persistent View shape introduced in `0.2.9.00`.
+- The root View shape remains unchanged. Add the documented `port_range` variant to `ViewAnnotation`.
 
 ## Non-negotiable semantic boundary
 
@@ -33,12 +33,12 @@ Detailed device blocks continue showing live cable numbers and destination stubs
 Add a typed transient tool mode owned by the View editor controller:
 
 ```ts
-type ViewEditorTool = 'select' | 'line' | 'text' | 'group';
+type ViewEditorTool = 'select' | 'line' | 'text' | 'group' | 'portRange';
 ```
 
 Toolbar requirements:
 
-- Clearly labeled/titled buttons for Select, Line, Text, and Group.
+- One compact, non-wrapping segmented strip for Select, Line, Text, Group, and I/O Range inside the existing 50 px header. At constrained widths use icon-only buttons with `title` and `aria-label`.
 - Active tool has a visible pressed state and `aria-pressed`.
 - Tool buttons appear only while a View is selected.
 - Switching Views resets to Select and cancels any draft.
@@ -46,7 +46,15 @@ Toolbar requirements:
 - Clicking a finished element selects it and returns to Select after one-shot Text/Group creation; Line remains active only long enough to finish one line, then also returns to Select.
 - Do not add color, stroke-style, arrow, z-order, multi-select, or align controls.
 
-Keep draft geometry in the controller. Persist only a completed line/annotation, and commit pointer editing once on release.
+Keep draft geometry in the controller. Persist only a completed line/annotation, and commit pointer editing once on release. The Fix 4 equal-axis I/O-row-derived virtual grid applies to text/group gestures, manual waypoints, and keyboard nudging; Alt bypasses pointer snapping. Automatic routes and placement anchors remain exact millimetre geometry.
+
+## Device-attached I/O Range
+
+Add `ViewPortRangeAnnotation` with `kind: 'port_range'`, `placementId`, `side: 'left' | 'right'`, stable `startPortId`/`endPortId`, and a free `label`. It is supported only on standard devices. Two clicks select the first and last rendered row on one device side; reverse selection is normalized to current presentation order. Single rows and unmarked gaps are valid, but ranges on the same placement side may not share a row. Opposite sides are independent.
+
+I/O Ranges are View-only presentation marks. Port IDs are visual anchors and imply no connectivity, direction, cable count, cable ownership, or engineering state. Resolve the live contiguous row span between the endpoint ports after insert/reorder. Missing endpoints remain loadable, validate as errors, and render a selectable warning on their placement.
+
+Render a black vertical brace with short inward end marks and an optional restrained green vertical label outside the cable-row column. It moves and scales as part of the complete device diagram; it has no independent drag, resize, color, or offset. Its Inspector contains Label (`Add label` placeholder), Side, Start I/O, End I/O, Open Device, and Remove. Removing a placement/source also removes attached I/O Ranges; unrelated text/group annotations remain.
 
 ## Line creation workflow
 
@@ -105,7 +113,7 @@ Extend transient `ViewCanvasSelection` with a discriminated line selection. The 
 - `Reset route`, disabled when already automatic.
 - `Delete line`.
 
-Double-clicking a line label focuses the same Inspector input. Inspector updates use the common canvas commit path so prompt 05 can record them in history.
+Double-clicking a line label focuses the same Inspector input. Inspector updates use the common canvas commit path so the later hardening prompt can record them in history.
 
 ## Text tool
 
@@ -214,4 +222,4 @@ npm run clean
 npm run clean:check
 ```
 
-Do not run Git commands, release gates, source packaging, Playwright installation/E2E, or prompt 05. Finish with a concise summary and stop at `0.2.9.03`.
+Do not run Git commands, release gates, source packaging, Playwright installation/E2E, or any later prompt. Finish with a concise summary and stop at `0.2.9.03`.

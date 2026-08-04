@@ -4,8 +4,10 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
 import type { ProjectView } from '../../domain/types';
 import { sampleProject } from '../../domain/sampleProject';
+import type { ViewCanvasSelection } from './viewEditorTypes';
 
 const contextHarness = vi.hoisted(() => ({ current: null as any }));
 
@@ -43,6 +45,8 @@ describe('ViewWorkspace', () => {
 
     expect(screen.getByText('Drag a device or rack from the navigator.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Add object' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Area' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Group' })).toBeNull();
     expect(screen.getByLabelText('Signal Overview A3 portrait page')).toBeTruthy();
     expect(screen.getByLabelText('Current zoom').textContent).toBe('100%');
 
@@ -72,16 +76,26 @@ describe('ViewWorkspace', () => {
       labelOverride: null,
     };
     const currentView = { ...view('view-move', 'Move View'), placements: [placement] };
-    const updateViewPlacement = vi.fn();
-    const removeViewPlacement = vi.fn();
+    const replaceViewCanvas = vi.fn();
     contextHarness.current = {
       project: { ...structuredClone(sampleProject), views: [currentView] },
       addViewPlacement: vi.fn(),
-      updateViewPlacement,
-      removeViewPlacement,
+      updateViewPlacement: vi.fn(),
+      removeViewPlacement: vi.fn(),
+      replaceViewCanvas,
     };
     render(
-      <ViewWorkspace view={currentView} selectedPlacementId={placement.id} onSelectPlacement={vi.fn()} />,
+      <ViewWorkspace
+        view={currentView}
+        canvasSelection={{
+          kind: 'movable',
+          value: {
+            primary: { kind: 'placement', id: placement.id },
+            items: [{ kind: 'placement', id: placement.id }],
+          },
+        }}
+        onCanvasSelectionChange={vi.fn()}
+      />,
     );
 
     const block = screen.getByRole('button', { name: /Router 1 placement, selected/ });
@@ -92,28 +106,35 @@ describe('ViewWorkspace', () => {
 
     fireEvent.pointerDown(header, { button: 0, pointerId: 1, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(page, { pointerId: 1, clientX: 180, clientY: 0 });
-    expect(updateViewPlacement).not.toHaveBeenCalled();
+    expect(replaceViewCanvas).not.toHaveBeenCalled();
     fireEvent.pointerUp(page, { pointerId: 1, clientX: 180, clientY: 0 });
-    expect(updateViewPlacement).toHaveBeenCalledTimes(1);
-    expect(updateViewPlacement).toHaveBeenLastCalledWith('view-move', placement.id, {
-      xMm: 68.723404,
-      yMm: 10,
+    expect(replaceViewCanvas).toHaveBeenCalledTimes(1);
+    expect(replaceViewCanvas).toHaveBeenLastCalledWith('view-move', {
+      placements: [expect.objectContaining({ id: placement.id, xMm: 68.723404, yMm: 10 })],
+      lines: [],
+      annotations: [],
     });
 
-    updateViewPlacement.mockClear();
+    replaceViewCanvas.mockClear();
     fireEvent.pointerDown(header, { button: 0, pointerId: 2, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(page, { pointerId: 2, clientX: 30, clientY: 0 });
     fireEvent.keyDown(block, { key: 'Escape' });
     fireEvent.pointerUp(page, { pointerId: 2, clientX: 30, clientY: 0 });
-    expect(updateViewPlacement).not.toHaveBeenCalled();
+    expect(replaceViewCanvas).not.toHaveBeenCalled();
 
     fireEvent.keyDown(block, { key: 'ArrowDown', shiftKey: true });
-    expect(updateViewPlacement).toHaveBeenCalledWith('view-move', placement.id, {
-      xMm: 10,
-      yMm: 34.468085,
+    expect(replaceViewCanvas).toHaveBeenCalledWith('view-move', {
+      placements: [expect.objectContaining({ id: placement.id, xMm: 10, yMm: 34.468085 })],
+      lines: [],
+      annotations: [],
     });
+    replaceViewCanvas.mockClear();
     fireEvent.keyDown(block, { key: 'Delete' });
-    expect(removeViewPlacement).toHaveBeenCalledWith('view-move', placement.id);
+    expect(replaceViewCanvas).toHaveBeenCalledWith('view-move', {
+      placements: [],
+      lines: [],
+      annotations: [],
+    });
   });
 
   it('applies one preset size to every View device while preserving logical grid cells', async () => {
@@ -175,5 +196,100 @@ describe('ViewWorkspace', () => {
       annotations: [],
     });
     expect(screen.queryByText(/Device size set to/)).toBeNull();
+  });
+
+  it('adds fully enclosed items with Shift-marquee and moves the resulting selection once', () => {
+    Object.defineProperty(window, 'PointerEvent', { configurable: true, value: MouseEvent });
+    Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    const currentView = {
+      ...view('view-multi', 'Multi View'),
+      placements: [
+        {
+          id: 'placement-router',
+          sourceType: 'device' as const,
+          sourceId: 'device-router-1',
+          xMm: 10,
+          yMm: 10,
+          scale: 1,
+          labelOverride: null,
+        },
+        {
+          id: 'placement-multiviewer',
+          sourceType: 'device' as const,
+          sourceId: 'device-multiviewer-1',
+          xMm: 110,
+          yMm: 10,
+          scale: 1,
+          labelOverride: null,
+        },
+      ],
+    };
+    const replaceViewCanvas = vi.fn();
+    contextHarness.current = {
+      project: { ...structuredClone(sampleProject), views: [currentView] },
+      addViewPlacement: vi.fn(),
+      updateViewPlacement: vi.fn(),
+      removeViewPlacement: vi.fn(),
+      replaceViewCanvas,
+    };
+
+    function Harness() {
+      const [selection, setSelection] = useState<ViewCanvasSelection | null>({
+        kind: 'movable',
+        value: {
+          primary: { kind: 'placement', id: 'placement-router' },
+          items: [{ kind: 'placement', id: 'placement-router' }],
+        },
+      });
+      return (
+        <ViewWorkspace
+          view={currentView}
+          canvasSelection={selection}
+          onCanvasSelectionChange={setSelection}
+        />
+      );
+    }
+
+    render(<Harness />);
+    const page = screen.getByLabelText('Multi View A3 portrait page');
+    fireEvent.pointerDown(page, {
+      button: 0,
+      pointerId: 20,
+      clientX: 100 * 3,
+      clientY: 0,
+      shiftKey: true,
+    });
+    fireEvent.pointerMove(page, { pointerId: 20, clientX: 210 * 3, clientY: 100 * 3 });
+    fireEvent.pointerUp(page, {
+      pointerId: 20,
+      clientX: 210 * 3,
+      clientY: 100 * 3,
+      shiftKey: true,
+    });
+
+    const router = screen.getByRole('button', { name: /Router 1 placement, selected/ });
+    expect(screen.getByRole('button', { name: /Multiviewer 1 placement, selected/ })).toBeTruthy();
+    const header = router.querySelector('.device-body-header.is-draggable');
+    if (!header) throw new Error('Technical device drag header missing.');
+    fireEvent.pointerDown(header, { button: 0, pointerId: 21, clientX: 30, clientY: 30 });
+    fireEvent.pointerMove(page, { pointerId: 21, clientX: 45, clientY: 45 });
+    expect(replaceViewCanvas).not.toHaveBeenCalled();
+    fireEvent.pointerUp(page, { pointerId: 21, clientX: 45, clientY: 45 });
+
+    expect(replaceViewCanvas).toHaveBeenCalledTimes(1);
+    const canvas = replaceViewCanvas.mock.calls[0][1];
+    expect(canvas.placements[0].xMm - currentView.placements[0].xMm).toBeCloseTo(
+      canvas.placements[1].xMm - currentView.placements[1].xMm,
+      6,
+    );
+    expect(canvas.placements[0].yMm - currentView.placements[0].yMm).toBeCloseTo(
+      canvas.placements[1].yMm - currentView.placements[1].yMm,
+      6,
+    );
+    expect(canvas.placements[1].xMm - canvas.placements[0].xMm).toBe(100);
+    expect(canvas.placements[1].yMm - canvas.placements[0].yMm).toBe(0);
   });
 });

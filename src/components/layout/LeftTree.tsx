@@ -127,8 +127,8 @@ export function LeftTree({
             <ActionContextMenu actions={rootActions}>
               <SidebarGroupLabel className="cursor-context-menu">Project navigator</SidebarGroupLabel>
             </ActionContextMenu>
-            <SidebarGroupContent>
-              <SidebarMenu>
+            <SidebarGroupContent className="project-tree-content">
+              <SidebarMenu className="project-tree-list">
                 {tree.isNavigatorEmpty ? (
                   <SidebarMenuItem>
                     <ActionContextMenu actions={rootActions}>

@@ -25,6 +25,7 @@ import {
   getViewPageDimensions,
   VIEW_GRID_MM,
 } from './viewGeometry';
+import { getAutomaticLineRoute } from './viewRouting';
 
 function projectFixture(): ProjectRoot {
   return structuredClone(sampleProject);
@@ -157,8 +158,11 @@ describe('View domain operations', () => {
       labelOverride: 'Router block',
     });
     if (!moved.ok) throw new Error(moved.error);
+    const movedView = moved.project.views[0];
+    const movedLine = movedView.lines.find((line) => line.id === 'line-main');
+    if (!movedLine) throw new Error('Expected the routed line.');
     const routed = updateViewLine(moved.project, 'view-main', 'line-main', {
-      waypoints: [{ xMm: 120, yMm: 42.5 }],
+      waypoints: getAutomaticLineRoute(moved.project, movedView, movedLine.from, movedLine.to).slice(1, -1),
     });
     if (!routed.ok) throw new Error(routed.error);
     const annotated = addViewAnnotation(routed.project, 'view-main', {
@@ -245,6 +249,7 @@ describe('View domain operations', () => {
         viewName: 'Main View',
         placementCount: 1,
         attachedLineCount: 1,
+        attachedPortRangeCount: 0,
       },
     ]);
 

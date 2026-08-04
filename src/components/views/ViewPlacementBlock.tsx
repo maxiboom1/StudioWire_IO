@@ -7,6 +7,7 @@ import type { ViewEditorController } from './useViewEditorController';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
 import { ViewDeviceBlockBody } from './ViewDeviceBlockBody';
 import { ViewRackBlockBody } from './ViewRackBlockBody';
+import { ViewPortRangeOverlay } from './ViewPortRangeOverlay';
 
 export function ViewPlacementBlock({
   controller,
@@ -14,14 +15,15 @@ export function ViewPlacementBlock({
   project,
   view,
   selected,
+  primary = false,
 }: {
   controller: ViewEditorController;
   placement: ViewPlacement;
   project: ProjectRoot;
   view: ProjectView;
   selected: boolean;
+  primary?: boolean;
 }) {
-  const preview = controller.preview?.placementId === placement.id ? controller.preview : placement;
   const natural = getPlacementNaturalSize(project, placement);
   const source =
     placement.sourceType === 'device'
@@ -33,21 +35,21 @@ export function ViewPlacementBlock({
     placement.sourceType === 'device' && source && 'kind' in source && source.kind === 'device';
   const outsidePage = isPlacementOutsidePage(project, view, {
     ...placement,
-    xMm: preview.xMm,
-    yMm: preview.yMm,
-    scale: preview.scale,
+    xMm: placement.xMm,
+    yMm: placement.yMm,
+    scale: placement.scale,
   });
   const style = {
-    left: preview.xMm * VIEW_PIXELS_PER_MM,
-    top: preview.yMm * VIEW_PIXELS_PER_MM,
+    left: placement.xMm * VIEW_PIXELS_PER_MM,
+    top: placement.yMm * VIEW_PIXELS_PER_MM,
     width: natural.widthMm * VIEW_PIXELS_PER_MM,
     height: natural.heightMm * VIEW_PIXELS_PER_MM,
-    transform: `scale(${preview.scale})`,
+    transform: `scale(${placement.scale})`,
     '--view-device-diagram-scale': (natural.widthMm * VIEW_PIXELS_PER_MM) / DEVICE_DIAGRAM_SOURCE_WIDTH_PX,
   } as CSSProperties;
 
   function begin(event: PointerEvent<HTMLElement>) {
-    controller.beginGesture(event, placement);
+    controller.beginMovableGesture(event, { kind: 'placement', id: placement.id });
   }
 
   return (
@@ -59,6 +61,7 @@ export function ViewPlacementBlock({
         `is-${placement.sourceType}`,
         isTechnicalDevice ? 'is-device-diagram' : '',
         selected ? 'is-selected' : '',
+        primary ? 'is-primary' : '',
         outsidePage ? 'is-outside-page' : '',
         !source ? 'is-missing-source' : '',
       ]
@@ -70,9 +73,11 @@ export function ViewPlacementBlock({
       tabIndex={0}
       onClick={(event) => {
         event.stopPropagation();
-        controller.selectPlacement(placement.id);
+        controller.selectMovable(
+          { kind: 'placement', id: placement.id },
+          event.ctrlKey || event.metaKey,
+        );
       }}
-      onKeyDown={(event) => controller.handlePlacementKeyDown(event, placement)}
     >
       {!isTechnicalDevice ? (
         <PlacementHeader
@@ -103,7 +108,37 @@ export function ViewPlacementBlock({
       ) : placement.sourceType === 'rack' && 'heightRu' in source ? (
         <ViewRackBlockBody project={project} rack={source} />
       ) : null}
+      {isTechnicalDevice ? (
+        <ViewPortRangeOverlay controller={controller} placement={placement} view={view} />
+      ) : null}
+      {controller.tool === 'line' && source ? (
+        <LineAnchors controller={controller} placementId={placement.id} />
+      ) : null}
     </article>
+  );
+}
+
+function LineAnchors({ controller, placementId }: { controller: ViewEditorController; placementId: string }) {
+  return (
+    <div className="view-line-anchors">
+      {(['top', 'right', 'bottom', 'left'] as const).flatMap((side) =>
+        [0.25, 0.5, 0.75].map((offset) => (
+          <button
+            aria-label={`Line anchor ${side} ${offset}`}
+            className={`view-line-anchor is-${side}`}
+            key={`${side}-${offset}`}
+            style={
+              side === 'top' || side === 'bottom' ? { left: `${offset * 100}%` } : { top: `${offset * 100}%` }
+            }
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              controller.handleLineAnchor({ placementId, side, offset });
+            }}
+          />
+        )),
+      )}
+    </div>
   );
 }
 

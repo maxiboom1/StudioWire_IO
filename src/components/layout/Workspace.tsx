@@ -8,17 +8,18 @@ import { RackWorkspace } from '../racks/RackWorkspace';
 import { SettingsWorkspace } from '../settings/SettingsWorkspace';
 import { ViewWorkspace } from '../views/ViewWorkspace';
 import { ProjectWorkspace } from './ProjectWorkspace';
+import type { ViewCanvasSelection } from '../views/viewEditorTypes';
 
 export function Workspace({
   selection,
-  selectedViewPlacementId,
-  onSelectViewPlacement,
+  viewCanvasSelection,
+  onViewCanvasSelectionChange,
   onAddDevice,
   onAddTerminalBlock,
 }: {
   selection: SelectionState;
-  selectedViewPlacementId: string | null;
-  onSelectViewPlacement: (placementId: string | null) => void;
+  viewCanvasSelection: ViewCanvasSelection | null;
+  onViewCanvasSelectionChange: (selection: ViewCanvasSelection | null) => void;
   onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
@@ -68,8 +69,8 @@ export function Workspace({
     return (
       <ViewWorkspace
         view={selected.value}
-        selectedPlacementId={selectedViewPlacementId}
-        onSelectPlacement={onSelectViewPlacement}
+        canvasSelection={viewCanvasSelection}
+        onCanvasSelectionChange={onViewCanvasSelectionChange}
       />
     );
   }

@@ -19,6 +19,7 @@ export type DeleteDeviceResult =
       affectedViewCount: number;
       deletedViewPlacementCount: number;
       deletedViewLineCount: number;
+      deletedViewPortRangeCount: number;
     }
   | { ok: false; error: string };
 
@@ -127,6 +128,7 @@ function deleteDeviceRecordFromProject(
     affectedViewCount: viewImpact.length,
     deletedViewPlacementCount: viewImpact.reduce((total, impact) => total + impact.placementCount, 0),
     deletedViewLineCount: viewImpact.reduce((total, impact) => total + impact.attachedLineCount, 0),
+    deletedViewPortRangeCount: viewImpact.reduce((total, impact) => total + impact.attachedPortRangeCount, 0),
   };
 }
 

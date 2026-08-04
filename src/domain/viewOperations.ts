@@ -1,4 +1,4 @@
-import { VIEW_PLACEMENT_MAX_SCALE, VIEW_PLACEMENT_MIN_SCALE } from './viewGeometry';
+import { getLineEndpointPoint, VIEW_PLACEMENT_MAX_SCALE, VIEW_PLACEMENT_MIN_SCALE } from './viewGeometry';
 import {
   getViewLayoutScale,
   isViewDeviceScale,
@@ -15,6 +15,7 @@ import type {
   ViewPlacement,
   ViewSourceType,
 } from './types';
+import { normalizeViewPortRange, resolveViewPortRange, viewPortRangesOverlap } from './viewPortRanges';
 
 export interface ProjectViewInput {
   id: string;
@@ -34,6 +35,7 @@ export interface ViewSourceImpact {
   viewName: string;
   placementCount: number;
   attachedLineCount: number;
+  attachedPortRangeCount: number;
 }
 
 export type ViewOperationResult = { ok: true; project: ProjectRoot } | { ok: false; error: string };
@@ -240,7 +242,7 @@ export function addViewLine(project: ProjectRoot, viewId: string, line: ViewLine
     return failure('View line creation blocked: selected View no longer exists.');
   }
 
-  const lineError = validateLine(view, line);
+  const lineError = validateLine(project, view, line);
 
   if (lineError) {
     return failure(lineError);
@@ -263,7 +265,7 @@ export function updateViewLine(
   }
 
   const updatedLine = { ...line, ...updates };
-  const lineError = validateLine(view, updatedLine);
+  const lineError = validateLine(project, view, updatedLine);
 
   if (lineError) {
     return failure(lineError);
@@ -296,11 +298,13 @@ export function addViewAnnotation(
     return failure('View annotation creation blocked: selected View no longer exists.');
   }
 
-  if (!isAnnotationGeometryValid(annotation)) {
-    return failure('View annotation creation blocked: annotation geometry is invalid.');
+  const annotationError = validateAnnotation(project, view, annotation);
+  if (annotationError) {
+    return failure(annotationError);
   }
-
-  return replaceView(project, { ...view, annotations: [...view.annotations, annotation] });
+  const normalized =
+    annotation.kind === 'port_range' ? normalizeViewPortRange(project, view, annotation)! : annotation;
+  return replaceView(project, { ...view, annotations: [...view.annotations, normalized] });
 }
 
 export function updateViewAnnotation(
@@ -315,14 +319,18 @@ export function updateViewAnnotation(
     return failure('View annotation update blocked: selected annotation no longer exists.');
   }
 
-  if (annotation.id !== annotationId || !isAnnotationGeometryValid(annotation)) {
-    return failure('View annotation update blocked: annotation data is invalid.');
+  const annotationError = validateAnnotation(project, view, annotation, annotationId);
+  if (annotation.id !== annotationId || annotationError) {
+    return failure(annotationError ?? 'View annotation update blocked: annotation data is invalid.');
   }
+
+  const normalized =
+    annotation.kind === 'port_range' ? normalizeViewPortRange(project, view, annotation)! : annotation;
 
   return replaceView(project, {
     ...view,
     annotations: view.annotations.map((candidate) =>
-      candidate.id === annotationId ? annotation : candidate,
+      candidate.id === annotationId ? normalized : candidate,
     ),
   });
 }
@@ -382,6 +390,9 @@ export function getViewSourceImpact(
         attachedLineCount: view.lines.filter(
           (line) => placementIds.has(line.from.placementId) || placementIds.has(line.to.placementId),
         ).length,
+        attachedPortRangeCount: view.annotations.filter(
+          (annotation) => annotation.kind === 'port_range' && placementIds.has(annotation.placementId),
+        ).length,
       },
     ];
   });
@@ -420,7 +431,7 @@ function validateViewName(project: ProjectRoot, name: string, excludedViewId?: s
   return conflict ? `View operation blocked: View name "${name.trim()}" is already used.` : null;
 }
 
-function validateLine(view: ProjectView, line: ViewLine): string | null {
+function validateLine(project: ProjectRoot, view: ProjectView, line: ViewLine): string | null {
   const placementIds = new Set(view.placements.map((placement) => placement.id));
 
   if (!placementIds.has(line.from.placementId) || !placementIds.has(line.to.placementId)) {
@@ -443,6 +454,19 @@ function validateLine(view: ProjectView, line: ViewLine): string | null {
     return 'View line operation blocked: line geometry is invalid.';
   }
 
+  if (line.waypoints.length) {
+    const start = getLineEndpointPoint(project, view, line.from);
+    const end = getLineEndpointPoint(project, view, line.to);
+    const points = start && end ? [start, ...line.waypoints, end] : [];
+    if (
+      points
+        .slice(1)
+        .some((point, index) => point.xMm !== points[index].xMm && point.yMm !== points[index].yMm)
+    ) {
+      return 'View line operation blocked: manual routes must remain orthogonal.';
+    }
+  }
+
   return null;
 }
 
@@ -457,6 +481,7 @@ function isPlacementGeometryValid(placement: ViewPlacement): boolean {
 }
 
 function isAnnotationGeometryValid(annotation: ViewAnnotation): boolean {
+  if (annotation.kind === 'port_range') return true;
   return (
     isFiniteNumber(annotation.xMm) &&
     isFiniteNumber(annotation.yMm) &&
@@ -464,6 +489,25 @@ function isAnnotationGeometryValid(annotation: ViewAnnotation): boolean {
     annotation.widthMm > 0 &&
     (annotation.kind === 'text' || (isFiniteNumber(annotation.heightMm) && annotation.heightMm > 0))
   );
+}
+
+function validateAnnotation(
+  project: ProjectRoot,
+  view: ProjectView,
+  annotation: ViewAnnotation,
+  excludedId?: string,
+): string | null {
+  if (!isAnnotationGeometryValid(annotation)) {
+    return 'View annotation operation blocked: annotation geometry is invalid.';
+  }
+  if (annotation.kind !== 'port_range') return null;
+  if (!resolveViewPortRange(project, view, annotation)) {
+    return 'I/O Range blocked: choose two rows on the same side of one standard device.';
+  }
+  if (viewPortRangesOverlap(project, view, annotation, excludedId)) {
+    return 'I/O Range blocked: rows on this side are already included in another range.';
+  }
+  return null;
 }
 
 function sourceExists(project: ProjectRoot, sourceType: ViewSourceType, sourceId: string): boolean {
@@ -478,6 +522,9 @@ function removePlacementAndAttachedLines(view: ProjectView, placementIds: Set<st
     placements: view.placements.filter((placement) => !placementIds.has(placement.id)),
     lines: view.lines.filter(
       (line) => !placementIds.has(line.from.placementId) && !placementIds.has(line.to.placementId),
+    ),
+    annotations: view.annotations.filter(
+      (annotation) => annotation.kind !== 'port_range' || !placementIds.has(annotation.placementId),
     ),
   };
 }

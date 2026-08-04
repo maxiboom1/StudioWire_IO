@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.02 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.04 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -99,10 +99,11 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations.
 - A flat, location-independent Views navigator with Add, Rename, guarded Delete, buffered metadata/page settings, and View validation-issue routing.
 - An exact ISO A3/A4 portrait/landscape View workspace with a 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, and Fit Width controls.
-- Searchable live device, terminal-block, and rack placement with deterministic virtual-grid insertion, navigator drop, selection, move-only drag, keyboard grid movement/delete, missing-source and out-of-page diagnostics, and a placement Inspector.
+- Live device, terminal-block, and rack placement with deterministic virtual-grid insertion, navigator drop, transient modifier/marquee multi-selection, atomic collective move/delete, keyboard grid movement, missing-source and out-of-page diagnostics, and focused Inspectors.
 - A View-wide 70/80/90/100% Device Size control that proportionally scales every device/TB renderer and preserves logical alignment cells; the virtual grid stays invisible behind the existing paper pattern.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
-- JSON import/export: current exports use schema version `0.2.9.02`. Version `0.2.8.25` migrates by adding `views: []`, then `0.2.9.00` and `0.2.9.01` advance through identity migrations; the chain does not change engineering data.
+- View drawing tools for neutral orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. These marks remain presentation-only and cannot change cables, ports, numbering, racks, or locations.
+- JSON import/export: current exports use schema version `0.2.9.04`. Version `0.2.8.25` migrates by adding `views: []`, then each staged version through `0.2.9.03` advances through identity migrations; the chain does not change engineering data.
 
 ## Release Gates
 
@@ -125,7 +126,7 @@ Run release/stabilization gates from a clean checkout or clean source-package ex
 - Authentication or user accounts.
 - Backend services or database storage.
 - Multi-user collaboration.
-- View line/text/group drawing tools, View printing, and View document export.
+- View printing and View document export.
 
 ## Screenshots
 
@@ -147,6 +148,23 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.04
+
+- Top-aligned the independently scrolling project tree and fixed the bottom Views shelf to three 42 px rows with list-only overflow from the fourth View onward.
+- Renamed the visual-only Group tool to Area while retaining serialized `kind: 'group'` compatibility and explicitly keeping Areas free of membership or containment semantics.
+- Added transient Ctrl/Cmd toggle selection, full-containment marquee selection, Shift-marquee addition, and atomic collective drag, grid nudge, and removal for placements, Text, and Areas.
+- Kept collective relative positions exact through one shared grid-aware delta, allowed Alt pointer bypass, constrained selections that begin inside the page, and left existing out-of-page content repairable.
+- Refined device-attached I/O Range braces and labels into a thinner technical presentation that continues to scale with the complete device diagram.
+- Added the shape-preserving `0.2.9.03 -> 0.2.9.04` migration while keeping selection and gesture state out of project JSON.
+
+### v0.2.9.03
+
+- Added one compact Select/Line/Text/Group/I/O Range tool strip without expanding the 50 px View header. Canvas selection now coordinates placements, lines/bends, and annotations through the existing Inspector.
+- Added neutral orthogonal manual lines with placement-boundary anchors, parallel-line support, live endpoint recalculation, absolute manual waypoints, bend handles, labels, and Reset Route. View lines never create or imply engineering connectivity.
+- Added grid-aligned text headings and visual Group rectangles with transactional movement/resizing. Groups are backgrounds only and never contain or move enclosed elements.
+- Added standard-device I/O Ranges: black braces and restrained green vertical labels attached to live left/right port rows. Ranges move/scale with the device, normalize reverse selection, support single rows/gaps, reject same-side overlap, and use port IDs only as visual anchors.
+- Added range cleanup/impact reporting, missing-reference validation, out-of-page bounds, exact JSON round-trip support, and the explicit `0.2.9.02 -> 0.2.9.03` migration while retaining all earlier View stages.
 
 ### v0.2.9.02-fix-4
 

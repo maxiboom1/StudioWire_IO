@@ -242,6 +242,8 @@ describe('importProjectValue structural safety', () => {
   it('supports the current schema, prior View stage, and retained 0.2.8.25 baseline', () => {
     expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([
       STUDIOWIRE_CURRENT_VERSION,
+      '0.2.9.03',
+      '0.2.9.02',
       '0.2.9.01',
       '0.2.9.00',
       '0.2.8.25',
@@ -311,6 +313,38 @@ describe('importProjectValue structural safety', () => {
     }
   });
 
+  it('imports 0.2.9.02 through an identity migration without changing project data', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.02';
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+      const { schemaVersion: _beforeVersion, ...beforeData } = before;
+      const { schemaVersion: _afterVersion, ...afterData } = result.project;
+      expect(afterData).toEqual(beforeData);
+    }
+  });
+
+  it('imports 0.2.9.03 through an identity migration without changing project data', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.03';
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+      const { schemaVersion: _beforeVersion, ...beforeData } = before;
+      const { schemaVersion: _afterVersion, ...afterData } = result.project;
+      expect(afterData).toEqual(beforeData);
+    }
+  });
+
   it('requires Views on current files and round-trips exact View layout data', () => {
     const missingViews = currentProject();
     delete missingViews.views;
@@ -324,6 +358,9 @@ describe('importProjectValue structural safety', () => {
     }
 
     const project = currentProject();
+    const routerPortIds = project.ports
+      .filter((port: (typeof sampleProject.ports)[number]) => port.deviceId === 'device-router-1')
+      .map((port: (typeof sampleProject.ports)[number]) => port.id);
     project.views = [
       {
         id: 'view-roundtrip',
@@ -378,6 +415,15 @@ describe('importProjectValue structural safety', () => {
             widthMm: 250,
             heightMm: 100,
             label: 'Core',
+          },
+          {
+            id: 'annotation-port-range',
+            kind: 'port_range',
+            placementId: 'placement-router',
+            side: 'right',
+            startPortId: routerPortIds[0],
+            endPortId: routerPortIds[1],
+            label: 'Router outputs',
           },
         ],
       },

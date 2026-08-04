@@ -1,4 +1,15 @@
-import { Maximize2, Minus, Plus, RotateCcw, StretchHorizontal } from 'lucide-react';
+import {
+  Braces,
+  Cable,
+  Maximize2,
+  Minus,
+  MousePointer2,
+  Plus,
+  RotateCcw,
+  Square,
+  StretchHorizontal,
+  Type,
+} from 'lucide-react';
 import type { ProjectView } from '../../domain/types';
 import { Button } from '../ui/button';
 import { ViewPage } from './ViewPage';
@@ -6,23 +17,24 @@ import { getViewPageDimensions } from './viewViewport';
 import { useViewViewport } from './useViewViewport';
 import { useViewEditorController } from './useViewEditorController';
 import { ViewDeviceSizeControl } from './ViewDeviceSizeControl';
+import type { ViewCanvasSelection, ViewEditorTool } from './viewEditorTypes';
 
 export function ViewWorkspace({
   view,
-  selectedPlacementId = null,
-  onSelectPlacement = () => undefined,
+  canvasSelection = null,
+  onCanvasSelectionChange = () => undefined,
 }: {
   view: ProjectView;
-  selectedPlacementId?: string | null;
-  onSelectPlacement?: (placementId: string | null) => void;
+  canvasSelection?: ViewCanvasSelection | null;
+  onCanvasSelectionChange?: (selection: ViewCanvasSelection | null) => void;
 }) {
   const page = getViewPageDimensions(view.pageSize, view.orientation);
   const viewport = useViewViewport(view.id, page);
   const editor = useViewEditorController({
     view,
     zoom: viewport.zoom,
-    selectedPlacementId,
-    onSelectPlacement,
+    canvasSelection,
+    onCanvasSelectionChange,
   });
 
   return (
@@ -33,6 +45,7 @@ export function ViewWorkspace({
           <h1>{view.name}</h1>
         </div>
         <div className="view-viewport-toolbar" aria-label="View controls">
+          <ViewToolStrip tool={editor.tool} onChange={editor.setTool} />
           <ViewDeviceSizeControl state={editor.deviceScaleState} onChange={editor.changeDeviceScale} />
           <Button
             aria-label="Zoom out"
@@ -88,5 +101,40 @@ export function ViewWorkspace({
         <ViewPage controller={editor} page={page} view={view} zoom={viewport.zoom} />
       </div>
     </section>
+  );
+}
+
+function ViewToolStrip({
+  tool,
+  onChange,
+}: {
+  tool: ViewEditorTool;
+  onChange: (tool: ViewEditorTool) => void;
+}) {
+  const tools = [
+    ['select', 'Select', MousePointer2],
+    ['line', 'Line', Cable],
+    ['text', 'Text', Type],
+    ['group', 'Area', Square],
+    ['portRange', 'I/O Range', Braces],
+  ] as const;
+  return (
+    <div className="view-tool-strip" aria-label="View drawing tools">
+      {tools.map(([id, label, Icon]) => (
+        <Button
+          aria-label={label}
+          aria-pressed={tool === id}
+          className={tool === id ? 'is-active' : ''}
+          key={id}
+          title={label}
+          type="button"
+          variant={tool === id ? 'default' : 'outline'}
+          onClick={() => onChange(id)}
+        >
+          <Icon aria-hidden="true" className="h-4 w-4" />
+          <span>{label}</span>
+        </Button>
+      ))}
+    </div>
   );
 }

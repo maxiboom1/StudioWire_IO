@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../projectFactory';
 import type { ProjectRoot, ProjectView } from '../types';
 import { validateProject } from '../validators';
+import { sampleProject } from '../sampleProject';
+import { getOrderedDevicePortColumns } from '../devicePortLayout';
 
 function emptyProject(): ProjectRoot {
   return createEmptyProject({ id: 'project-view-validation', name: 'View Validation' });
@@ -210,5 +212,69 @@ describe('View relational validation', () => {
     expect(duplicateIssues).toHaveLength(4);
     expect(duplicateIssues.every((issue) => issue.objectType === 'view')).toBe(true);
     expect(duplicateIssues.every((issue) => issue.objectId === project.project.id)).toBe(true);
+  });
+
+  it('validates missing, invalid, overlapping, and out-of-page I/O Ranges', () => {
+    const project = structuredClone(sampleProject);
+    const device = project.devices.find((item) => item.id === 'device-multiviewer-1')!;
+    const ports = getOrderedDevicePortColumns(project, device).left;
+    project.views = [
+      viewFixture({
+        placements: [
+          {
+            id: 'placement-device',
+            sourceType: 'device',
+            sourceId: device.id,
+            xMm: 0,
+            yMm: 10,
+            scale: 1,
+            labelOverride: null,
+          },
+        ],
+        annotations: [
+          {
+            id: 'range-a',
+            kind: 'port_range',
+            placementId: 'placement-device',
+            side: 'left',
+            startPortId: ports[0].id,
+            endPortId: ports[2].id,
+            label: '',
+          },
+          {
+            id: 'range-b',
+            kind: 'port_range',
+            placementId: 'placement-device',
+            side: 'left',
+            startPortId: ports[2].id,
+            endPortId: ports[3].id,
+            label: '',
+          },
+          {
+            id: 'range-missing',
+            kind: 'port_range',
+            placementId: 'placement-device',
+            side: 'left',
+            startPortId: 'missing-port',
+            endPortId: ports[0].id,
+            label: '',
+          },
+          {
+            id: 'range-placement',
+            kind: 'port_range',
+            placementId: 'missing-placement',
+            side: 'right',
+            startPortId: ports[0].id,
+            endPortId: ports[0].id,
+            label: '',
+          },
+        ],
+      }),
+    ];
+    const codes = validateProject(project).map((issue) => issue.code);
+    expect(codes).toContain('view-port-range-overlap');
+    expect(codes).toContain('view-port-range-port-missing');
+    expect(codes).toContain('view-port-range-placement-missing');
+    expect(codes).toContain('view-item-outside-page');
   });
 });

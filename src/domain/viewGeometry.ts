@@ -107,7 +107,8 @@ export function getPlacementBounds(project: ProjectRoot, placement: ViewPlacemen
   };
 }
 
-export function getAnnotationBounds(annotation: ViewAnnotation): ViewBounds {
+export function getAnnotationBounds(annotation: ViewAnnotation): ViewBounds | null {
+  if (annotation.kind === 'port_range') return null;
   return {
     xMm: annotation.xMm,
     yMm: annotation.yMm,

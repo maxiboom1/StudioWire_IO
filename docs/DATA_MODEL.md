@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.02`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the shape-preserving `0.2.9.00 -> 0.2.9.01 -> 0.2.9.02` migration chain. These migrations do not change existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.04`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the shape-preserving `0.2.9.00 -> 0.2.9.01 -> 0.2.9.02 -> 0.2.9.03 -> 0.2.9.04` migration chain. These migrations do not change existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.02`.
+- `schemaVersion`: current fixed string `0.2.9.04`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -280,7 +280,7 @@ Text annotation fields:
 - `text`
 - `size`: `small`, `medium`, or `large`
 
-Group annotation fields:
+Area annotation fields (stored as the compatibility variant `kind: 'group'`):
 
 - `id`
 - `kind`: `group`
@@ -290,9 +290,20 @@ Group annotation fields:
 - `heightMm`: positive height
 - `label`
 
-Group rectangles are visual backgrounds, not containers; moving one does not move enclosed elements. View render ordering is group rectangles, lines, placements, text, then transient selection controls.
+I/O Range annotation fields:
 
-Deleting a source device or terminal block removes its matching placements from every View and removes only lines attached to those placements. Deleting a rack does the same for direct rack placements. Deleting a device mounted inside a placed rack does not remove the rack placement. Unrelated annotations and placements remain unchanged. Structurally valid imported dangling references remain loadable, are reported by relational validation, and may be rendered as removable missing-source placeholders.
+- `id`
+- `kind`: `port_range`
+- `placementId`: a standard-device placement in the same View
+- `side`: `left` or `right`
+- `startPortId` and `endPortId`: stable presentation anchors resolved against current rendered device rows
+- `label`: optional free presentation text; an empty string renders only the brace
+
+An I/O Range is a View-only black brace and green vertical label spanning a contiguous live row range. Reverse selection is normalized to current presentation order. Same-side ranges may not share a row; different sides are independent. Port IDs do not assert connectivity, direction, cable count, or cable ownership. Missing ports remain structurally loadable and produce relational validation errors. The range moves and scales with its placement and cannot be independently moved, resized, colored, or offset.
+
+Area rectangles are visual backgrounds, not containers; moving one does not move enclosed elements. Transient multi-selection may contain placements, Text, and Areas only and is never serialized. A full-containment marquee or Ctrl/Cmd toggle creates that temporary selection; one shared millimetre delta preserves relative positions during atomic collective movement. View render ordering is Area rectangles, lines, placements, text, then transient selection controls.
+
+Deleting a source device or terminal block removes its matching placements from every View and removes only lines and I/O Ranges attached to those placements. Deleting a rack does the same for direct rack placements. Deleting a device mounted inside a placed rack does not remove the rack placement. Unrelated Text/Area annotations and placements remain unchanged. Structurally valid imported dangling references remain loadable, are reported by relational validation, and may be rendered as removable missing-source placeholders.
 
 ## PortGroup
 
@@ -433,6 +444,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous-stage `0.2.9.00` and `0.2.9.01` data then advance unchanged through the staged chain to `0.2.9.02` before current structural validation.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous-stage `0.2.9.00`, `0.2.9.01`, `0.2.9.02`, and `0.2.9.03` data then advance unchanged through the staged chain to `0.2.9.04` before current structural validation.
 
 Views are stored in the normal project JSON and the same compact autosave under `studiowire.io.project.current`; no separate View file or storage key exists. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. A restored `0.2.8.25` autosave is migrated to the current schema in memory and written back through the normal autosave lifecycle. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

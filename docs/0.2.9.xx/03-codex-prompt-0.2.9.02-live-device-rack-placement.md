@@ -102,7 +102,7 @@ When a placement is selected, the existing View Inspector switches from View met
 - `Remove from View` action; copy must state that the source object is unaffected.
 - A `Back to View properties` action clears transient element selection.
 
-Property updates use the same controller commit path as canvas changes so prompt 05 can add history cleanly.
+Property updates use the same controller commit path as canvas changes so the later hardening prompt can add history cleanly.
 
 ## Shared read-only device presentation
 

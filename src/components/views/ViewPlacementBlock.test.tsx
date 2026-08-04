@@ -7,6 +7,7 @@ import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectView, ViewPlacement } from '../../domain/types';
 import type { ViewEditorController } from './useViewEditorController';
 import { ViewPlacementBlock } from './ViewPlacementBlock';
+import { getOrderedDevicePortColumns } from '../../domain/devicePortLayout';
 
 afterEach(cleanup);
 
@@ -45,7 +46,7 @@ function controller(project = structuredClone(sampleProject)): ViewEditorControl
     handlePageDragOver: vi.fn(),
     handlePageDrop: vi.fn(),
     clearDropPreview: vi.fn(),
-  };
+  } as unknown as ViewEditorController;
 }
 
 describe('ViewPlacementBlock', () => {
@@ -85,6 +86,79 @@ describe('ViewPlacementBlock', () => {
       0,
     );
     expect(document.querySelector('.view-device-rows')).toBeNull();
+  });
+
+  it('renders attached I/O Ranges as part of a uniformly scaled standard-device placement', () => {
+    const editor = controller();
+    const device = editor.project.devices.find((item) => item.id === 'device-multiviewer-1')!;
+    const ports = getOrderedDevicePortColumns(editor.project, device).left;
+    const placement: ViewPlacement = {
+      id: 'placement-range',
+      sourceType: 'device',
+      sourceId: device.id,
+      xMm: 10,
+      yMm: 10,
+      scale: 0.7,
+      labelOverride: null,
+    };
+    const currentView = view(placement);
+    currentView.annotations = [
+      {
+        id: 'range',
+        kind: 'port_range',
+        placementId: placement.id,
+        side: 'left',
+        startPortId: ports[0].id,
+        endPortId: ports[2].id,
+        label: 'CAMERAS',
+      },
+    ];
+    render(
+      <ViewPlacementBlock
+        controller={editor}
+        placement={placement}
+        project={editor.project}
+        selected={false}
+        view={currentView}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'CAMERAS' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /placement/ }).style.transform).toBe('scale(0.7)');
+  });
+
+  it('keeps a missing I/O Range selectable and removable through its warning', () => {
+    const editor = controller();
+    const placement: ViewPlacement = {
+      id: 'placement-range',
+      sourceType: 'device',
+      sourceId: 'device-multiviewer-1',
+      xMm: 10,
+      yMm: 10,
+      scale: 1,
+      labelOverride: null,
+    };
+    const currentView = view(placement);
+    currentView.annotations = [
+      {
+        id: 'range-missing',
+        kind: 'port_range',
+        placementId: placement.id,
+        side: 'left',
+        startPortId: 'missing-a',
+        endPortId: 'missing-b',
+        label: '',
+      },
+    ];
+    render(
+      <ViewPlacementBlock
+        controller={editor}
+        placement={placement}
+        project={editor.project}
+        selected={false}
+        view={currentView}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /Missing I\/O Range/ })).toBeTruthy();
   });
 
   it('uses live read-only rack contents and a removable missing-source placeholder', () => {

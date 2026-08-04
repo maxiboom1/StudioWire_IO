@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.9.02",
+  "title": "StudioWire IO Project v0.2.9.04",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.9.02"
+      "const": "0.2.9.04"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -559,7 +559,11 @@
       }
     },
     "ViewAnnotation": {
-      "oneOf": [{ "$ref": "#/$defs/ViewTextAnnotation" }, { "$ref": "#/$defs/ViewGroupAnnotation" }]
+      "oneOf": [
+        { "$ref": "#/$defs/ViewTextAnnotation" },
+        { "$ref": "#/$defs/ViewGroupAnnotation" },
+        { "$ref": "#/$defs/ViewPortRangeAnnotation" }
+      ]
     },
     "ViewTextAnnotation": {
       "type": "object",
@@ -620,6 +624,20 @@
         "label": {
           "type": "string"
         }
+      }
+    },
+    "ViewPortRangeAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "placementId", "side", "startPortId", "endPortId", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "port_range" },
+        "placementId": { "type": "string", "minLength": 1 },
+        "side": { "enum": ["left", "right"] },
+        "startPortId": { "type": "string", "minLength": 1 },
+        "endPortId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" }
       }
     },
     "Device": {

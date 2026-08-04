@@ -1,4 +1,5 @@
 import type { ProjectRoot, ProjectView, ValidationIssue, ViewAnnotation, ViewLine } from '../types';
+import { getOrderedDevicePortColumns } from '../devicePortLayout';
 import {
   getAnnotationBounds,
   getLineEndpointPoint,
@@ -9,6 +10,7 @@ import {
   VIEW_PLACEMENT_MAX_SCALE,
   VIEW_PLACEMENT_MIN_SCALE,
 } from '../viewGeometry';
+import { getViewPortRangeBounds, viewPortRangesOverlap } from '../viewPortRanges';
 import { countBy, type ValidationIssueBuilder } from './shared';
 
 export function validateViews(project: ProjectRoot, issue: ValidationIssueBuilder): ValidationIssue[] {
@@ -36,7 +38,7 @@ export function validateViews(project: ProjectRoot, issue: ValidationIssueBuilde
 
     validateViewPlacements(project, view, deviceIds, rackIds, issue, issues);
     validateViewLines(project, view, issue, issues);
-    validateViewAnnotations(view, issue, issues);
+    validateViewAnnotations(project, view, issue, issues);
     validateViewPageBounds(project, view, issue, issues);
   }
 
@@ -144,7 +146,7 @@ function validateViewLines(
       );
     }
 
-    if (!isLineGeometryValid(line)) {
+    if (!isLineGeometryValid(line) || !isLineOrthogonal(project, view, line)) {
       issues.push(geometryIssue(view, `Line ${line.id} has invalid geometry.`, issue));
     }
 
@@ -154,12 +156,28 @@ function validateViewLines(
   }
 }
 
+function isLineOrthogonal(project: ProjectRoot, view: ProjectView, line: ViewLine): boolean {
+  if (!line.waypoints.length) return true;
+  const start = getLineEndpointPoint(project, view, line.from);
+  const end = getLineEndpointPoint(project, view, line.to);
+  if (!start || !end) return true;
+  const points = [start, ...line.waypoints, end];
+  return points
+    .slice(1)
+    .every((point, index) => point.xMm === points[index].xMm || point.yMm === points[index].yMm);
+}
+
 function validateViewAnnotations(
+  project: ProjectRoot,
   view: ProjectView,
   issue: ValidationIssueBuilder,
   issues: ValidationIssue[],
 ) {
   for (const annotation of view.annotations) {
+    if (annotation.kind === 'port_range') {
+      validatePortRange(project, view, annotation, issue, issues);
+      continue;
+    }
     if (!isAnnotationGeometryValid(annotation)) {
       issues.push(geometryIssue(view, `Annotation ${annotation.id} has invalid geometry.`, issue));
     }
@@ -181,7 +199,11 @@ function validateViewPageBounds(
   }
 
   for (const annotation of view.annotations) {
-    if (isBoundsOutsidePage(getAnnotationBounds(annotation), page)) {
+    const bounds =
+      annotation.kind === 'port_range'
+        ? getViewPortRangeBounds(project, view, annotation)
+        : getAnnotationBounds(annotation);
+    if (bounds && isBoundsOutsidePage(bounds, page)) {
       issues.push(outsidePageIssue(view, `Annotation ${annotation.id} is outside the View page.`, issue));
     }
   }
@@ -208,6 +230,7 @@ function isLineGeometryValid(line: ViewLine): boolean {
 }
 
 function isAnnotationGeometryValid(annotation: ViewAnnotation): boolean {
+  if (annotation.kind === 'port_range') return true;
   return (
     isFiniteNumber(annotation.xMm) &&
     isFiniteNumber(annotation.yMm) &&
@@ -215,6 +238,75 @@ function isAnnotationGeometryValid(annotation: ViewAnnotation): boolean {
     annotation.widthMm > 0 &&
     (annotation.kind === 'text' || (isFiniteNumber(annotation.heightMm) && annotation.heightMm > 0))
   );
+}
+
+function validatePortRange(
+  project: ProjectRoot,
+  view: ProjectView,
+  range: Extract<ViewAnnotation, { kind: 'port_range' }>,
+  issue: ValidationIssueBuilder,
+  issues: ValidationIssue[],
+) {
+  const placement = view.placements.find((candidate) => candidate.id === range.placementId);
+  const device =
+    placement?.sourceType === 'device'
+      ? project.devices.find((candidate) => candidate.id === placement.sourceId)
+      : null;
+  if (!placement || !device || device.kind !== 'device') {
+    issues.push(
+      issue(
+        'error',
+        'view-port-range-placement-missing',
+        `I/O Range ${range.id} must reference a standard-device placement in this View.`,
+        'view',
+        view.id,
+      ),
+    );
+    return;
+  }
+  const ports = project.ports.filter((port) => port.deviceId === device.id);
+  if (
+    !ports.some((port) => port.id === range.startPortId) ||
+    !ports.some((port) => port.id === range.endPortId)
+  ) {
+    issues.push(
+      issue(
+        'error',
+        'view-port-range-port-missing',
+        `I/O Range ${range.id} references a missing device port.`,
+        'view',
+        view.id,
+      ),
+    );
+    return;
+  }
+  const sidePorts = getOrderedDevicePortColumns(project, device)[range.side];
+  if (
+    !sidePorts.some((port) => port.id === range.startPortId) ||
+    !sidePorts.some((port) => port.id === range.endPortId)
+  ) {
+    issues.push(
+      issue(
+        'error',
+        'view-port-range-invalid',
+        `I/O Range ${range.id} endpoints must appear on its selected device side.`,
+        'view',
+        view.id,
+      ),
+    );
+    return;
+  }
+  if (viewPortRangesOverlap(project, view, range, range.id)) {
+    issues.push(
+      issue(
+        'error',
+        'view-port-range-overlap',
+        `I/O Range ${range.id} shares rows with another range on the same device side.`,
+        'view',
+        view.id,
+      ),
+    );
+  }
 }
 
 function isEndpointOffsetValid(offset: number): boolean {

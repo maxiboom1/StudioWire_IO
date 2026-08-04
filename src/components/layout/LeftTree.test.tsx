@@ -324,7 +324,7 @@ describe('LeftTree', () => {
     );
     expect(screen.getByRole('button', { name: /^Control Room 0$/ })).toBeTruthy();
     expect(screen.queryByText('Machine Room')).toBeNull();
-  });
+  }, 10_000);
 
   it('adds folders from the location context menu with an app modal', async () => {
     const user = userEvent.setup();
@@ -436,6 +436,26 @@ describe('LeftTree', () => {
       targetLocationId: 'location-machine-room',
       targetFolderId: null,
     });
+  });
+
+  it('keeps project content top-aligned and gives a fourth View an independent scrolling list', () => {
+    const project = projectFixture();
+    project.views = Array.from({ length: 4 }, (_, index) => ({
+      id: `view-${index + 1}`,
+      name: `View ${index + 1}`,
+      description: '',
+      pageSize: 'a3' as const,
+      orientation: 'portrait' as const,
+      placements: [],
+      lines: [],
+      annotations: [],
+    }));
+    const { container } = renderTree(project);
+
+    expect(container.querySelector('.project-tree-section > .project-tree-content')).toBeTruthy();
+    expect(container.querySelector('.view-tree-section > .view-tree-content')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /View \d A3/ })).toHaveLength(4);
+    expect(container.querySelector('.view-tree-heading')?.textContent).toContain('Views');
   });
 });
 

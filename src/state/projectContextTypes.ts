@@ -14,6 +14,7 @@ import type {
   ViewGroupAnnotation,
   ViewLine,
   ViewPlacement,
+  ViewPortRangeAnnotation,
   ViewTextAnnotation,
 } from '../domain/types';
 import type {
@@ -57,7 +58,10 @@ export type AddViewPlacementInput = Omit<ViewPlacement, 'id' | 'scale' | 'labelO
 export type ViewPlacementUpdates = Partial<Pick<ViewPlacement, 'xMm' | 'yMm' | 'scale' | 'labelOverride'>>;
 export type AddViewLineInput = Omit<ViewLine, 'id'>;
 export type ViewLineUpdates = Partial<Pick<ViewLine, 'from' | 'to' | 'label' | 'waypoints'>>;
-export type ViewAnnotationInput = Omit<ViewTextAnnotation, 'id'> | Omit<ViewGroupAnnotation, 'id'>;
+export type ViewAnnotationInput =
+  | Omit<ViewTextAnnotation, 'id'>
+  | Omit<ViewGroupAnnotation, 'id'>
+  | Omit<ViewPortRangeAnnotation, 'id'>;
 export type ViewCanvasInput = Pick<ProjectView, 'placements' | 'lines' | 'annotations'>;
 export type AddDeviceInput = { device: DeviceDraft; portGroups: DevicePortGroupDraft[] };
 export type { EditDeviceInput };

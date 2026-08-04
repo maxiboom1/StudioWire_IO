@@ -6,6 +6,7 @@ import type { ViewPageDimensions } from './viewViewport';
 import { VIEW_GRID_MM, VIEW_PIXELS_PER_MM } from './viewViewport';
 import type { ViewEditorController } from './useViewEditorController';
 import { ViewPlacementBlock } from './ViewPlacementBlock';
+import { ViewDrawingLayer } from './ViewDrawingLayer';
 
 export function ViewPage({
   view,
@@ -22,6 +23,7 @@ export function ViewPage({
   const widthPx = page.widthMm * VIEW_PIXELS_PER_MM;
   const heightPx = page.heightMm * VIEW_PIXELS_PER_MM;
   const gridPx = VIEW_GRID_MM * VIEW_PIXELS_PER_MM;
+  const renderedView = controller.renderedView;
 
   useEffect(() => {
     if (!controller.selectedPlacement?.id) return;
@@ -45,7 +47,7 @@ export function ViewPage({
             '--view-grid-size': `${gridPx}px`,
           } as CSSProperties
         }
-        onClick={() => controller.selectPlacement(null)}
+        onPointerDown={controller.handlePagePointerDown}
         onDragLeave={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
             controller.clearDropPreview();
@@ -68,16 +70,30 @@ export function ViewPage({
           </div>
         ) : null}
         {controller.dropPreview ? <DropPreview controller={controller} /> : null}
-        {view.placements.map((placement) => (
+        <ViewDrawingLayer controller={controller} view={renderedView} />
+        {renderedView.placements.map((placement) => (
           <ViewPlacementBlock
             controller={controller}
             key={placement.id}
             placement={placement}
             project={controller.project}
-            selected={controller.selectedPlacement?.id === placement.id}
-            view={view}
+            primary={controller.isMovablePrimary({ kind: 'placement', id: placement.id })}
+            selected={controller.isMovableSelected({ kind: 'placement', id: placement.id })}
+            view={renderedView}
           />
         ))}
+        {controller.marqueeBounds ? (
+          <div
+            aria-hidden="true"
+            className="view-selection-marquee"
+            style={{
+              left: controller.marqueeBounds.xMm * VIEW_PIXELS_PER_MM,
+              top: controller.marqueeBounds.yMm * VIEW_PIXELS_PER_MM,
+              width: controller.marqueeBounds.widthMm * VIEW_PIXELS_PER_MM,
+              height: controller.marqueeBounds.heightMm * VIEW_PIXELS_PER_MM,
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );

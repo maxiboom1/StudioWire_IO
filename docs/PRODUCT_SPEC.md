@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.02
+# StudioWire IO Product Spec v0.2.9.04
 
-StudioWire IO v0.2.9.02 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.04 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.02` adds live device, terminal-block, and rack placement, movement, display labels, and read-only technical rendering over the existing View model. Maintenance labels through `0.2.9.02-fix-4` keep objects move-only, add a View-wide 70/80/90/100% Device Size control, align placements to a shared fine virtual grid, and make navigator drag-and-drop the only placement creation workflow. Manual line/text/group drawing tools remain staged for `0.2.9.03`.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.04` retains neutral manual lines and device-attached I/O Ranges while adding transient multi-selection and user-facing visual Areas. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
 
 ## Application Layout
 
@@ -196,7 +196,7 @@ Views do not copy source devices or racks. They never create, remove, renumber, 
 
 View names are trimmed and case-insensitively unique among Views only. Dangling imported source references remain structurally loadable and are relational validation errors. Out-of-page content remains stored and is reported as a warning. Views use the normal project export and local autosave; no separate View file or storage service exists.
 
-The left navigator anchors its independent Views section at the bottom of the navigator area and lists Views in project array order with their page format. Add View defaults to the next available `View N` name and A3 portrait, selects the created View, and opens its page workspace. Its modal uses the same bottom-pinned StudioWire footer and actions as other creation forms. The View Inspector buffers name/Notes and format edits; populated page-format changes require confirmation and retain all coordinates. Deleting a View reports placement, line, and annotation counts and does not delete source devices or racks.
+The left navigator starts the independently scrolling project tree directly below its label. A fixed Views shelf remains above the version footer, shows exactly three 42 px rows, and scrolls only its list when more Views exist. Add View defaults to the next available `View N` name and A3 portrait, selects the created View, and opens its page workspace. Its modal uses the same bottom-pinned StudioWire footer and actions as other creation forms. The View Inspector buffers name/Notes and format edits; populated page-format changes require confirmation and retain all coordinates. Deleting a View reports placement, line, and annotation counts and does not delete source devices or racks.
 
 Version `0.2.9.02` adds existing objects by dropping the existing navigator payload onto the paper. Exact duplicate sources focus their current placement instead of creating another record. Pointer movement uses a local preview and commits once at interaction end; Delete removes only the placement plus attached View lines. The `0.2.9.02-fix-4` editor snaps direct drop, pointer movement, coordinate editing, and keyboard movement to an invisible View alignment grid whose horizontal and vertical pitch both equal one scaled standard-device I/O row. The grid begins at the 10 mm page margin, and Alt bypasses pointer snapping. The existing subtle 2.5 mm paper pattern remains the only visible canvas grid.
 
@@ -205,6 +205,12 @@ The `0.2.9.02-fix-2` maintenance UI renders standard-device blocks by uniformly 
 The `0.2.9.02-fix-3` Device Size control is View-wide and offers 70%, 80%, 90%, and 100%. It applies one uniform scale to every device and terminal-block placement and remaps all placements to the corresponding virtual-grid column and row so alignment survives the density change. Racks move with their grid slot but retain scale `1`. New devices inherit the current uniform View device size. Imported mixed or non-preset scales remain structurally loadable; the control reports a mixed state until the operator chooses a preset. This operation changes only View placement coordinates/scales plus normal stamps and change-log metadata.
 
 The `0.2.9.02-fix-4` workspace keeps its header intentionally shallow: View name, Device Size, and viewport controls only. Page size, orientation, and Notes remain editable in the View Inspector. A selected placement exposes its View-only Display Label and coordinates plus a direct Open Device/Open Rack action; source metadata is not repeated in an accordion. Selection emphasis remains opaque while hovering.
+
+Version `0.2.9.03` adds a compact non-wrapping drawing strip. Lines use placement-boundary anchors and orthogonal automatic/manual routes; their free label is their only meaning. Text and visual Areas follow the same equal-axis virtual grid and commit pointer changes once on release. Areas persist as `kind: 'group'` backgrounds rather than containers.
+
+Version `0.2.9.04` adds transient collective selection for placements, Text, and Areas. Plain click selects one, Ctrl/Cmd toggles, a plain full-containment marquee replaces, and Shift-marquee adds. Collective drag, grid nudge, and removal commit once for the whole selection and preserve relative positions through one shared delta. This behavior is temporary canvas state, not logical grouping, and never enters JSON or autosave.
+
+I/O Ranges are View-only braces attached to standard-device left or right presentation rows. Two row clicks define a normalized inclusive range; a one-row range and unmarked gaps are valid, while same-side ranges cannot share a row. A range moves and uniformly scales with its device. Stable port IDs keep visual anchors through row changes but imply no direction, connectivity, cable count, or ownership.
 
 Terminal blocks use a compact rear/front representation. Rack blocks use the current numbering direction, mounted source names/RU spans, and existing placement diagnostics. These blocks expose no patch, rack-assignment, source drag, or other engineering-data editing controls. Missing imported sources remain selectable and removable placeholders. Placement growth or movement outside the paper is highlighted and reported without scaling or rewriting coordinates. Devices and racks can be dropped from the existing navigator directly onto the View paper; duplicate sources focus the existing placement.
 
@@ -225,4 +231,4 @@ StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB 
 
 ## Explicit Exclusions
 
-The current app intentionally excludes View line/text/group drawing tools, View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline through the `0.2.9.00` and `0.2.9.01` stages, and leaves the in-memory project exportable after autosave failure.
+The current app intentionally excludes View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline through the `0.2.9.00`, `0.2.9.01`, and `0.2.9.02` stages, and leaves the in-memory project exportable after autosave failure.
