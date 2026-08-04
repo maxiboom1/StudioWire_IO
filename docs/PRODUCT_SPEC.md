@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.24
+# StudioWire IO Product Spec v0.2.8.25
 
-StudioWire IO v0.2.8.24 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.25 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -90,6 +90,8 @@ Project settings define global configuration used by the rest of the project:
 
 Settings are part of project data and must be included in JSON import/export. Imports use staged syntax, schema-version, structural, migration, and relational validation; failed structural imports preserve the open project.
 
+New projects start with the maintained operator settings baseline: VIDEO, Audio, Network, Reference, RF, Control, and AV categories; V, A, N, R, RF, C, and AV cable prefixes; the global broadcast connector catalog including DVI; the documented category assignments; an empty Video connector group; an Audio connector group containing XLR, PL, and RCA; 48 RU racks; and `PREFIX-0001` cable labels with four-digit padding.
+
 Connector icons are fixed CSS-drawn in-app symbols selected by `iconKey`; users do not upload connector images or provide SVG/path assets. Category colors are editable hex values and may be overridden per I/O interface for drawing presentation.
 
 ## Locations
@@ -136,6 +138,8 @@ Each device has:
 Device creation can generate I/O interfaces, ports, planned cables, and ledger allocations in one workflow.
 
 Add/Edit Device uses General and I/O tabs. General exposes Device Name, Device sub-name, Manufacturer, Device model, Category, Location, Folder, and optional Mount height (RU). Label Prefix, Role, and Notes are not shown in Add/Edit Device.
+
+All I/O interfaces are collapsed by default in Add Device, Clone and Edit, and Edit Device, including interfaces loaded from Device Collection or appended during the current session.
 
 Add Device also includes a Device Collection tab. The bundled collection follows Manufacturer, Category, and Model folders. Selecting a model displays its hardware and ordered I/O summary plus complete compatibility results for the current project. Loading a compatible template replaces the Add Device draft, selects the first project location with no folder, proposes fresh project cable ranges, and returns to General for review. Loading never creates a device directly.
 

@@ -7,6 +7,18 @@ describe('connector compatibility', () => {
     const project = structuredClone(sampleProject);
     const left = project.ports[0];
     const right = { ...project.ports[4], connectorTypeId: 'connector-sdi-din' };
+    project.settings.connectorCompatibilityGroupMembers.push(
+      {
+        id: 'test-member-video-bnc',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-bnc',
+      },
+      {
+        id: 'test-member-video-sdi-din',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-sdi-din',
+      },
+    );
 
     expect(arePortConnectorsCompatible(project, left, right).ok).toBe(true);
   });
@@ -14,7 +26,7 @@ describe('connector compatibility', () => {
   it('blocks connectors in different groups within one category', () => {
     const project = structuredClone(sampleProject);
     const left = project.ports[0];
-    const right = { ...project.ports[4], connectorTypeId: 'connector-hdmi' };
+    const right = { ...project.ports[4], connectorTypeId: 'connector-micro-bnc' };
 
     const result = arePortConnectorsCompatible(project, left, right);
 
@@ -26,8 +38,8 @@ describe('connector compatibility', () => {
 
   it('allows exact connector matches even without a compatibility group', () => {
     const project = structuredClone(sampleProject);
-    const left = { ...project.ports[0], connectorTypeId: 'connector-hdmi' };
-    const right = { ...project.ports[4], connectorTypeId: 'connector-hdmi' };
+    const left = { ...project.ports[0], connectorTypeId: 'connector-bnc' };
+    const right = { ...project.ports[4], connectorTypeId: 'connector-bnc' };
 
     expect(arePortConnectorsCompatible(project, left, right).ok).toBe(true);
   });

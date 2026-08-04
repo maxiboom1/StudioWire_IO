@@ -248,7 +248,7 @@ describe('SettingsWorkspace category workflows', () => {
     const { commands, project, rerender } = setup();
 
     await openTab('Categories');
-    expect(screen.getByRole('tab', { name: 'Video' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'VIDEO' }).getAttribute('aria-selected')).toBe('true');
     await user.click(screen.getByRole('tab', { name: 'Audio' }));
     expect(screen.getByRole('tab', { name: 'Audio' }).getAttribute('aria-selected')).toBe('true');
 
@@ -263,7 +263,7 @@ describe('SettingsWorkspace category workflows', () => {
       commands,
     );
     rerender(<SettingsWorkspace />);
-    expect(screen.getByRole('tab', { name: 'Video' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'VIDEO' }).getAttribute('aria-selected')).toBe('true');
 
     contextHarness.current = createContext(
       {
@@ -328,7 +328,7 @@ describe('SettingsWorkspace category workflows', () => {
       name: 'Video Updated',
     });
 
-    fireEvent.change(screen.getByLabelText('Video color picker'), { target: { value: '#123abc' } });
+    fireEvent.change(screen.getByLabelText('VIDEO color picker'), { target: { value: '#123abc' } });
     expect(commands.updateCategory).toHaveBeenCalledWith('category-video', { color: '#123ABC' });
 
     const assignmentSelect = screen.getAllByRole('combobox').at(-1) as HTMLSelectElement;
@@ -353,7 +353,7 @@ describe('SettingsWorkspace compatibility group workflows', () => {
     const { commands, project, rerender } = setup();
 
     await openTab('Connector Groups');
-    expect(screen.getByRole('tab', { name: 'Video' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'VIDEO' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('tab', { name: 'Video connector group' }).getAttribute('aria-selected')).toBe(
       'true',
     );
@@ -445,11 +445,29 @@ describe('SettingsWorkspace compatibility group workflows', () => {
       connectorTypeId: 'connector-bnc',
     });
 
-    await user.click(screen.getByRole('tab', { name: 'Video connector group' }));
+    contextHarness.current = createContext(
+      {
+        ...project,
+        settings: {
+          ...project.settings,
+          connectorCompatibilityGroups: [...project.settings.connectorCompatibilityGroups, newGroup],
+          connectorCompatibilityGroupMembers: [
+            ...project.settings.connectorCompatibilityGroupMembers,
+            {
+              id: 'member-new-bnc',
+              groupId: 'group-new',
+              connectorTypeId: 'connector-bnc',
+            },
+          ],
+        },
+      },
+      commands,
+    );
+    rerender(<SettingsWorkspace />);
     expect(screen.queryByRole('option', { name: 'BNC' })).toBeNull();
     await user.click(screen.getByRole('button', { name: /^BNC\s*Remove$/ }));
     expect(commands.removeConnectorGroupMember).toHaveBeenCalledWith({
-      groupId: 'group-video-sdi-coax',
+      groupId: 'group-new',
       connectorTypeId: 'connector-bnc',
     });
   });

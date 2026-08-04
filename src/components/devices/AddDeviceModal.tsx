@@ -35,8 +35,6 @@ export function AddDeviceModal({
   const { project, addDevice } = useProject();
   const confirm = useConfirmation();
   const [activeTab, setActiveTab] = useState<'general' | 'io' | 'collection'>('general');
-  const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
-  const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
   const form = useAddDeviceForm({
     addDevice,
     initialLocationId,
@@ -44,6 +42,8 @@ export function AddDeviceModal({
     project,
     sourceDevice,
   });
+  const [expandedInterfaceIds, setExpandedInterfaceIds] = useState<Set<string>>(() => new Set());
+  const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,7 +51,7 @@ export function AddDeviceModal({
   }
 
   function toggleInterfaceCollapsed(localId: string) {
-    setCollapsedInterfaceIds((current) => {
+    setExpandedInterfaceIds((current) => {
       const next = new Set(current);
 
       if (next.has(localId)) {
@@ -85,7 +85,7 @@ export function AddDeviceModal({
     }
 
     if (form.loadTemplate(template, compatibility)) {
-      setCollapsedInterfaceIds(new Set());
+      setExpandedInterfaceIds(new Set());
       setDraggingInterfaceId(null);
       setActiveTab('general');
     }
@@ -225,7 +225,7 @@ export function AddDeviceModal({
                   <PortGroupEditor
                     categories={project.settings.categories}
                     group={group}
-                    isCollapsed={collapsedInterfaceIds.has(group.localId)}
+                    isCollapsed={!expandedInterfaceIds.has(group.localId)}
                     key={group.localId}
                     settings={project.settings}
                     onCategoryChange={form.updatePortGroupCategory}

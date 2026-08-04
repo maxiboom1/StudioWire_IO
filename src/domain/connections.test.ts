@@ -167,6 +167,18 @@ describe('connectPorts', () => {
 
   it('allows different connector types in the same compatibility group', () => {
     let project = structuredClone(sampleProject);
+    project.settings.connectorCompatibilityGroupMembers.push(
+      {
+        id: 'test-member-video-bnc',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-bnc',
+      },
+      {
+        id: 'test-member-video-sdi-din',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-sdi-din',
+      },
+    );
     project = addDevicePort(project, {
       id: 'device-switcher-sdi-din',
       labelPrefix: 'SWDIN',
@@ -181,17 +193,17 @@ describe('connectPorts', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('blocks connector types in different compatibility groups', () => {
+  it('blocks different connector types without a shared compatibility group', () => {
     let project = structuredClone(sampleProject);
     project = addDevicePort(project, {
-      id: 'device-monitor-hdmi',
+      id: 'device-monitor-micro-bnc',
       labelPrefix: 'MON',
       direction: 'input',
       firstCableNumber: 9,
-      connectorTypeId: 'connector-hdmi',
+      connectorTypeId: 'connector-micro-bnc',
     });
     const routerOut = getPort(project, 'device-router-1', 'output');
-    const monitorIn = getPort(project, 'device-monitor-hdmi', 'input');
+    const monitorIn = getPort(project, 'device-monitor-micro-bnc', 'input');
     const result = connectPorts(project, { fromPortId: routerOut.id, toPortId: monitorIn.id });
 
     expect(result.ok).toBe(false);

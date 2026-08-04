@@ -415,7 +415,7 @@ describe('Add Device token normalization and submit shaping', () => {
     );
 
     expect(createQuickPortGroups(project, 'category-video', ids('fallback'))[0].connectorTypeId).toBe(
-      'connector-hdmi',
+      'connector-micro-bnc',
     );
   });
 });

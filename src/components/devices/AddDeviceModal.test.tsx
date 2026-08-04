@@ -131,7 +131,7 @@ describe('AddDeviceModal', () => {
     expect(screen.queryByLabelText('Notes')).toBeNull();
   });
 
-  it('switches to the I/O tab and collapses interface cards', () => {
+  it('opens the I/O tab with every initial interface collapsed', () => {
     const project = createProject();
 
     contextHarness.current = createContext(project);
@@ -142,6 +142,14 @@ describe('AddDeviceModal', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'I/O' }));
 
     expect(screen.getByRole('button', { name: 'Add I/O Interface' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Expand SDI IN' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Expand SDI OUT' })).toBeTruthy();
+    expect(screen.queryByLabelText('I/O Name')).toBeNull();
+    expect(screen.queryByLabelText('Label Pattern')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand SDI IN' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand SDI OUT' }));
+
     expect(screen.getAllByDisplayValue('{I/O NAME}-{000}')).toHaveLength(2);
     expect(screen.getAllByLabelText('I/O Name')).toHaveLength(2);
     const colorPicker = screen.getAllByLabelText('Color')[0];
@@ -153,10 +161,9 @@ describe('AddDeviceModal', () => {
     expect(screen.queryByRole('button', { name: /Move SDI IN/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Move SDI OUT/ })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI IN' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse SDI OUT' }));
-
-    expect(screen.queryByLabelText('Label Pattern')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Add I/O Interface' }));
+    expect(screen.getByRole('button', { name: 'Expand PORTS' })).toBeTruthy();
+    expect(screen.getAllByLabelText('I/O Name')).toHaveLength(2);
   });
 
   it('loads a compatible collection template into the form without creating a device', async () => {
@@ -215,6 +222,8 @@ describe('AddDeviceModal', () => {
     expect(contextHarness.current?.addDevice).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('tab', { name: 'I/O' }));
+    expect(screen.getByRole('button', { name: 'Expand SDI OUT' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Expand SDI OUT' }));
     expect((screen.getByLabelText('I/O Name') as HTMLInputElement).value).toBe('SDI OUT');
     expect((screen.getByLabelText('Color') as HTMLInputElement).value).toBe('#123456');
   });

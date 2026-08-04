@@ -18,7 +18,7 @@ describe('settings selectors', () => {
   it('finds categories and returns null for missing IDs', () => {
     const project = projectFixture();
 
-    expect(findCategory(project, 'category-video')?.name).toBe('Video');
+    expect(findCategory(project, 'category-video')?.name).toBe('VIDEO');
     expect(findCategory(project, 'missing')).toBeNull();
   });
 
@@ -27,7 +27,7 @@ describe('settings selectors', () => {
       (connector) => connector.name,
     );
 
-    expect(names).toEqual(['BNC', 'HDMI', 'Micro BNC', 'MiniDIN', 'SDI DIN']);
+    expect(names).toEqual(['BNC', 'Micro BNC', 'SDI DIN']);
     expect(getCategoryConnectors(projectFixture(), '')).toEqual([]);
   });
 
@@ -36,7 +36,7 @@ describe('settings selectors', () => {
       (connector) => connector.name,
     );
 
-    expect(names.slice(0, 3)).toEqual(['DB25', 'Fiber', 'GPIO']);
+    expect(names.slice(0, 3)).toEqual(['DB25', 'DVI', 'Fiber']);
     expect(names).not.toContain('BNC');
   });
 
@@ -47,17 +47,12 @@ describe('settings selectors', () => {
     expect(getGroupsForCategory(project, 'category-video').map((group) => group.id)).toEqual([
       'group-video-sdi-coax',
     ]);
-    expect(getGroupConnectors(project, 'group-video-sdi-coax').map((connector) => connector.name)).toEqual([
-      'BNC',
-      'Micro BNC',
-      'MiniDIN',
-      'SDI DIN',
-    ]);
+    expect(getGroupConnectors(project, 'group-video-sdi-coax')).toEqual([]);
     expect(
       getAvailableGroupConnectors(project, 'category-video', 'group-video-sdi-coax').map(
         (connector) => connector.name,
       ),
-    ).toEqual(['HDMI']);
+    ).toEqual(['BNC', 'Micro BNC', 'SDI DIN']);
     expect(project.settings.connectorCompatibilityGroupMembers).toEqual(before);
   });
 

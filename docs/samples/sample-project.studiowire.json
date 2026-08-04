@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.24",
+  "schemaVersion": "0.2.8.25",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -15,7 +15,7 @@
     "categories": [
       {
         "id": "category-video",
-        "name": "Video",
+        "name": "VIDEO",
         "defaultCablePrefix": "V",
         "color": "#2563EB"
       },
@@ -48,6 +48,12 @@
         "name": "Control",
         "defaultCablePrefix": "C",
         "color": "#475569"
+      },
+      {
+        "id": "category-av",
+        "name": "AV",
+        "defaultCablePrefix": "AV",
+        "color": "#2563EB"
       }
     ],
     "connectorTypes": [
@@ -130,6 +136,11 @@
         "id": "connector-other",
         "name": "Other",
         "iconKey": "generic"
+      },
+      {
+        "id": "connector-dvi",
+        "name": "DVI",
+        "iconKey": "generic"
       }
     ],
     "categoryConnectorAssignments": [
@@ -144,19 +155,9 @@
         "connectorTypeId": "connector-micro-bnc"
       },
       {
-        "id": "assignment-video-minidin",
-        "categoryId": "category-video",
-        "connectorTypeId": "connector-minidin"
-      },
-      {
         "id": "assignment-video-sdi-din",
         "categoryId": "category-video",
         "connectorTypeId": "connector-sdi-din"
-      },
-      {
-        "id": "assignment-video-hdmi",
-        "categoryId": "category-video",
-        "connectorTypeId": "connector-hdmi"
       },
       {
         "id": "assignment-audio-bnc",
@@ -199,6 +200,11 @@
         "connectorTypeId": "connector-madi-fiber"
       },
       {
+        "id": "assignment-audio-sfp",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-sfp"
+      },
+      {
         "id": "assignment-network-rj45",
         "categoryId": "category-network",
         "connectorTypeId": "connector-rj45"
@@ -232,6 +238,11 @@
         "id": "assignment-control-rj45",
         "categoryId": "category-control",
         "connectorTypeId": "connector-rj45"
+      },
+      {
+        "id": "assignment-av-dvi",
+        "categoryId": "category-av",
+        "connectorTypeId": "connector-dvi"
       }
     ],
     "connectorCompatibilityGroups": [
@@ -247,26 +258,6 @@
       }
     ],
     "connectorCompatibilityGroupMembers": [
-      {
-        "id": "member-video-sdi-bnc",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-bnc"
-      },
-      {
-        "id": "member-video-sdi-micro-bnc",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-micro-bnc"
-      },
-      {
-        "id": "member-video-sdi-minidin",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-minidin"
-      },
-      {
-        "id": "member-video-sdi-din",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-sdi-din"
-      },
       {
         "id": "member-audio-xlr",
         "groupId": "group-audio-analog",
@@ -313,6 +304,11 @@
         "id": "prefix-control",
         "prefix": "C",
         "name": "Control"
+      },
+      {
+        "id": "prefix-av",
+        "prefix": "AV",
+        "name": "AV"
       }
     ],
     "rackDefaults": {

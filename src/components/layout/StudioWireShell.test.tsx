@@ -95,6 +95,7 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
     expect((screen.getByLabelText('Device model') as HTMLInputElement).value).toBe('XR-16');
 
     await user.click(screen.getByRole('tab', { name: 'I/O' }));
+    await user.click(screen.getByRole('button', { name: 'Expand OUT' }));
     expect((screen.getByLabelText('I/O Name') as HTMLInputElement).value).toBe('OUT');
     expect((screen.getByLabelText('First Cable Number') as HTMLInputElement).value).toBe('9');
     expect(contextHarness.current?.addDevice).not.toHaveBeenCalled();

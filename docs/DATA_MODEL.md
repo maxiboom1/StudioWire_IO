@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.24`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.25`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.24`.
+- `schemaVersion`: current fixed string `0.2.8.25`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -59,13 +59,15 @@ Fields:
 - `rackDefaults`: `RackDefaults`
 - `labelRules`: `LabelRules`
 
-Default categories are Video, Audio, Network, Reference, RF, and Control. Each category has a default cable prefix and a hex display color.
+Default categories are VIDEO, Audio, Network, Reference, RF, Control, and AV. Each category has a default cable prefix and a hex display color. The matching default cable prefixes are V, A, N, R, RF, C, and AV.
 
 Connector types are a global catalog, for example BNC, XLR, PL, RJ45, and HDMI. Each connector has an `iconKey` selecting a fixed in-app CSS-drawn connector symbol. Connector icons are app-owned CSS drawings, not user-provided image assets, file paths, or stored SVG. Categories assign the connector types that are valid for that category. A port can select only connector types assigned to its category.
 
 Direct connections are strict by default: endpoints must share a category and the same connector type. Connector compatibility groups are the advanced override for direct cross-connector connections inside one category. If two different connector types are members of the same category-scoped group, they can be connected directly. Connectors in different categories or different groups require conversion somewhere else in the design.
 
-Default connector assignments include common broadcast options. For example, Video includes BNC, Micro BNC, MiniDIN, SDI DIN, and HDMI; Audio includes BNC, XLR, PL, RCA, RJ45, DB25, MADI BNC, and MADI Fiber. Default connector groups are intentionally small: Video has a Video connector group for SDI-style connectors, and Audio has an Audio connector group for XLR/PL/RCA.
+Default connector assignments follow the maintained operator baseline. VIDEO includes BNC, Micro BNC, and SDI DIN. Audio includes BNC, XLR, PL, RCA, RJ45, DB25, MADI BNC, MADI Fiber, and SFP. Network includes RJ45, SFP, and Fiber; Reference and RF use BNC; Control uses GPIO and RJ45; and AV uses DVI. MiniDIN, HDMI, and Other remain available in the global connector catalog without default category assignments.
+
+The default Video connector group exists with no members. The default Audio connector group contains XLR, PL, and RCA. An empty group does not make different connector types compatible.
 
 Cable numbers use `PREFIX-0001` formatting, for example `V-0001`, `A-0021`, `N-0100`, and `RF-0001`.
 

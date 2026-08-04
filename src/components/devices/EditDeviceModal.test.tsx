@@ -129,6 +129,9 @@ describe('EditDeviceModal', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'I/O' }));
     expect(screen.queryByRole('heading', { name: 'I/O Interfaces' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'New I/O Interfaces' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Expand OUT' })).toBeTruthy();
+    expect(screen.queryByLabelText('I/O Name')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand OUT' }));
 
     const existingCount = screen.getByLabelText('Count') as HTMLInputElement;
     expect(existingCount.value).toBe('4');
@@ -151,6 +154,8 @@ describe('EditDeviceModal', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Clear override' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add I/O Interface' }));
+    expect(screen.getByRole('button', { name: 'Expand PORTS' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand PORTS' }));
     fireEvent.change(screen.getAllByLabelText('I/O Name').at(-1) as HTMLInputElement, {
       target: { value: 'MGMT' },
     });

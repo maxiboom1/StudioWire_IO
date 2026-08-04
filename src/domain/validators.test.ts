@@ -95,6 +95,11 @@ describe('validateProject settings rules', () => {
     );
     project.settings.connectorCompatibilityGroupMembers.push(
       {
+        id: 'member-video-bnc',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-bnc',
+      },
+      {
         id: 'member-missing-group',
         groupId: 'group-missing',
         connectorTypeId: 'connector-bnc',
@@ -482,6 +487,19 @@ describe('validateProject connector compatibility rules', () => {
     const left = project.ports[0];
     const right = project.ports[4];
 
+    project.settings.connectorCompatibilityGroupMembers.push(
+      {
+        id: 'test-member-video-bnc',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-bnc',
+      },
+      {
+        id: 'test-member-video-sdi-din',
+        groupId: 'group-video-sdi-coax',
+        connectorTypeId: 'connector-sdi-din',
+      },
+    );
+
     right.connectorTypeId = 'connector-sdi-din';
     cable.status = 'connected';
     cable.sideAEndpoint = { type: 'device_port', id: left.id, label: left.label };
@@ -492,13 +510,13 @@ describe('validateProject connector compatibility rules', () => {
     expect(codes).not.toContain('connection-connector-group-mismatch');
   });
 
-  it('reports connected cables with incompatible connector groups', () => {
+  it('reports connected cables without a shared compatibility group', () => {
     const project = structuredClone(sampleProject);
     const cable = project.cables[0];
     const left = project.ports[0];
     const right = project.ports[4];
 
-    right.connectorTypeId = 'connector-hdmi';
+    right.connectorTypeId = 'connector-micro-bnc';
     cable.status = 'connected';
     cable.sideAEndpoint = { type: 'device_port', id: left.id, label: left.label };
     cable.sideBEndpoint = { type: 'device_port', id: right.id, label: right.label };

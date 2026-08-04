@@ -18,7 +18,7 @@ describe('importProjectValue structural safety', () => {
     if (!result.ok) {
       expect(result.errors[0]).toMatchObject({
         code: 'schema-type',
-        path: '$.settings.connectorTypes[16]',
+        path: '$.settings.connectorTypes[17]',
       });
     }
   });

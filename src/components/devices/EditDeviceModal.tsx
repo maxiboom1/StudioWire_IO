@@ -27,14 +27,14 @@ export function EditDeviceModal({
   const { project, editDevice } = useProject();
   const confirm = useConfirmation();
   const [activeTab, setActiveTab] = useState<'general' | 'io'>('general');
-  const [collapsedInterfaceIds, setCollapsedInterfaceIds] = useState<Set<string>>(() => new Set());
-  const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
   const form = useEditDeviceForm({
     device,
     editDevice,
     onSaved,
     project,
   });
+  const [expandedInterfaceIds, setExpandedInterfaceIds] = useState<Set<string>>(() => new Set());
+  const [draggingInterfaceId, setDraggingInterfaceId] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,7 +42,7 @@ export function EditDeviceModal({
   }
 
   function toggleInterfaceCollapsed(localId: string) {
-    setCollapsedInterfaceIds((current) => {
+    setExpandedInterfaceIds((current) => {
       const next = new Set(current);
 
       if (next.has(localId)) {
@@ -194,7 +194,7 @@ export function EditDeviceModal({
                   <PortGroupEditor
                     categories={project.settings.categories}
                     group={item.group}
-                    isCollapsed={collapsedInterfaceIds.has(item.group.localId)}
+                    isCollapsed={!expandedInterfaceIds.has(item.group.localId)}
                     key={item.group.localId}
                     lockedFields={item.kind === 'existing'}
                     settings={project.settings}

@@ -15,12 +15,13 @@ export const DEFAULT_CABLE_NUMBER_PADDING = 4;
 export const DEFAULT_CABLE_NUMBER_FORMAT = 'PREFIX-0001';
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'category-video', name: 'Video', defaultCablePrefix: 'V', color: '#2563EB' },
+  { id: 'category-video', name: 'VIDEO', defaultCablePrefix: 'V', color: '#2563EB' },
   { id: 'category-audio', name: 'Audio', defaultCablePrefix: 'A', color: '#DC2626' },
   { id: 'category-network', name: 'Network', defaultCablePrefix: 'N', color: '#059669' },
   { id: 'category-reference', name: 'Reference', defaultCablePrefix: 'R', color: '#7C3AED' },
   { id: 'category-rf', name: 'RF', defaultCablePrefix: 'RF', color: '#D97706' },
   { id: 'category-control', name: 'Control', defaultCablePrefix: 'C', color: '#475569' },
+  { id: 'category-av', name: 'AV', defaultCablePrefix: 'AV', color: '#2563EB' },
 ];
 
 const DEFAULT_CATEGORY_COLOR_PALETTE = ['#2563EB', '#DC2626', '#059669', '#7C3AED', '#D97706', '#475569'];
@@ -46,6 +47,7 @@ export const DEFAULT_CONNECTOR_TYPES: ConnectorType[] = [
   { id: 'connector-fiber', name: 'Fiber', iconKey: 'fiber' },
   { id: 'connector-gpio', name: 'GPIO', iconKey: 'generic' },
   { id: 'connector-other', name: 'Other', iconKey: 'generic' },
+  { id: 'connector-dvi', name: 'DVI', iconKey: 'generic' },
 ];
 
 export function getDefaultConnectorIconKey(name: string): ConnectorIconKey {
@@ -85,9 +87,7 @@ export function getDefaultConnectorIconKey(name: string): ConnectorIconKey {
 export const DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS: CategoryConnectorAssignment[] = [
   { id: 'assignment-video-bnc', categoryId: 'category-video', connectorTypeId: 'connector-bnc' },
   { id: 'assignment-video-micro-bnc', categoryId: 'category-video', connectorTypeId: 'connector-micro-bnc' },
-  { id: 'assignment-video-minidin', categoryId: 'category-video', connectorTypeId: 'connector-minidin' },
   { id: 'assignment-video-sdi-din', categoryId: 'category-video', connectorTypeId: 'connector-sdi-din' },
-  { id: 'assignment-video-hdmi', categoryId: 'category-video', connectorTypeId: 'connector-hdmi' },
   { id: 'assignment-audio-bnc', categoryId: 'category-audio', connectorTypeId: 'connector-bnc' },
   { id: 'assignment-audio-xlr', categoryId: 'category-audio', connectorTypeId: 'connector-xlr' },
   { id: 'assignment-audio-pl', categoryId: 'category-audio', connectorTypeId: 'connector-pl' },
@@ -100,6 +100,7 @@ export const DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS: CategoryConnectorAssignment
     categoryId: 'category-audio',
     connectorTypeId: 'connector-madi-fiber',
   },
+  { id: 'assignment-audio-sfp', categoryId: 'category-audio', connectorTypeId: 'connector-sfp' },
   { id: 'assignment-network-rj45', categoryId: 'category-network', connectorTypeId: 'connector-rj45' },
   { id: 'assignment-network-sfp', categoryId: 'category-network', connectorTypeId: 'connector-sfp' },
   { id: 'assignment-network-fiber', categoryId: 'category-network', connectorTypeId: 'connector-fiber' },
@@ -107,6 +108,7 @@ export const DEFAULT_CATEGORY_CONNECTOR_ASSIGNMENTS: CategoryConnectorAssignment
   { id: 'assignment-rf-bnc', categoryId: 'category-rf', connectorTypeId: 'connector-bnc' },
   { id: 'assignment-control-gpio', categoryId: 'category-control', connectorTypeId: 'connector-gpio' },
   { id: 'assignment-control-rj45', categoryId: 'category-control', connectorTypeId: 'connector-rj45' },
+  { id: 'assignment-av-dvi', categoryId: 'category-av', connectorTypeId: 'connector-dvi' },
 ];
 
 export const DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS: ConnectorCompatibilityGroup[] = [
@@ -115,14 +117,6 @@ export const DEFAULT_CONNECTOR_COMPATIBILITY_GROUPS: ConnectorCompatibilityGroup
 ];
 
 export const DEFAULT_CONNECTOR_COMPATIBILITY_GROUP_MEMBERS: ConnectorCompatibilityGroupMember[] = [
-  { id: 'member-video-sdi-bnc', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-bnc' },
-  {
-    id: 'member-video-sdi-micro-bnc',
-    groupId: 'group-video-sdi-coax',
-    connectorTypeId: 'connector-micro-bnc',
-  },
-  { id: 'member-video-sdi-minidin', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-minidin' },
-  { id: 'member-video-sdi-din', groupId: 'group-video-sdi-coax', connectorTypeId: 'connector-sdi-din' },
   { id: 'member-audio-xlr', groupId: 'group-audio-analog', connectorTypeId: 'connector-xlr' },
   { id: 'member-audio-pl', groupId: 'group-audio-analog', connectorTypeId: 'connector-pl' },
   { id: 'member-audio-rca', groupId: 'group-audio-analog', connectorTypeId: 'connector-rca' },
@@ -135,6 +129,7 @@ export const DEFAULT_CABLE_PREFIXES: CablePrefix[] = [
   { id: 'prefix-reference', prefix: 'R', name: 'Reference' },
   { id: 'prefix-rf', prefix: 'RF', name: 'RF' },
   { id: 'prefix-control', prefix: 'C', name: 'Control' },
+  { id: 'prefix-av', prefix: 'AV', name: 'AV' },
 ];
 
 export const DEFAULT_RACK_DEFAULTS: RackDefaults = {
