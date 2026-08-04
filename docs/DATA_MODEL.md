@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.01`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the shape-preserving `0.2.9.00 -> 0.2.9.01` migration. Neither step changes existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.02`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the shape-preserving `0.2.9.00 -> 0.2.9.01 -> 0.2.9.02` migration chain. These migrations do not change existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.01`.
+- `schemaVersion`: current fixed string `0.2.9.02`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -248,7 +248,11 @@ Fields:
 
 An exact source may appear only once in one View. A rack and a device mounted in that rack are different representations and may both be placed. Standard devices, terminal blocks, and racks remain live read-only representations of their project records; placement data never changes location or rack assignment.
 
-Placement bounds use deterministic natural sizes for validation. Standard devices and terminal blocks are 92 mm wide, with a 10 mm header and 2.4 mm per rendered I/O row, using at least one row. Racks are 58 mm wide, with an 8 mm header and 3 mm per rack unit. A missing-source placeholder is 60 x 30 mm. The stored uniform scale multiplies both natural dimensions.
+Placement bounds use the same deterministic natural sizes for validation, insertion, movement, and rendering. Standard devices and terminal blocks are 92 mm wide, with a 10 mm header and 2.4 mm per rendered live I/O row, using at least one row. Standard-device row count is the larger of its ordered left and right presentation columns; terminal-block row count is the larger of its rear and front faces. Racks are 58 mm wide, with an 8 mm header and 3 mm per current rack unit. A missing-source placeholder is 60 x 30 mm. The stored uniform scale multiplies both natural dimensions.
+
+Version `0.2.9.02` renders placements as read-only live references. Device/TB port labels, cable numbers, destination summaries, and rack contents are always resolved from current project records and are never copied into a View. The optional `labelOverride` is presentation-only. Adding, moving, scaling, labeling, or removing a placement may mutate only the owning View's `placements` plus normal project stamps/change-log metadata; removing a placement also removes View lines attached to that placement. It cannot modify locations, folders, rack assignments, devices, port groups, ports, cables, endpoints, or numbering ledgers.
+
+Picker insertion scans from a 10 mm page margin in 5 mm steps and chooses the first in-page, non-overlapping position. When no such position exists, insertion uses a 2.5 mm diagonal cascade and leaves overlap for manual correction. Direct navigator drops and committed movement use the fixed 2.5 mm grid unless Alt bypasses snapping. Default-scale direct drops and normal moves are clamped to the current page when the live block can fit.
 
 ### ViewLine
 
@@ -429,6 +433,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous-stage `0.2.9.00` data then advances unchanged to `0.2.9.01` before current structural validation.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous-stage `0.2.9.00` and `0.2.9.01` data then advance unchanged through the staged chain to `0.2.9.02` before current structural validation.
 
 Views are stored in the normal project JSON and the same compact autosave under `studiowire.io.project.current`; no separate View file or storage key exists. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. A restored `0.2.8.25` autosave is migrated to the current schema in memory and written back through the normal autosave lifecycle. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

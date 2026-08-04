@@ -37,6 +37,7 @@ function StudioWireShellContent() {
   const [activeView, setActiveView] = useState<AppView>('workspace');
   const [modal, setModal] = useState<ObjectModalState>(null);
   const [inspectorGuard, setInspectorGuard] = useState<InspectorDirtyGuard | null>(null);
+  const [selectedViewPlacementId, setSelectedViewPlacementId] = useState<string | null>(null);
 
   const runWithUnsavedGuard = useCallback(
     async (action: () => void) => {
@@ -95,17 +96,34 @@ function StudioWireShellContent() {
     }
   }, [project, selection]);
 
+  useEffect(() => {
+    if (selection.selectedObjectType !== 'view' || !selection.selectedObjectId) {
+      setSelectedViewPlacementId(null);
+      return;
+    }
+
+    const currentView = project.views.find((view) => view.id === selection.selectedObjectId);
+    if (
+      selectedViewPlacementId &&
+      !currentView?.placements.some((placement) => placement.id === selectedViewPlacementId)
+    ) {
+      setSelectedViewPlacementId(null);
+    }
+  }, [project, selectedViewPlacementId, selection]);
+
   function selectObject(selectedObjectType: SelectedObjectType, selectedObjectId: string) {
     void runWithUnsavedGuard(() => {
       if (selectedObjectType === 'view') {
         setActiveView('workspace');
       }
       setSelection({ selectedObjectType, selectedObjectId });
+      setSelectedViewPlacementId(null);
     });
   }
 
   function selectObjectImmediately(selectedObjectType: SelectedObjectType, selectedObjectId: string) {
     setSelection({ selectedObjectType, selectedObjectId });
+    setSelectedViewPlacementId(null);
   }
 
   function selectProject() {
@@ -184,13 +202,20 @@ function StudioWireShellContent() {
             {activeView === 'workspace' ? (
               <Workspace
                 selection={selection}
+                selectedViewPlacementId={selectedViewPlacementId}
+                onSelectViewPlacement={setSelectedViewPlacementId}
                 onAddDevice={openAddDevice}
                 onAddTerminalBlock={openAddTerminalBlock}
               />
             ) : (
               <CablesWorkspace />
             )}
-            <Inspector selection={selection} onInspectorDirtyGuardChange={setInspectorGuard} />
+            <Inspector
+              selection={selection}
+              selectedViewPlacementId={selectedViewPlacementId}
+              onSelectViewPlacement={setSelectedViewPlacementId}
+              onInspectorDirtyGuardChange={setInspectorGuard}
+            />
             <ValidationPanel
               onSelectIssue={(issue) => {
                 const target = resolveIssueSelection(project, issue);

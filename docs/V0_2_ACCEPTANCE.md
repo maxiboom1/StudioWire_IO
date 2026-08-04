@@ -17,9 +17,10 @@ v0.2 is complete around:
 - Bundled, validated device templates that populate Add Device without bypassing project validation.
 - Persistent project-level View metadata, live source references, neutral manual lines, and View-only annotations that cannot modify connectivity, numbering, rack assignment, or location hierarchy.
 - Flat View navigation and CRUD, buffered View metadata/page settings, validation-issue routing, and exact A3/A4 portrait/landscape page workspace behavior.
+- Live View device/TB/rack placement, searchable insertion and navigator drop, transient selection, transactional movement/scaling, presentation labels, source-safe removal, and compact read-only technical blocks.
 - Retained `0.2.8.25` import/autosave migration that adds `views: []` without changing existing project engineering data.
 
-Version `0.2.9.01` provides View discovery, CRUD, inspector metadata/page settings, and the page workspace shell. It does not yet support live View placement/rendering, drawing tools, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
+Version `0.2.9.02` provides View discovery/CRUD, metadata/page settings, the page workspace, and live source placement/rendering. It does not yet support View line/text/group tools, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
 
 ## Development And Release Commands
 
@@ -78,6 +79,7 @@ Release packaging, clean-extraction verification, and Playwright E2E are not req
 | Cable register and filtering                                      | `src/components/cables/cableRows.test.ts`, `src/components/layout/CablesWorkspace.test.ts`, and Playwright exported cable assertions                                                                   |
 | Navigator grouping and interaction boundaries                     | Pure tree model/collapse tests and rendered navigator tests under `src/components/layout`, plus Playwright lifecycle navigation coverage                                                               |
 | View CRUD, selection, page formats, and viewport controls         | `src/components/layout/StudioWireShell.test.tsx`, `src/components/common/selection.test.ts`, and focused tests under `src/components/views`                                                            |
+| View live placement, technical rendering, and source isolation    | `src/domain/viewPlacement.test.ts`, `src/components/devices/devicePresentationModel.test.ts`, focused `src/components/views` tests, and View reducer isolation tests                                   |
 | Unsupported export/auth/backend features absent                   | README, `docs/PRODUCT_SPEC.md`, `docs/ROADMAP.md`, this acceptance doc, and UI/E2E coverage with no unsupported controls expected                                                                      |
 | Synthetic multi-thousand-port persistence/import/export check     | `npm run check:scale`                                                                                                                                                                                  |
 | Chromium browser availability                                     | `npm run test:e2e:install` installs the lockfile-compatible Chromium browser used by Playwright for release/E2E checkpoints                                                                            |
@@ -92,5 +94,6 @@ Automated tests cover behavior and data equivalence. Before publishing, a human 
 - Add Device and Add TB dialogs.
 - The Views section with no Locations, Add/Rename/Delete flows, and the selected View Inspector.
 - A4 and A3 pages in portrait and landscape at 100%, Fit Page, and Fit Width zoom.
+- A View containing a standard device, terminal block, 48 RU rack, and high-port-count device at several zoom levels; verify readable live summaries, selection/resize affordances, and out-of-page highlighting.
 
 This visual check is not a substitute for the automated gates.

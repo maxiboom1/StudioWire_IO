@@ -13,7 +13,8 @@ export type MigrationResult = { ok: true; project: unknown } | { ok: false; erro
 
 export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.8.25', to: '0.2.9.00', migrate: addViewsCollection },
-  { from: '0.2.9.00', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
+  { from: '0.2.9.00', to: '0.2.9.01', migrate: identityMigration },
+  { from: '0.2.9.01', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
 ];
 
 export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {

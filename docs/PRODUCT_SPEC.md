@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.01
+# StudioWire IO Product Spec v0.2.9.02
 
-StudioWire IO v0.2.9.01 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.02 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.01` exposes View discovery, CRUD, metadata/page settings, and the exact A3/A4 page workspace shell over the `0.2.9.00` model. Live device/rack placement and drawing tools remain staged for `0.2.9.02` and `0.2.9.03`.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.02` adds live device, terminal-block, and rack placement, movement, scale, display labels, and compact read-only technical rendering over the existing View model. Manual line/text/group drawing tools remain staged for `0.2.9.03`.
 
 ## Application Layout
 
@@ -63,7 +63,7 @@ Examples:
 - Rack name, height, numbering direction, assigned device list, and standard-device rack unassign controls.
 - Device name, code, manufacturer, model, role, notes, location, folder, rack placement, and rack units.
 - Locked cable range note for device port groups.
-- View ID, name, description, page size, orientation, canvas counts, and guarded deletion.
+- View ID, name, description, page size, orientation, canvas counts, and guarded deletion. When a View placement is selected, the same Inspector switches to its presentation label, scale, coordinates, live source context, and source-safe removal.
 
 Object inspectors use one compact, continuous accordion. One parent section is open at a time, nested Device I/O sections may be opened independently, content scrolls within the inspector, and Save/Delete actions remain visible. Dirty inspector navigation is guarded by Save, Discard, and Cancel. Locations, folders, and racks are deleted only when no child objects reference them. Device and TB deletion safely removes owned topology while preserving surviving planned cable slots.
 
@@ -196,7 +196,11 @@ Views do not copy source devices or racks. They never create, remove, renumber, 
 
 View names are trimmed and case-insensitively unique among Views only. Dangling imported source references remain structurally loadable and are relational validation errors. Out-of-page content remains stored and is reported as a warning. Views use the normal project export and local autosave; no separate View file or storage service exists.
 
-The left navigator lists Views in project array order with their page format. Add View defaults to the next available `View N` name and A3 portrait, selects the created View, and opens its page workspace. The View Inspector buffers name/description and format edits; populated page-format changes require confirmation and retain all coordinates. Deleting a View reports placement, line, and annotation counts and does not delete source devices or racks. Version `0.2.9.01` intentionally renders only the page shell and existing-content notice; live device, terminal-block, and rack blocks begin in `0.2.9.02`.
+The left navigator lists Views in project array order with their page format. Add View defaults to the next available `View N` name and A3 portrait, selects the created View, and opens its page workspace. The View Inspector buffers name/description and format edits; populated page-format changes require confirmation and retain all coordinates. Deleting a View reports placement, line, and annotation counts and does not delete source devices or racks.
+
+Version `0.2.9.02` adds existing objects through a compact searchable picker grouped by Location and Folder or by dropping the existing navigator payload onto the paper. Picker insertion scans deterministically for the first non-overlapping position; direct drop and movement use the 2.5 mm grid unless Alt bypasses snapping. Exact duplicate sources focus their current placement instead of creating another record. Pointer movement and uniform resize use local previews and commit once at interaction end; arrow keys nudge and Delete removes only the placement plus attached View lines.
+
+Standard-device blocks show ordered live I/O rows, connector/color cues, cable numbers, terminal-block chain markers, and remote destination stubs. Terminal blocks use a compact rear/front representation. Rack blocks use the current numbering direction, mounted source names/RU spans, and existing placement diagnostics. These blocks expose no crosspoint, patch, rack-assignment, source drag, or other engineering-data editing controls. Missing imported sources remain selectable and removable placeholders. Placement growth or movement outside the paper is highlighted and reported without scaling or rewriting coordinates.
 
 ## Cable Numbering
 
@@ -215,4 +219,4 @@ StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB 
 
 ## Explicit Exclusions
 
-The current app intentionally excludes live View placement/rendering, drawing tools, View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline and the previous `0.2.9.00` stage, and leaves the in-memory project exportable after autosave failure.
+The current app intentionally excludes View line/text/group drawing tools, View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline through the `0.2.9.00` and `0.2.9.01` stages, and leaves the in-memory project exportable after autosave failure.

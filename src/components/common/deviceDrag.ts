@@ -57,3 +57,5 @@ export function clearDeviceDragData() {
   window.__studioWireDraggingDeviceId = undefined;
   window.__studioWireNavigatorDragPayload = undefined;
 }
+
+export const clearNavigatorDragData = clearDeviceDragData;

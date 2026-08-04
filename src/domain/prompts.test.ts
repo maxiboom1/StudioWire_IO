@@ -53,8 +53,8 @@ describe('confirmation prompts', () => {
       },
     ]);
 
-    expect(confirmation.message).toContain('Affected Views: "Signal Overview"');
-    expect(confirmation.message).toContain('1 placement(s) and 2 attached line(s)');
+    expect(confirmation.message).toContain('Affected Views: 1 ("Signal Overview")');
+    expect(confirmation.message).toContain('1 direct placement(s) and 2 attached manual line(s)');
   });
 
   it('reports exact View-local deletion counts and protects source objects', () => {

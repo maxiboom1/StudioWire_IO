@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from 'react';
-import {
-  buildCrossLocationRackAssignmentConfirmation,
-  type ConfirmationCopy,
-} from '../../domain/prompts';
+import { buildCrossLocationRackAssignmentConfirmation, type ConfirmationCopy } from '../../domain/prompts';
 import { analyzeRackPlacements } from '../../domain/rackDiagnostics';
 import { validateRackPlacement } from '../../domain/rackPlacement';
 import type { Device, ProjectRoot, Rack } from '../../domain/types';
@@ -134,11 +131,7 @@ export function useRackViewController({
     event.dataTransfer.dropEffect = preview.ok ? 'move' : 'none';
   }
 
-  async function handleRackDrop(
-    event: DragEvent<HTMLDivElement>,
-    targetRack: Rack,
-    displayRus: number[],
-  ) {
+  async function handleRackDrop(event: DragEvent<HTMLDivElement>, targetRack: Rack, displayRus: number[]) {
     event.preventDefault();
     const deviceId = draggingDeviceId || readDeviceDragData(event);
     const rect = event.currentTarget.getBoundingClientRect();

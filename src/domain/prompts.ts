@@ -177,5 +177,5 @@ function formatViewSourceDeletionImpact(viewImpact: ViewSourceImpact[]): string 
   const lineCount = viewImpact.reduce((total, impact) => total + impact.attachedLineCount, 0);
   const viewNames = viewImpact.map((impact) => `"${impact.viewName}"`).join(', ');
 
-  return `\n\nAffected Views: ${viewNames}. ${placementCount} placement(s) and ${lineCount} attached line(s) will be removed; unrelated View annotations remain.`;
+  return `\n\nAffected Views: ${viewImpact.length} (${viewNames}). ${placementCount} direct placement(s) and ${lineCount} attached manual line(s) will be removed; unrelated View annotations remain.`;
 }

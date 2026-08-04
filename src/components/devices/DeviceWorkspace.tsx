@@ -1,33 +1,16 @@
 import { type CSSProperties } from 'react';
-import {
-  describePortConnection,
-  type PortConnectionChainPart,
-  type PortConnectionSummary,
-} from '../../domain/connections';
-import type { Device, Port, ProjectRoot } from '../../domain/types';
+import type { PortConnectionChainPart } from '../../domain/connections';
+import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { ConnectorIcon } from '../common/ConnectorIcon';
-import { getPortGroupColor, getPortGroupConnectorIconKey } from '../common/connectorVisuals';
 import { CrosspointPicker } from '../connections/CrosspointPicker';
-
-interface DevicePortRow {
-  port: Port;
-  connection: PortConnectionSummary;
-  accentColor: string;
-  iconKey: string;
-}
-
-interface DevicePortRowSlot {
-  input?: DevicePortRow;
-  output?: DevicePortRow;
-}
+import { buildDevicePresentationModel, type DevicePortPresentation } from './devicePresentationModel';
 
 export function DeviceWorkspace({ device }: { device: Device }) {
   const { project } = useProject();
-  const portGroups = project.portGroups.filter((group) => group.deviceId === device.id);
-  const ports = project.ports.filter((port) => port.deviceId === device.id);
-  const rowSlots = buildPortRowSlots(project, portGroups, ports);
-  const rowCount = Math.max(rowSlots.length, 1);
+  const model = buildDevicePresentationModel(project, device);
+  const rowSlots = model.rows;
+  const rowCount = model.rowCount;
   const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
   const secondaryLabel = device.code ?? '';
   const diagramStyle = { '--device-port-rows': rowCount } as CSSProperties;
@@ -39,7 +22,7 @@ export function DeviceWorkspace({ device }: { device: Device }) {
           <div className="device-line-column device-line-column-left" aria-label="Input cable rows">
             <div className="device-line-header-spacer" />
             {rowIndexes.map((index) => (
-              <CableLineRow key={`input-${index}`} row={rowSlots[index]?.input} side="input" />
+              <CableLineRow key={`input-${index}`} row={rowSlots[index]?.left} side="input" />
             ))}
           </div>
           <div className="device-body">
@@ -49,15 +32,15 @@ export function DeviceWorkspace({ device }: { device: Device }) {
             </div>
             {rowIndexes.map((index) => (
               <div className="device-body-row" key={`body-${index}`}>
-                <DevicePortLabel row={rowSlots[index]?.input} side="input" />
-                <DevicePortLabel row={rowSlots[index]?.output} side="output" />
+                <DevicePortLabel row={rowSlots[index]?.left} side="input" />
+                <DevicePortLabel row={rowSlots[index]?.right} side="output" />
               </div>
             ))}
           </div>
           <div className="device-line-column device-line-column-right" aria-label="Output cable rows">
             <div className="device-line-header-spacer" />
             {rowIndexes.map((index) => (
-              <CableLineRow key={`output-${index}`} row={rowSlots[index]?.output} side="output" />
+              <CableLineRow key={`output-${index}`} row={rowSlots[index]?.right} side="output" />
             ))}
           </div>
         </div>
@@ -66,7 +49,13 @@ export function DeviceWorkspace({ device }: { device: Device }) {
   );
 }
 
-function DevicePortLabel({ row, side }: { row: DevicePortRow | undefined; side: 'input' | 'output' }) {
+function DevicePortLabel({
+  row,
+  side,
+}: {
+  row: DevicePortPresentation | undefined;
+  side: 'input' | 'output';
+}) {
   if (!row) {
     return <span className={`device-port-label device-port-label-${side}`} />;
   }
@@ -81,19 +70,19 @@ function DevicePortLabel({ row, side }: { row: DevicePortRow | undefined; side: 
   );
 }
 
-function DevicePortAnchor({ row }: { row: DevicePortRow }) {
+function DevicePortAnchor({ row }: { row: DevicePortPresentation }) {
   return (
     <ConnectorIcon className="device-port-anchor" color={row.accentColor} decorative iconKey={row.iconKey} />
   );
 }
 
-function CableLineRow({ row, side }: { row: DevicePortRow | undefined; side: 'input' | 'output' }) {
+function CableLineRow({ row, side }: { row: DevicePortPresentation | undefined; side: 'input' | 'output' }) {
   if (!row) {
     return <div className="device-wire-row" />;
   }
 
   const inlineMarker = row.connection.chainParts.find((part) => part.type === 'terminal_block') ?? null;
-  const remoteLabel = getRemoteChainLabel(row.connection.chainParts);
+  const remoteLabel = row.remoteLabel;
   const hasInlineFrontPicker = Boolean(inlineMarker?.exitPortId);
   const rowStyle = { '--device-port-color': row.accentColor } as CSSProperties;
 
@@ -188,55 +177,4 @@ function InlineTbMarker({ part }: { part: Extract<PortConnectionChainPart, { typ
       {isFrontFirst ? <span className="device-inline-tb-rear-bar" aria-hidden="true" /> : null}
     </span>
   );
-}
-
-function getRemoteChainLabel(parts: PortConnectionChainPart[]) {
-  const labels = parts
-    .filter((part): part is Extract<PortConnectionChainPart, { type: 'port' }> => part.type === 'port')
-    .map((part) => part.label);
-
-  return labels.length > 0 ? labels[labels.length - 1] : '';
-}
-
-function buildPortRows(
-  project: ProjectRoot,
-  groups: ProjectRoot['portGroups'],
-  ports: ProjectRoot['ports'],
-): DevicePortRow[] {
-  return groups.flatMap((group) =>
-    ports
-      .filter((port) => port.portGroupId === group.id)
-      .sort((left, right) => left.index - right.index)
-      .map((port) => ({
-        port,
-        connection: describePortConnection(project, port.id),
-        accentColor: getPortGroupColor(project, group),
-        iconKey: getPortGroupConnectorIconKey(project, group),
-      })),
-  );
-}
-
-function buildPortRowSlots(
-  project: ProjectRoot,
-  groups: ProjectRoot['portGroups'],
-  ports: ProjectRoot['ports'],
-): DevicePortRowSlot[] {
-  const inputRows: DevicePortRow[] = [];
-  const outputRows: DevicePortRow[] = [];
-
-  for (const group of groups) {
-    const side = group.direction === 'input' ? 'input' : 'output';
-    const rows = buildPortRows(project, [group], ports);
-
-    if (side === 'input') {
-      inputRows.push(...rows);
-    } else {
-      outputRows.push(...rows);
-    }
-  }
-
-  return Array.from({ length: Math.max(inputRows.length, outputRows.length) }, (_, index) => ({
-    input: inputRows[index],
-    output: outputRows[index],
-  }));
 }

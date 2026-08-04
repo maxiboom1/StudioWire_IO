@@ -8,6 +8,7 @@ import type {
   ViewPlacement,
   ViewPoint,
 } from './types';
+import { getDeviceViewRowCount } from './devicePortLayout';
 
 export const VIEW_GRID_MM = 2.5;
 export const VIEW_PLACEMENT_MIN_SCALE = 0.25;
@@ -70,17 +71,7 @@ export function getPlacementNaturalSize(
     return missingSourceSize();
   }
 
-  const groups = project.portGroups.filter((group) => group.deviceId === device.id);
-  const counts = new Map<string, number>();
-
-  for (const group of groups) {
-    counts.set(group.direction, (counts.get(group.direction) ?? 0) + group.count);
-  }
-
-  const rowCount =
-    device.kind === 'terminal_block'
-      ? Math.max(counts.get('rear') ?? 0, counts.get('front') ?? 0, 1)
-      : Math.max(counts.get('input') ?? 0, counts.get('output') ?? 0, counts.get('bidirectional') ?? 0, 1);
+  const rowCount = getDeviceViewRowCount(project, device);
 
   return {
     widthMm: DEVICE_WIDTH_MM,

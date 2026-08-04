@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.01 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.02 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -98,8 +98,10 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Validation in the UI and from CLI tools.
 - Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations.
 - A flat, location-independent Views navigator with Add, Rename, guarded Delete, buffered metadata/page settings, and View validation-issue routing.
-- An exact ISO A3/A4 portrait/landscape page workspace with a 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, and Fit Width controls. Live placement rendering begins in `0.2.9.02`.
-- JSON import/export: current exports use schema version `0.2.9.01`. Version `0.2.8.25` migrates by adding `views: []`, and `0.2.9.00` advances through an identity migration; neither path changes engineering data.
+- An exact ISO A3/A4 portrait/landscape View workspace with a 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, and Fit Width controls.
+- Searchable live device, terminal-block, and rack placement with deterministic insertion, navigator drop, selection, drag, uniform scale, keyboard nudge/delete, missing-source and out-of-page diagnostics, and a placement Inspector.
+- Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
+- JSON import/export: current exports use schema version `0.2.9.02`. Version `0.2.8.25` migrates by adding `views: []`, then `0.2.9.00` and `0.2.9.01` advance through identity migrations; the chain does not change engineering data.
 
 ## Release Gates
 
@@ -122,7 +124,7 @@ Run release/stabilization gates from a clean checkout or clean source-package ex
 - Authentication or user accounts.
 - Backend services or database storage.
 - Multi-user collaboration.
-- Live View placement/rendering, drawing tools, View printing, and View document export.
+- View line/text/group drawing tools, View printing, and View document export.
 
 ## Screenshots
 
@@ -144,6 +146,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.02
+
+- Added the searchable Add object picker and direct navigator device/rack drops with duplicate prevention, deterministic first-fit insertion, 2.5 mm snapping, Alt bypass, page clamping, and lightweight drop feedback.
+- Added transient placement selection, single-commit pointer move/scale gestures, keyboard nudge/delete, Display Label/scale/coordinate Inspector editing, source-safe removal, missing-source placeholders, and live out-of-page highlighting.
+- Added compact read-only standard-device, terminal-block, and rack blocks backed by shared connection and rack-elevation presentation models, so cable/destination summaries and rack contents update from source data without adding core-data controls.
+- Preserved the `0.2.8.25 -> 0.2.9.00 -> 0.2.9.01` compatibility chain and added the shape-preserving `0.2.9.01 -> 0.2.9.02` migration. Manual View lines, text, groups, and undo/redo remain staged for later prompts.
 
 ### v0.2.9.01
 

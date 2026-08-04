@@ -97,9 +97,7 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
           <DialogHeader>
             <DialogTitle>{request?.title ?? 'Confirm action'}</DialogTitle>
             {request ? (
-              <DialogDescription className="confirmation-dialog-message">
-                {request.message}
-              </DialogDescription>
+              <DialogDescription className="confirmation-dialog-message">{request.message}</DialogDescription>
             ) : null}
           </DialogHeader>
           <DialogFooter>

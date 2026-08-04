@@ -1,7 +1,11 @@
 import type { ViewOrientation, ViewPageSize } from '../../domain/types';
+import {
+  getViewPageDimensions as getDomainViewPageDimensions,
+  VIEW_GRID_MM as DOMAIN_VIEW_GRID_MM,
+} from '../../domain/viewGeometry';
 
 export const VIEW_PIXELS_PER_MM = 3;
-export const VIEW_GRID_MM = 2.5;
+export const VIEW_GRID_MM = DOMAIN_VIEW_GRID_MM;
 export const VIEW_MIN_ZOOM = 0.25;
 export const VIEW_MAX_ZOOM = 3;
 export const VIEW_VIEWPORT_PADDING_PX = 32;
@@ -20,9 +24,7 @@ export function getViewPageDimensions(
   pageSize: ViewPageSize,
   orientation: ViewOrientation,
 ): ViewPageDimensions {
-  const portrait = pageSize === 'a4' ? { widthMm: 210, heightMm: 297 } : { widthMm: 297, heightMm: 420 };
-
-  return orientation === 'portrait' ? portrait : { widthMm: portrait.heightMm, heightMm: portrait.widthMm };
+  return getDomainViewPageDimensions(pageSize, orientation);
 }
 
 export function clampViewZoom(zoom: number): number {

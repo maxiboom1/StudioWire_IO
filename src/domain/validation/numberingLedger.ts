@@ -27,9 +27,7 @@ export function validateLedgerRanges(
     }
 
     if (
-      ledger.ranges.some(
-        (range) => ledger.nextSuggested >= range.from && ledger.nextSuggested <= range.to,
-      )
+      ledger.ranges.some((range) => ledger.nextSuggested >= range.from && ledger.nextSuggested <= range.to)
     ) {
       issues.push(
         issue(
@@ -96,10 +94,7 @@ export function validateLedgerRanges(
       (item) => item.status === 'planned' && item.prefix === ledger.prefix,
     )) {
       const owningRange = ledger.ranges.find(
-        (range) =>
-          range.status === 'allocated' &&
-          cable.index >= range.from &&
-          cable.index <= range.to,
+        (range) => range.status === 'allocated' && cable.index >= range.from && cable.index <= range.to,
       );
       checkedPlannedCableIds.add(cable.id);
 

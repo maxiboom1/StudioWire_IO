@@ -54,7 +54,9 @@ export function RackWorkspace({ rack }: { rack: Rack }) {
                     onRackDragOver={(event) =>
                       rackView.handleRackDragOver(event, viewedRack, canvasModel.displayRus)
                     }
-                    onRackDrop={(event) => void rackView.handleRackDrop(event, viewedRack, canvasModel.displayRus)}
+                    onRackDrop={(event) =>
+                      void rackView.handleRackDrop(event, viewedRack, canvasModel.displayRus)
+                    }
                     onRemove={() => rackView.removeRackFromView(viewedRack.id)}
                   />
                 </div>

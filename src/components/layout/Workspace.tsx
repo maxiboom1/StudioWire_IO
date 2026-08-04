@@ -11,10 +11,14 @@ import { ProjectWorkspace } from './ProjectWorkspace';
 
 export function Workspace({
   selection,
+  selectedViewPlacementId,
+  onSelectViewPlacement,
   onAddDevice,
   onAddTerminalBlock,
 }: {
   selection: SelectionState;
+  selectedViewPlacementId: string | null;
+  onSelectViewPlacement: (placementId: string | null) => void;
   onAddDevice: (locationId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
 }) {
@@ -61,7 +65,13 @@ export function Workspace({
   }
 
   if (selected.type === 'view') {
-    return <ViewWorkspace view={selected.value} />;
+    return (
+      <ViewWorkspace
+        view={selected.value}
+        selectedPlacementId={selectedViewPlacementId}
+        onSelectPlacement={onSelectViewPlacement}
+      />
+    );
   }
 
   if (selected.value.kind === 'terminal_block') {

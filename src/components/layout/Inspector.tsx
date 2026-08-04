@@ -6,14 +6,19 @@ import { FolderInspector } from '../locations/FolderInspector';
 import { LocationInspector } from '../locations/LocationInspector';
 import { RackInspector } from '../racks/RackInspector';
 import { ViewInspector } from '../views/ViewInspector';
+import { ViewPlacementInspector } from '../views/ViewPlacementInspector';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function Inspector({
   onInspectorDirtyGuardChange,
+  selectedViewPlacementId,
+  onSelectViewPlacement,
   selection,
 }: {
   onInspectorDirtyGuardChange?: (guard: InspectorDirtyGuard | null) => void;
   selection: SelectionState;
+  selectedViewPlacementId: string | null;
+  onSelectViewPlacement: (placementId: string | null) => void;
 }) {
   const { project } = useProject();
   const selected = resolveSelection(project, selection);
@@ -50,6 +55,17 @@ export function Inspector({
   }
 
   if (selected.type === 'view') {
+    const placement = selected.value.placements.find((candidate) => candidate.id === selectedViewPlacementId);
+    if (placement) {
+      return (
+        <ViewPlacementInspector
+          placement={placement}
+          view={selected.value}
+          onBack={() => onSelectViewPlacement(null)}
+          onRemoved={() => onSelectViewPlacement(null)}
+        />
+      );
+    }
     return <ViewInspector view={selected.value} onDirtyGuardChange={onInspectorDirtyGuardChange} />;
   }
 

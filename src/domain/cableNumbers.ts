@@ -238,11 +238,7 @@ export function normalizeNumberingLedgers(project: ProjectRoot): ProjectRoot {
   };
 }
 
-export function getNextSuggestedForPrefix(
-  project: ProjectRoot,
-  prefix: string,
-  count = 1,
-): number {
+export function getNextSuggestedForPrefix(project: ProjectRoot, prefix: string, count = 1): number {
   const normalizedPrefix = normalizePrefix(prefix);
   const ledger = project.numberingLedgers.find((item) => item.prefix === normalizedPrefix);
 

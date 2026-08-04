@@ -118,16 +118,7 @@ iconKey: ConnectorIconKey;
 Define a fixed enum/list for in-app CSS-drawn connector shapes:
 
 ```ts
-const CONNECTOR_ICON_KEY_VALUES = [
-  'bnc',
-  'xlr',
-  'rj45',
-  'fiber',
-  'sfp',
-  'hdmi',
-  'db25',
-  'generic',
-] as const;
+const CONNECTOR_ICON_KEY_VALUES = ['bnc', 'xlr', 'rj45', 'fiber', 'sfp', 'hdmi', 'db25', 'generic'] as const;
 ```
 
 Rules:

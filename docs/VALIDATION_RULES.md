@@ -54,7 +54,7 @@ Compatibility validation reports all mismatches before a template can fill Add D
 - `view-line-placement-missing`: both endpoints of a View line must reference placements in the same View.
 - `view-line-self-reference`: a View line must connect two different placements; parallel lines between the same pair remain valid.
 - `view-geometry-invalid`: View coordinates must be finite, placement scale must be from 0.25 through 3, endpoint offset must be from 0 through 1, and annotation dimensions must be positive.
-- `view-item-outside-page`: a placement, annotation, line endpoint, or manual waypoint outside the selected ISO page is reported as a warning; format changes retain the stored coordinates.
+- `view-item-outside-page`: a placement, annotation, line endpoint, or manual waypoint outside the selected ISO page is reported as a warning; format changes retain the stored coordinates. Placement bounds use current live source content and the same natural-size formulas as the editor: device/TB rows are derived from ordered port presentation data, racks use current RU height, and dangling sources use the 60 x 30 mm missing-source placeholder. Source growth may therefore introduce a warning without changing stored View geometry.
 - `duplicate-project-item-name`: folders, racks, standard devices, and terminal blocks share one unique trimmed, case-insensitive name namespace.
 - `sub-location-without-location`: folders must reference an existing location.
 - `sub-location-name-required`: folder names are required.
