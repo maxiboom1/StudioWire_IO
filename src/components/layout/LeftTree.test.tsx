@@ -138,6 +138,7 @@ function renderTree(project = projectFixture(), commands: Partial<ProjectContext
     onAddLocation: vi.fn(),
     onAddRack: vi.fn(),
     onAddDevice: vi.fn(),
+    onCloneDevice: vi.fn(),
     onEditDevice: vi.fn(),
     onEditTerminalBlock: vi.fn(),
     onAddTerminalBlock: vi.fn(),
@@ -148,6 +149,7 @@ function renderTree(project = projectFixture(), commands: Partial<ProjectContext
     <LeftTree
       selection={{ selectedObjectType: 'device', selectedObjectId: 'device-router-1' }}
       onAddDevice={callbacks.onAddDevice}
+      onCloneDevice={callbacks.onCloneDevice}
       onEditDevice={callbacks.onEditDevice}
       onEditTerminalBlock={callbacks.onEditTerminalBlock}
       onAddLocation={callbacks.onAddLocation}
@@ -253,6 +255,14 @@ describe('LeftTree', () => {
     await user.click(await screen.findByText('Edit Device'));
     expect(callbacks.onEditDevice).toHaveBeenCalledWith('device-router-1');
 
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Router 1 Device RTR1/ }));
+    await user.click(await screen.findByText('Clone and Edit'));
+    expect(callbacks.onCloneDevice).toHaveBeenCalledWith('device-router-1');
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /TB 1 TB/ }));
+    expect(screen.queryByText('Clone and Edit')).toBeNull();
+    fireEvent.keyDown(document, { key: 'Escape' });
+
     contextHarness.current = createContext({
       ...project,
       locations: project.locations.slice(0, 1),
@@ -263,6 +273,7 @@ describe('LeftTree', () => {
       <LeftTree
         selection={{ selectedObjectType: 'project', selectedObjectId: project.project.id }}
         onAddDevice={callbacks.onAddDevice}
+        onCloneDevice={callbacks.onCloneDevice}
         onEditDevice={callbacks.onEditDevice}
         onEditTerminalBlock={callbacks.onEditTerminalBlock}
         onAddLocation={callbacks.onAddLocation}

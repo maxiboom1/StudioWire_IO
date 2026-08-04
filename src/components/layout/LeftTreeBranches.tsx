@@ -35,6 +35,7 @@ export function LocationBranch({
   onAddDevice,
   onAddSubLocation,
   onEditDevice,
+  onCloneDevice,
   onEditTerminalBlock,
   onExportDeviceTemplate,
   onAddTerminalBlock,
@@ -51,6 +52,7 @@ export function LocationBranch({
   onAddDevice: (locationId: string) => void;
   onAddSubLocation: (locationId: string) => void;
   onEditDevice: (deviceId: string) => void;
+  onCloneDevice: (deviceId: string) => void;
   onEditTerminalBlock: (deviceId: string) => void;
   onExportDeviceTemplate: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
@@ -140,6 +142,7 @@ export function LocationBranch({
                   items={subLocationBranch.items}
                   selection={selection}
                   onEditDevice={onEditDevice}
+                  onCloneDevice={onCloneDevice}
                   onEditTerminalBlock={onEditTerminalBlock}
                   onExportDeviceTemplate={onExportDeviceTemplate}
                   onSelectObject={onSelectObject}
@@ -151,6 +154,7 @@ export function LocationBranch({
               items={branch.items}
               selection={selection}
               onEditDevice={onEditDevice}
+              onCloneDevice={onCloneDevice}
               onEditTerminalBlock={onEditTerminalBlock}
               onExportDeviceTemplate={onExportDeviceTemplate}
               onSelectObject={onSelectObject}
@@ -234,6 +238,7 @@ export function NavigatorItemList({
   items,
   selection,
   onEditDevice,
+  onCloneDevice,
   onEditTerminalBlock,
   onExportDeviceTemplate,
   onSelectObject,
@@ -241,6 +246,7 @@ export function NavigatorItemList({
   items: NavigatorTreeItem[];
   selection: SelectionState;
   onEditDevice: (deviceId: string) => void;
+  onCloneDevice: (deviceId: string) => void;
   onEditTerminalBlock: (deviceId: string) => void;
   onExportDeviceTemplate: (deviceId: string) => void;
   onSelectObject: (selectedObjectType: SelectedObjectType, selectedObjectId: string) => void;
@@ -253,6 +259,7 @@ export function NavigatorItemList({
           item={item}
           key={`${item.type}-${item.id}`}
           onEditDevice={onEditDevice}
+          onCloneDevice={onCloneDevice}
           onEditTerminalBlock={onEditTerminalBlock}
           onExportDeviceTemplate={onExportDeviceTemplate}
           onSelect={() => onSelectObject(item.type, item.id)}
@@ -266,6 +273,7 @@ export function NavigatorItem({
   active,
   item,
   onEditDevice,
+  onCloneDevice,
   onEditTerminalBlock,
   onExportDeviceTemplate,
   onSelect,
@@ -273,6 +281,7 @@ export function NavigatorItem({
   active: boolean;
   item: NavigatorTreeItem;
   onEditDevice: (deviceId: string) => void;
+  onCloneDevice: (deviceId: string) => void;
   onEditTerminalBlock: (deviceId: string) => void;
   onExportDeviceTemplate: (deviceId: string) => void;
   onSelect: () => void;
@@ -318,6 +327,10 @@ export function NavigatorItem({
             : { label: 'Edit Device', onSelect: () => onEditDevice(item.id) },
           ...(item.device.kind === 'device'
             ? [
+                {
+                  label: 'Clone and Edit',
+                  onSelect: () => onCloneDevice(item.id),
+                },
                 {
                   label: 'Export Device Template',
                   onSelect: () => onExportDeviceTemplate(item.id),

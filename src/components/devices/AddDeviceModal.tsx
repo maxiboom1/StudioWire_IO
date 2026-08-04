@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { bundledDeviceTemplateRepository } from '../../deviceCollection/bundledDeviceTemplateRepository';
 import { buildReplaceDeviceDraftConfirmation } from '../../domain/prompts';
 import type { DeviceTemplateRepository } from '../../domain/deviceTemplates/types';
+import type { Device } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { HorizontalTabs } from '../common/AppTabs';
 import { useConfirmation } from '../common/ConfirmationDialog';
@@ -22,11 +23,13 @@ export function AddDeviceModal({
   initialLocationId,
   onClose,
   onCreated,
+  sourceDevice,
   deviceTemplateRepository = bundledDeviceTemplateRepository,
 }: {
   initialLocationId: string | null;
   onClose: () => void;
   onCreated: (id: string) => void;
+  sourceDevice?: Device | null;
   deviceTemplateRepository?: DeviceTemplateRepository;
 }) {
   const { project, addDevice } = useProject();
@@ -39,6 +42,7 @@ export function AddDeviceModal({
     initialLocationId,
     onCreated,
     project,
+    sourceDevice,
   });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -90,7 +94,11 @@ export function AddDeviceModal({
   return (
     <ModalFrame
       title="Add Device"
-      description="Create a new device with generated ports and optional I/O interfaces."
+      description={
+        sourceDevice
+          ? `Review the cloned details from ${sourceDevice.name}, then create a new device with fresh cable allocations.`
+          : 'Create a new device with generated ports and optional I/O interfaces.'
+      }
       onClose={onClose}
     >
       <form className="editor-form standard-modal-form add-device-form" onSubmit={handleSubmit}>

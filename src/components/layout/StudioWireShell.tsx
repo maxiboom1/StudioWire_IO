@@ -27,7 +27,7 @@ type ModalState =
   | null
   | { type: 'location' }
   | { type: 'rack'; locationId: string }
-  | { type: 'device'; locationId: string }
+  | { type: 'device'; locationId: string; sourceDeviceId?: string }
   | { type: 'edit_device'; deviceId: string }
   | { type: 'edit_terminal_block'; deviceId: string }
   | { type: 'terminal_block'; locationId: string | null };
@@ -125,6 +125,22 @@ function StudioWireShellContent() {
     void runWithUnsavedGuard(() => setModal({ type: 'edit_device', deviceId }));
   }
 
+  function openCloneDevice(deviceId: string) {
+    const sourceDevice = project.devices.find((device) => device.id === deviceId && device.kind === 'device');
+
+    if (!sourceDevice) {
+      return;
+    }
+
+    void runWithUnsavedGuard(() =>
+      setModal({
+        type: 'device',
+        locationId: sourceDevice.locationId,
+        sourceDeviceId: sourceDevice.id,
+      }),
+    );
+  }
+
   function openEditTerminalBlock(deviceId: string) {
     void runWithUnsavedGuard(() => setModal({ type: 'edit_terminal_block', deviceId }));
   }
@@ -148,6 +164,7 @@ function StudioWireShellContent() {
           onAddLocation={() => void runWithUnsavedGuard(() => setModal({ type: 'location' }))}
           onAddRack={(locationId) => void runWithUnsavedGuard(() => setModal({ type: 'rack', locationId }))}
           onAddDevice={openAddDevice}
+          onCloneDevice={openCloneDevice}
           onEditDevice={openEditDevice}
           onEditTerminalBlock={openEditTerminalBlock}
           onAddTerminalBlock={openAddTerminalBlock}
@@ -209,6 +226,9 @@ function StudioWireShellContent() {
       {modal?.type === 'device' ? (
         <AddDeviceModal
           initialLocationId={modal.locationId}
+          sourceDevice={
+            modal.sourceDeviceId ? project.devices.find((device) => device.id === modal.sourceDeviceId) : null
+          }
           onClose={() => setModal(null)}
           onCreated={(id) => {
             setModal(null);

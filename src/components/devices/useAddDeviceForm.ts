@@ -3,7 +3,7 @@ import { buildCableReservationConfirmation, type ConfirmationCopy } from '../../
 import type { DeviceTemplate, DeviceTemplateCompatibility } from '../../domain/deviceTemplates/types';
 import { mapDeviceTemplateToFormDraft } from '../../domain/deviceTemplates/templateMapping';
 import { normalizeSubLocationForLocation } from '../../domain/subLocations';
-import type { ProjectRoot } from '../../domain/types';
+import type { Device, ProjectRoot } from '../../domain/types';
 import type { AddDeviceInput } from '../../state/projectContextTypes';
 import type { DeviceDraft } from '../../state/projectTypes';
 import {
@@ -19,6 +19,7 @@ import {
   updatePortGroupDrafts,
   type DevicePortGroupForm,
 } from './addDeviceDraft';
+import { createClonedAddDeviceDraft, type ClonedAddDeviceDraft } from './addDeviceCloneDraft';
 import { createRuntimeAddDeviceLocalIdFactory, type AddDeviceLocalIdFactory } from './addDeviceLocalIds';
 import { moveByOffset, reorderById } from './portGroupOrdering';
 
@@ -47,22 +48,36 @@ export function useAddDeviceForm({
   makeLocalId,
   onCreated,
   project,
+  sourceDevice,
 }: {
   addDevice: (input: AddDeviceInput) => string;
   initialLocationId: string | null;
   makeLocalId?: AddDeviceLocalIdFactory;
   onCreated: (id: string) => void;
   project: ProjectRoot;
+  sourceDevice?: Device | null;
 }): AddDeviceFormController {
   const localIdFactory = useRef<AddDeviceLocalIdFactory>(
     makeLocalId ?? createRuntimeAddDeviceLocalIdFactory(),
   );
-  const [device, setDeviceState] = useState<DeviceDraft>(() =>
-    createInitialDeviceDraft(project, initialLocationId),
-  );
-  const [portGroups, setPortGroups] = useState<DevicePortGroupForm[]>(() =>
-    createInitialPortGroups(project, project.settings.categories[0]?.id ?? '', localIdFactory.current),
-  );
+  const initialDraft = useRef<ClonedAddDeviceDraft | null>(null);
+
+  if (initialDraft.current === null) {
+    initialDraft.current =
+      sourceDevice?.kind === 'device'
+        ? createClonedAddDeviceDraft(project, sourceDevice, localIdFactory.current)
+        : {
+            device: createInitialDeviceDraft(project, initialLocationId),
+            portGroups: createInitialPortGroups(
+              project,
+              project.settings.categories[0]?.id ?? '',
+              localIdFactory.current,
+            ),
+          };
+  }
+
+  const [device, setDeviceState] = useState<DeviceDraft>(() => initialDraft.current!.device);
+  const [portGroups, setPortGroups] = useState<DevicePortGroupForm[]>(() => initialDraft.current!.portGroups);
   const baselineFingerprint = useRef<string | null>(null);
   const currentFingerprint = createFormFingerprint(device, portGroups);
 

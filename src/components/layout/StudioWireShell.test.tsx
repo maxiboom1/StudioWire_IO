@@ -79,6 +79,27 @@ afterEach(() => {
 });
 
 describe('StudioWireShell dirty device inspector navigation guard', () => {
+  it('opens Clone and Edit as a prefilled Add Device draft with fresh cable allocation', async () => {
+    const user = userEvent.setup();
+
+    contextHarness.current = createContext();
+    render(<StudioWireShell />);
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /Router 1 Device RTR1/ }));
+    await user.click(await screen.findByText('Clone and Edit'));
+
+    expect(await screen.findByRole('heading', { name: 'Add Device' })).toBeTruthy();
+    expect(screen.getByText(/Review the cloned details from Router 1/)).toBeTruthy();
+    expect((screen.getByLabelText(/Device Name/) as HTMLInputElement).value).toBe('Router 1');
+    expect((screen.getByLabelText(/Device sub-name/) as HTMLInputElement).value).toBe('RTR1');
+    expect((screen.getByLabelText('Device model') as HTMLInputElement).value).toBe('XR-16');
+
+    await user.click(screen.getByRole('tab', { name: 'I/O' }));
+    expect((screen.getByLabelText('I/O Name') as HTMLInputElement).value).toBe('OUT');
+    expect((screen.getByLabelText('First Cable Number') as HTMLInputElement).value).toBe('9');
+    expect(contextHarness.current?.addDevice).not.toHaveBeenCalled();
+  });
+
   it('cancels or discards dirty inspector changes before selection changes', async () => {
     const user = userEvent.setup();
     const editDevice = vi.fn();

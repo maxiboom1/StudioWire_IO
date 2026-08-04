@@ -1,6 +1,6 @@
-# StudioWire IO Product Spec v0.2.8.23
+# StudioWire IO Product Spec v0.2.8.24
 
-StudioWire IO v0.2.8.23 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.8.24 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
@@ -140,6 +140,8 @@ Add/Edit Device uses General and I/O tabs. General exposes Device Name, Device s
 Add Device also includes a Device Collection tab. The bundled collection follows Manufacturer, Category, and Model folders. Selecting a model displays its hardware and ordered I/O summary plus complete compatibility results for the current project. Loading a compatible template replaces the Add Device draft, selects the first project location with no folder, proposes fresh project cable ranges, and returns to General for review. Loading never creates a device directly.
 
 Standard devices can be exported as device-template JSON from the navigator. Export resolves project IDs to semantic names, stores effective interface colors, excludes placement and cable allocation data, and reports the intended `collections/devices` path. Bundled collection additions require an application restart or rebuild.
+
+Standard devices also provide a `Clone and Edit` navigator action. It opens Add Device with the source hardware and ordered I/O definition prefilled, retains the source Location and Folder as editable defaults, clears rack placement and runtime identity, and proposes fresh category-derived cable ranges. The draft still passes through the normal Add Device validation and does not create anything until the operator submits it.
 
 Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
 

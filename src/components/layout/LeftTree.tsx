@@ -31,6 +31,7 @@ export function LeftTree({
   onAddLocation,
   onAddRack,
   onAddDevice,
+  onCloneDevice,
   onEditDevice,
   onEditTerminalBlock,
   onAddTerminalBlock,
@@ -40,6 +41,7 @@ export function LeftTree({
   onAddLocation: () => void;
   onAddRack: (locationId: string) => void;
   onAddDevice: (locationId: string) => void;
+  onCloneDevice: (deviceId: string) => void;
   onEditDevice: (deviceId: string) => void;
   onEditTerminalBlock: (deviceId: string) => void;
   onAddTerminalBlock: (locationId: string | null) => void;
@@ -145,6 +147,7 @@ export function LeftTree({
                         key={branch.location.id}
                         onAddDevice={onAddDevice}
                         onAddSubLocation={handleAddSubLocation}
+                        onCloneDevice={onCloneDevice}
                         onEditDevice={onEditDevice}
                         onEditTerminalBlock={onEditTerminalBlock}
                         onExportDeviceTemplate={handleExportDeviceTemplate}
