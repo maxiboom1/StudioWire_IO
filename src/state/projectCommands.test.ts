@@ -239,4 +239,77 @@ describe('project command factory', () => {
 
     expect(exported).toEqual(['Latest']);
   });
+
+  it('creates all persistent View element IDs in the command layer', () => {
+    const { actions, commands, seeds } = createHarness();
+
+    expect(commands.addView({ name: 'Signal View' })).toBe('view:Signal View');
+    expect(
+      commands.addViewPlacement('view-a', {
+        sourceType: 'device',
+        sourceId: 'device-router-1',
+        xMm: 10,
+        yMm: 20,
+      }),
+    ).toBe('view-placement:view-a-device-device-router-1');
+    expect(
+      commands.addViewLine('view-a', {
+        from: { placementId: 'placement-a', side: 'right', offset: 0.5 },
+        to: { placementId: 'placement-b', side: 'left', offset: 0.5 },
+        label: '4 x SDI',
+        waypoints: [],
+      }),
+    ).toBe('view-line:view-a-placement-a-placement-b');
+    expect(
+      commands.addViewAnnotation('view-a', {
+        kind: 'text',
+        xMm: 5,
+        yMm: 5,
+        widthMm: 40,
+        text: 'Core',
+        size: 'medium',
+      }),
+    ).toBe('view-annotation:view-a-text');
+
+    commands.updateView('view-a', { name: 'Overview' });
+    commands.updateViewPlacement('view-a', 'placement-a', { xMm: 12.5 });
+    commands.updateViewLine('view-a', 'line-a', { label: '8 x SDI' });
+    commands.updateViewAnnotation('view-a', 'annotation-a', {
+      kind: 'group',
+      xMm: 0,
+      yMm: 0,
+      widthMm: 100,
+      heightMm: 50,
+      label: 'Core',
+    });
+    commands.removeViewLine('view-a', 'line-a');
+    commands.removeViewAnnotation('view-a', 'annotation-a');
+    commands.removeViewPlacement('view-a', 'placement-a');
+    commands.replaceViewCanvas('view-a', { placements: [], lines: [], annotations: [] });
+    commands.deleteView('view-a');
+
+    expect(seeds).toEqual(
+      expect.arrayContaining([
+        ['view', 'Signal View'],
+        ['view-placement', 'view-a-device-device-router-1'],
+        ['view-line', 'view-a-placement-a-placement-b'],
+        ['view-annotation', 'view-a-text'],
+      ]),
+    );
+    expect(actions.map((action) => action.type)).toEqual([
+      'ADD_VIEW',
+      'ADD_VIEW_PLACEMENT',
+      'ADD_VIEW_LINE',
+      'ADD_VIEW_ANNOTATION',
+      'UPDATE_VIEW',
+      'UPDATE_VIEW_PLACEMENT',
+      'UPDATE_VIEW_LINE',
+      'UPDATE_VIEW_ANNOTATION',
+      'REMOVE_VIEW_LINE',
+      'REMOVE_VIEW_ANNOTATION',
+      'REMOVE_VIEW_PLACEMENT',
+      'REPLACE_VIEW_CANVAS',
+      'DELETE_VIEW',
+    ]);
+  });
 });

@@ -5,6 +5,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { AddTerminalBlockModal } from './AddTerminalBlockModal';
 
 const contextHarness = vi.hoisted(() => ({
@@ -25,6 +26,7 @@ function createContext(): ProjectContextValue {
   project.racks = [];
 
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

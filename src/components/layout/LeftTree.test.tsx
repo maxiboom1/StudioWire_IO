@@ -8,6 +8,7 @@ import { sampleProject } from '../../domain/sampleProject';
 import type { Device, ProjectRoot } from '../../domain/types';
 import { STUDIOWIRE_CURRENT_VERSION } from '../../domain/version';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { LeftTree } from './LeftTree';
 
 const contextHarness = vi.hoisted(() => ({
@@ -129,6 +130,7 @@ function createContext(
     editTerminalBlock: vi.fn(),
     deleteTerminalBlock: vi.fn(),
     ...commands,
+    ...noopViewCommands,
   };
 }
 

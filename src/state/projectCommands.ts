@@ -1,9 +1,12 @@
 import { makeUniqueId } from '../domain/id';
 import { getDefaultCategoryColor, getDefaultConnectorIconKey } from '../domain/defaults';
+import { createProjectView, createViewPlacement } from '../domain/viewOperations';
 import type { ProjectRoot } from '../domain/types';
 import { importProjectFile, exportProjectFile, type ProjectFileLike } from './projectFileTransfer';
 import type {
   AddDeviceInput,
+  AddViewLineInput,
+  AddViewPlacementInput,
   CablePrefixInput,
   CategoryConnectorAssignmentInput,
   CategoryInput,
@@ -26,6 +29,12 @@ import type {
   RackUpdates,
   SubLocationInput,
   SubLocationUpdates,
+  ViewAnnotationInput,
+  ViewCanvasInput,
+  ViewInput,
+  ViewLineUpdates,
+  ViewPlacementUpdates,
+  ViewUpdates,
 } from './projectContextTypes';
 import type { ProjectAction, TerminalBlockDraft, TerminalBlockEditInput, DeviceUpdate } from './projectTypes';
 
@@ -208,6 +217,55 @@ export function createProjectCommands(dependencies: ProjectCommandDependencies):
     updateRack: (id: string, updates: RackUpdates) =>
       dispatch({ type: 'UPDATE_RACK', payload: { id, updates } }),
     deleteRack: (id: string) => dispatch({ type: 'DELETE_RACK', payload: { id } }),
+    addView: (input: ViewInput) => {
+      const id = dependencies.makeUniqueId('view', input.name);
+      dispatch({ type: 'ADD_VIEW', payload: createProjectView({ id, ...input }) });
+      return id;
+    },
+    updateView: (id: string, updates: ViewUpdates) =>
+      dispatch({ type: 'UPDATE_VIEW', payload: { id, updates } }),
+    deleteView: (id: string) => dispatch({ type: 'DELETE_VIEW', payload: { id } }),
+    addViewPlacement: (viewId: string, input: AddViewPlacementInput) => {
+      const id = dependencies.makeUniqueId(
+        'view-placement',
+        `${viewId}-${input.sourceType}-${input.sourceId}`,
+      );
+      dispatch({
+        type: 'ADD_VIEW_PLACEMENT',
+        payload: { viewId, placement: createViewPlacement({ id, ...input }) },
+      });
+      return id;
+    },
+    updateViewPlacement: (viewId: string, placementId: string, updates: ViewPlacementUpdates) =>
+      dispatch({ type: 'UPDATE_VIEW_PLACEMENT', payload: { viewId, placementId, updates } }),
+    removeViewPlacement: (viewId: string, placementId: string) =>
+      dispatch({ type: 'REMOVE_VIEW_PLACEMENT', payload: { viewId, placementId } }),
+    addViewLine: (viewId: string, input: AddViewLineInput) => {
+      const id = dependencies.makeUniqueId(
+        'view-line',
+        `${viewId}-${input.from.placementId}-${input.to.placementId}`,
+      );
+      dispatch({ type: 'ADD_VIEW_LINE', payload: { viewId, line: { id, ...input } } });
+      return id;
+    },
+    updateViewLine: (viewId: string, lineId: string, updates: ViewLineUpdates) =>
+      dispatch({ type: 'UPDATE_VIEW_LINE', payload: { viewId, lineId, updates } }),
+    removeViewLine: (viewId: string, lineId: string) =>
+      dispatch({ type: 'REMOVE_VIEW_LINE', payload: { viewId, lineId } }),
+    addViewAnnotation: (viewId: string, input: ViewAnnotationInput) => {
+      const id = dependencies.makeUniqueId('view-annotation', `${viewId}-${input.kind}`);
+      dispatch({ type: 'ADD_VIEW_ANNOTATION', payload: { viewId, annotation: { id, ...input } } });
+      return id;
+    },
+    updateViewAnnotation: (viewId: string, annotationId: string, input: ViewAnnotationInput) =>
+      dispatch({
+        type: 'UPDATE_VIEW_ANNOTATION',
+        payload: { viewId, annotationId, annotation: { id: annotationId, ...input } },
+      }),
+    removeViewAnnotation: (viewId: string, annotationId: string) =>
+      dispatch({ type: 'REMOVE_VIEW_ANNOTATION', payload: { viewId, annotationId } }),
+    replaceViewCanvas: (viewId: string, canvas: ViewCanvasInput) =>
+      dispatch({ type: 'REPLACE_VIEW_CANVAS', payload: { viewId, canvas } }),
     addDevice: (input: AddDeviceInput) => {
       const id =
         input.device.id ?? dependencies.makeUniqueId('device', input.device.code || input.device.name);

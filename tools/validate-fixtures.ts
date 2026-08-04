@@ -124,68 +124,16 @@ function validateLegacySentinel(path: string, version: SchemaVersion, raw: any, 
     fail(`${path} did not preserve stable project identity.`);
   }
 
-  if (version === '0.1.0') {
-    if (!('sourceEndpoint' in raw.cables[0]) || !('destinationEndpoint' in raw.cables[0])) {
-      fail(`${path} must contain legacy source/destination cable endpoints.`);
-    }
-
-    if (
-      'sourceEndpoint' in (project.cables[0] as any) ||
-      'destinationEndpoint' in (project.cables[0] as any)
-    ) {
-      fail(`${path} migrated legacy endpoint fields into current cable shape incorrectly.`);
-    }
-
-    if (!project.cables[0].sideAEndpoint || !project.cables[0].sideBEndpoint) {
-      fail(`${path} did not migrate legacy endpoints to sideAEndpoint/sideBEndpoint.`);
-    }
+  if (version !== '0.2.8.25') {
+    fail(`${path} is not the retained 0.2.8.25 compatibility fixture.`);
   }
 
-  if (version === '0.2.4.1') {
-    if (!raw.settings.connectorTypes.some((connector: any) => 'categoryId' in connector)) {
-      fail(`${path} must contain legacy connector category fields.`);
-    }
-
-    if (project.settings.connectorTypes.some((connector: any) => 'categoryId' in connector)) {
-      fail(`${path} did not migrate connector types into the global current catalog.`);
-    }
-
-    if (project.settings.categoryConnectorAssignments.length === 0) {
-      fail(`${path} did not create category connector assignments.`);
-    }
+  if ('views' in raw) {
+    fail(`${path} must retain the real pre-View 0.2.8.25 shape.`);
   }
 
-  if (version === '0.2.5.1' || version === '0.2.6.0') {
-    const router = project.devices.find((device) => device.id === 'device-router-1');
-
-    if (!router?.code || !('manufacturer' in router) || !('model' in router) || !('role' in router)) {
-      fail(`${path} did not backfill required standard-device metadata.`);
-    }
-  }
-
-  if (version === '0.2.6.0') {
-    const rawTerminalBlock = raw.devices.find((device: any) => device.id === 'device-tb-legacy-metadata');
-    const migratedTerminalBlock = project.devices.find((device) => device.id === 'device-tb-legacy-metadata');
-
-    if (
-      !rawTerminalBlock?.code ||
-      !rawTerminalBlock.manufacturer ||
-      !rawTerminalBlock.model ||
-      !rawTerminalBlock.role
-    ) {
-      fail(`${path} must contain legacy terminal block metadata fields.`);
-    }
-
-    if (
-      !migratedTerminalBlock ||
-      'code' in migratedTerminalBlock ||
-      'manufacturer' in migratedTerminalBlock ||
-      'model' in migratedTerminalBlock ||
-      'role' in migratedTerminalBlock ||
-      migratedTerminalBlock.rackSizeRu !== 1
-    ) {
-      fail(`${path} did not remove historical terminal block metadata during migration.`);
-    }
+  if (project.views.length !== 0) {
+    fail(`${path} did not migrate to an empty Views collection.`);
   }
 }
 

@@ -1,6 +1,7 @@
 import { cableReferencesPort } from './connections';
 import { normalizeNumberingLedgers } from './cableNumbers';
 import type { Cable, Endpoint, Port, ProjectRoot } from './types';
+import { getViewSourceImpact, removeViewSourceReferences } from './viewOperations';
 
 const UNKNOWN_ENDPOINT: Endpoint = {
   type: 'unknown',
@@ -15,6 +16,9 @@ export type DeleteDeviceResult =
       deletedPortCount: number;
       deletedCableCount: number;
       releasedRangeCount: number;
+      affectedViewCount: number;
+      deletedViewPlacementCount: number;
+      deletedViewLineCount: number;
     }
   | { ok: false; error: string };
 
@@ -88,7 +92,8 @@ function deleteDeviceRecordFromProject(
     return [resetCableToPortSlot(cable, survivingOwner)];
   });
   let releasedRangeCount = 0;
-  const nextProject = normalizeNumberingLedgers({
+  const viewImpact = getViewSourceImpact(project, 'device', deviceId);
+  const nextEngineeringProject = normalizeNumberingLedgers({
     ...project,
     devices: project.devices.filter((candidate) => candidate.id !== deviceId),
     portGroups: project.portGroups.filter((portGroup) => !devicePortGroupIds.has(portGroup.id)),
@@ -111,12 +116,17 @@ function deleteDeviceRecordFromProject(
     })),
   });
 
+  const nextProject = removeViewSourceReferences(nextEngineeringProject, 'device', deviceId);
+
   return {
     ok: true,
     project: nextProject,
     deletedPortCount: devicePorts.length,
     deletedCableCount,
     releasedRangeCount,
+    affectedViewCount: viewImpact.length,
+    deletedViewPlacementCount: viewImpact.reduce((total, impact) => total + impact.placementCount, 0),
+    deletedViewLineCount: viewImpact.reduce((total, impact) => total + impact.attachedLineCount, 0),
   };
 }
 

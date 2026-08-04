@@ -4,6 +4,7 @@ import { findProjectItemNameConflict, formatProjectItemNameConflict } from '../.
 import { buildDeleteRackConfirmation, buildRackUnassignConfirmation } from '../../domain/prompts';
 import { analyzeRackPlacements } from '../../domain/rackDiagnostics';
 import type { Rack } from '../../domain/types';
+import { getViewSourceImpact } from '../../domain/viewOperations';
 import { useProject } from '../../state/ProjectContext';
 import { useConfirmation } from '../common/ConfirmationDialog';
 import { InspectorAccordion, InspectorShell } from '../common/InspectorShell';
@@ -73,7 +74,10 @@ export function RackInspector({
   }, [discard, isDirty, onDirtyGuardChange, save]);
 
   async function handleDelete() {
-    if (devices.length === 0 && (await confirm(buildDeleteRackConfirmation(rack)))) {
+    if (
+      devices.length === 0 &&
+      (await confirm(buildDeleteRackConfirmation(rack, getViewSourceImpact(project, 'rack', rack.id))))
+    ) {
       deleteRack(rack.id);
     }
   }

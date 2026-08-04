@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { DeviceWorkspace } from './DeviceWorkspace';
 
 const contextHarness = vi.hoisted(() => ({
@@ -39,6 +40,7 @@ function createContext(): ProjectContextValue {
   routerGroup.colorOverride = '#ABCDEF';
 
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

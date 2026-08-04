@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { AddLocationModal } from './AddLocationModal';
 
 const contextHarness = vi.hoisted(() => ({
@@ -24,6 +25,7 @@ vi.mock('../../state/ProjectContext', () => ({
 
 function createContext(addLocation = vi.fn(() => 'location-created')): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project: structuredClone(sampleProject),
     statusMessage: '',
     importError: null,

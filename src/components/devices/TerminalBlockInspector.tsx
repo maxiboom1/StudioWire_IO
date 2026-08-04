@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { buildDeleteTerminalBlockConfirmation } from '../../domain/prompts';
 import type { Device } from '../../domain/types';
+import { getViewSourceImpact } from '../../domain/viewOperations';
 import { useProject } from '../../state/ProjectContext';
 import { useConfirmation } from '../common/ConfirmationDialog';
 import { InspectorAccordion, InspectorShell } from '../common/InspectorShell';
@@ -59,7 +60,11 @@ export function TerminalBlockInspector({
   }, [discard, isDirty, onDirtyGuardChange, save]);
 
   async function handleDelete() {
-    if (await confirm(buildDeleteTerminalBlockConfirmation(device))) {
+    if (
+      await confirm(
+        buildDeleteTerminalBlockConfirmation(device, getViewSourceImpact(project, 'device', device.id)),
+      )
+    ) {
       deleteTerminalBlock(device.id);
     }
   }

@@ -1,4 +1,5 @@
 import { validateRackPlacement } from '../../domain/rackPlacement';
+import { getViewSourceImpact, removeViewSourceReferences } from '../../domain/viewOperations';
 import {
   findLocationNameConflict,
   findProjectItemNameConflict,
@@ -297,16 +298,20 @@ export function handleDeleteRack(
     };
   }
 
+  const viewImpact = getViewSourceImpact(state.project, 'rack', action.payload.id);
+  const projectWithoutRack = {
+    ...state.project,
+    racks: state.project.racks.filter((rack) => rack.id !== action.payload.id),
+  };
+
   return {
     project: stampProject(
-      {
-        ...state.project,
-        racks: state.project.racks.filter((rack) => rack.id !== action.payload.id),
-      },
+      removeViewSourceReferences(projectWithoutRack, 'rack', action.payload.id),
       `Rack deleted: ${action.payload.id}`,
       context.dependencies,
     ),
-    statusMessage: 'Rack deleted',
+    statusMessage:
+      viewImpact.length > 0 ? `Rack deleted; removed from ${viewImpact.length} View(s)` : 'Rack deleted',
     importError: null,
   };
 }

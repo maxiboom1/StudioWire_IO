@@ -272,7 +272,7 @@ export function validateSettings(project: ProjectRoot, issue: ValidationIssueBui
 export function validateDuplicateIds(project: ProjectRoot, issue: ValidationIssueBuilder): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const seen = new Map<string, { objectType: string; objectId: string }>();
-  const ids: Array<{ objectType: string; objectId: string }> = [
+  const ids: Array<{ objectType: string; objectId: string; stableId?: string }> = [
     { objectType: 'project', objectId: project.project.id },
     ...project.settings.categories.map((item) => ({ objectType: 'category', objectId: item.id })),
     ...project.settings.connectorTypes.map((item) => ({ objectType: 'connectorType', objectId: item.id })),
@@ -292,6 +292,24 @@ export function validateDuplicateIds(project: ProjectRoot, issue: ValidationIssu
     ...project.locations.map((item) => ({ objectType: 'location', objectId: item.id })),
     ...project.subLocations.map((item) => ({ objectType: 'subLocation', objectId: item.id })),
     ...project.racks.map((item) => ({ objectType: 'rack', objectId: item.id })),
+    ...project.views.flatMap((view) => [
+      { objectType: 'view', objectId: view.id },
+      ...view.placements.map((item) => ({
+        objectType: 'view',
+        objectId: view.id,
+        stableId: item.id,
+      })),
+      ...view.lines.map((item) => ({
+        objectType: 'view',
+        objectId: view.id,
+        stableId: item.id,
+      })),
+      ...view.annotations.map((item) => ({
+        objectType: 'view',
+        objectId: view.id,
+        stableId: item.id,
+      })),
+    ]),
     ...project.devices.map((item) => ({ objectType: 'device', objectId: item.id })),
     ...project.portGroups.map((item) => ({ objectType: 'portGroup', objectId: item.id })),
     ...project.ports.map((item) => ({ objectType: 'port', objectId: item.id })),
@@ -303,24 +321,26 @@ export function validateDuplicateIds(project: ProjectRoot, issue: ValidationIssu
   ];
 
   for (const item of ids) {
-    if (!item.objectId) {
+    const stableId = item.stableId ?? item.objectId;
+
+    if (!stableId) {
       continue;
     }
 
-    const first = seen.get(item.objectId);
+    const first = seen.get(stableId);
 
     if (first) {
       issues.push(
         issue(
           'error',
           'duplicate-object-id',
-          `Duplicate object ID "${item.objectId}" is used by ${first.objectType} and ${item.objectType}.`,
+          `Duplicate object ID "${stableId}" is used by ${first.objectType} and ${item.objectType}.`,
           item.objectType,
           item.objectId,
         ),
       );
     } else {
-      seen.set(item.objectId, item);
+      seen.set(stableId, { objectType: item.objectType, objectId: item.objectId });
     }
   }
 

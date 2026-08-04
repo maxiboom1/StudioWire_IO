@@ -1,7 +1,14 @@
 import type { ProjectImportError } from './types';
 import { isRecord } from './schemaVersion';
 
-export function preflightProjectShape(payload: unknown): ProjectImportError[] {
+export interface PreflightProjectShapeOptions {
+  requireViews?: boolean;
+}
+
+export function preflightProjectShape(
+  payload: unknown,
+  options: PreflightProjectShapeOptions = {},
+): ProjectImportError[] {
   if (!isRecord(payload)) {
     return [];
   }
@@ -11,8 +18,9 @@ export function preflightProjectShape(payload: unknown): ProjectImportError[] {
   requireRecord(payload.project, '$.project', errors);
   requireRecord(payload.settings, '$.settings', errors);
 
-  for (const field of [
+  const collectionFields = [
     'locations',
+    'subLocations',
     'racks',
     'devices',
     'portGroups',
@@ -21,7 +29,13 @@ export function preflightProjectShape(payload: unknown): ProjectImportError[] {
     'numberingLedgers',
     'validationIssues',
     'changeLog',
-  ]) {
+  ];
+
+  if (options.requireViews ?? true) {
+    collectionFields.splice(3, 0, 'views');
+  }
+
+  for (const field of collectionFields) {
     requireArray(payload[field], `$.${field}`, errors);
   }
 

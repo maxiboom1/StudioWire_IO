@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.8.25",
+  "title": "StudioWire IO Project v0.2.9.00",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,6 +11,7 @@
     "locations",
     "subLocations",
     "racks",
+    "views",
     "devices",
     "portGroups",
     "ports",
@@ -21,7 +22,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.8.25"
+      "const": "0.2.9.00"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -45,6 +46,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/Rack"
+      }
+    },
+    "views": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ProjectView"
       }
     },
     "devices": {
@@ -408,6 +415,210 @@
         },
         "numberingDirection": {
           "$ref": "#/$defs/RackNumberingDirection"
+        }
+      }
+    },
+    "ProjectView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "pageSize",
+        "orientation",
+        "placements",
+        "lines",
+        "annotations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "pageSize": {
+          "enum": ["a4", "a3"]
+        },
+        "orientation": {
+          "enum": ["portrait", "landscape"]
+        },
+        "placements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ViewPlacement"
+          }
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ViewLine"
+          }
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ViewAnnotation"
+          }
+        }
+      }
+    },
+    "ViewPlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sourceType", "sourceId", "xMm", "yMm", "scale", "labelOverride"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceType": {
+          "enum": ["device", "rack"]
+        },
+        "sourceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xMm": {
+          "type": "number"
+        },
+        "yMm": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 3
+        },
+        "labelOverride": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "ViewLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to", "label", "waypoints"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "$ref": "#/$defs/ViewLineEndpoint"
+        },
+        "to": {
+          "$ref": "#/$defs/ViewLineEndpoint"
+        },
+        "label": {
+          "type": "string"
+        },
+        "waypoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ViewPoint"
+          }
+        }
+      }
+    },
+    "ViewLineEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["placementId", "side", "offset"],
+      "properties": {
+        "placementId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "side": {
+          "enum": ["top", "right", "bottom", "left"]
+        },
+        "offset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "ViewPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xMm", "yMm"],
+      "properties": {
+        "xMm": {
+          "type": "number"
+        },
+        "yMm": {
+          "type": "number"
+        }
+      }
+    },
+    "ViewAnnotation": {
+      "oneOf": [{ "$ref": "#/$defs/ViewTextAnnotation" }, { "$ref": "#/$defs/ViewGroupAnnotation" }]
+    },
+    "ViewTextAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "xMm", "yMm", "widthMm", "text", "size"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "text"
+        },
+        "xMm": {
+          "type": "number"
+        },
+        "yMm": {
+          "type": "number"
+        },
+        "widthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "text": {
+          "type": "string"
+        },
+        "size": {
+          "enum": ["small", "medium", "large"]
+        }
+      }
+    },
+    "ViewGroupAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "xMm", "yMm", "widthMm", "heightMm", "label"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "group"
+        },
+        "xMm": {
+          "type": "number"
+        },
+        "yMm": {
+          "type": "number"
+        },
+        "widthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "heightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "label": {
+          "type": "string"
         }
       }
     },

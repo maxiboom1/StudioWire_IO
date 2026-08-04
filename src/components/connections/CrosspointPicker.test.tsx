@@ -8,6 +8,7 @@ import { connectPorts } from '../../domain/connections';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { CrosspointPicker } from './CrosspointPicker';
 
 const contextHarness = vi.hoisted(() => ({
@@ -33,6 +34,7 @@ function createContext(
   commands: Partial<ProjectContextValue> = {},
 ): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

@@ -1,4 +1,5 @@
 import type { Device, Location, ProjectRoot, Rack, SubLocation } from './types';
+import type { ViewSourceImpact } from './viewOperations';
 
 export type ConfirmationTone = 'default' | 'danger';
 
@@ -59,30 +60,39 @@ export function buildRackUnassignConfirmation(device: Device, rack?: Rack | null
   };
 }
 
-export function buildDeleteDeviceConfirmation(device: Device): ConfirmationCopy {
+export function buildDeleteDeviceConfirmation(
+  device: Device,
+  viewImpact: ViewSourceImpact[] = [],
+): ConfirmationCopy {
   return {
     title: 'Delete device?',
-    message: `Delete device "${device.name}"?\n\nThis removes the device, ports, port groups, and device-owned cable numbers. Any active connections involving this device are disconnected.`,
+    message: `Delete device "${device.name}"?\n\nThis removes the device, ports, port groups, and device-owned cable numbers. Any active connections involving this device are disconnected.${formatViewSourceDeletionImpact(viewImpact)}`,
     confirmLabel: 'Delete Device',
     cancelLabel: 'Cancel',
     tone: 'danger',
   };
 }
 
-export function buildDeleteTerminalBlockConfirmation(device: Device): ConfirmationCopy {
+export function buildDeleteTerminalBlockConfirmation(
+  device: Device,
+  viewImpact: ViewSourceImpact[] = [],
+): ConfirmationCopy {
   return {
     title: 'Delete terminal block?',
-    message: `Delete TB "${device.name}"?\n\nThis removes its rear/front ports and disconnects cables that reference them.`,
+    message: `Delete TB "${device.name}"?\n\nThis removes its rear/front ports and disconnects cables that reference them.${formatViewSourceDeletionImpact(viewImpact)}`,
     confirmLabel: 'Delete TB',
     cancelLabel: 'Cancel',
     tone: 'danger',
   };
 }
 
-export function buildDeleteRackConfirmation(rack: Rack): ConfirmationCopy {
+export function buildDeleteRackConfirmation(
+  rack: Rack,
+  viewImpact: ViewSourceImpact[] = [],
+): ConfirmationCopy {
   return {
     title: 'Delete rack?',
-    message: `Delete rack "${rack.name}"?\n\nRacks with assigned devices will be blocked.`,
+    message: `Delete rack "${rack.name}"?\n\nRacks with assigned devices will be blocked.${formatViewSourceDeletionImpact(viewImpact)}`,
     confirmLabel: 'Delete Rack',
     cancelLabel: 'Cancel',
     tone: 'danger',
@@ -138,3 +148,15 @@ export function buildUnsavedInspectorChangesConfirmation(): ConfirmationCopy {
 }
 
 export const buildUnsavedDeviceInspectorChangesConfirmation = buildUnsavedInspectorChangesConfirmation;
+
+function formatViewSourceDeletionImpact(viewImpact: ViewSourceImpact[]): string {
+  if (viewImpact.length === 0) {
+    return '';
+  }
+
+  const placementCount = viewImpact.reduce((total, impact) => total + impact.placementCount, 0);
+  const lineCount = viewImpact.reduce((total, impact) => total + impact.attachedLineCount, 0);
+  const viewNames = viewImpact.map((impact) => `"${impact.viewName}"`).join(', ');
+
+  return `\n\nAffected Views: ${viewNames}. ${placementCount} placement(s) and ${lineCount} attached line(s) will be removed; unrelated View annotations remain.`;
+}

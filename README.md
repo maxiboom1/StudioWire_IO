@@ -1,8 +1,8 @@
 # StudioWire IO
 
-StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, validation, and JSON import/export.
+StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.8.25 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.00 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -96,7 +96,8 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Planned cable numbering with project numbering ledgers and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
-- JSON import/export: current exports use schema version `0.2.8.25`. This internal dev schema is current-shape only; older dev exports may be rejected before the first public released schema.
+- Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations. This version provides the model, validation, migration, reducer, and persistence foundation; View navigation and canvas UI begin in `0.2.9.01`.
+- JSON import/export: current exports use schema version `0.2.9.00`. Version `0.2.8.25` is the retained compatibility baseline and migrates by adding `views: []` without changing engineering data.
 
 ## Release Gates
 
@@ -119,6 +120,7 @@ Run release/stabilization gates from a clean checkout or clean source-package ex
 - Authentication or user accounts.
 - Backend services or database storage.
 - Multi-user collaboration.
+- Interactive View navigation/canvas editing, View printing, and View document export in this model-foundation version.
 
 ## Screenshots
 
@@ -140,6 +142,13 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.00
+
+- Added the persistent project-level View model for named A4/A3 portrait or landscape canvases containing live device/rack placements, neutral manual lines, and View-only text/group annotations.
+- Added strict JSON Schema coverage, relational View validation, deterministic millimetre geometry helpers, pure canvas operations, dedicated reducer/context commands, and source-deletion cleanup without changing physical connectivity or numbering behavior.
+- Declared `0.2.8.25` as the retained compatibility baseline; project import and active autosave recovery migrate it by adding `views: []`, with one realistic legacy fixture replacing the prior internal-dev fixture matrix.
+- Stored Views in normal project JSON/autosave and documented the staged `0.2.9.x` editor plan. No View navigator or React canvas UI is included yet.
 
 ### v0.2.8.25
 

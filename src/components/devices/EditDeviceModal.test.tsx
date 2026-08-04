@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput, ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { EditDeviceModal } from './EditDeviceModal';
 
@@ -26,6 +27,7 @@ vi.mock('../../state/ProjectContext', () => ({
 
 function createContext(project: ProjectRoot, editDevice = vi.fn()): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

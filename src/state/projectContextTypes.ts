@@ -8,8 +8,13 @@ import type {
   ConnectorType,
   Location,
   ProjectInfo,
+  ProjectView,
   Rack,
   SubLocation,
+  ViewGroupAnnotation,
+  ViewLine,
+  ViewPlacement,
+  ViewTextAnnotation,
 } from '../domain/types';
 import type {
   DeviceDraft,
@@ -44,6 +49,16 @@ export type SubLocationUpdates = Pick<SubLocation, 'name' | 'description'>;
 export type RackInput = Pick<Rack, 'locationId' | 'name' | 'heightRu' | 'numberingDirection'> &
   Partial<Pick<Rack, 'subLocationId'>>;
 export type RackUpdates = Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'>;
+export type ViewInput = Pick<ProjectView, 'name'> &
+  Partial<Pick<ProjectView, 'description' | 'pageSize' | 'orientation'>>;
+export type ViewUpdates = Partial<Pick<ProjectView, 'name' | 'description' | 'pageSize' | 'orientation'>>;
+export type AddViewPlacementInput = Omit<ViewPlacement, 'id' | 'scale' | 'labelOverride'> &
+  Partial<Pick<ViewPlacement, 'scale' | 'labelOverride'>>;
+export type ViewPlacementUpdates = Partial<Pick<ViewPlacement, 'xMm' | 'yMm' | 'scale' | 'labelOverride'>>;
+export type AddViewLineInput = Omit<ViewLine, 'id'>;
+export type ViewLineUpdates = Partial<Pick<ViewLine, 'from' | 'to' | 'label' | 'waypoints'>>;
+export type ViewAnnotationInput = Omit<ViewTextAnnotation, 'id'> | Omit<ViewGroupAnnotation, 'id'>;
+export type ViewCanvasInput = Pick<ProjectView, 'placements' | 'lines' | 'annotations'>;
 export type AddDeviceInput = { device: DeviceDraft; portGroups: DevicePortGroupDraft[] };
 export type { EditDeviceInput };
 export type ConnectPortsInput = { fromPortId: string; toPortId: string };
@@ -84,6 +99,19 @@ export interface ProjectCommands {
   addRack: (input: RackInput) => string;
   updateRack: (id: string, updates: RackUpdates) => void;
   deleteRack: (id: string) => void;
+  addView: (input: ViewInput) => string;
+  updateView: (id: string, updates: ViewUpdates) => void;
+  deleteView: (id: string) => void;
+  addViewPlacement: (viewId: string, input: AddViewPlacementInput) => string;
+  updateViewPlacement: (viewId: string, placementId: string, updates: ViewPlacementUpdates) => void;
+  removeViewPlacement: (viewId: string, placementId: string) => void;
+  addViewLine: (viewId: string, input: AddViewLineInput) => string;
+  updateViewLine: (viewId: string, lineId: string, updates: ViewLineUpdates) => void;
+  removeViewLine: (viewId: string, lineId: string) => void;
+  addViewAnnotation: (viewId: string, input: ViewAnnotationInput) => string;
+  updateViewAnnotation: (viewId: string, annotationId: string, input: ViewAnnotationInput) => void;
+  removeViewAnnotation: (viewId: string, annotationId: string) => void;
+  replaceViewCanvas: (viewId: string, canvas: ViewCanvasInput) => void;
   addDevice: (input: AddDeviceInput) => string;
   addTerminalBlock: (input: TerminalBlockDraft) => string;
   editTerminalBlock: (input: TerminalBlockEditInput) => void;

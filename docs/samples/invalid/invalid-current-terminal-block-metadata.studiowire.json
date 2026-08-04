@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.10",
+  "schemaVersion": "0.2.9.00",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -15,99 +15,132 @@
     "categories": [
       {
         "id": "category-video",
-        "name": "Video",
-        "defaultCablePrefix": "V"
+        "name": "VIDEO",
+        "defaultCablePrefix": "V",
+        "color": "#2563EB"
       },
       {
         "id": "category-audio",
         "name": "Audio",
-        "defaultCablePrefix": "A"
+        "defaultCablePrefix": "A",
+        "color": "#DC2626"
       },
       {
         "id": "category-network",
         "name": "Network",
-        "defaultCablePrefix": "N"
+        "defaultCablePrefix": "N",
+        "color": "#059669"
       },
       {
         "id": "category-reference",
         "name": "Reference",
-        "defaultCablePrefix": "R"
+        "defaultCablePrefix": "R",
+        "color": "#7C3AED"
       },
       {
         "id": "category-rf",
         "name": "RF",
-        "defaultCablePrefix": "RF"
+        "defaultCablePrefix": "RF",
+        "color": "#D97706"
       },
       {
         "id": "category-control",
         "name": "Control",
-        "defaultCablePrefix": "C"
+        "defaultCablePrefix": "C",
+        "color": "#475569"
+      },
+      {
+        "id": "category-av",
+        "name": "AV",
+        "defaultCablePrefix": "AV",
+        "color": "#2563EB"
       }
     ],
     "connectorTypes": [
       {
         "id": "connector-bnc",
-        "name": "BNC"
+        "name": "BNC",
+        "iconKey": "bnc"
       },
       {
         "id": "connector-micro-bnc",
-        "name": "Micro BNC"
+        "name": "Micro BNC",
+        "iconKey": "bnc"
       },
       {
         "id": "connector-minidin",
-        "name": "MiniDIN"
+        "name": "MiniDIN",
+        "iconKey": "generic"
       },
       {
         "id": "connector-sdi-din",
-        "name": "SDI DIN"
+        "name": "SDI DIN",
+        "iconKey": "bnc"
       },
       {
         "id": "connector-hdmi",
-        "name": "HDMI"
+        "name": "HDMI",
+        "iconKey": "hdmi"
       },
       {
         "id": "connector-xlr",
-        "name": "XLR"
+        "name": "XLR",
+        "iconKey": "xlr"
       },
       {
         "id": "connector-pl",
-        "name": "PL"
+        "name": "PL",
+        "iconKey": "generic"
       },
       {
         "id": "connector-rca",
-        "name": "RCA"
+        "name": "RCA",
+        "iconKey": "generic"
       },
       {
         "id": "connector-rj45",
-        "name": "RJ45"
+        "name": "RJ45",
+        "iconKey": "rj45"
       },
       {
         "id": "connector-db25",
-        "name": "DB25"
+        "name": "DB25",
+        "iconKey": "db25"
       },
       {
         "id": "connector-madi-bnc",
-        "name": "MADI BNC"
+        "name": "MADI BNC",
+        "iconKey": "bnc"
       },
       {
         "id": "connector-madi-fiber",
-        "name": "MADI Fiber"
+        "name": "MADI Fiber",
+        "iconKey": "fiber"
       },
       {
         "id": "connector-sfp",
-        "name": "SFP"
+        "name": "SFP",
+        "iconKey": "sfp"
       },
       {
         "id": "connector-fiber",
-        "name": "Fiber"
+        "name": "Fiber",
+        "iconKey": "fiber"
       },
       {
         "id": "connector-gpio",
-        "name": "GPIO"
+        "name": "GPIO",
+        "iconKey": "generic"
       },
       {
         "id": "connector-other",
-        "name": "Other"
+        "name": "Other",
+        "iconKey": "generic"
+      },
+      {
+        "id": "connector-dvi",
+        "name": "DVI",
+        "iconKey": "generic"
       }
     ],
     "categoryConnectorAssignments": [
@@ -122,19 +155,9 @@
         "connectorTypeId": "connector-micro-bnc"
       },
       {
-        "id": "assignment-video-minidin",
-        "categoryId": "category-video",
-        "connectorTypeId": "connector-minidin"
-      },
-      {
         "id": "assignment-video-sdi-din",
         "categoryId": "category-video",
         "connectorTypeId": "connector-sdi-din"
-      },
-      {
-        "id": "assignment-video-hdmi",
-        "categoryId": "category-video",
-        "connectorTypeId": "connector-hdmi"
       },
       {
         "id": "assignment-audio-bnc",
@@ -177,6 +200,11 @@
         "connectorTypeId": "connector-madi-fiber"
       },
       {
+        "id": "assignment-audio-sfp",
+        "categoryId": "category-audio",
+        "connectorTypeId": "connector-sfp"
+      },
+      {
         "id": "assignment-network-rj45",
         "categoryId": "category-network",
         "connectorTypeId": "connector-rj45"
@@ -210,6 +238,11 @@
         "id": "assignment-control-rj45",
         "categoryId": "category-control",
         "connectorTypeId": "connector-rj45"
+      },
+      {
+        "id": "assignment-av-dvi",
+        "categoryId": "category-av",
+        "connectorTypeId": "connector-dvi"
       }
     ],
     "connectorCompatibilityGroups": [
@@ -225,26 +258,6 @@
       }
     ],
     "connectorCompatibilityGroupMembers": [
-      {
-        "id": "member-video-sdi-bnc",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-bnc"
-      },
-      {
-        "id": "member-video-sdi-micro-bnc",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-micro-bnc"
-      },
-      {
-        "id": "member-video-sdi-minidin",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-minidin"
-      },
-      {
-        "id": "member-video-sdi-din",
-        "groupId": "group-video-sdi-coax",
-        "connectorTypeId": "connector-sdi-din"
-      },
       {
         "id": "member-audio-xlr",
         "groupId": "group-audio-analog",
@@ -291,10 +304,15 @@
         "id": "prefix-control",
         "prefix": "C",
         "name": "Control"
+      },
+      {
+        "id": "prefix-av",
+        "prefix": "AV",
+        "name": "AV"
       }
     ],
     "rackDefaults": {
-      "heightRu": 42,
+      "heightRu": 48,
       "numberingDirection": "bottom_to_top"
     },
     "labelRules": {
@@ -306,16 +324,15 @@
     {
       "id": "location-control-room",
       "name": "Control Room",
-      "type": "control_room",
       "description": "Primary production control room."
     },
     {
       "id": "location-machine-room",
       "name": "Machine Room",
-      "type": "machine_room",
       "description": "Central equipment rack area."
     }
   ],
+  "subLocations": [],
   "racks": [
     {
       "id": "rack-mcr-a",
@@ -326,6 +343,7 @@
       "numberingDirection": "bottom_to_top"
     }
   ],
+  "views": [],
   "devices": [
     {
       "id": "device-router-1",
@@ -336,6 +354,7 @@
       "model": "XR-16",
       "categoryId": "category-video",
       "locationId": "location-machine-room",
+      "subLocationId": null,
       "role": "Video router",
       "labelPrefix": "RTR1",
       "mountType": "rack",
@@ -356,6 +375,7 @@
       "model": "MV-4",
       "categoryId": "category-video",
       "locationId": "location-control-room",
+      "subLocationId": null,
       "role": "Monitoring",
       "labelPrefix": "MV1",
       "mountType": "non_rack",
@@ -368,15 +388,16 @@
       "updatedAt": "2026-05-06T00:00:00.000Z"
     },
     {
-      "id": "device-tb-current-metadata",
-      "name": "Current TB Metadata",
+      "id": "device-tb-strict-import",
+      "name": "TB Strict Import",
       "kind": "terminal_block",
       "code": "TB",
-      "manufacturer": "Forbidden",
-      "model": "Forbidden",
+      "manufacturer": "Legacy",
+      "model": "Legacy Model",
       "categoryId": "category-video",
       "locationId": "location-machine-room",
-      "role": "Forbidden",
+      "subLocationId": null,
+      "role": "Legacy Role",
       "labelPrefix": "TB",
       "mountType": "rack",
       "rackId": "rack-mcr-a",
@@ -397,13 +418,14 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "count": 4,
-      "portLabelPattern": "{DEVICE}-OUT-{000}",
+      "portLabelPattern": "{I/O NAME}-{000}",
       "cablePrefix": "V",
       "firstCableNumber": 1,
       "lastCableNumber": 4,
       "numberingRangeId": "range-v-router-outputs",
       "createPlannedCables": true,
-      "locked": false
+      "locked": false,
+      "colorOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs",
@@ -413,13 +435,14 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "count": 4,
-      "portLabelPattern": "{DEVICE}-IN-{000}",
+      "portLabelPattern": "{I/O NAME}-{000}",
       "cablePrefix": "V",
       "firstCableNumber": null,
       "lastCableNumber": null,
       "numberingRangeId": null,
       "createPlannedCables": false,
-      "locked": false
+      "locked": false,
+      "colorOverride": null
     }
   ],
   "ports": [
@@ -429,7 +452,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 1,
       "name": "OUT 1",
-      "label": "RTR1-OUT-001",
+      "label": "OUT-001",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -442,7 +465,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 2,
       "name": "OUT 2",
-      "label": "RTR1-OUT-002",
+      "label": "OUT-002",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -455,7 +478,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 3,
       "name": "OUT 3",
-      "label": "RTR1-OUT-003",
+      "label": "OUT-003",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -468,7 +491,7 @@
       "portGroupId": "port-group-router-outputs",
       "index": 4,
       "name": "OUT 4",
-      "label": "RTR1-OUT-004",
+      "label": "OUT-004",
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -481,7 +504,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 1,
       "name": "IN 1",
-      "label": "MV1-IN-001",
+      "label": "IN-001",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -494,7 +517,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 2,
       "name": "IN 2",
-      "label": "MV1-IN-002",
+      "label": "IN-002",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -507,7 +530,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 3,
       "name": "IN 3",
-      "label": "MV1-IN-003",
+      "label": "IN-003",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -520,7 +543,7 @@
       "portGroupId": "port-group-multiviewer-inputs",
       "index": 4,
       "name": "IN 4",
-      "label": "MV1-IN-004",
+      "label": "IN-004",
       "direction": "input",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
@@ -538,14 +561,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
-        "label": "RTR1-OUT-001"
+        "label": "OUT-001"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-001",
+      "labelTop": "OUT-001",
       "labelMiddle": "V-0001",
       "labelBottom": "",
       "notes": ""
@@ -559,14 +582,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0002",
-        "label": "RTR1-OUT-002"
+        "label": "OUT-002"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-002",
+      "labelTop": "OUT-002",
       "labelMiddle": "V-0002",
       "labelBottom": "",
       "notes": ""
@@ -580,14 +603,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0003",
-        "label": "RTR1-OUT-003"
+        "label": "OUT-003"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-003",
+      "labelTop": "OUT-003",
       "labelMiddle": "V-0003",
       "labelBottom": "",
       "notes": ""
@@ -601,14 +624,14 @@
       "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0004",
-        "label": "RTR1-OUT-004"
+        "label": "OUT-004"
       },
       "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
       },
-      "labelTop": "RTR1-OUT-004",
+      "labelTop": "OUT-004",
       "labelMiddle": "V-0004",
       "labelBottom": "",
       "notes": ""

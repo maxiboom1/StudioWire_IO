@@ -1,6 +1,6 @@
 # StudioWire IO — Multi-Device "Sheet" View: Concept Document
 
-**Status:** Concept / pre-implementation. This document captures a design discussion and is intended as a future prompt/spec input, not a final implementation plan. Many open questions remain (marked below).
+**Status:** Superseded research input. The maintained [v0.2.9.x View Editor decision and prompt set](../0.2.9.xx/README.md) replaces the user-facing term "Sheet" with "View" and is authoritative for implementation. In particular, the earlier live per-port line proposal is superseded by neutral, custom-labeled, View-only manual cable-group lines that do not reference ports, cables, or engineering direction.
 
 **Context at time of writing:** v0.2.8.8, 246/246 tests passing, clean build. This concept does not require changes to the core domain model (`Device`, `Port`, `PortGroup`, `Cable`, `Endpoint`). It is purely an additive presentation layer.
 
@@ -24,7 +24,7 @@ Real broadcast wiring books (RGE 2024 BOOK — Control, Peripheral, EVERTZ matri
 
 4. **Color/position encode meaning structurally.** Inputs left (often red), outputs right; front/rear panels drawn as physically separate rows mirroring the real connector panel.
 
-5. **Exception — the network/Ethernet sheet draws real routed lines** between switch blocks, because at that layer there are few enough trunk connections between any two specific blocks that a real line adds clarity instead of clutter. This is the tell for *when* a real line is worth drawing: low connection count between two specific on-sheet blocks, not high.
+5. **Exception — the network/Ethernet sheet draws real routed lines** between switch blocks, because at that layer there are few enough trunk connections between any two specific blocks that a real line adds clarity instead of clutter. This is the tell for _when_ a real line is worth drawing: low connection count between two specific on-sheet blocks, not high.
 
 **Implication for this feature:** the canvas should default to label/stub rendering for every port, and treat drawn lines as a deliberate, sparingly-used editorial choice — not an automatic rendering of every resolvable connection.
 
@@ -35,6 +35,7 @@ The existing single-device canvas (`DeviceWorkspace`) is not obsolete — it's t
 > A curated, positioned collection of existing single-device blocks, placed on a shared canvas, where each device's own ports default to label-stub rendering (exactly like today, just pointed at text instead of nothing) — with an explicit, per-port, user-controlled option to instead draw a real line to another device's port **only when that destination device is also present on the same sheet.**
 
 This means:
+
 - No new device/port rendering logic is needed for the common case — only the wiring of "is destination on this sheet → stub vs. line" and the line-drawing itself.
 - No graph routing problem to solve in general — only point-to-point lines between two explicitly chosen, currently-resolved port positions.
 - The domain model (`Device`, `Port`, `Cable`, `Endpoint`, the chain-walking logic in `connections.ts`) is untouched. This is purely a presentation layer.
@@ -46,7 +47,7 @@ A new top-level entity, `Sheet`, added as a sibling array on `ProjectRoot` — s
 ```ts
 interface Sheet {
   id: string;
-  name: string;                  // e.g. "Control-1", "Peripheral 1 VTR+FS"
+  name: string; // e.g. "Control-1", "Peripheral 1 VTR+FS"
   description?: string;
   deviceRefs: SheetDeviceRef[];
   annotations: SheetAnnotation[];
@@ -58,12 +59,12 @@ interface SheetDeviceRef {
   deviceId: string;
   x: number;
   y: number;
-  customLabel?: string;          // optional per-sheet display override, e.g. shorten "Yamaha PM-7" to "MIX 1"
+  customLabel?: string; // optional per-sheet display override, e.g. shorten "Yamaha PM-7" to "MIX 1"
 }
 
 interface SheetAnnotation {
   id: string;
-  kind: 'text' | 'rect' | 'group-label';   // freeform text boxes, grouping borders (e.g. the red rounded-rect "FAST SERVER" boundary seen in references)
+  kind: 'text' | 'rect' | 'group-label'; // freeform text boxes, grouping borders (e.g. the red rounded-rect "FAST SERVER" boundary seen in references)
   x: number;
   y: number;
   width?: number;
@@ -75,7 +76,7 @@ interface SheetAnnotation {
 
 ### 4.1 Line visibility vs. line path — a critical separation
 
-Earlier in this discussion, a single `manualLines: { fromPortId, toPortId }` object was proposed and then correctly rejected: storing the *connection* itself in the sheet would go stale the moment the user re-patches a crosspoint, since the stored pair would no longer reflect the live data. The fix is to separate two concerns:
+Earlier in this discussion, a single `manualLines: { fromPortId, toPortId }` object was proposed and then correctly rejected: storing the _connection_ itself in the sheet would go stale the moment the user re-patches a crosspoint, since the stored pair would no longer reflect the live data. The fix is to separate two concerns:
 
 **Visibility** — "should this port's connection be drawn as a line on this sheet, instead of a stub?" This is the only thing that needs to be a stable, user-set flag, and it is keyed by port, not by a from/to pair:
 
@@ -85,12 +86,12 @@ interface SheetLineVisibility {
 }
 ```
 
-**Path** — "given that a line is being drawn between two *live-resolved* points, how should it bend?" This is purely cosmetic geometry and never asserts a connectivity fact, so it's safe to store:
+**Path** — "given that a line is being drawn between two _live-resolved_ points, how should it bend?" This is purely cosmetic geometry and never asserts a connectivity fact, so it's safe to store:
 
 ```ts
 interface SheetLinePath {
-  portId: string;                          // matches the visible port
-  waypoints?: { x: number; y: number }[];  // optional user-dragged bend points
+  portId: string; // matches the visible port
+  waypoints?: { x: number; y: number }[]; // optional user-dragged bend points
   style?: 'straight' | 'elbow';
 }
 ```
@@ -103,7 +104,7 @@ For each port belonging to a device placed on the sheet:
 2. If the port has **no** `SheetLineVisibility` entry → render as a stub/label, exactly like the reference sheets (arrow + destination device/port text), reusing the existing label/cable-number badge rendering.
 3. If the port **has** a `SheetLineVisibility` entry:
    - If the resolved destination device is **not** on this sheet → render as a stub anyway (visibility flag is inert/ignored until the destination is added to the sheet).
-   - If the resolved destination device **is** on this sheet → draw a real line to that destination port's *current* anchor position, using `SheetLinePath` waypoints if present, otherwise a default straight/lightly-curved path.
+   - If the resolved destination device **is** on this sheet → draw a real line to that destination port's _current_ anchor position, using `SheetLinePath` waypoints if present, otherwise a default straight/lightly-curved path.
 
 Because nothing about the connection itself is stored — only the display preference and cosmetic geometry — a crosspoint change is always reflected correctly: the line (or stub) simply follows the live data on the next render. There is no code path by which the canvas can show a connection that isn't currently true.
 
@@ -125,12 +126,14 @@ If a device is removed from a sheet (or a crosspoint changes such that the desti
 ## 6. What Is Explicitly Reused vs. New
 
 **Reused as-is:**
+
 - `describePortConnection` and the TB chain-walking logic in `connections.ts` — same source of truth for what's connected to what.
 - `CrosspointPicker` for the underlying connect/patch interaction.
 - Visual language for cable number badges, TB markers, port anchors — same components, repositioned by x/y instead of CSS Grid row.
 - `CanvasViewport` (zoom/pan shell) and `deviceDrag.ts` (drag positioning).
 
 **New work required:**
+
 - `Sheet` entity and its CRUD (add/remove device, position, annotations).
 - Stub/label rendering pointed at arbitrary text instead of the current fixed-column layout (small extension of existing rendering).
 - Point-to-point line rendering between two arbitrary on-canvas anchors (SVG overlay), with optional waypoint editing.
@@ -153,4 +156,4 @@ If a device is removed from a sheet (or a crosspoint changes such that the desti
 
 ---
 
-*This document reflects a design conversation only. No code has been written against this concept yet.*
+_This document reflects a design conversation only. No code has been written against this concept yet._

@@ -14,6 +14,12 @@ export const OBJECT_STATUS_VALUES = ['planned', 'connected'] as const;
 export const NUMBERING_RANGE_STATUS_VALUES = ['allocated', 'reserved_gap'] as const;
 export const ENDPOINT_TYPE_VALUES = ['device_port', 'tb_port', 'external', 'unknown'] as const;
 export const VALIDATION_SEVERITY_VALUES = ['error', 'warning', 'info'] as const;
+export const VIEW_PAGE_SIZE_VALUES = ['a4', 'a3'] as const;
+export const VIEW_ORIENTATION_VALUES = ['portrait', 'landscape'] as const;
+export const VIEW_SOURCE_TYPE_VALUES = ['device', 'rack'] as const;
+export const VIEW_LINE_SIDE_VALUES = ['top', 'right', 'bottom', 'left'] as const;
+export const VIEW_ANNOTATION_KIND_VALUES = ['text', 'group'] as const;
+export const VIEW_TEXT_SIZE_VALUES = ['small', 'medium', 'large'] as const;
 export const CONNECTOR_ICON_KEY_VALUES = [
   'bnc',
   'xlr',
@@ -35,6 +41,12 @@ export type ObjectStatus = (typeof OBJECT_STATUS_VALUES)[number];
 export type NumberingRangeStatus = (typeof NUMBERING_RANGE_STATUS_VALUES)[number];
 export type EndpointType = (typeof ENDPOINT_TYPE_VALUES)[number];
 export type ValidationSeverity = (typeof VALIDATION_SEVERITY_VALUES)[number];
+export type ViewPageSize = (typeof VIEW_PAGE_SIZE_VALUES)[number];
+export type ViewOrientation = (typeof VIEW_ORIENTATION_VALUES)[number];
+export type ViewSourceType = (typeof VIEW_SOURCE_TYPE_VALUES)[number];
+export type ViewLineSide = (typeof VIEW_LINE_SIDE_VALUES)[number];
+export type ViewAnnotationKind = (typeof VIEW_ANNOTATION_KIND_VALUES)[number];
+export type ViewTextSize = (typeof VIEW_TEXT_SIZE_VALUES)[number];
 export type ConnectorIconKey = (typeof CONNECTOR_ICON_KEY_VALUES)[number];
 
 export interface ProjectRoot {
@@ -44,6 +56,7 @@ export interface ProjectRoot {
   locations: Location[];
   subLocations: SubLocation[];
   racks: Rack[];
+  views: ProjectView[];
   devices: Device[];
   portGroups: PortGroup[];
   ports: Port[];
@@ -143,6 +156,68 @@ export interface Rack {
   name: string;
   heightRu: number;
   numberingDirection: RackNumberingDirection;
+}
+
+export interface ProjectView {
+  id: string;
+  name: string;
+  description: string;
+  pageSize: ViewPageSize;
+  orientation: ViewOrientation;
+  placements: ViewPlacement[];
+  lines: ViewLine[];
+  annotations: ViewAnnotation[];
+}
+
+export interface ViewPlacement {
+  id: string;
+  sourceType: ViewSourceType;
+  sourceId: string;
+  xMm: number;
+  yMm: number;
+  scale: number;
+  labelOverride: string | null;
+}
+
+export interface ViewLine {
+  id: string;
+  from: ViewLineEndpoint;
+  to: ViewLineEndpoint;
+  label: string;
+  waypoints: ViewPoint[];
+}
+
+export interface ViewLineEndpoint {
+  placementId: string;
+  side: ViewLineSide;
+  offset: number;
+}
+
+export interface ViewPoint {
+  xMm: number;
+  yMm: number;
+}
+
+export type ViewAnnotation = ViewTextAnnotation | ViewGroupAnnotation;
+
+export interface ViewTextAnnotation {
+  id: string;
+  kind: 'text';
+  xMm: number;
+  yMm: number;
+  widthMm: number;
+  text: string;
+  size: ViewTextSize;
+}
+
+export interface ViewGroupAnnotation {
+  id: string;
+  kind: 'group';
+  xMm: number;
+  yMm: number;
+  widthMm: number;
+  heightMm: number;
+  label: string;
 }
 
 export interface Device {

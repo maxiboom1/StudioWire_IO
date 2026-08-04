@@ -18,7 +18,7 @@ Scope:
 - Validation.
 - Guarded delete/retire behavior.
 
-Historical schema identifier `0.1.0` remains supported for import compatibility.
+Historical internal schemas before `0.2.8.25` are no longer maintained import baselines. Version `0.2.8.25` is the retained compatibility baseline for the additive View model.
 
 ## v0.2.0.0
 
@@ -37,6 +37,20 @@ Scope:
 - Import, storage, recovery, documentation, acceptance, and quality-gate stabilization.
 
 Prewire export is not a `0.2.0.0` deliverable and is not required to close v0.2. The current app continues to state that prewire export is unsupported.
+
+## v0.2.9.x
+
+Project-level View authoring remains presentation-only and does not change the engineering model.
+
+Staged scope:
+
+- `0.2.9.00` complete: persistent View types and JSON Schema, A4/A3 millimetre geometry, pure View operations, reducer/context commands, relational validation, source-deletion cleanup, normal autosave/export persistence, and retained `0.2.8.25` migration compatibility.
+- `0.2.9.01` planned: flat Views navigation, CRUD, View selection/inspector metadata, and the page workspace shell.
+- `0.2.9.02` planned: live device, terminal-block, and rack placement and compact technical rendering.
+- `0.2.9.03` planned: neutral labeled lines, route editing, text headings, and visual group rectangles.
+- `0.2.9.04` planned: View-local undo/redo, accessibility and lifecycle hardening, sample content, and final editor acceptance.
+
+View printing, title blocks, PDF/SVG generation, and document export remain v0.3 work.
 
 ## v0.3.0.0
 

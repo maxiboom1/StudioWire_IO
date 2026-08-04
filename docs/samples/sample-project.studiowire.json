@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.8.25",
+  "schemaVersion": "0.2.9.00",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -343,6 +343,7 @@
       "numberingDirection": "bottom_to_top"
     }
   ],
+  "views": [],
   "devices": [
     {
       "id": "device-router-1",

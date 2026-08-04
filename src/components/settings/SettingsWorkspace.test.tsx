@@ -8,6 +8,7 @@ import { sampleProject } from '../../domain/sampleProject';
 import type { Category, ConnectorCompatibilityGroup, ProjectRoot } from '../../domain/types';
 import { STUDIOWIRE_CURRENT_VERSION } from '../../domain/version';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { SettingsWorkspace } from './SettingsWorkspace';
 
 const contextHarness = vi.hoisted(() => ({
@@ -58,6 +59,7 @@ function createCommands(): CommandMocks {
 
 function createContext(project: ProjectRoot, commands = createCommands()): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

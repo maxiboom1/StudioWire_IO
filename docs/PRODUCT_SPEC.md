@@ -1,8 +1,10 @@
-# StudioWire IO Product Spec v0.2.8.25
+# StudioWire IO Product Spec v0.2.9.00
 
-StudioWire IO v0.2.8.25 is the current v0.2 local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.00 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
+
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. The `0.2.9.00` foundation defines and validates View metadata, live device/rack placements, neutral manual lines, and View-only annotations. It intentionally does not expose a View navigator or canvas editor until the staged `0.2.9.01` through `0.2.9.04` work.
 
 ## Application Layout
 
@@ -179,6 +181,18 @@ New I/O interfaces default to `{I/O NAME}-{000}` label patterns. `{I/O NAME}` re
 
 New Add/Edit Device interfaces derive their cable prefix from the selected category's `defaultCablePrefix`. Existing locked interfaces preserve their stored prefix.
 
+## Project Views
+
+A View is a named A4 or A3 portrait/landscape presentation canvas stored as a sibling collection on the project root. A new View defaults to A3 portrait, uses millimetre coordinates, and contains:
+
+- Live placements referencing an existing standard device, terminal block, or rack by ID.
+- Neutral, labeled, orthogonal manual lines between placement boundaries.
+- View-only text headings and visual group rectangles.
+
+Views do not copy source devices or racks. They never create, remove, renumber, connect, or disconnect ports or physical cables, and they do not change location hierarchy or rack assignment. Source changes remain live through ID references. Deleting a source removes only its direct View placements and attached View lines; unrelated placements and annotations remain.
+
+View names are trimmed and case-insensitively unique among Views only. Dangling imported source references remain structurally loadable and are relational validation errors. Out-of-page content remains stored and is reported as a warning. Views use the normal project export and local autosave; no separate View file or storage service exists.
+
 ## Cable Numbering
 
 Cable numbering is planned through project data, not inferred from drawings.
@@ -196,4 +210,4 @@ StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB 
 
 ## Explicit Exclusions
 
-The current app intentionally excludes prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, and autosave failure leaves the in-memory project exportable.
+The current app intentionally excludes the interactive View navigator/canvas UI until the following staged versions, as well as View print/export, prewire export, Excel export, Bartender export, Visio export, authentication, and backend/database storage. Browser autosave is local only; startup recovery tries the active autosave key and known legacy keys, migrates the retained `0.2.8.25` baseline, and leaves the in-memory project exportable after autosave failure.

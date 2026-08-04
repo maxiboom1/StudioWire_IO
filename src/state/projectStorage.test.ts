@@ -50,6 +50,20 @@ describe('projectStorage recovery', () => {
     expect(result.key).toBe('studiowire.io.project.v0.2.7');
   });
 
+  it('migrates a 0.2.8.25 project from the active autosave key', () => {
+    const storage = new MemoryStorage();
+    const legacyProject = structuredClone(sampleProject) as any;
+    legacyProject.schemaVersion = '0.2.8.25';
+    delete legacyProject.views;
+    storage.values.set(ACTIVE_STORAGE_KEY, JSON.stringify(legacyProject));
+
+    const result = restoreStoredProject(storage);
+
+    expect(result.key).toBe(ACTIVE_STORAGE_KEY);
+    expect(result.project?.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+    expect(result.project?.views).toEqual([]);
+  });
+
   it('handles thrown getItem and removeItem operations without crashing recovery', () => {
     const storage = new MemoryStorage({ getItem: new Error('blocked') });
 

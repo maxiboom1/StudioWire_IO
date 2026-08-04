@@ -1,6 +1,6 @@
 # StudioWire IO v0.2 Acceptance
 
-This document defines repeatable acceptance for the closed v0.2 release line. Project data is the source of truth; drawings and document packages are not source data and are future v0.3.0.0 scope.
+This document defines repeatable acceptance for the maintained local v0.2 release line, including the additive v0.2.9 View presentation model. Project engineering data is the source of truth; View records are project-owned presentation data, while generated document packages remain future v0.3.0.0 scope.
 
 ## Scope Statement
 
@@ -15,8 +15,10 @@ v0.2 is complete around:
 - Safe JSON import/export with supported legacy migration.
 - Resilient local browser persistence and recovery.
 - Bundled, validated device templates that populate Add Device without bypassing project validation.
+- Persistent project-level View metadata, live source references, neutral manual lines, and View-only annotations that cannot modify connectivity, numbering, rack assignment, or location hierarchy.
+- Retained `0.2.8.25` import/autosave migration that adds `views: []` without changing existing project engineering data.
 
-v0.2 does not support prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
+Version `0.2.9.00` provides the View domain and persistence foundation only. It does not yet support View navigation/canvas editing, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
 
 ## Development And Release Commands
 
@@ -52,30 +54,32 @@ Release packaging, clean-extraction verification, and Playwright E2E are not req
 
 ## Acceptance Matrix
 
-| Acceptance item                                                  | Verification                                                                                                                                                                                     |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Clean install and deterministic build                            | `npm ci`, `npm run build`, and package-extraction verification for release checkpoints                                                                                                           |
-| Version synchronization                                          | `npm run version:check` checks package, lockfile, TypeScript constant, JSON Schema, sample data, README, data model, and visible UI version usage                                                |
-| Current structural schema validation                             | `npm run validate:fixtures`, `src/domain/projectContract.test.ts`, and JSON Schema validation inside the import pipeline                                                                         |
-| Relational validation behavior                                   | `src/domain/validators.test.ts`, `src/domain/validation/validationModules.test.ts`, and `src/domain/projectBehaviorCharacterization.test.ts`                                                     |
-| Every supported released-baseline/fixture migration              | `npm run validate:fixtures`, `src/domain/projectImport.test.ts`, and Playwright `imports current and legacy fixtures`; internal dev-to-dev compatibility is not guaranteed before public release |
-| New, open, load sample, import, export flows                     | Playwright lifecycle and import/export tests in `tests/e2e/studiowire.spec.ts`; export/import compares complete project-domain JSON with only volatile download path excluded                    |
-| Local save, reload, unavailable storage, corrupt-record fallback | Playwright storage tests plus `src/state/projectStorage.test.ts` and `src/state/projectAutosave.test.ts`; quota/write failure after a user edit is covered by unit tests, not browser injection  |
-| Settings and connector compatibility                             | Playwright settings test plus `src/domain/connectorCompatibility.test.ts`                                                                                                                        |
-| Location, rack, device, and terminal-block creation              | Playwright lifecycle tests plus reducer and domain command tests; editing proof is limited to settings edits, rack movement, device deletion, and reducer-level update behavior                  |
-| Rack placement and movement                                      | `src/domain/rackPlacement.test.ts`, `src/domain/rackDiagnostics.test.ts`, `src/state/projectReducer.test.ts`, and focused rack canvas/controller tests under `src/components/racks`              |
-| Cable allocation, skipped reserved gaps, and uniqueness          | `src/domain/cableNumbers.test.ts`, validator tests, and Playwright lifecycle export inspection                                                                                                   |
-| Direct device connections                                        | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
-| Device/TB connections                                            | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
-| TB front-to-front connections                                    | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
-| Disconnect behavior                                              | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                   |
-| Device deletion and cable-number release                         | Reducer/domain tests plus Playwright lifecycle coverage for removed reconnection candidates                                                                                                      |
-| Cable register and filtering                                     | `src/components/cables/cableRows.test.ts`, `src/components/layout/CablesWorkspace.test.ts`, and Playwright exported cable assertions                                                             |
-| Navigator grouping and interaction boundaries                    | Pure tree model/collapse tests and rendered navigator tests under `src/components/layout`, plus Playwright lifecycle navigation coverage                                                         |
-| Unsupported export/auth/backend features absent                  | README, `docs/PRODUCT_SPEC.md`, `docs/ROADMAP.md`, this acceptance doc, and UI/E2E coverage with no unsupported controls expected                                                                |
-| Synthetic multi-thousand-port persistence/import/export check    | `npm run check:scale`                                                                                                                                                                            |
-| Chromium browser availability                                    | `npm run test:e2e:install` installs the lockfile-compatible Chromium browser used by Playwright for release/E2E checkpoints                                                                      |
-| Clean source packaging                                           | `npm run package:source`, ZIP-aware source-package extraction verification, `npm run clean`, and `npm run clean:check` for release checkpoints                                                   |
+| Acceptance item                                                   | Verification                                                                                                                                                                                           |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Clean install and deterministic build                             | `npm ci`, `npm run build`, and package-extraction verification for release checkpoints                                                                                                                 |
+| Version synchronization                                           | `npm run version:check` checks package, lockfile, TypeScript constant, JSON Schema, sample data, README, data model, and visible UI version usage                                                      |
+| Current structural schema validation                              | `npm run validate:fixtures`, `src/domain/projectContract.test.ts`, and JSON Schema validation inside the import pipeline                                                                               |
+| Relational validation behavior                                    | `src/domain/validators.test.ts`, `src/domain/validation/validationModules.test.ts`, and `src/domain/projectBehaviorCharacterization.test.ts`                                                           |
+| View model isolation, geometry, validation, and canvas operations | `src/domain/viewOperations.test.ts`, `src/domain/validation/views.test.ts`, and `src/state/projectHandlers/viewHandlers.test.ts`; engineering collections remain byte-equivalent across View mutations |
+| Retained `0.2.8.25` View migration and exact JSON round-trip      | `npm run validate:fixtures`, `src/domain/projectImport.test.ts`, and `src/state/projectStorage.test.ts`                                                                                                |
+| Every supported released-baseline/fixture migration               | `npm run validate:fixtures`, `src/domain/projectImport.test.ts`, and Playwright `imports current and legacy fixtures`; internal dev-to-dev compatibility is not guaranteed before public release       |
+| New, open, load sample, import, export flows                      | Playwright lifecycle and import/export tests in `tests/e2e/studiowire.spec.ts`; export/import compares complete project-domain JSON with only volatile download path excluded                          |
+| Local save, reload, unavailable storage, corrupt-record fallback  | Playwright storage tests plus `src/state/projectStorage.test.ts` and `src/state/projectAutosave.test.ts`; quota/write failure after a user edit is covered by unit tests, not browser injection        |
+| Settings and connector compatibility                              | Playwright settings test plus `src/domain/connectorCompatibility.test.ts`                                                                                                                              |
+| Location, rack, device, and terminal-block creation               | Playwright lifecycle tests plus reducer and domain command tests; editing proof is limited to settings edits, rack movement, device deletion, and reducer-level update behavior                        |
+| Rack placement and movement                                       | `src/domain/rackPlacement.test.ts`, `src/domain/rackDiagnostics.test.ts`, `src/state/projectReducer.test.ts`, and focused rack canvas/controller tests under `src/components/racks`                    |
+| Cable allocation, skipped reserved gaps, and uniqueness           | `src/domain/cableNumbers.test.ts`, validator tests, and Playwright lifecycle export inspection                                                                                                         |
+| Direct device connections                                         | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                         |
+| Device/TB connections                                             | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                         |
+| TB front-to-front connections                                     | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                         |
+| Disconnect behavior                                               | Playwright lifecycle test and `src/domain/connections.test.ts`                                                                                                                                         |
+| Device deletion and cable-number release                          | Reducer/domain tests plus Playwright lifecycle coverage for removed reconnection candidates                                                                                                            |
+| Cable register and filtering                                      | `src/components/cables/cableRows.test.ts`, `src/components/layout/CablesWorkspace.test.ts`, and Playwright exported cable assertions                                                                   |
+| Navigator grouping and interaction boundaries                     | Pure tree model/collapse tests and rendered navigator tests under `src/components/layout`, plus Playwright lifecycle navigation coverage                                                               |
+| Unsupported export/auth/backend features absent                   | README, `docs/PRODUCT_SPEC.md`, `docs/ROADMAP.md`, this acceptance doc, and UI/E2E coverage with no unsupported controls expected                                                                      |
+| Synthetic multi-thousand-port persistence/import/export check     | `npm run check:scale`                                                                                                                                                                                  |
+| Chromium browser availability                                     | `npm run test:e2e:install` installs the lockfile-compatible Chromium browser used by Playwright for release/E2E checkpoints                                                                            |
+| Clean source packaging                                            | `npm run package:source`, ZIP-aware source-package extraction verification, `npm run clean`, and `npm run clean:check` for release checkpoints                                                         |
 
 ## Manual Visual Check
 

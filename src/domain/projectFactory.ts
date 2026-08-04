@@ -61,6 +61,7 @@ export function createEmptyProject(input: ProjectInfoInput): ProjectRoot {
     locations: [],
     subLocations: [],
     racks: [],
+    views: [],
     devices: [],
     portGroups: [],
     ports: [],

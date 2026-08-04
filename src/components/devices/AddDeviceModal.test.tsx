@@ -9,6 +9,7 @@ import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { DeviceTemplateRepository } from '../../domain/deviceTemplates/types';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { AddDeviceModal } from './AddDeviceModal';
 
@@ -49,6 +50,7 @@ function createProject(): ProjectRoot {
 
 function createContext(project: ProjectRoot): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

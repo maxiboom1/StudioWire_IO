@@ -10,8 +10,12 @@ import type {
   PortDirection,
   ProjectInfo,
   ProjectRoot,
+  ProjectView,
   Rack,
   SubLocation,
+  ViewAnnotation,
+  ViewLine,
+  ViewPlacement,
 } from '../domain/types';
 
 export interface ProjectState {
@@ -166,6 +170,48 @@ export type ProjectAction =
   | {
       type: 'UPDATE_RACK';
       payload: { id: string; updates: Pick<Rack, 'name' | 'heightRu' | 'numberingDirection'> };
+    }
+  | { type: 'ADD_VIEW'; payload: ProjectView }
+  | {
+      type: 'UPDATE_VIEW';
+      payload: {
+        id: string;
+        updates: Partial<Pick<ProjectView, 'name' | 'description' | 'pageSize' | 'orientation'>>;
+      };
+    }
+  | { type: 'DELETE_VIEW'; payload: { id: string } }
+  | { type: 'ADD_VIEW_PLACEMENT'; payload: { viewId: string; placement: ViewPlacement } }
+  | {
+      type: 'UPDATE_VIEW_PLACEMENT';
+      payload: {
+        viewId: string;
+        placementId: string;
+        updates: Partial<Pick<ViewPlacement, 'xMm' | 'yMm' | 'scale' | 'labelOverride'>>;
+      };
+    }
+  | { type: 'REMOVE_VIEW_PLACEMENT'; payload: { viewId: string; placementId: string } }
+  | { type: 'ADD_VIEW_LINE'; payload: { viewId: string; line: ViewLine } }
+  | {
+      type: 'UPDATE_VIEW_LINE';
+      payload: {
+        viewId: string;
+        lineId: string;
+        updates: Partial<Pick<ViewLine, 'from' | 'to' | 'label' | 'waypoints'>>;
+      };
+    }
+  | { type: 'REMOVE_VIEW_LINE'; payload: { viewId: string; lineId: string } }
+  | { type: 'ADD_VIEW_ANNOTATION'; payload: { viewId: string; annotation: ViewAnnotation } }
+  | {
+      type: 'UPDATE_VIEW_ANNOTATION';
+      payload: { viewId: string; annotationId: string; annotation: ViewAnnotation };
+    }
+  | { type: 'REMOVE_VIEW_ANNOTATION'; payload: { viewId: string; annotationId: string } }
+  | {
+      type: 'REPLACE_VIEW_CANVAS';
+      payload: {
+        viewId: string;
+        canvas: Pick<ProjectView, 'placements' | 'lines' | 'annotations'>;
+      };
     }
   | { type: 'ADD_DEVICE'; payload: { device: DeviceDraft; portGroups: DevicePortGroupDraft[] } }
   | { type: 'ADD_TERMINAL_BLOCK'; payload: { terminalBlock: TerminalBlockDraft } }

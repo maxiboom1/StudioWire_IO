@@ -239,8 +239,8 @@ describe('importProjectValue structural safety', () => {
     }
   });
 
-  it('supports only the current internal dev schema version', () => {
-    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([STUDIOWIRE_CURRENT_VERSION]);
+  it('supports the current schema and the retained 0.2.8.25 compatibility baseline', () => {
+    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([STUDIOWIRE_CURRENT_VERSION, '0.2.8.25']);
 
     const project = currentProject();
     project.schemaVersion = '0.2.8.10';
@@ -253,6 +253,149 @@ describe('importProjectValue structural safety', () => {
         code: 'unsupported-schema-version',
         path: '$.schemaVersion',
       });
+    }
+  });
+
+  it('migrates 0.2.8.25 by adding only an empty Views collection', () => {
+    const project = currentProject();
+    delete project.views;
+    project.schemaVersion = '0.2.8.25';
+    const engineeringBefore = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+      expect(result.project.views).toEqual([]);
+      const { schemaVersion: _beforeVersion, ...beforeData } = engineeringBefore;
+      const { schemaVersion: _afterVersion, views: _views, ...afterData } = result.project;
+      expect(afterData).toEqual(beforeData);
+    }
+  });
+
+  it('requires Views on current files and round-trips exact View layout data', () => {
+    const missingViews = currentProject();
+    delete missingViews.views;
+    const missingResult = importProjectValue(missingViews);
+
+    expect(missingResult.ok).toBe(false);
+    if (!missingResult.ok) {
+      expect(missingResult.errors).toContainEqual(
+        expect.objectContaining({ code: 'schema-required', path: '$.views' }),
+      );
+    }
+
+    const project = currentProject();
+    project.views = [
+      {
+        id: 'view-roundtrip',
+        name: 'Signal Overview',
+        description: 'Exact persistence contract',
+        pageSize: 'a3',
+        orientation: 'landscape',
+        placements: [
+          {
+            id: 'placement-router',
+            sourceType: 'device',
+            sourceId: 'device-router-1',
+            xMm: 12.5,
+            yMm: 22.5,
+            scale: 0.75,
+            labelOverride: 'Main router',
+          },
+          {
+            id: 'placement-missing',
+            sourceType: 'rack',
+            sourceId: 'rack-missing',
+            xMm: 200,
+            yMm: 30,
+            scale: 1,
+            labelOverride: null,
+          },
+        ],
+        lines: [
+          {
+            id: 'line-roundtrip',
+            from: { placementId: 'placement-router', side: 'right', offset: 0.25 },
+            to: { placementId: 'placement-missing', side: 'left', offset: 0.75 },
+            label: '12 x SDI',
+            waypoints: [{ xMm: 130, yMm: 42.5 }],
+          },
+        ],
+        annotations: [
+          {
+            id: 'annotation-text',
+            kind: 'text',
+            xMm: 10,
+            yMm: 8,
+            widthMm: 80,
+            text: 'VIDEO CORE',
+            size: 'large',
+          },
+          {
+            id: 'annotation-group',
+            kind: 'group',
+            xMm: 5,
+            yMm: 5,
+            widthMm: 250,
+            heightMm: 100,
+            label: 'Core',
+          },
+        ],
+      },
+    ];
+
+    const result = importProjectJsonText(JSON.stringify(project));
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.views).toEqual(project.views);
+      expect(result.validationIssues).toContainEqual(
+        expect.objectContaining({ code: 'view-placement-rack-missing', objectId: 'view-roundtrip' }),
+      );
+    }
+  });
+
+  it('strictly validates required View fields, closed properties, enums, and geometry bounds', () => {
+    const baseView = {
+      id: 'view-structural',
+      name: 'Structural View',
+      description: '',
+      pageSize: 'a3',
+      orientation: 'portrait',
+      placements: [
+        {
+          id: 'placement-structural',
+          sourceType: 'device',
+          sourceId: 'device-router-1',
+          xMm: 0,
+          yMm: 0,
+          scale: 1,
+          labelOverride: null,
+        },
+      ],
+      lines: [],
+      annotations: [],
+    };
+    const cases: Array<[string, (view: any) => void]> = [
+      ['$.views[0].pageSize', (view) => (view.pageSize = 'letter')],
+      ['$.views[0].placements[0].scale', (view) => (view.placements[0].scale = 3.01)],
+      ['$.views[0].placements[0].labelOverride', (view) => delete view.placements[0].labelOverride],
+      ['$.views[0].unexpected', (view) => (view.unexpected = true)],
+    ];
+
+    for (const [path, mutate] of cases) {
+      const project = currentProject();
+      const view = structuredClone(baseView);
+      mutate(view);
+      project.views = [view];
+      const result = importProjectValue(project);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.errors.some((error) => error.path === path)).toBe(true);
+      }
     }
   });
 

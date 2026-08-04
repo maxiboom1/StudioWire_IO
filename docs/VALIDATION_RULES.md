@@ -2,7 +2,7 @@
 
 Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and only mutates project state when the UI stores the returned issues after the user clicks Validate.
 
-Current-version JSON imports are structurally validated exactly as supplied before any migration or cleanup. Legacy-only fields such as `sourceEndpoint`, `destinationEndpoint`, and terminal-block standard-device metadata are accepted only by the specific historical migration step that owns them; current imports report schema errors at the offending path.
+Current-version JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` before current structural and relational validation. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
 
 Port label generation resolves `{I/O NAME}` and its supported `{NAME}` alias from the parent `PortGroup.name`. Device metadata changes must not alter labels that use either interface-name token. `{DEVICE}` remains the explicit token for patterns that use the device label prefix.
 
@@ -46,6 +46,15 @@ Compatibility validation reports all mismatches before a template can fill Add D
 - `port-connector-not-assigned-to-category`: port connector types must be assigned to the port category.
 - `unknown-cable-prefix`: port group, cable, and numbering ledger prefixes must exist in settings.
 - `duplicate-location-name`: location names must be unique after trimming and case folding.
+- `view-name-required`: View names must contain non-whitespace text after trimming.
+- `duplicate-view-name`: View names must be unique among Views after trimming and case folding; they do not share the location or project-item namespace.
+- `duplicate-view-placement-source`: one View may contain an exact device or rack source only once.
+- `view-placement-device-missing`: a device placement must reference an existing standard device or terminal block.
+- `view-placement-rack-missing`: a rack placement must reference an existing rack.
+- `view-line-placement-missing`: both endpoints of a View line must reference placements in the same View.
+- `view-line-self-reference`: a View line must connect two different placements; parallel lines between the same pair remain valid.
+- `view-geometry-invalid`: View coordinates must be finite, placement scale must be from 0.25 through 3, endpoint offset must be from 0 through 1, and annotation dimensions must be positive.
+- `view-item-outside-page`: a placement, annotation, line endpoint, or manual waypoint outside the selected ISO page is reported as a warning; format changes retain the stored coordinates.
 - `duplicate-project-item-name`: folders, racks, standard devices, and terminal blocks share one unique trimmed, case-insensitive name namespace.
 - `sub-location-without-location`: folders must reference an existing location.
 - `sub-location-name-required`: folder names are required.

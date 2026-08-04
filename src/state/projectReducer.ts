@@ -49,6 +49,21 @@ import {
 import type { ProjectHandlerContext } from './projectHandlers/shared';
 import { defaultProjectReducerDependencies, type ProjectReducerDependencies } from './projectReducerContext';
 import type { ProjectAction, ProjectState } from './projectTypes';
+import {
+  handleAddView,
+  handleAddViewAnnotation,
+  handleAddViewLine,
+  handleAddViewPlacement,
+  handleDeleteView,
+  handleRemoveViewAnnotation,
+  handleRemoveViewLine,
+  handleRemoveViewPlacement,
+  handleReplaceViewCanvas,
+  handleUpdateView,
+  handleUpdateViewAnnotation,
+  handleUpdateViewLine,
+  handleUpdateViewPlacement,
+} from './projectHandlers/viewHandlers';
 
 export type {
   DeviceDraft,
@@ -132,6 +147,32 @@ function reduceProjectState(
       return handleAddRack(state, action, context);
     case 'UPDATE_RACK':
       return handleUpdateRack(state, action, context);
+    case 'ADD_VIEW':
+      return handleAddView(state, action, context);
+    case 'UPDATE_VIEW':
+      return handleUpdateView(state, action, context);
+    case 'DELETE_VIEW':
+      return handleDeleteView(state, action, context);
+    case 'ADD_VIEW_PLACEMENT':
+      return handleAddViewPlacement(state, action, context);
+    case 'UPDATE_VIEW_PLACEMENT':
+      return handleUpdateViewPlacement(state, action, context);
+    case 'REMOVE_VIEW_PLACEMENT':
+      return handleRemoveViewPlacement(state, action, context);
+    case 'ADD_VIEW_LINE':
+      return handleAddViewLine(state, action, context);
+    case 'UPDATE_VIEW_LINE':
+      return handleUpdateViewLine(state, action, context);
+    case 'REMOVE_VIEW_LINE':
+      return handleRemoveViewLine(state, action, context);
+    case 'ADD_VIEW_ANNOTATION':
+      return handleAddViewAnnotation(state, action, context);
+    case 'UPDATE_VIEW_ANNOTATION':
+      return handleUpdateViewAnnotation(state, action, context);
+    case 'REMOVE_VIEW_ANNOTATION':
+      return handleRemoveViewAnnotation(state, action, context);
+    case 'REPLACE_VIEW_CANVAS':
+      return handleReplaceViewCanvas(state, action, context);
     case 'ADD_DEVICE':
       return handleAddDevice(state, action, context);
     case 'ADD_TERMINAL_BLOCK':

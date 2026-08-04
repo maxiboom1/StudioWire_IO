@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_IO_PORT_LABEL_PATTERN } from '../../domain/portLabels';
 import { buildDeleteDeviceConfirmation, buildRackUnassignConfirmation } from '../../domain/prompts';
 import type { Device } from '../../domain/types';
+import { getViewSourceImpact } from '../../domain/viewOperations';
 import { useProject } from '../../state/ProjectContext';
 import { useConfirmation } from '../common/ConfirmationDialog';
 import { InspectorAccordion, InspectorShell, InspectorSubCollapsible } from '../common/InspectorShell';
@@ -87,7 +88,9 @@ export function StandardDeviceInspector({
   }
 
   async function handleDelete() {
-    if (await confirm(buildDeleteDeviceConfirmation(device))) {
+    if (
+      await confirm(buildDeleteDeviceConfirmation(device, getViewSourceImpact(project, 'device', device.id)))
+    ) {
       deleteDevice(device.id);
     }
   }

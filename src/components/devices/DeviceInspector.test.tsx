@@ -8,6 +8,7 @@ import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot } from '../../domain/types';
 import type { EditDeviceInput } from '../../state/projectTypes';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { ConfirmationProvider } from '../common/ConfirmationDialog';
 import { DeviceInspector, type InspectorDirtyGuard } from './DeviceInspector';
 
@@ -31,6 +32,7 @@ function createContext(
   deleteDevice = vi.fn(),
 ): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project,
     statusMessage: '',
     importError: null,

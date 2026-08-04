@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.8.25`. This internal development schema is current-shape only: older dev exports may be rejected before the first public/released schema baseline. New internal dev versions do not automatically receive identity migrations.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.00`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version migrates it to `0.2.9.00` by adding `views: []` without changing existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,12 +18,13 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.8.25`.
+- `schemaVersion`: current fixed string `0.2.9.00`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
 - `subLocations`: `SubLocation[]`.
 - `racks`: `Rack[]`.
+- `views`: `ProjectView[]`.
 - `devices`: `Device[]`.
 - `portGroups`: `PortGroup[]`.
 - `ports`: `Port[]`.
@@ -216,6 +217,79 @@ Terminal blocks use `kind: "terminal_block"` and are stored in the same `devices
 
 Terminal block edits preserve existing port IDs by rear/front face and connector index. Increasing count appends matching ports. Reducing count is blocked while a removed port is referenced by a cable. TB deletion removes the TB, its groups, and its ports while restoring any surviving standard-device planned cable owner affected by a connection.
 
+## ProjectView
+
+Views are project-owned presentation records. They arrange live references to existing devices, terminal blocks, and racks on an ISO page and store drawing-only annotations. A View never owns or copies engineering records and cannot create, remove, renumber, connect, or disconnect ports or physical cables.
+
+Fields:
+
+- `id`
+- `name`: trimmed, required, and case-insensitively unique among Views only
+- `description`
+- `pageSize`: `a4` or `a3`
+- `orientation`: `portrait` or `landscape`
+- `placements`: `ViewPlacement[]`
+- `lines`: `ViewLine[]`
+- `annotations`: `ViewAnnotation[]`
+
+A new View defaults to A3 portrait. Page dimensions are stored implicitly by `pageSize` and `orientation`: A4 portrait is 210 x 297 mm, A4 landscape is 297 x 210 mm, A3 portrait is 297 x 420 mm, and A3 landscape is 420 x 297 mm. All View coordinates and dimensions use millimetres. Format changes retain coordinates; items outside the new page remain loadable and are reported as warnings.
+
+### ViewPlacement
+
+Fields:
+
+- `id`
+- `sourceType`: `device` or `rack`
+- `sourceId`: live reference to an existing record of the declared source type
+- `xMm`
+- `yMm`
+- `scale`: uniform scale from 0.25 through 3
+- `labelOverride`: View-local label or `null`
+
+An exact source may appear only once in one View. A rack and a device mounted in that rack are different representations and may both be placed. Standard devices, terminal blocks, and racks remain live read-only representations of their project records; placement data never changes location or rack assignment.
+
+Placement bounds use deterministic natural sizes for validation. Standard devices and terminal blocks are 92 mm wide, with a 10 mm header and 2.4 mm per rendered I/O row, using at least one row. Racks are 58 mm wide, with an 8 mm header and 3 mm per rack unit. A missing-source placeholder is 60 x 30 mm. The stored uniform scale multiplies both natural dimensions.
+
+### ViewLine
+
+Fields:
+
+- `id`
+- `from`: `ViewLineEndpoint`
+- `to`: `ViewLineEndpoint`
+- `label`: the View-local custom meaning of the line
+- `waypoints`: `ViewPoint[]`
+
+Each endpoint contains `placementId`, a boundary `side` (`top`, `right`, `bottom`, or `left`), and an `offset` from 0 through 1 along that side. Both endpoints must belong to different placements in the same View. Parallel lines between the same placements are allowed. View lines are neutral manual cable-group marks: they have no engineering direction, cable count, cable IDs, or port IDs.
+
+Routes are orthogonal. Empty `waypoints` requests automatic routing. Manual bend editing stores absolute millimetre points; moving a placement updates its attached endpoints while preserving those waypoints. Resetting a route clears its waypoints. Removing a placement also removes lines attached to it.
+
+### ViewAnnotation
+
+Text annotation fields:
+
+- `id`
+- `kind`: `text`
+- `xMm`
+- `yMm`
+- `widthMm`: positive width
+- `text`
+- `size`: `small`, `medium`, or `large`
+
+Group annotation fields:
+
+- `id`
+- `kind`: `group`
+- `xMm`
+- `yMm`
+- `widthMm`: positive width
+- `heightMm`: positive height
+- `label`
+
+Group rectangles are visual backgrounds, not containers; moving one does not move enclosed elements. View render ordering is group rectangles, lines, placements, text, then transient selection controls.
+
+Deleting a source device or terminal block removes its matching placements from every View and removes only lines attached to those placements. Deleting a rack does the same for direct rack placements. Deleting a device mounted inside a placed rack does not remove the rack placement. Unrelated annotations and placements remain unchanged. Structurally valid imported dangling references remain loadable, are reported by relational validation, and may be rendered as removable missing-source placeholders.
+
 ## PortGroup
 
 Fields:
@@ -355,6 +429,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection before current structural validation.
 
-Autosave stores compact JSON under `studiowire.io.project.current`. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.
+Views are stored in the normal project JSON and the same compact autosave under `studiowire.io.project.current`; no separate View file or storage key exists. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. A restored `0.2.8.25` autosave is migrated to the current schema in memory and written back through the normal autosave lifecycle. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

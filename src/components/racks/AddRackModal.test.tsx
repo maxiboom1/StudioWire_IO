@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { noopViewCommands } from '../../test/projectContextStubs';
 import { AddRackModal } from './AddRackModal';
 
 const contextHarness = vi.hoisted(() => ({
@@ -24,6 +25,7 @@ vi.mock('../../state/ProjectContext', () => ({
 
 function createContext(addRack = vi.fn(() => 'rack-created')): ProjectContextValue {
   return {
+    ...noopViewCommands,
     project: structuredClone(sampleProject),
     statusMessage: '',
     importError: null,

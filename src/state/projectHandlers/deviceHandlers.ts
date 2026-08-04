@@ -215,7 +215,10 @@ export function handleDeleteDevice(
 
   return {
     project: stampProject(result.project, `Device deleted: ${action.payload.id}`, context.dependencies),
-    statusMessage: 'Device deleted; cable numbers released',
+    statusMessage:
+      result.affectedViewCount > 0
+        ? `Device deleted; cable numbers released; removed from ${result.affectedViewCount} View(s)`
+        : 'Device deleted; cable numbers released',
     importError: null,
   };
 }
@@ -241,7 +244,10 @@ export function handleDeleteTerminalBlock(
       `Terminal block deleted: ${action.payload.id}`,
       context.dependencies,
     ),
-    statusMessage: 'Terminal block deleted',
+    statusMessage:
+      result.affectedViewCount > 0
+        ? `Terminal block deleted; removed from ${result.affectedViewCount} View(s)`
+        : 'Terminal block deleted',
     importError: null,
   };
 }

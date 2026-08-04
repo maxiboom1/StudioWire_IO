@@ -59,7 +59,7 @@ export function importProjectValue(payload: unknown): ProjectImportResult {
       };
     }
 
-    const preflightErrors = preflightProjectShape(payload);
+    const preflightErrors = preflightProjectShape(payload, { requireViews: false });
 
     if (preflightErrors.length > 0) {
       return importFailure(preflightErrors);
