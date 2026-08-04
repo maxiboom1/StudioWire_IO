@@ -147,11 +147,18 @@ See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
 
+### v0.2.9.02-fix1
+
+- Replaced the separate View device summary table with the same technical diagram presentation used by Device Workspace: centered device body, ordered left/right I/O, connector anchors, cable routes and numbers, terminal-block markers, destination labels, and endpoint stubs.
+- Kept the shared View diagram read-only and presentation-only while retaining the established 92 mm placement geometry, movement, scaling, Display Label override, and live source updates.
+- Confirmed navigator-to-View device drag/drop through the shared payload, including snapped placement at the drop point and duplicate-source focus instead of duplication; the empty View now advertises this workflow.
+- This is a UI maintenance label over schema/app version `0.2.9.02`; no project data shape or migration changed.
+
 ### v0.2.9.02
 
 - Added the searchable Add object picker and direct navigator device/rack drops with duplicate prevention, deterministic first-fit insertion, 2.5 mm snapping, Alt bypass, page clamping, and lightweight drop feedback.
 - Added transient placement selection, single-commit pointer move/scale gestures, keyboard nudge/delete, Display Label/scale/coordinate Inspector editing, source-safe removal, missing-source placeholders, and live out-of-page highlighting.
-- Added compact read-only standard-device, terminal-block, and rack blocks backed by shared connection and rack-elevation presentation models, so cable/destination summaries and rack contents update from source data without adding core-data controls.
+- Added read-only standard-device, terminal-block, and rack blocks backed by shared connection and rack-elevation presentation models, so cable/destination summaries and rack contents update from source data without adding core-data controls.
 - Preserved the `0.2.8.25 -> 0.2.9.00 -> 0.2.9.01` compatibility chain and added the shape-preserving `0.2.9.01 -> 0.2.9.02` migration. Manual View lines, text, groups, and undo/redo remain staged for later prompts.
 
 ### v0.2.9.01

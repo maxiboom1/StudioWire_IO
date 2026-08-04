@@ -72,6 +72,13 @@ describe('ViewPlacementBlock', () => {
     expect(screen.getByText('RTR1')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Connect/ })).toBeNull();
     expect(document.querySelector('[data-canvas-draggable="true"]')).toBeNull();
+    expect(document.querySelector('.device-diagram-view')).toBeTruthy();
+    expect(document.querySelectorAll('.device-body-row')).toHaveLength(4);
+    expect(document.querySelectorAll('.device-wire-row-output .device-cable-line').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.device-wire-row-output .device-port-anchor').length).toBeGreaterThan(
+      0,
+    );
+    expect(document.querySelector('.view-device-rows')).toBeNull();
   });
 
   it('uses live read-only rack contents and a removable missing-source placeholder', () => {

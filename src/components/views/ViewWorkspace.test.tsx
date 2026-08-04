@@ -41,7 +41,7 @@ describe('ViewWorkspace', () => {
     };
     const { rerender } = render(<ViewWorkspace view={first} />);
 
-    expect(screen.getByText('Add a device or rack to start this View.')).toBeTruthy();
+    expect(screen.getByText('Drag a device or rack from the navigator, or use Add object.')).toBeTruthy();
     expect(screen.getByLabelText('Signal Overview A3 portrait page')).toBeTruthy();
     expect(screen.getByLabelText('Current zoom').textContent).toBe('100%');
 
@@ -110,9 +110,9 @@ describe('ViewWorkspace', () => {
     );
 
     const block = screen.getByRole('button', { name: /Router 1 placement, selected/ });
-    const header = block.querySelector('.view-placement-header');
+    const header = block.querySelector('.device-body-header.is-draggable');
     const page = screen.getByLabelText('Move View A3 portrait page');
-    if (!header) throw new Error('Placement header missing.');
+    if (!header) throw new Error('Technical device drag header missing.');
 
     fireEvent.pointerDown(header, { button: 0, pointerId: 1, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(page, { pointerId: 1, clientX: 15, clientY: 0 });

@@ -62,7 +62,7 @@ export function ViewPage({
             <p>
               {isViewPopulated(view)
                 ? 'This View contains saved canvas content.'
-                : 'Add a device or rack to start this View.'}
+                : 'Drag a device or rack from the navigator, or use Add object.'}
             </p>
             <span>Objects remain live references to project data.</span>
           </div>

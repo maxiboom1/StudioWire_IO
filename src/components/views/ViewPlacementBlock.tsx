@@ -29,6 +29,8 @@ export function ViewPlacementBlock({
       : project.racks.find((rack) => rack.id === placement.sourceId);
   const sourceName = source?.name ?? (placement.sourceType === 'device' ? 'Missing device' : 'Missing rack');
   const label = placement.labelOverride ?? sourceName;
+  const isTechnicalDevice =
+    placement.sourceType === 'device' && source && 'kind' in source && source.kind === 'device';
   const outsidePage = isPlacementOutsidePage(project, view, {
     ...placement,
     xMm: preview.xMm,
@@ -54,6 +56,7 @@ export function ViewPlacementBlock({
       className={[
         'view-placement',
         `is-${placement.sourceType}`,
+        isTechnicalDevice ? 'is-device-diagram' : '',
         selected ? 'is-selected' : '',
         outsidePage ? 'is-outside-page' : '',
         !source ? 'is-missing-source' : '',
@@ -70,23 +73,19 @@ export function ViewPlacementBlock({
       }}
       onKeyDown={(event) => controller.handlePlacementKeyDown(event, placement)}
     >
-      <header className="view-placement-header" onPointerDown={(event) => begin(event, 'move')}>
-        <span className="view-placement-grip" aria-hidden="true">
-          <Grip />
+      {!isTechnicalDevice ? (
+        <PlacementHeader
+          label={label}
+          outsidePage={outsidePage}
+          source={source}
+          sourceType={placement.sourceType}
+          onPointerDown={(event) => begin(event, 'move')}
+        />
+      ) : outsidePage ? (
+        <span className="view-placement-warning" aria-label="Placement is outside the View page">
+          <AlertTriangle />
         </span>
-        <span>
-          <strong>{label}</strong>
-          {placement.sourceType === 'device' && source && 'code' in source && source.code ? (
-            <small>{source.code}</small>
-          ) : placement.sourceType === 'rack' && source && 'heightRu' in source ? (
-            <small>
-              {source.heightRu} RU ·{' '}
-              {source.numberingDirection === 'top_to_bottom' ? 'top down' : 'bottom up'}
-            </small>
-          ) : null}
-        </span>
-        {outsidePage ? <AlertTriangle aria-label="Placement is outside the View page" /> : null}
-      </header>
+      ) : null}
       {!source ? (
         <div className="view-missing-source">
           <AlertTriangle aria-hidden="true" />
@@ -94,7 +93,12 @@ export function ViewPlacementBlock({
           <span>{placement.sourceId}</span>
         </div>
       ) : placement.sourceType === 'device' && 'kind' in source ? (
-        <ViewDeviceBlockBody project={project} device={source} />
+        <ViewDeviceBlockBody
+          project={project}
+          device={source}
+          displayName={label}
+          onHeaderPointerDown={isTechnicalDevice ? (event) => begin(event, 'move') : undefined}
+        />
       ) : placement.sourceType === 'rack' && 'heightRu' in source ? (
         <ViewRackBlockBody project={project} rack={source} />
       ) : null}
@@ -108,5 +112,38 @@ export function ViewPlacementBlock({
         />
       ) : null}
     </article>
+  );
+}
+
+function PlacementHeader({
+  label,
+  outsidePage,
+  source,
+  sourceType,
+  onPointerDown,
+}: {
+  label: string;
+  outsidePage: boolean;
+  source: ProjectRoot['devices'][number] | ProjectRoot['racks'][number] | undefined;
+  sourceType: ViewPlacement['sourceType'];
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+}) {
+  return (
+    <header className="view-placement-header" onPointerDown={onPointerDown}>
+      <span className="view-placement-grip" aria-hidden="true">
+        <Grip />
+      </span>
+      <span>
+        <strong>{label}</strong>
+        {sourceType === 'device' && source && 'code' in source && source.code ? (
+          <small>{source.code}</small>
+        ) : sourceType === 'rack' && source && 'heightRu' in source ? (
+          <small>
+            {source.heightRu} RU · {source.numberingDirection === 'top_to_bottom' ? 'top down' : 'bottom up'}
+          </small>
+        ) : null}
+      </span>
+      {outsidePage ? <AlertTriangle aria-label="Placement is outside the View page" /> : null}
+    </header>
   );
 }

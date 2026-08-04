@@ -149,7 +149,7 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
 
     await user.click(screen.getByRole('button', { name: /Signal Overview/ }));
     expect(screen.getByRole('region', { name: 'Signal Overview View workspace' })).toBeTruthy();
-    expect(screen.getByText('Add a device or rack to start this View.')).toBeTruthy();
+    expect(screen.getByText('Drag a device or rack from the navigator, or use Add object.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'View Inspector' })).toBeTruthy();
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /Signal Overview/ }));

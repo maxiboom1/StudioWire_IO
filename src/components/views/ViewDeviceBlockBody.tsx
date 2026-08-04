@@ -1,13 +1,23 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, PointerEventHandler } from 'react';
 import type { Device, ProjectRoot } from '../../domain/types';
 import { ConnectorIcon } from '../common/ConnectorIcon';
+import { DeviceDiagram } from '../devices/DeviceDiagram';
 import {
-  buildDevicePresentationModel,
   buildTerminalBlockPresentationModel,
   type DevicePortPresentation,
 } from '../devices/devicePresentationModel';
 
-export function ViewDeviceBlockBody({ project, device }: { project: ProjectRoot; device: Device }) {
+export function ViewDeviceBlockBody({
+  project,
+  device,
+  displayName,
+  onHeaderPointerDown,
+}: {
+  project: ProjectRoot;
+  device: Device;
+  displayName: string;
+  onHeaderPointerDown?: PointerEventHandler<HTMLDivElement>;
+}) {
   if (device.kind === 'terminal_block') {
     const model = buildTerminalBlockPresentationModel(project, device);
     return (
@@ -23,16 +33,15 @@ export function ViewDeviceBlockBody({ project, device }: { project: ProjectRoot;
     );
   }
 
-  const model = buildDevicePresentationModel(project, device);
   return (
-    <div className="view-device-rows" aria-label={`${device.name} connections`}>
-      {model.rows.map((row, index) => (
-        <div className="view-device-row" key={index}>
-          <PortSummary row={row.left} side="left" />
-          <PortSummary row={row.right} side="right" />
-        </div>
-      ))}
-    </div>
+    <DeviceDiagram
+      device={device}
+      displayName={displayName}
+      onHeaderPointerDown={onHeaderPointerDown}
+      project={project}
+      readOnly
+      variant="view"
+    />
   );
 }
 
