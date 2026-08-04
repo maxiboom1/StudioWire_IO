@@ -3,7 +3,7 @@ import { buildDeleteViewConfirmation, buildViewFormatChangeConfirmation } from '
 import type { ProjectView, ViewOrientation, ViewPageSize } from '../../domain/types';
 import { useProject } from '../../state/ProjectContext';
 import { useConfirmation } from '../common/ConfirmationDialog';
-import { InspectorAccordion, InspectorShell } from '../common/InspectorShell';
+import { InspectorShell } from '../common/InspectorShell';
 import type { InspectorDirtyGuard } from '../common/inspectorDirtyGuard';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -23,14 +23,12 @@ export function ViewInspector({
   const confirm = useConfirmation();
   const baseline = useMemo(() => createViewFormValues(view), [view]);
   const [form, setForm] = useState(baseline);
-  const [activeSection, setActiveSection] = useState<string | null>('edit');
   const error = getViewNameError(project, form.name, view.id);
   const isDirty = JSON.stringify(form) !== JSON.stringify(baseline);
   const formatChanged = form.pageSize !== baseline.pageSize || form.orientation !== baseline.orientation;
 
   useEffect(() => {
     setForm(baseline);
-    setActiveSection('edit');
   }, [baseline, view.id]);
 
   const discard = useCallback(() => setForm(baseline), [baseline]);
@@ -77,103 +75,55 @@ export function ViewInspector({
         </>
       }
     >
-      <InspectorAccordion
-        activeSectionId={activeSection}
-        onActiveSectionChange={setActiveSection}
-        sections={[
-          {
-            id: 'edit',
-            title: 'View Metadata',
-            content: (
-              <div className="editor-form inspector-form">
-                <div className="form-field">
-                  <Label htmlFor="inspector-view-id">ID</Label>
-                  <Input id="inspector-view-id" readOnly value={view.id} />
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="inspector-view-name">View Name</Label>
-                  <Input
-                    id="inspector-view-name"
-                    value={form.name}
-                    onChange={(event) => setForm({ ...form, name: event.target.value })}
-                  />
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="inspector-view-description">Description</Label>
-                  <Textarea
-                    id="inspector-view-description"
-                    value={form.description}
-                    onChange={(event) => setForm({ ...form, description: event.target.value })}
-                  />
-                </div>
-                {error ? <p className="inspector-form-error">{error}</p> : null}
-              </div>
-            ),
-          },
-          {
-            id: 'page',
-            title: 'Page Format',
-            content: (
-              <div className="editor-form inspector-form">
-                <div className="form-field">
-                  <Label htmlFor="inspector-view-page-size">Page Size</Label>
-                  <Select
-                    value={form.pageSize}
-                    onValueChange={(pageSize: ViewPageSize) => setForm({ ...form, pageSize })}
-                  >
-                    <SelectTrigger id="inspector-view-page-size">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="a3">A3</SelectItem>
-                      <SelectItem value="a4">A4</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="inspector-view-orientation">Orientation</Label>
-                  <Select
-                    value={form.orientation}
-                    onValueChange={(orientation: ViewOrientation) => setForm({ ...form, orientation })}
-                  >
-                    <SelectTrigger id="inspector-view-orientation">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="portrait">Portrait</SelectItem>
-                      <SelectItem value="landscape">Landscape</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="view-inspector-note">
-                  Format changes retain all canvas coordinates. Content can remain outside a smaller page
-                  boundary until it is moved.
-                </p>
-              </div>
-            ),
-          },
-          {
-            id: 'counts',
-            title: 'View Content',
-            content: (
-              <dl>
-                <Detail label="Placements" value={view.placements.length} />
-                <Detail label="Lines" value={view.lines.length} />
-                <Detail label="Annotations" value={view.annotations.length} />
-              </dl>
-            ),
-          },
-        ]}
-      />
+      <div className="editor-form inspector-form">
+        <div className="form-field">
+          <Label htmlFor="inspector-view-name">View Name</Label>
+          <Input
+            id="inspector-view-name"
+            value={form.name}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
+          />
+        </div>
+        <div className="form-field">
+          <Label htmlFor="inspector-view-page-size">Page Size</Label>
+          <Select
+            value={form.pageSize}
+            onValueChange={(pageSize: ViewPageSize) => setForm({ ...form, pageSize })}
+          >
+            <SelectTrigger id="inspector-view-page-size">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="a3">A3</SelectItem>
+              <SelectItem value="a4">A4</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="form-field">
+          <Label htmlFor="inspector-view-orientation">Orientation</Label>
+          <Select
+            value={form.orientation}
+            onValueChange={(orientation: ViewOrientation) => setForm({ ...form, orientation })}
+          >
+            <SelectTrigger id="inspector-view-orientation">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="portrait">Portrait</SelectItem>
+              <SelectItem value="landscape">Landscape</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="form-field">
+          <Label htmlFor="inspector-view-description">Notes</Label>
+          <Textarea
+            id="inspector-view-description"
+            value={form.description}
+            onChange={(event) => setForm({ ...form, description: event.target.value })}
+          />
+        </div>
+        {error ? <p className="inspector-form-error">{error}</p> : null}
+      </div>
     </InspectorShell>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
   );
 }

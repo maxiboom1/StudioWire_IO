@@ -1,7 +1,13 @@
 import { useEffect, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { ProjectRoot, ProjectView, ViewPlacement } from '../../domain/types';
 import { getPlacementNaturalSize } from '../../domain/viewGeometry';
-import { clampPlacementPosition, getPlacementPage, snapViewPosition } from '../../domain/viewPlacement';
+import {
+  clampViewLayoutPosition,
+  getViewLayoutScale,
+  moveViewLayoutPosition,
+  snapViewLayoutPosition,
+} from '../../domain/viewLayoutGrid';
+import { clampPlacementPosition, getPlacementPage } from '../../domain/viewPlacement';
 import type { ViewPlacementUpdates } from '../../state/projectContextTypes';
 import type { ViewPlacementPreview } from './viewEditorTypes';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
@@ -31,6 +37,7 @@ export function useViewPlacementGestures({
 }) {
   const [gesture, setGesture] = useState<GestureDraft | null>(null);
   const page = getPlacementPage(project, view);
+  const layoutScale = getViewLayoutScale(view);
 
   useEffect(() => setGesture(null), [view.id]);
   useEffect(() => {
@@ -70,12 +77,17 @@ export function useViewPlacementGestures({
     if (!gesture || event.pointerId !== gesture.pointerId) return;
     const deltaX = (event.clientX - gesture.startClientX) / zoom / VIEW_PIXELS_PER_MM;
     const deltaY = (event.clientY - gesture.startClientY) / zoom / VIEW_PIXELS_PER_MM;
+    const position = {
+      xMm: gesture.placement.xMm + deltaX,
+      yMm: gesture.placement.yMm + deltaY,
+    };
+    const preview = event.altKey ? position : snapViewLayoutPosition(position, layoutScale);
     setGesture({
       ...gesture,
       preview: {
         placementId: gesture.placement.id,
-        xMm: gesture.placement.xMm + deltaX,
-        yMm: gesture.placement.yMm + deltaY,
+        xMm: preview.xMm,
+        yMm: preview.yMm,
         scale: gesture.placement.scale,
       },
     });
@@ -84,18 +96,15 @@ export function useViewPlacementGestures({
   function finishGesture(event: PointerEvent<HTMLElement>) {
     if (!gesture || event.pointerId !== gesture.pointerId) return;
 
-    const position = event.altKey
-      ? { xMm: gesture.preview.xMm, yMm: gesture.preview.yMm }
-      : snapViewPosition(gesture.preview);
+    const position = { xMm: gesture.preview.xMm, yMm: gesture.preview.yMm };
     const natural = getPlacementNaturalSize(project, gesture.placement);
-    const clamped = clampPlacementPosition(
-      position,
-      {
-        widthMm: natural.widthMm * gesture.placement.scale,
-        heightMm: natural.heightMm * gesture.placement.scale,
-      },
-      page,
-    );
+    const size = {
+      widthMm: natural.widthMm * gesture.placement.scale,
+      heightMm: natural.heightMm * gesture.placement.scale,
+    };
+    const clamped = event.altKey
+      ? clampPlacementPosition(position, size, page)
+      : clampViewLayoutPosition(position, size, page, layoutScale);
     if (clamped.xMm !== gesture.placement.xMm || clamped.yMm !== gesture.placement.yMm) {
       commitPlacement(gesture.placement.id, clamped);
     }
@@ -114,29 +123,26 @@ export function useViewPlacementGestures({
       return;
     }
 
-    const direction = {
-      ArrowLeft: [-1, 0],
-      ArrowRight: [1, 0],
-      ArrowUp: [0, -1],
-      ArrowDown: [0, 1],
-    }[event.key];
+    let direction: readonly [number, number] | undefined;
+    if (event.key === 'ArrowLeft') direction = [-1, 0];
+    if (event.key === 'ArrowRight') direction = [1, 0];
+    if (event.key === 'ArrowUp') direction = [0, -1];
+    if (event.key === 'ArrowDown') direction = [0, 1];
     if (!direction) return;
 
     event.preventDefault();
-    const amount = event.shiftKey ? 10 : 2.5;
     const natural = getPlacementNaturalSize(project, placement);
+    const size = {
+      widthMm: natural.widthMm * placement.scale,
+      heightMm: natural.heightMm * placement.scale,
+    };
     commitPlacement(
       placement.id,
-      clampPlacementPosition(
-        {
-          xMm: placement.xMm + direction[0] * amount,
-          yMm: placement.yMm + direction[1] * amount,
-        },
-        {
-          widthMm: natural.widthMm * placement.scale,
-          heightMm: natural.heightMm * placement.scale,
-        },
+      clampViewLayoutPosition(
+        moveViewLayoutPosition(placement, direction, layoutScale, event.shiftKey ? 5 : 1),
+        size,
         page,
+        layoutScale,
       ),
     );
   }

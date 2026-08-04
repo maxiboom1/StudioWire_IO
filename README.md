@@ -99,7 +99,8 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations.
 - A flat, location-independent Views navigator with Add, Rename, guarded Delete, buffered metadata/page settings, and View validation-issue routing.
 - An exact ISO A3/A4 portrait/landscape View workspace with a 2.5 mm grid, 3 CSS px/mm at 100%, zoom/reset, Fit Page, and Fit Width controls.
-- Searchable live device, terminal-block, and rack placement with deterministic insertion, navigator drop, selection, move-only drag, keyboard nudge/delete, missing-source and out-of-page diagnostics, and a placement Inspector.
+- Searchable live device, terminal-block, and rack placement with deterministic virtual-grid insertion, navigator drop, selection, move-only drag, keyboard grid movement/delete, missing-source and out-of-page diagnostics, and a placement Inspector.
+- A View-wide 70/80/90/100% Device Size control that proportionally scales every device/TB renderer and preserves logical alignment cells; the virtual grid stays invisible behind the existing paper pattern.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
 - JSON import/export: current exports use schema version `0.2.9.02`. Version `0.2.8.25` migrates by adding `views: []`, then `0.2.9.00` and `0.2.9.01` advance through identity migrations; the chain does not change engineering data.
 
@@ -147,12 +148,28 @@ See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
 
+### v0.2.9.02-fix-4
+
+- Made the invisible View alignment grid equally fine on both axes, using the scaled device I/O-row pitch for horizontal and vertical movement. Removed the Device Size change notice; scale changes remain immediate and View-wide.
+- Reduced the View workspace header to its name and essential canvas controls. Removed the page-format summary and Add object picker, making navigator drag-and-drop the only placement creation workflow.
+- Simplified View and Placement Inspectors to actionable fields, added direct source opening, clarified that Display Label is View-only, and shortened placement removal copy.
+- Anchored Views to the bottom of the navigator, centered its Add View icon affordance, and aligned the Add/Rename View modal footer with the app's other creation forms.
+- Kept selected-placement emphasis stable on hover by preventing the device-diagram hover style from overriding selection.
+- This is a UX maintenance label over schema/app version `0.2.9.02`; no project JSON shape or migration changed.
+
+### v0.2.9.02-fix-3
+
+- Added an invisible View alignment grid derived from the current device size. Device and rack insertion, navigator drop, pointer movement, coordinate editing, and keyboard movement now share its column and I/O-row snapping rules; Alt still bypasses pointer snapping. The existing subtle paper grid remains the only visible canvas pattern.
+- Added one View-level Device Size control with 70%, 80%, 90%, and 100% choices. A change updates every device and terminal-block placement in one project action, including the complete uniformly scaled renderer, while rack scale and all engineering records remain unchanged.
+- Changing Device Size preserves each placement's virtual grid column and row. New devices inherit the View's current uniform size; imported mixed/legacy placement scales remain loadable and can be normalized by choosing one of the four sizes.
+- This is a layout/UI maintenance label over schema/app version `0.2.9.02`; it reuses existing placement `xMm`, `yMm`, and `scale` fields and introduces no JSON shape or migration change.
+
 ### v0.2.9.02-fix-2
 
 - Replaced the compact per-element View overrides with one uniform reduction of the complete Device Workspace diagram, keeping complex connector icons, anchors, cable lines, labels, and row spacing in their original relative alignment.
 - Updated standard-device View geometry to use the same `940 × (82 + rows × 50)` source ratio at a fixed 92 mm width; terminal-block and rack renderers retain their dedicated compact geometry.
 - Disabled placement resizing in the current View editor: resize handles, resize pointer gestures, and the Inspector Scale field are removed. Move, keyboard nudge, Display Label, coordinates, selection, and source-safe removal remain available.
-- This is a UI/geometry maintenance label over schema/app version `0.2.9.02`. The persisted `scale` field remains structurally compatible and is preserved for imported projects, but the editor no longer changes it.
+- This is a UI/geometry maintenance label over schema/app version `0.2.9.02`. The persisted `scale` field remains structurally compatible; Fix 3 changes it only through the View-wide Device Size control, never through a per-object resize gesture.
 
 ### v0.2.9.02-fix1
 
@@ -163,7 +180,7 @@ See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ### v0.2.9.02
 
-- Added the searchable Add object picker and direct navigator device/rack drops with duplicate prevention, deterministic first-fit insertion, 2.5 mm snapping, Alt bypass, page clamping, and lightweight drop feedback.
+- Added direct navigator device/rack drops with duplicate prevention, snapping, Alt bypass, page clamping, and lightweight drop feedback. The later Fix 4 maintenance UI removes the alternative searchable picker.
 - Added transient placement selection, single-commit pointer move/scale gestures, keyboard nudge/delete, Display Label/scale/coordinate Inspector editing, source-safe removal, missing-source placeholders, and live out-of-page highlighting.
 - Added read-only standard-device, terminal-block, and rack blocks backed by shared connection and rack-elevation presentation models, so cable/destination summaries and rack contents update from source data without adding core-data controls.
 - Preserved the `0.2.8.25 -> 0.2.9.00 -> 0.2.9.01` compatibility chain and added the shape-preserving `0.2.9.01 -> 0.2.9.02` migration. Manual View lines, text, groups, and undo/redo remain staged for later prompts.

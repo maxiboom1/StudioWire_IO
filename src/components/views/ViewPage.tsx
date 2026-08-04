@@ -62,7 +62,7 @@ export function ViewPage({
             <p>
               {isViewPopulated(view)
                 ? 'This View contains saved canvas content.'
-                : 'Drag a device or rack from the navigator, or use Add object.'}
+                : 'Drag a device or rack from the navigator.'}
             </p>
             <span>Objects remain live references to project data.</span>
           </div>
@@ -94,8 +94,8 @@ function DropPreview({ controller }: { controller: ViewEditorController }) {
       style={{
         left: preview.placement.xMm * VIEW_PIXELS_PER_MM,
         top: preview.placement.yMm * VIEW_PIXELS_PER_MM,
-        width: natural.widthMm * VIEW_PIXELS_PER_MM,
-        height: natural.heightMm * VIEW_PIXELS_PER_MM,
+        width: natural.widthMm * preview.placement.scale * VIEW_PIXELS_PER_MM,
+        height: natural.heightMm * preview.placement.scale * VIEW_PIXELS_PER_MM,
       }}
     >
       {preview.duplicatePlacementId ? 'Already in View' : 'Place object'}

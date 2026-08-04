@@ -17,10 +17,10 @@ v0.2 is complete around:
 - Bundled, validated device templates that populate Add Device without bypassing project validation.
 - Persistent project-level View metadata, live source references, neutral manual lines, and View-only annotations that cannot modify connectivity, numbering, rack assignment, or location hierarchy.
 - Flat View navigation and CRUD, buffered View metadata/page settings, validation-issue routing, and exact A3/A4 portrait/landscape page workspace behavior.
-- Live View device/TB/rack placement, searchable insertion and navigator drop, transient selection, transactional move-only placement, presentation labels, source-safe removal, and read-only technical blocks. Standard-device blocks uniformly reduce the complete Device Workspace diagram so connector internals remain aligned.
+- Live View device/TB/rack placement by navigator drag-and-drop, transient selection, transactional move-only placement, View-only presentation labels, direct source opening, source-safe removal, and read-only technical blocks. Standard-device blocks uniformly reduce the complete Device Workspace diagram, an invisible equal-pitch virtual grid aligns both axes to I/O-row resolution, and one View-wide 70/80/90/100% Device Size control updates all device/TB blocks.
 - Retained `0.2.8.25` import/autosave migration that adds `views: []` without changing existing project engineering data.
 
-Version `0.2.9.02` plus maintenance labels through `0.2.9.02-fix-2` provides View discovery/CRUD, metadata/page settings, the page workspace, navigator-to-paper device/rack dropping, move-only live source placement, and a uniformly scaled shared technical device renderer. It does not yet support View line/text/group tools, placement resizing, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
+Version `0.2.9.02` plus maintenance labels through `0.2.9.02-fix-4` provides View discovery/CRUD, metadata/page settings, a compact page workspace, navigator-to-paper device/rack dropping, fine equal-pitch virtual-grid move-only live source placement, a uniformly scaled shared technical device renderer, View-wide preset device sizing, and streamlined View/placement Inspectors. It does not yet support View line/text/group tools, per-object placement resizing, View printing/export, prewire export, Excel export, Bartender export, Visio export, SVG/PDF document export, authentication, backend storage, database storage, or multi-user collaboration.
 
 ## Development And Release Commands
 
@@ -92,7 +92,7 @@ Automated tests cover behavior and data equivalence. Before publishing, a human 
 - App shell layout with tree, workspace, inspector, and validation panel.
 - Device and terminal-block connection views.
 - Add Device and Add TB dialogs.
-- The Views section with no Locations, Add/Rename/Delete flows, and the selected View Inspector.
+- The bottom-anchored Views section with no Locations, aligned Add control, bottom-pinned Add/Rename modal footer, Add/Rename/Delete flows, and the streamlined selected View Inspector.
 - A4 and A3 pages in portrait and landscape at 100%, Fit Page, and Fit Width zoom.
 - A View containing a standard device, terminal block, 48 RU rack, and high-port-count device at several zoom levels; verify aligned connector icons, readable live summaries, move-only selection affordances, and out-of-page highlighting.
 

@@ -1,4 +1,10 @@
 import { VIEW_PLACEMENT_MAX_SCALE, VIEW_PLACEMENT_MIN_SCALE } from './viewGeometry';
+import {
+  getViewLayoutScale,
+  isViewDeviceScale,
+  remapViewLayoutPosition,
+  type ViewDeviceScale,
+} from './viewLayoutGrid';
 import type {
   ProjectRoot,
   ProjectView,
@@ -177,6 +183,40 @@ export function updateViewPlacement(
       candidate.id === placementId ? updatedPlacement : candidate,
     ),
   });
+}
+
+export function setViewDeviceScale(
+  project: ProjectRoot,
+  viewId: string,
+  scale: ViewDeviceScale,
+): ViewOperationResult {
+  const view = project.views.find((candidate) => candidate.id === viewId);
+
+  if (!view) {
+    return failure('View device size update blocked: selected View no longer exists.');
+  }
+
+  if (!isViewDeviceScale(scale)) {
+    return failure('View device size update blocked: size must be 70%, 80%, 90%, or 100%.');
+  }
+
+  if (!view.placements.some((placement) => placement.sourceType === 'device')) {
+    return failure('View device size update blocked: add a device to the View first.');
+  }
+
+  return replaceView(project, applyViewDeviceScale(view, scale));
+}
+
+export function applyViewDeviceScale(view: ProjectView, scale: ViewDeviceScale): ProjectView {
+  const currentScale = getViewLayoutScale(view);
+  return {
+    ...view,
+    placements: view.placements.map((placement) => ({
+      ...placement,
+      ...remapViewLayoutPosition(placement, currentScale, scale),
+      scale: placement.sourceType === 'device' ? scale : placement.scale,
+    })),
+  };
 }
 
 export function removeViewPlacement(

@@ -214,6 +214,7 @@ function StudioWireShellContent() {
               selection={selection}
               selectedViewPlacementId={selectedViewPlacementId}
               onSelectViewPlacement={setSelectedViewPlacementId}
+              onOpenObject={(type, id) => selectObject(type, id)}
               onInspectorDirtyGuardChange={setInspectorGuard}
             />
             <ValidationPanel

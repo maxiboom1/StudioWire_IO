@@ -39,19 +39,30 @@ describe('ViewPlacementInspector', () => {
     const updateViewPlacement = vi.fn();
     const removeViewPlacement = vi.fn();
     const onRemoved = vi.fn();
+    const onOpenSource = vi.fn();
     contextHarness.current = {
       project: { ...structuredClone(sampleProject), views: [view] },
       updateViewPlacement,
       removeViewPlacement,
     };
     render(
-      <ViewPlacementInspector placement={placement} view={view} onBack={vi.fn()} onRemoved={onRemoved} />,
+      <ViewPlacementInspector
+        placement={placement}
+        view={view}
+        onOpenSource={onOpenSource}
+        onRemoved={onRemoved}
+      />,
     );
 
     const label = screen.getByLabelText('Display Label');
     await user.type(label, '  Core Router  ');
     expect(screen.queryByLabelText('Scale (%)')).toBeNull();
-    expect(screen.getByText(/Placement size is fixed/)).toBeTruthy();
+    expect(screen.queryByText('Back to View properties')).toBeNull();
+    expect(screen.queryByText('Live Source')).toBeNull();
+    expect(screen.getByText(/applies only to this View/)).toBeTruthy();
+    expect(screen.getByText(/controlled for the whole View/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Open Device' }));
+    expect(onOpenSource).toHaveBeenCalledWith('device', 'device-router-1');
     await user.clear(screen.getByLabelText('X (mm)'));
     await user.type(screen.getByLabelText('X (mm)'), '12.4');
     await user.clear(screen.getByLabelText('Y (mm)'));
@@ -60,14 +71,10 @@ describe('ViewPlacementInspector', () => {
 
     expect(updateViewPlacement).toHaveBeenCalledWith('view-main', placement.id, {
       labelOverride: 'Core Router',
-      xMm: 12.5,
-      yMm: 20,
+      xMm: 10,
+      yMm: 19.787234,
     });
-    await user.click(screen.getByRole('button', { name: 'Live Source' }));
-    expect(screen.getByText('Router 1')).toBeTruthy();
-    expect(screen.getByText('Machine Room')).toBeTruthy();
-
-    await user.click(screen.getByRole('button', { name: /Remove from View/ }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
     expect(removeViewPlacement).toHaveBeenCalledWith('view-main', placement.id);
     expect(onRemoved).toHaveBeenCalled();
   });

@@ -2,11 +2,10 @@ import { Maximize2, Minus, Plus, RotateCcw, StretchHorizontal } from 'lucide-rea
 import type { ProjectView } from '../../domain/types';
 import { Button } from '../ui/button';
 import { ViewPage } from './ViewPage';
-import { formatViewPageMeta } from './viewUiModel';
 import { getViewPageDimensions } from './viewViewport';
 import { useViewViewport } from './useViewViewport';
 import { useViewEditorController } from './useViewEditorController';
-import { ViewObjectPicker } from './ViewObjectPicker';
+import { ViewDeviceSizeControl } from './ViewDeviceSizeControl';
 
 export function ViewWorkspace({
   view,
@@ -32,12 +31,9 @@ export function ViewWorkspace({
         <div>
           <p className="eyebrow">View</p>
           <h1>{view.name}</h1>
-          <p className="view-workspace-meta">
-            {formatViewPageMeta(view)} · {page.widthMm} × {page.heightMm} mm
-          </p>
         </div>
         <div className="view-viewport-toolbar" aria-label="View controls">
-          <ViewObjectPicker project={editor.project} view={view} onAdd={editor.addSource} />
+          <ViewDeviceSizeControl state={editor.deviceScaleState} onChange={editor.changeDeviceScale} />
           <Button
             aria-label="Zoom out"
             disabled={!viewport.canZoomOut}

@@ -104,7 +104,6 @@ Extend transient `ViewCanvasSelection` with a discriminated line selection. The 
 - Read-only route mode: `Automatic` or `Manual`.
 - `Reset route`, disabled when already automatic.
 - `Delete line`.
-- `Back to View properties`.
 
 Double-clicking a line label focuses the same Inspector input. Inspector updates use the common canvas commit path so prompt 05 can record them in history.
 
@@ -131,7 +130,6 @@ Text Inspector fields/actions:
 - Size select: Small, Medium, Large.
 - Width in millimetres.
 - Delete text.
-- Back to View properties.
 
 ## Group tool
 
@@ -155,13 +153,13 @@ Group Inspector fields/actions:
 - Required non-empty label.
 - X/Y/width/height in millimetres using shared geometry rules.
 - Delete group.
-- Back to View properties.
 
 ## Selection, keyboard, and interaction precedence
 
 - Fixed hit/layer order remains group backgrounds, lines, placements, text, selection controls.
 - Interaction hit testing must still allow selecting a group border behind other elements.
 - Clicking empty paper clears selection.
+- Clearing canvas-element selection returns the right Inspector to View properties; do not add a persistent Back to View button.
 - Delete removes the selected element; do not delete while focus is inside an input/textarea.
 - Arrow and Shift+Arrow nudge selected placements, text, and groups using the established steps. Lines are moved only through endpoints/waypoints, not as a whole.
 - Escape cancels drafts/active drags before clearing selection.

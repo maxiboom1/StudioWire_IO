@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ProjectView } from '../../domain/types';
@@ -41,7 +41,8 @@ describe('ViewWorkspace', () => {
     };
     const { rerender } = render(<ViewWorkspace view={first} />);
 
-    expect(screen.getByText('Drag a device or rack from the navigator, or use Add object.')).toBeTruthy();
+    expect(screen.getByText('Drag a device or rack from the navigator.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add object' })).toBeNull();
     expect(screen.getByLabelText('Signal Overview A3 portrait page')).toBeTruthy();
     expect(screen.getByLabelText('Current zoom').textContent).toBe('100%');
 
@@ -50,32 +51,6 @@ describe('ViewWorkspace', () => {
 
     rerender(<ViewWorkspace view={view('view-b', 'Rack Overview')} />);
     await waitFor(() => expect(screen.getByLabelText('Current zoom').textContent).toBe('100%'));
-  });
-
-  it('searches and adds a live object from the compact picker', async () => {
-    const user = userEvent.setup();
-    const currentView = view('view-picker', 'Picker View');
-    const addViewPlacement = vi.fn(() => 'placement-new');
-    contextHarness.current = {
-      project: { ...structuredClone(sampleProject), views: [currentView] },
-      addViewPlacement,
-      updateViewPlacement: vi.fn(),
-      removeViewPlacement: vi.fn(),
-    };
-    render(<ViewWorkspace view={currentView} />);
-
-    await user.click(screen.getByRole('button', { name: 'Add object' }));
-    await user.type(screen.getByPlaceholderText(/Search name/), 'XR-16');
-    const result = screen.getByRole('button', { name: /Router 1/ });
-    expect(within(result).getByText(/Device · RTR1 · XR-16/)).toBeTruthy();
-    await user.click(result);
-
-    expect(addViewPlacement).toHaveBeenCalledWith('view-picker', {
-      sourceType: 'device',
-      sourceId: 'device-router-1',
-      xMm: 10,
-      yMm: 10,
-    });
   });
 
   it('commits move-only pointer gestures once, cancels cleanly, and supports keyboard nudge/delete', () => {
@@ -116,12 +91,12 @@ describe('ViewWorkspace', () => {
     expect(screen.queryByRole('button', { name: /Resize Router 1 placement/ })).toBeNull();
 
     fireEvent.pointerDown(header, { button: 0, pointerId: 1, clientX: 0, clientY: 0 });
-    fireEvent.pointerMove(page, { pointerId: 1, clientX: 15, clientY: 0 });
+    fireEvent.pointerMove(page, { pointerId: 1, clientX: 180, clientY: 0 });
     expect(updateViewPlacement).not.toHaveBeenCalled();
-    fireEvent.pointerUp(page, { pointerId: 1, clientX: 15, clientY: 0 });
+    fireEvent.pointerUp(page, { pointerId: 1, clientX: 180, clientY: 0 });
     expect(updateViewPlacement).toHaveBeenCalledTimes(1);
     expect(updateViewPlacement).toHaveBeenLastCalledWith('view-move', placement.id, {
-      xMm: 15,
+      xMm: 68.723404,
       yMm: 10,
     });
 
@@ -135,9 +110,70 @@ describe('ViewWorkspace', () => {
     fireEvent.keyDown(block, { key: 'ArrowDown', shiftKey: true });
     expect(updateViewPlacement).toHaveBeenCalledWith('view-move', placement.id, {
       xMm: 10,
-      yMm: 20,
+      yMm: 34.468085,
     });
     fireEvent.keyDown(block, { key: 'Delete' });
     expect(removeViewPlacement).toHaveBeenCalledWith('view-move', placement.id);
+  });
+
+  it('applies one preset size to every View device while preserving logical grid cells', async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
+      configurable: true,
+      value: vi.fn(() => false),
+    });
+    Object.defineProperty(HTMLElement.prototype, 'releasePointerCapture', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    const currentView = {
+      ...view('view-scale', 'Scale View'),
+      placements: [
+        {
+          id: 'placement-router',
+          sourceType: 'device' as const,
+          sourceId: 'device-router-1',
+          xMm: 10,
+          yMm: 10,
+          scale: 1,
+          labelOverride: null,
+        },
+        {
+          id: 'placement-multiviewer',
+          sourceType: 'device' as const,
+          sourceId: 'device-multiviewer-1',
+          xMm: 112,
+          yMm: 10,
+          scale: 1,
+          labelOverride: null,
+        },
+      ],
+    };
+    const replaceViewCanvas = vi.fn();
+    contextHarness.current = {
+      project: { ...structuredClone(sampleProject), views: [currentView] },
+      addViewPlacement: vi.fn(),
+      updateViewPlacement: vi.fn(),
+      removeViewPlacement: vi.fn(),
+      replaceViewCanvas,
+    };
+    render(<ViewWorkspace view={currentView} />);
+
+    await user.click(screen.getByRole('combobox', { name: 'Device size for all devices in this View' }));
+    await user.click(await screen.findByRole('option', { name: '80%' }));
+
+    expect(replaceViewCanvas).toHaveBeenCalledWith('view-scale', {
+      placements: [
+        expect.objectContaining({ id: 'placement-router', xMm: 10, yMm: 10, scale: 0.8 }),
+        expect.objectContaining({ id: 'placement-multiviewer', xMm: 92.212774, yMm: 10, scale: 0.8 }),
+      ],
+      lines: [],
+      annotations: [],
+    });
+    expect(screen.queryByText(/Device size set to/)).toBeNull();
   });
 });

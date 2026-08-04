@@ -138,7 +138,7 @@ Use exported value lists and derived union types for page sizes, orientations, s
   - A3 portrait: `297 x 420` mm.
   - A3 landscape: `420 x 297` mm.
 - Screen rendering uses `3 CSS px` per millimetre at 100% zoom. Zoom is a viewport concern and is never persisted.
-- The fixed drawing grid is `2.5 mm`. Pointer/keyboard placement snaps to it; holding Alt bypasses pointer snapping.
+- The base drawing grid is `2.5 mm`. Starting with the `0.2.9.02-fix-4` maintenance pass, placement interactions use an invisible alignment grid with the same scaled I/O-row pitch on both axes; holding Alt still bypasses pointer snapping.
 - Default page format is A3 portrait.
 - Placement scale is uniform, defaults to `1`, and is structurally constrained to `0.25..3`.
 - The editor normally keeps content within the page. Format changes retain stored geometry; content that no longer fits is highlighted and reported as a warning.
@@ -160,6 +160,10 @@ Natural dimensions at scale `1`:
 Multiply natural width/height by the placement scale. Rendering may tune internal typography and padding, but it must not change these outer geometry calculations without updating their tests and this guide.
 
 Object-picker insertion scans from a `10 mm` page margin in `5 mm` increments, left-to-right then top-to-bottom, and chooses the first fitting non-overlapping placement. If none fits, use a visible `2.5 mm` diagonal cascade from the top-left margin and report that the new block overlaps existing content.
+
+#### Fix 3 alignment amendment
+
+The implemented Fix 3 contract supersedes the earlier placement scan for operator placement UI without changing the JSON model. An invisible virtual grid begins at 10 mm; the existing subtle 2.5 mm paper pattern remains the only visible grid. For uniform View device scale `s`, column pitch is `92 * s + 10` mm and row pitch is `(50 * 92 / 940) * s` mm. Picker insertion, navigator drop, pointer movement, coordinate edits, and keyboard movement share these positions. The View-wide Device Size choices are 70%, 80%, 90%, and 100%; applying one updates every device/TB placement and remaps all placements to the same logical grid cells. Racks keep their scale. Existing `xMm`, `yMm`, and `scale` fields remain the only persisted data.
 
 ### Live references and read-only rendering
 
@@ -220,17 +224,20 @@ Use these validation codes consistently:
 - The creation dialog includes name, A4/A3, and portrait/landscape, prefilled with the next available `View N`, A3, portrait.
 - Selecting a View opens its page in the center workspace and its properties in the existing right Inspector.
 - Deleting a non-empty View confirms counts and never affects source objects.
+- Existing devices and racks enter a View only by dragging them from the navigator onto the paper; no separate object picker is shown.
+- The View workspace header stays compact. A placement Inspector can open its source directly and makes clear that Display Label affects only the current View.
+- Keep the Views section anchored at the bottom of the navigator area, center the Add View affordance, and use the standard bottom-pinned modal footer.
 
 ### Canvas and tools
 
 - Use a real paper boundary with shadow and whitespace inside the existing scrollable canvas area.
 - Provide zoom out/in/reset, fit page, and fit width.
 - Add tools only when functional: Select, Line, Text, Group.
-- Devices/racks enter through both an accessible searchable picker and existing navigator drag payloads.
+- Devices/racks enter only through existing navigator drag payloads dropped onto the paper.
 - Canvas-element selection is transient UI state coordinated between ViewWorkspace and the existing Inspector; it is not serialized.
 - Commit pointer move/resize/route changes once at pointer release. Do not dispatch or autosave on every pointer move.
 - Escape cancels an active creation/edit gesture. Delete removes the selected View element.
-- Arrow keys nudge by `2.5 mm`; Shift+Arrow nudges by `10 mm`.
+- Arrow keys nudge by one scale-aware virtual-grid cell; Shift+Arrow nudges by five cells. Both axes use the same I/O-row-derived pitch.
 
 ### Undo/redo
 

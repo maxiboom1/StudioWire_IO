@@ -118,6 +118,8 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
     expect((within(dialog).getByLabelText('View Name') as HTMLInputElement).value).toBe('View 1');
     expect(within(dialog).getByRole('combobox', { name: 'Page Size' }).textContent).toContain('A3');
     expect(within(dialog).getByRole('combobox', { name: 'Orientation' }).textContent).toContain('Portrait');
+    expect(dialog.querySelector('.view-modal-form')).toBeTruthy();
+    expect(dialog.querySelector('.standard-modal-footer')).toBeTruthy();
 
     await user.click(within(dialog).getByRole('button', { name: 'Add View' }));
     expect(addView).toHaveBeenCalledWith({
@@ -149,8 +151,15 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
 
     await user.click(screen.getByRole('button', { name: /Signal Overview/ }));
     expect(screen.getByRole('region', { name: 'Signal Overview View workspace' })).toBeTruthy();
-    expect(screen.getByText('Drag a device or rack from the navigator, or use Add object.')).toBeTruthy();
+    expect(screen.getByText('Drag a device or rack from the navigator.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'View Inspector' })).toBeTruthy();
+    expect(screen.getByLabelText('View Name')).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Page Size' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Orientation' })).toBeTruthy();
+    expect(screen.getByLabelText('Notes')).toBeTruthy();
+    expect(screen.queryByLabelText('ID')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Page Format' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'View Content' })).toBeNull();
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /Signal Overview/ }));
     await user.click(await screen.findByText('Rename View'));
@@ -199,7 +208,6 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
     render(<StudioWireShell />);
 
     await user.click(screen.getByRole('button', { name: /Populated View/ }));
-    await user.click(screen.getByRole('button', { name: 'Page Format' }));
     await user.click(screen.getByRole('combobox', { name: 'Page Size' }));
     await user.click(await screen.findByRole('option', { name: 'A4' }));
     await user.click(screen.getByRole('button', { name: 'Save View' }));

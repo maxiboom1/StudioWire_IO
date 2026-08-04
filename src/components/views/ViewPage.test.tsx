@@ -53,8 +53,9 @@ describe('ViewPage navigator drop', () => {
     expect(addViewPlacement).toHaveBeenCalledWith('view-main', {
       sourceType: 'device',
       sourceId: 'device-router-1',
-      xMm: 25,
-      yMm: 20,
+      xMm: 24.680851,
+      yMm: 19.787234,
+      scale: 1,
     });
   });
 
@@ -88,6 +89,41 @@ describe('ViewPage navigator drop', () => {
 
     expect(addViewPlacement).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Router 1 placement, selected' })).toBeTruthy();
+  });
+
+  it('inherits the current View-wide device size for a newly dropped device', () => {
+    const project = structuredClone(sampleProject);
+    const view = emptyView();
+    view.placements.push({
+      id: 'placement-existing',
+      sourceType: 'device',
+      sourceId: 'device-router-1',
+      xMm: 10,
+      yMm: 10,
+      scale: 0.8,
+      labelOverride: null,
+    });
+    const addViewPlacement = vi.fn(() => 'placement-from-drop');
+    contextHarness.current = {
+      project,
+      addViewPlacement,
+      updateViewPlacement: vi.fn(),
+      removeViewPlacement: vi.fn(),
+    } as unknown as ProjectContextValue;
+
+    render(<Harness view={view} />);
+    const page = screen.getByLabelText('Main A3 portrait page');
+    const transfer = createNavigatorTransfer({ type: 'device', id: 'device-multiviewer-1' });
+    dispatchDrag(page, 'drop', transfer);
+
+    expect(addViewPlacement).toHaveBeenCalledWith(
+      'view-main',
+      expect.objectContaining({
+        sourceId: 'device-multiviewer-1',
+        sourceType: 'device',
+        scale: 0.8,
+      }),
+    );
   });
 });
 

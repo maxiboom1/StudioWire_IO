@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState, type DragEvent } from 'react';
-import type { ProjectView, ViewPlacement, ViewSourceType } from '../../domain/types';
+import type { ProjectView, ViewPlacement } from '../../domain/types';
 import { getPlacementNaturalSize } from '../../domain/viewGeometry';
+import { applyViewDeviceScale } from '../../domain/viewOperations';
+import {
+  clampViewLayoutPosition,
+  getViewDeviceScaleState,
+  getViewLayoutScale,
+  type ViewDeviceScale,
+} from '../../domain/viewLayoutGrid';
 import {
   clampPlacementPosition,
   findExistingPlacement,
-  findFirstPlacementPosition,
   getPlacementPage,
   pointToViewPosition,
 } from '../../domain/viewPlacement';
@@ -30,12 +36,15 @@ export function useViewEditorController({
   selectedPlacementId: string | null;
   onSelectPlacement: (placementId: string | null) => void;
 }) {
-  const { project, addViewPlacement, updateViewPlacement, removeViewPlacement } = useProject();
+  const { project, addViewPlacement, updateViewPlacement, removeViewPlacement, replaceViewCanvas } =
+    useProject();
   const [dropPreview, setDropPreview] = useState<ViewDropPreview | null>(null);
   const [notice, setNotice] = useState('');
   const [focusRequest, setFocusRequest] = useState(0);
   const selectedPlacement = view.placements.find((placement) => placement.id === selectedPlacementId) ?? null;
   const page = getPlacementPage(project, view);
+  const deviceScaleState = getViewDeviceScaleState(view);
+  const layoutScale = getViewLayoutScale(view);
 
   const clearDragState = useCallback(() => {
     setDropPreview(null);
@@ -64,26 +73,6 @@ export function useViewEditorController({
     onSelectPlacement(placement.id);
     setNotice('Object is already in this View');
     requestPlacementFocus();
-  }
-
-  function addSource(sourceType: ViewSourceType, sourceId: string) {
-    const existing = findExistingPlacement(view, sourceType, sourceId);
-    if (existing) {
-      selectExisting(existing);
-      return existing.id;
-    }
-
-    const position = findFirstPlacementPosition(project, view, sourceType, sourceId);
-    const id = addViewPlacement(view.id, {
-      sourceType,
-      sourceId,
-      xMm: position.xMm,
-      yMm: position.yMm,
-    });
-    onSelectPlacement(id);
-    setNotice(position.overlaps ? 'Object added with overlap; adjust its position.' : 'Object added to View');
-    requestPlacementFocus();
-    return id;
   }
 
   function commitPlacement(placementId: string, updates: ViewPlacementUpdates) {
@@ -115,6 +104,7 @@ export function useViewEditorController({
       zoom,
       VIEW_PIXELS_PER_MM,
       event.altKey,
+      layoutScale,
     );
     const draft: ViewPlacement = {
       id: '__view-drop-preview__',
@@ -122,11 +112,17 @@ export function useViewEditorController({
       sourceId: payload.id,
       xMm: raw.xMm,
       yMm: raw.yMm,
-      scale: 1,
+      scale: payload.type === 'device' ? layoutScale : 1,
       labelOverride: null,
     };
     const natural = getPlacementNaturalSize(project, draft);
-    const position = clampPlacementPosition(raw, natural, page);
+    const size = {
+      widthMm: natural.widthMm * draft.scale,
+      heightMm: natural.heightMm * draft.scale,
+    };
+    const position = event.altKey
+      ? clampPlacementPosition(raw, size, page)
+      : clampViewLayoutPosition(raw, size, page, layoutScale);
     return { ...draft, ...position };
   }
 
@@ -161,6 +157,7 @@ export function useViewEditorController({
       sourceId: placement.sourceId,
       xMm: placement.xMm,
       yMm: placement.yMm,
+      scale: placement.scale,
     });
     onSelectPlacement(id);
     setNotice('Object added to View');
@@ -174,16 +171,29 @@ export function useViewEditorController({
       : project.racks.some((rack) => rack.id === payload.id);
   }
 
+  function changeDeviceScale(scale: ViewDeviceScale) {
+    if (deviceScaleState.kind === 'uniform' && deviceScaleState.scale === scale) return;
+    const updated = applyViewDeviceScale(view, scale);
+    replaceViewCanvas(view.id, {
+      placements: updated.placements,
+      lines: updated.lines,
+      annotations: updated.annotations,
+    });
+    setNotice('');
+  }
+
   return {
     project,
     selectedPlacement,
     preview: gestures.preview,
     dropPreview,
     notice,
+    deviceScaleState,
+    layoutScale,
     focusRequest,
-    addSource,
     commitPlacement,
     removePlacement,
+    changeDeviceScale,
     selectPlacement: onSelectPlacement,
     beginGesture: gestures.beginGesture,
     updateGesture: gestures.updateGesture,

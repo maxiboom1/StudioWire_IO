@@ -13,12 +13,14 @@ export function Inspector({
   onInspectorDirtyGuardChange,
   selectedViewPlacementId,
   onSelectViewPlacement,
+  onOpenObject,
   selection,
 }: {
   onInspectorDirtyGuardChange?: (guard: InspectorDirtyGuard | null) => void;
   selection: SelectionState;
   selectedViewPlacementId: string | null;
   onSelectViewPlacement: (placementId: string | null) => void;
+  onOpenObject: (type: 'device' | 'rack', id: string) => void;
 }) {
   const { project } = useProject();
   const selected = resolveSelection(project, selection);
@@ -61,7 +63,7 @@ export function Inspector({
         <ViewPlacementInspector
           placement={placement}
           view={selected.value}
-          onBack={() => onSelectViewPlacement(null)}
+          onOpenSource={onOpenObject}
           onRemoved={() => onSelectViewPlacement(null)}
         />
       );

@@ -122,8 +122,8 @@ export function LeftTree({
   return (
     <>
       <Sidebar aria-label="StudioWire project sidebar" className="app-sidebar">
-        <SidebarContent>
-          <SidebarGroup>
+        <SidebarContent className="app-sidebar-content">
+          <SidebarGroup className="project-tree-section">
             <ActionContextMenu actions={rootActions}>
               <SidebarGroupLabel className="cursor-context-menu">Project navigator</SidebarGroupLabel>
             </ActionContextMenu>

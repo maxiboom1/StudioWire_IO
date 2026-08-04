@@ -13,6 +13,7 @@ import {
   removeViewPlacement,
   removeViewSourceReferences,
   replaceViewCanvas,
+  setViewDeviceScale,
   updateProjectView,
   updateViewAnnotation,
   updateViewLine,
@@ -289,6 +290,49 @@ describe('View domain operations', () => {
     });
     expect(rackBounds).toMatchObject({ widthMm: 58, heightMm: 134, sourceMissing: false });
     expect(missingBounds).toMatchObject({ widthMm: 60, heightMm: 30, sourceMissing: true });
+  });
+
+  it('sets one View-wide device size while preserving grid slots and engineering data', () => {
+    const project = projectFixture();
+    project.views = [
+      viewFixture({
+        placements: [
+          placementFixture('placement-router', 'device-router-1', { xMm: 112, yMm: 19.787234 }),
+          placementFixture('placement-multiviewer', 'device-multiviewer-1', {
+            xMm: 10,
+            yMm: 29.574468,
+          }),
+          placementFixture('placement-rack', 'rack-mcr-a', {
+            sourceType: 'rack',
+            xMm: 112,
+            yMm: 10,
+          }),
+        ],
+      }),
+    ];
+    const before = engineeringSnapshot(project);
+
+    const result = setViewDeviceScale(project, 'view-main', 0.8);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.views[0].placements).toEqual([
+        expect.objectContaining({
+          id: 'placement-router',
+          xMm: 92.212774,
+          yMm: 17.829788,
+          scale: 0.8,
+        }),
+        expect.objectContaining({
+          id: 'placement-multiviewer',
+          xMm: 10,
+          yMm: 25.659576,
+          scale: 0.8,
+        }),
+        expect.objectContaining({ id: 'placement-rack', xMm: 92.212774, yMm: 10, scale: 1 }),
+      ]);
+      expect(engineeringSnapshot(result.project)).toEqual(before);
+    }
   });
 });
 

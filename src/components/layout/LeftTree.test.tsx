@@ -199,11 +199,14 @@ describe('LeftTree', () => {
       },
     ];
 
-    renderTree(project);
+    const rendered = renderTree(project);
 
     expect(screen.getByText('Create a location')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Only View/ })).toBeTruthy();
     expect(screen.getByText('A4 · Landscape')).toBeTruthy();
+    const content = rendered.container.querySelector('.app-sidebar-content');
+    expect(content?.lastElementChild?.classList.contains('view-tree-section')).toBe(true);
+    expect(rendered.container.querySelector('.project-tree-section')).toBeTruthy();
   });
 
   it('renders version header, flat item rows, folders, active selection, and stable attributes', () => {
