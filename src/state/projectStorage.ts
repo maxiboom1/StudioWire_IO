@@ -23,6 +23,7 @@ export interface StorageRecoveryResult {
   project: ProjectRoot | null;
   key: string | null;
   errors: Array<{ key: string; message: string }>;
+  removedViewLineCount: number;
 }
 
 export function getBrowserStorage(): StorageAccessResult {
@@ -58,14 +59,19 @@ export function restoreStoredProject(storage: BrowserStorageLike): StorageRecove
     const importResult = importProjectJsonText(readResult.value);
 
     if (importResult.ok) {
-      return { project: importResult.project, key, errors };
+      return {
+        project: importResult.project,
+        key,
+        errors,
+        removedViewLineCount: importResult.removedViewLineCount,
+      };
     }
 
     errors.push({ key, message: importResult.error });
     safeRemoveItem(storage, key);
   }
 
-  return { project: null, key: null, errors };
+  return { project: null, key: null, errors, removedViewLineCount: 0 };
 }
 
 export function saveStoredProject(

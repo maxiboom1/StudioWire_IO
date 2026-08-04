@@ -38,7 +38,10 @@ export function restoreProjectState(
   if (result.project) {
     return {
       project: result.project,
-      statusMessage: `Project restored from ${result.key}`,
+      statusMessage:
+        result.removedViewLineCount > 0
+          ? `Project restored from ${result.key}; removed ${result.removedViewLineCount} legacy View line(s)`
+          : `Project restored from ${result.key}`,
       importError: null,
       persistenceState: 'saved',
     };

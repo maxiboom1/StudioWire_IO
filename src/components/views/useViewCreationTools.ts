@@ -1,5 +1,6 @@
 import { useEffect, useState, type PointerEvent } from 'react';
 import type { ProjectRoot, ProjectView, ViewLineEndpoint, ViewPoint } from '../../domain/types';
+import { DEFAULT_VIEW_LINE_STYLE } from '../../domain/viewLineStyles';
 import { normalizeViewPortRange, viewPortRangesOverlap } from '../../domain/viewPortRanges';
 import { snapViewLayoutPosition, type ViewDeviceScale } from '../../domain/viewLayoutGrid';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
@@ -90,7 +91,13 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
       setNotice('Choose a different placement.');
       return;
     }
-    const id = addViewLine(view.id, { from: lineDraft, to: endpoint, label: '', waypoints: [] });
+    const id = addViewLine(view.id, {
+      from: lineDraft,
+      to: endpoint,
+      label: '',
+      waypoints: [],
+      ...DEFAULT_VIEW_LINE_STYLE,
+    });
     selectCanvas({ kind: 'line', id });
     setTool('select');
     requestFocus(true);

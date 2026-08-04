@@ -47,7 +47,7 @@ describe('initial project state restore', () => {
   it('returns an empty state when no storage record is valid', () => {
     const state = loadInitialProjectState({
       getStorage: () => ({ ok: true, storage: new MemoryStorage() }),
-      restoreProject: () => ({ project: null, key: null, errors: [] }),
+      restoreProject: () => ({ project: null, key: null, errors: [], removedViewLineCount: 0 }),
       createEmptyState: emptyState,
     });
 
@@ -60,7 +60,7 @@ describe('initial project state restore', () => {
     storage.setItem(ACTIVE_STORAGE_KEY, JSON.stringify(project));
     const state = loadInitialProjectState({
       getStorage: () => ({ ok: true, storage }),
-      restoreProject: () => ({ project, key: ACTIVE_STORAGE_KEY, errors: [] }),
+      restoreProject: () => ({ project, key: ACTIVE_STORAGE_KEY, errors: [], removedViewLineCount: 0 }),
       createEmptyState: emptyState,
     });
 
@@ -81,11 +81,30 @@ describe('initial project state restore', () => {
         project: migratedProject,
         key: 'studiowire.io.project.v0.2.7',
         errors: [{ key: ACTIVE_STORAGE_KEY, message: 'bad current' }],
+        removedViewLineCount: 0,
       }),
       createEmptyState: emptyState,
     });
 
     expect(state.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
     expect(state.statusMessage).toBe('Project restored from studiowire.io.project.v0.2.7');
+  });
+
+  it('reports one concise recovery notice when legacy View lines were removed', () => {
+    const storage = new MemoryStorage();
+    const project = structuredClone(sampleProject);
+    const state = loadInitialProjectState({
+      getStorage: () => ({ ok: true, storage }),
+      restoreProject: () => ({
+        project,
+        key: ACTIVE_STORAGE_KEY,
+        errors: [],
+        removedViewLineCount: 2,
+      }),
+      createEmptyState: emptyState,
+    });
+    expect(state.statusMessage).toBe(
+      `Project restored from ${ACTIVE_STORAGE_KEY}; removed 2 legacy View line(s)`,
+    );
   });
 });

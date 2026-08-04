@@ -134,6 +134,10 @@ export function useConfirmation(): ConfirmFn {
   return context.confirm;
 }
 
+export function useOptionalConfirmation(): ConfirmFn {
+  return useContext(ConfirmationContext)?.confirm ?? (async () => true);
+}
+
 export function useConfirmationChoice(): ConfirmChoiceFn {
   const context = useContext(ConfirmationContext);
 

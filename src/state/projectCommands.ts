@@ -312,7 +312,11 @@ async function importProjectJson(
 
   dependencies.dispatch({
     type: 'IMPORT_PROJECT_JSON',
-    payload: { project: result.project, validationIssues: result.validationIssues },
+    payload: {
+      project: result.project,
+      validationIssues: result.validationIssues,
+      removedViewLineCount: result.removedViewLineCount,
+    },
   });
   return true;
 }

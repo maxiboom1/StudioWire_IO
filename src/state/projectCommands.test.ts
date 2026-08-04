@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_VIEW_LINE_STYLE } from '../domain/viewLineStyles';
 import { sampleProject } from '../domain/sampleProject';
 import type { ProjectRoot } from '../domain/types';
 import { createProjectCommands, type ProjectDispatch } from './projectCommands';
@@ -26,7 +27,7 @@ function createHarness(project: ProjectRoot = structuredClone(sampleProject)) {
         };
       }
 
-      return { ok: true, project, validationIssues: [] };
+      return { ok: true, project, validationIssues: [], removedViewLineCount: 0 };
     },
     exportProjectFile: (exportedProject) => {
       actions.push({ type: 'IMPORT_PROJECT_FAILED', payload: { message: exportedProject.project.name } });
@@ -230,7 +231,12 @@ describe('project command factory', () => {
       dispatch: () => undefined,
       getProject: () => current,
       makeUniqueId: (prefix, value) => `${prefix}:${value}`,
-      importProjectFile: async () => ({ ok: true, project: current, validationIssues: [] }),
+      importProjectFile: async () => ({
+        ok: true,
+        project: current,
+        validationIssues: [],
+        removedViewLineCount: 0,
+      }),
       exportProjectFile: (project) => exported.push(project.project.name),
     });
 
@@ -254,10 +260,11 @@ describe('project command factory', () => {
     ).toBe('view-placement:view-a-device-device-router-1');
     expect(
       commands.addViewLine('view-a', {
-        from: { placementId: 'placement-a', side: 'right', offset: 0.5 },
-        to: { placementId: 'placement-b', side: 'left', offset: 0.5 },
+        from: { kind: 'port', placementId: 'placement-a', portId: 'port-a' },
+        to: { kind: 'port', placementId: 'placement-b', portId: 'port-b' },
         label: '4 x SDI',
         waypoints: [],
+        ...DEFAULT_VIEW_LINE_STYLE,
       }),
     ).toBe('view-line:view-a-placement-a-placement-b');
     expect(

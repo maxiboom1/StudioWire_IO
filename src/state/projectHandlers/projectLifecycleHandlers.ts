@@ -44,16 +44,20 @@ export function handleImportProjectJson(
   action: ActionOf<'IMPORT_PROJECT_JSON'>,
   context: ProjectHandlerContext,
 ): ProjectState {
+  const migrationStatus =
+    action.payload.removedViewLineCount > 0
+      ? `; removed ${action.payload.removedViewLineCount} legacy View line(s)`
+      : '';
   return {
     project: stampProject(
       {
         ...action.payload.project,
         validationIssues: action.payload.validationIssues,
       },
-      `Project imported from JSON with ${action.payload.validationIssues.length} validation issue(s)`,
+      `Project imported from JSON with ${action.payload.validationIssues.length} validation issue(s)${migrationStatus}`,
       context.dependencies,
     ),
-    statusMessage: `Project imported; ${action.payload.validationIssues.length} validation issue(s) found`,
+    statusMessage: `Project imported; ${action.payload.validationIssues.length} validation issue(s) found${migrationStatus}`,
     importError: null,
     persistenceState: 'unsaved',
   };

@@ -56,6 +56,7 @@ export function importProjectValue(payload: unknown): ProjectImportResult {
         ok: true,
         project: structuralResult.project,
         validationIssues,
+        removedViewLineCount: 0,
       };
     }
 
@@ -83,6 +84,7 @@ export function importProjectValue(payload: unknown): ProjectImportResult {
       ok: true,
       project: structuralResult.project,
       validationIssues,
+      removedViewLineCount: migrationResult.removedViewLineCount,
     };
   } catch (error) {
     return importFailure([

@@ -10,6 +10,7 @@ export interface ProjectImportSuccess {
   ok: true;
   project: ProjectRoot;
   validationIssues: ValidationIssue[];
+  removedViewLineCount: number;
 }
 
 export interface ProjectImportFailure {

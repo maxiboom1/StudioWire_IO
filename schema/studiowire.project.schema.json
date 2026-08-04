@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.9.04",
+  "title": "StudioWire IO Project v0.2.9.05",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.9.04"
+      "const": "0.2.9.05"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -503,7 +503,17 @@
     "ViewLine": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "from", "to", "label", "waypoints"],
+      "required": [
+        "id",
+        "from",
+        "to",
+        "label",
+        "waypoints",
+        "color",
+        "width",
+        "labelOrientation",
+        "labelPosition"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -523,27 +533,46 @@
           "items": {
             "$ref": "#/$defs/ViewPoint"
           }
-        }
-      }
-    },
-    "ViewLineEndpoint": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["placementId", "side", "offset"],
-      "properties": {
-        "placementId": {
-          "type": "string",
-          "minLength": 1
         },
-        "side": {
-          "enum": ["top", "right", "bottom", "left"]
+        "color": {
+          "enum": ["black", "red", "blue", "green", "orange", "purple", "gray", "teal"]
         },
-        "offset": {
+        "width": {
+          "enum": ["hairline", "thin", "medium", "wide"]
+        },
+        "labelOrientation": {
+          "enum": ["horizontal", "vertical"]
+        },
+        "labelPosition": {
           "type": "number",
           "minimum": 0,
           "maximum": 1
         }
       }
+    },
+    "ViewLineEndpoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "placementId", "portId"],
+          "properties": {
+            "kind": { "const": "port" },
+            "placementId": { "type": "string", "minLength": 1 },
+            "portId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "placementId", "annotationId"],
+          "properties": {
+            "kind": { "const": "port_range" },
+            "placementId": { "type": "string", "minLength": 1 },
+            "annotationId": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
     },
     "ViewPoint": {
       "type": "object",

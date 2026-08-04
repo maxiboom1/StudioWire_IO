@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.04`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the shape-preserving `0.2.9.00 -> 0.2.9.01 -> 0.2.9.02 -> 0.2.9.03 -> 0.2.9.04` migration chain. These migrations do not change existing engineering data. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.05`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; every other View and engineering record is preserved. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.04`.
+- `schemaVersion`: current fixed string `0.2.9.05`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -263,10 +263,18 @@ Fields:
 - `to`: `ViewLineEndpoint`
 - `label`: the View-local custom meaning of the line
 - `waypoints`: `ViewPoint[]`
+- `color`: `black`, `red`, `blue`, `green`, `orange`, `purple`, `gray`, or `teal`
+- `width`: `hairline`, `thin`, `medium`, or `wide`
+- `labelOrientation`: `horizontal` or `vertical`
+- `labelPosition`: normalized route distance from 0 through 1
 
-Each endpoint contains `placementId`, a boundary `side` (`top`, `right`, `bottom`, or `left`), and an `offset` from 0 through 1 along that side. Both endpoints must belong to different placements in the same View. Parallel lines between the same placements are allowed. View lines are neutral manual cable-group marks: they have no engineering direction, cable count, cable IDs, or port IDs.
+Each endpoint is either `{ kind: 'port', placementId, portId }` for a rendered standard-device I/O row or `{ kind: 'port_range', placementId, annotationId }` for an I/O Range on that standard device. Both endpoints must resolve to different standard-device placements in the same View. Terminal blocks, racks, missing sources, empty rows, Text, Areas, and generic placement boundaries cannot anchor lines. Parallel lines between the same placements are allowed.
 
-Routes are orthogonal. Empty `waypoints` requests automatic routing. Manual bend editing stores absolute millimetre points; moving a placement updates its attached endpoints while preserving those waypoints. Resetting a route clears its waypoints. Removing a placement also removes lines attached to it.
+The stored port and annotation IDs are stable presentation anchors only. They do not assert direction, connectivity, cable ownership, cable count, or engineering endpoint semantics and never mutate physical cables or ports. The visible outer white device-row squares become focusable anchors only while the Line tool is active. Rows covered by an I/O Range remain visible but are inactive; the range provides one matching square at its midpoint.
+
+Routes are orthogonal. Empty `waypoints` requests automatic routing, beginning with a 5 mm outward extension from each live endpoint. Manual bend editing stores absolute millimetre points; moving/scaling a placement or changing a range updates live endpoints while preserving those waypoints. Resetting a route clears its waypoints. Removing a placement removes its attached lines. Removing a referenced I/O Range confirms and removes its attached lines atomically.
+
+New lines default to black, Thin, horizontal labels, and `labelPosition: 0.5`. Labels always render black. `labelPosition` uses Manhattan arc length along the complete rendered orthogonal polyline; dragging projects the label to the closest route segment and commits one normalized value. Vertical labels read bottom-to-top. Missing port/range anchors remain structurally loadable, validate as relational errors, and render a selectable warning so the drawing-only line can be removed.
 
 ### ViewAnnotation
 
@@ -444,6 +452,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous-stage `0.2.9.00`, `0.2.9.01`, `0.2.9.02`, and `0.2.9.03` data then advance unchanged through the staged chain to `0.2.9.04` before current structural validation.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous stages advance to `0.2.9.04`, then the `.04 -> .05` step removes/counts legacy boundary lines and preserves all other records before current structural validation.
 
 Views are stored in the normal project JSON and the same compact autosave under `studiowire.io.project.current`; no separate View file or storage key exists. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. A restored `0.2.8.25` autosave is migrated to the current schema in memory and written back through the normal autosave lifecycle. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

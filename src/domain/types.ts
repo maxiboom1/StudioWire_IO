@@ -17,7 +17,18 @@ export const VALIDATION_SEVERITY_VALUES = ['error', 'warning', 'info'] as const;
 export const VIEW_PAGE_SIZE_VALUES = ['a4', 'a3'] as const;
 export const VIEW_ORIENTATION_VALUES = ['portrait', 'landscape'] as const;
 export const VIEW_SOURCE_TYPE_VALUES = ['device', 'rack'] as const;
-export const VIEW_LINE_SIDE_VALUES = ['top', 'right', 'bottom', 'left'] as const;
+export const VIEW_LINE_COLOR_VALUES = [
+  'black',
+  'red',
+  'blue',
+  'green',
+  'orange',
+  'purple',
+  'gray',
+  'teal',
+] as const;
+export const VIEW_LINE_WIDTH_VALUES = ['hairline', 'thin', 'medium', 'wide'] as const;
+export const VIEW_LINE_LABEL_ORIENTATION_VALUES = ['horizontal', 'vertical'] as const;
 export const VIEW_ANNOTATION_KIND_VALUES = ['text', 'group', 'port_range'] as const;
 export const VIEW_TEXT_SIZE_VALUES = ['small', 'medium', 'large'] as const;
 export const CONNECTOR_ICON_KEY_VALUES = [
@@ -44,7 +55,9 @@ export type ValidationSeverity = (typeof VALIDATION_SEVERITY_VALUES)[number];
 export type ViewPageSize = (typeof VIEW_PAGE_SIZE_VALUES)[number];
 export type ViewOrientation = (typeof VIEW_ORIENTATION_VALUES)[number];
 export type ViewSourceType = (typeof VIEW_SOURCE_TYPE_VALUES)[number];
-export type ViewLineSide = (typeof VIEW_LINE_SIDE_VALUES)[number];
+export type ViewLineColor = (typeof VIEW_LINE_COLOR_VALUES)[number];
+export type ViewLineWidth = (typeof VIEW_LINE_WIDTH_VALUES)[number];
+export type ViewLineLabelOrientation = (typeof VIEW_LINE_LABEL_ORIENTATION_VALUES)[number];
 export type ViewAnnotationKind = (typeof VIEW_ANNOTATION_KIND_VALUES)[number];
 export type ViewTextSize = (typeof VIEW_TEXT_SIZE_VALUES)[number];
 export type ConnectorIconKey = (typeof CONNECTOR_ICON_KEY_VALUES)[number];
@@ -185,13 +198,15 @@ export interface ViewLine {
   to: ViewLineEndpoint;
   label: string;
   waypoints: ViewPoint[];
+  color: ViewLineColor;
+  width: ViewLineWidth;
+  labelOrientation: ViewLineLabelOrientation;
+  labelPosition: number;
 }
 
-export interface ViewLineEndpoint {
-  placementId: string;
-  side: ViewLineSide;
-  offset: number;
-}
+export type ViewLineEndpoint =
+  | { kind: 'port'; placementId: string; portId: string }
+  | { kind: 'port_range'; placementId: string; annotationId: string };
 
 export interface ViewPoint {
   xMm: number;

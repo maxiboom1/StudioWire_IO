@@ -2,7 +2,6 @@ import type {
   ProjectRoot,
   ProjectView,
   ViewAnnotation,
-  ViewLineEndpoint,
   ViewOrientation,
   ViewPageSize,
   ViewPlacement,
@@ -115,31 +114,6 @@ export function getAnnotationBounds(annotation: ViewAnnotation): ViewBounds | nu
     widthMm: annotation.widthMm,
     heightMm: annotation.kind === 'group' ? annotation.heightMm : TEXT_HEIGHT_MM[annotation.size],
   };
-}
-
-export function getLineEndpointPoint(
-  project: ProjectRoot,
-  view: ProjectView,
-  endpoint: ViewLineEndpoint,
-): ViewPoint | null {
-  const placement = view.placements.find((candidate) => candidate.id === endpoint.placementId);
-
-  if (!placement) {
-    return null;
-  }
-
-  const bounds = getPlacementBounds(project, placement);
-
-  switch (endpoint.side) {
-    case 'top':
-      return { xMm: bounds.xMm + bounds.widthMm * endpoint.offset, yMm: bounds.yMm };
-    case 'right':
-      return { xMm: bounds.xMm + bounds.widthMm, yMm: bounds.yMm + bounds.heightMm * endpoint.offset };
-    case 'bottom':
-      return { xMm: bounds.xMm + bounds.widthMm * endpoint.offset, yMm: bounds.yMm + bounds.heightMm };
-    case 'left':
-      return { xMm: bounds.xMm, yMm: bounds.yMm + bounds.heightMm * endpoint.offset };
-  }
 }
 
 export function isBoundsOutsidePage(bounds: ViewBounds, page: ViewSizeMm): boolean {

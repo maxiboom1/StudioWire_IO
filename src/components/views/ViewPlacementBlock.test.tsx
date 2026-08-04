@@ -24,7 +24,10 @@ function view(placement: ViewPlacement): ProjectView {
   };
 }
 
-function controller(project = structuredClone(sampleProject)): ViewEditorController {
+function controller(
+  project = structuredClone(sampleProject),
+  overrides: Partial<ViewEditorController> = {},
+): ViewEditorController {
   return {
     project,
     selectedPlacement: null,
@@ -46,6 +49,7 @@ function controller(project = structuredClone(sampleProject)): ViewEditorControl
     handlePageDragOver: vi.fn(),
     handlePageDrop: vi.fn(),
     clearDropPreview: vi.fn(),
+    ...overrides,
   } as unknown as ViewEditorController;
 }
 
@@ -89,7 +93,11 @@ describe('ViewPlacementBlock', () => {
   });
 
   it('renders attached I/O Ranges as part of a uniformly scaled standard-device placement', () => {
-    const editor = controller();
+    const handleLineAnchor = vi.fn();
+    const editor = controller(structuredClone(sampleProject), {
+      tool: 'line',
+      handleLineAnchor,
+    });
     const device = editor.project.devices.find((item) => item.id === 'device-multiviewer-1')!;
     const ports = getOrderedDevicePortColumns(editor.project, device).left;
     const placement: ViewPlacement = {
@@ -123,7 +131,41 @@ describe('ViewPlacementBlock', () => {
       />,
     );
     expect(screen.getByRole('button', { name: 'CAMERAS' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Use CAMERAS as View line anchor' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: `Use ${ports[0].label} as View line anchor` })).toBeNull();
+    expect(screen.getByRole('button', { name: `Use ${ports[3].label} as View line anchor` })).toBeTruthy();
     expect(screen.getByRole('button', { name: /placement/ }).style.transform).toBe('scale(0.7)');
+  });
+
+  it('reuses row-end squares as Line buttons only for standard devices in Line mode', () => {
+    const handleLineAnchor = vi.fn();
+    const editor = controller(structuredClone(sampleProject), { tool: 'line', handleLineAnchor });
+    const placement: ViewPlacement = {
+      id: 'placement-device',
+      sourceType: 'device',
+      sourceId: 'device-router-1',
+      xMm: 10,
+      yMm: 10,
+      scale: 1,
+      labelOverride: null,
+    };
+    render(
+      <ViewPlacementBlock
+        controller={editor}
+        placement={placement}
+        project={editor.project}
+        selected={false}
+        view={view(placement)}
+      />,
+    );
+    const anchor = screen.getByRole('button', { name: 'Use OUT-001 as View line anchor' });
+    expect(anchor.classList.contains('device-cable-picker')).toBe(true);
+    anchor.click();
+    expect(handleLineAnchor).toHaveBeenCalledWith({
+      kind: 'port',
+      placementId: placement.id,
+      portId: 'port-group-router-outputs-port-0001',
+    });
   });
 
   it('keeps a missing I/O Range selectable and removable through its warning', () => {

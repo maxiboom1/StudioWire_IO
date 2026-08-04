@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sampleProject } from './sampleProject';
 import type { ProjectView, ViewLine } from './types';
 import { makeLineRouteManual, moveLineWaypoint, removeLineWaypoint } from './viewRouteEditing';
+import { DEFAULT_VIEW_LINE_STYLE } from './viewLineStyles';
 
 const view: ProjectView = {
   id: 'view',
@@ -34,10 +35,11 @@ const view: ProjectView = {
 };
 const line: ViewLine = {
   id: 'line',
-  from: { placementId: 'a', side: 'right', offset: 0.5 },
-  to: { placementId: 'b', side: 'left', offset: 0.5 },
+  from: { kind: 'port', placementId: 'a', portId: 'port-group-router-outputs-port-0001' },
+  to: { kind: 'port', placementId: 'b', portId: 'port-group-multiviewer-inputs-port-0001' },
   label: '',
   waypoints: [],
+  ...DEFAULT_VIEW_LINE_STYLE,
 };
 
 describe('View route editing', () => {

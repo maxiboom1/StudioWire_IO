@@ -199,6 +199,8 @@ export function useViewEditorController({
     beginMovableGesture: selection.beginMovableGesture,
     beginAnnotationResize: elements.beginAnnotationResize,
     beginWaypointGesture: elements.beginWaypointGesture,
+    beginLineLabelGesture: elements.beginLabelGesture,
+    toggleLineLabelOrientation: elements.toggleLineLabelOrientation,
     addWaypoint: elements.addWaypoint,
     updateGesture,
     finishGesture,

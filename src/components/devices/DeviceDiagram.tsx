@@ -1,6 +1,6 @@
 import type { CSSProperties, PointerEventHandler } from 'react';
 import type { PortConnectionChainPart } from '../../domain/connections';
-import type { Device, ProjectRoot } from '../../domain/types';
+import type { Device, ProjectRoot, ViewLineEndpoint } from '../../domain/types';
 import { ConnectorIcon } from '../common/ConnectorIcon';
 import { CrosspointPicker } from '../connections/CrosspointPicker';
 import { buildDevicePresentationModel, type DevicePortPresentation } from './devicePresentationModel';
@@ -12,6 +12,7 @@ export function DeviceDiagram({
   variant = 'workspace',
   readOnly = false,
   onHeaderPointerDown,
+  viewLineAnchors,
 }: {
   project: ProjectRoot;
   device: Device;
@@ -19,6 +20,11 @@ export function DeviceDiagram({
   variant?: 'workspace' | 'view';
   readOnly?: boolean;
   onHeaderPointerDown?: PointerEventHandler<HTMLDivElement>;
+  viewLineAnchors?: {
+    placementId: string;
+    coveredPortIds: ReadonlySet<string>;
+    onSelect: (endpoint: ViewLineEndpoint) => void;
+  };
 }) {
   const model = buildDevicePresentationModel(project, device);
   const rowIndexes = Array.from({ length: model.rowCount }, (_, index) => index);
@@ -38,6 +44,7 @@ export function DeviceDiagram({
             readOnly={readOnly}
             row={model.rows[index]?.left}
             side="input"
+            viewLineAnchors={viewLineAnchors}
           />
         ))}
       </div>
@@ -64,6 +71,7 @@ export function DeviceDiagram({
             readOnly={readOnly}
             row={model.rows[index]?.right}
             side="output"
+            viewLineAnchors={viewLineAnchors}
           />
         ))}
       </div>
@@ -104,10 +112,16 @@ function CableLineRow({
   row,
   side,
   readOnly,
+  viewLineAnchors,
 }: {
   row: DevicePortPresentation | undefined;
   side: 'input' | 'output';
   readOnly: boolean;
+  viewLineAnchors?: {
+    placementId: string;
+    coveredPortIds: ReadonlySet<string>;
+    onSelect: (endpoint: ViewLineEndpoint) => void;
+  };
 }) {
   if (!row) {
     return <div className="device-wire-row" />;
@@ -122,6 +136,20 @@ function CableLineRow({
       className={hasInlineFrontPoint ? 'device-cable-picker-primary' : ''}
       portId={row.port.id}
       readOnly={readOnly}
+      lineAnchor={
+        viewLineAnchors && !hasInlineFrontPoint
+          ? {
+              label: row.port.label,
+              covered: viewLineAnchors.coveredPortIds.has(row.port.id),
+              onSelect: () =>
+                viewLineAnchors.onSelect({
+                  kind: 'port',
+                  placementId: viewLineAnchors.placementId,
+                  portId: row.port.id,
+                }),
+            }
+          : undefined
+      }
     />
   );
   const secondaryPoint = inlineMarker?.exitPortId ? (
@@ -130,6 +158,20 @@ function CableLineRow({
       className="device-cable-picker-secondary"
       portId={inlineMarker.exitPortId}
       readOnly={readOnly}
+      lineAnchor={
+        viewLineAnchors
+          ? {
+              label: row.port.label,
+              covered: viewLineAnchors.coveredPortIds.has(row.port.id),
+              onSelect: () =>
+                viewLineAnchors.onSelect({
+                  kind: 'port',
+                  placementId: viewLineAnchors.placementId,
+                  portId: row.port.id,
+                }),
+            }
+          : undefined
+      }
     />
   ) : null;
 
@@ -172,16 +214,35 @@ function ConnectionPoint({
   className,
   portId,
   readOnly,
+  lineAnchor,
 }: {
   ariaLabel: string;
   className: string;
   portId: string;
   readOnly: boolean;
+  lineAnchor?: { label: string; covered: boolean; onSelect: () => void };
 }) {
   const classes = `device-cable-picker${className ? ` ${className}` : ''}`;
 
+  if (lineAnchor && !lineAnchor.covered) {
+    return (
+      <button
+        aria-label={`Use ${lineAnchor.label} as View line anchor`}
+        className={`${classes} is-view-line-anchor`}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          lineAnchor.onSelect();
+        }}
+      />
+    );
+  }
+
   return readOnly ? (
-    <span aria-hidden="true" className={`${classes} is-read-only`} />
+    <span
+      aria-hidden="true"
+      className={`${classes} is-read-only${lineAnchor?.covered ? ' is-line-covered' : ''}`}
+    />
   ) : (
     <CrosspointPicker ariaLabel={ariaLabel} className={classes} portId={portId} />
   );

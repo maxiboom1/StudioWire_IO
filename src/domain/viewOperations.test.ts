@@ -10,6 +10,8 @@ import {
   createProjectView,
   createViewPlacement,
   getViewSourceImpact,
+  getViewPortRangeAttachedLineCount,
+  removeViewAnnotation,
   removeViewPlacement,
   removeViewSourceReferences,
   replaceViewCanvas,
@@ -26,6 +28,7 @@ import {
   VIEW_GRID_MM,
 } from './viewGeometry';
 import { getAutomaticLineRoute } from './viewRouting';
+import { DEFAULT_VIEW_LINE_STYLE } from './viewLineStyles';
 
 function projectFixture(): ProjectRoot {
   return structuredClone(sampleProject);
@@ -65,10 +68,19 @@ function placementFixture(
 function lineFixture(id = 'line-main'): ViewLine {
   return {
     id,
-    from: { placementId: 'placement-router', side: 'right', offset: 0.5 },
-    to: { placementId: 'placement-multiviewer', side: 'left', offset: 0.5 },
+    from: {
+      kind: 'port',
+      placementId: 'placement-router',
+      portId: 'port-group-router-outputs-port-0001',
+    },
+    to: {
+      kind: 'port',
+      placementId: 'placement-multiviewer',
+      portId: 'port-group-multiviewer-inputs-port-0001',
+    },
     label: '4 x SDI',
     waypoints: [],
+    ...DEFAULT_VIEW_LINE_STYLE,
   };
 }
 
@@ -147,7 +159,11 @@ describe('View domain operations', () => {
     expect(
       addViewLine(parallelLine.project, 'view-main', {
         ...lineFixture('line-self'),
-        to: { placementId: 'placement-router', side: 'left', offset: 0.5 },
+        to: {
+          kind: 'port',
+          placementId: 'placement-router',
+          portId: 'port-group-router-outputs-port-0002',
+        },
       }).ok,
     ).toBe(false);
 
@@ -190,6 +206,72 @@ describe('View domain operations', () => {
     ]);
     expect(removed.project.views[0].lines).toEqual([]);
     expect(removed.project.views[0].annotations).toHaveLength(1);
+    expect(engineeringSnapshot(removed.project)).toEqual(engineeringBefore);
+  });
+
+  it('supports port-to-range and range-to-range lines and cascades range removal only in the View', () => {
+    const project = projectFixture();
+    const engineeringBefore = engineeringSnapshot(project);
+    project.views = [
+      viewFixture({
+        placements: [
+          placementFixture('placement-router', 'device-router-1'),
+          placementFixture('placement-multiviewer', 'device-multiviewer-1', { xMm: 160 }),
+        ],
+        annotations: [
+          {
+            id: 'range-router',
+            kind: 'port_range',
+            placementId: 'placement-router',
+            side: 'right',
+            startPortId: 'port-group-router-outputs-port-0001',
+            endPortId: 'port-group-router-outputs-port-0002',
+            label: 'ROUTER',
+          },
+          {
+            id: 'range-multiviewer',
+            kind: 'port_range',
+            placementId: 'placement-multiviewer',
+            side: 'left',
+            startPortId: 'port-group-multiviewer-inputs-port-0001',
+            endPortId: 'port-group-multiviewer-inputs-port-0002',
+            label: 'MV',
+          },
+        ],
+      }),
+    ];
+    const portToRange = addViewLine(project, 'view-main', {
+      ...lineFixture('port-to-range'),
+      to: {
+        kind: 'port_range',
+        placementId: 'placement-multiviewer',
+        annotationId: 'range-multiviewer',
+      },
+    });
+    if (!portToRange.ok) throw new Error(portToRange.error);
+    const rangeToRange = addViewLine(portToRange.project, 'view-main', {
+      ...lineFixture('range-to-range'),
+      from: {
+        kind: 'port_range',
+        placementId: 'placement-router',
+        annotationId: 'range-router',
+      },
+      to: {
+        kind: 'port_range',
+        placementId: 'placement-multiviewer',
+        annotationId: 'range-multiviewer',
+      },
+    });
+    if (!rangeToRange.ok) throw new Error(rangeToRange.error);
+    expect(getViewPortRangeAttachedLineCount(rangeToRange.project.views[0], 'range-multiviewer')).toBe(2);
+    const removed = removeViewAnnotation(
+      rangeToRange.project,
+      'view-main',
+      'range-multiviewer',
+    );
+    if (!removed.ok) throw new Error(removed.error);
+    expect(removed.project.views[0].lines).toEqual([]);
+    expect(removed.project.views[0].annotations.map((item) => item.id)).toEqual(['range-router']);
     expect(engineeringSnapshot(removed.project)).toEqual(engineeringBefore);
   });
 

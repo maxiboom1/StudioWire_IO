@@ -6,9 +6,13 @@ import {
   moveLineWaypoint,
   removeLineWaypoint,
 } from '../../domain/viewRouteEditing';
+import { projectViewLineLabelToRoute } from '../../domain/viewLineLabelGeometry';
+import { getRenderedLinePoints } from '../../domain/viewRouting';
 import { snapViewLayoutPosition, type ViewDeviceScale } from '../../domain/viewLayoutGrid';
 import { createViewMovableSelection } from '../../domain/viewSelection';
+import { getViewPortRangeAttachedLineCount } from '../../domain/viewOperations';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
+import { useOptionalConfirmation } from '../common/ConfirmationDialog';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
 import type { ViewCanvasSelection } from './viewEditorTypes';
 
@@ -30,6 +34,11 @@ interface WaypointGesture {
   origin: ViewPoint;
 }
 
+interface LabelGesture {
+  pointerId: number;
+  line: ViewLine;
+}
+
 interface ViewElementGestureOptions {
   project: ProjectRoot;
   view: ProjectView;
@@ -44,6 +53,7 @@ interface ViewElementGestureOptions {
 }
 
 export function useViewElementGestures(options: ViewElementGestureOptions) {
+  const confirm = useOptionalConfirmation();
   const {
     project,
     view,
@@ -60,6 +70,7 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
   const [annotationPreview, setAnnotationPreview] = useState<FreeAnnotation | null>(null);
   const [waypointGesture, setWaypointGesture] = useState<WaypointGesture | null>(null);
   const [linePreview, setLinePreview] = useState<ViewLine | null>(null);
+  const [labelGesture, setLabelGesture] = useState<LabelGesture | null>(null);
 
   useEffect(() => cancel(), [view.id]);
 
@@ -76,12 +87,32 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
           removeViewLine(view.id, canvasSelection.id);
         }
       }
-      if (canvasSelection?.kind === 'portRange') removeViewAnnotation(view.id, canvasSelection.id);
-      if (canvasSelection?.kind === 'line' || canvasSelection?.kind === 'portRange') selectCanvas(null);
+      if (canvasSelection?.kind === 'portRange') {
+        void removePortRange(canvasSelection.id);
+        return;
+      }
+      if (canvasSelection?.kind === 'line') selectCanvas(null);
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [canvasSelection, removeViewAnnotation, removeViewLine, selectCanvas, updateViewLine, view]);
+  }, [canvasSelection, removeViewLine, selectCanvas, updateViewLine, view]);
+
+  async function removePortRange(annotationId: string) {
+    const attached = getViewPortRangeAttachedLineCount(view, annotationId);
+    if (
+      attached > 0 &&
+      !(await confirm({
+        title: 'Remove I/O Range?',
+        message: `This I/O Range has ${attached} attached View line(s). Removing it will also remove those lines.`,
+        confirmLabel: 'Remove',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    removeViewAnnotation(view.id, annotationId);
+    selectCanvas(null);
+  }
 
   function beginAnnotationResize(event: PointerEvent<HTMLElement>, annotation: FreeAnnotation) {
     event.preventDefault();
@@ -136,6 +167,24 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
       });
       return true;
     }
+    if (labelGesture && labelGesture.pointerId === event.pointerId) {
+      const point = {
+        xMm:
+          (event.clientX - event.currentTarget.getBoundingClientRect().left) /
+          zoom /
+          VIEW_PIXELS_PER_MM,
+        yMm:
+          (event.clientY - event.currentTarget.getBoundingClientRect().top) /
+          zoom /
+          VIEW_PIXELS_PER_MM,
+      };
+      const projected = projectViewLineLabelToRoute(
+        getRenderedLinePoints(project, view, labelGesture.line),
+        point,
+      );
+      if (projected) setLinePreview({ ...labelGesture.line, labelPosition: projected.labelPosition });
+      return true;
+    }
     return false;
   }
 
@@ -149,6 +198,12 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     if (waypointGesture && waypointGesture.pointerId === event.pointerId && linePreview) {
       updateViewLine(view.id, linePreview.id, { waypoints: linePreview.waypoints });
       setWaypointGesture(null);
+      setLinePreview(null);
+      return true;
+    }
+    if (labelGesture && labelGesture.pointerId === event.pointerId && linePreview) {
+      updateViewLine(view.id, linePreview.id, { labelPosition: linePreview.labelPosition });
+      setLabelGesture(null);
       setLinePreview(null);
       return true;
     }
@@ -183,10 +238,26 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     selectCanvas({ kind: 'line', id: line.id });
   }
 
+  function beginLabelGesture(event: PointerEvent<SVGElement>, line: ViewLine) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    selectCanvas({ kind: 'line', id: line.id });
+    setLabelGesture({ pointerId: event.pointerId, line });
+    setLinePreview(line);
+  }
+
+  function toggleLineLabelOrientation(line: ViewLine) {
+    updateViewLine(view.id, line.id, {
+      labelOrientation: line.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal',
+    });
+  }
+
   function cancel() {
     setAnnotationGesture(null);
     setAnnotationPreview(null);
     setWaypointGesture(null);
+    setLabelGesture(null);
     setLinePreview(null);
   }
 
@@ -195,6 +266,8 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     linePreview,
     beginAnnotationResize,
     beginWaypointGesture,
+    beginLabelGesture,
+    toggleLineLabelOrientation,
     addWaypoint,
     updatePointer,
     finishPointer,

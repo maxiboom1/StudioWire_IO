@@ -996,15 +996,17 @@ button.view-tree-add:focus-visible {
 }
 
 .view-line-stroke,
-.view-line-hit {
+.view-line-hit,
+.view-line-selection-halo,
+.view-line-warning-halo {
   fill: none;
   stroke-linecap: square;
   stroke-linejoin: miter;
   pointer-events: stroke;
 }
 .view-line-stroke {
-  stroke: #172b31;
-  stroke-width: 2;
+  stroke: var(--view-line-color, #172b31);
+  stroke-width: var(--view-line-width, 2);
 }
 .view-line-stroke.is-draft {
   stroke: #168c89;
@@ -1015,12 +1017,16 @@ button.view-tree-add:focus-visible {
   stroke: transparent;
   stroke-width: 12;
 }
-.view-line-layer g.is-selected .view-line-stroke {
-  stroke: #078b87;
-  stroke-width: 3;
+.view-line-selection-halo {
+  stroke: rgba(8, 127, 124, 0.55);
+  stroke-width: calc(var(--view-line-width, 2) + 5px);
+  pointer-events: none;
 }
-.view-line-layer g.is-outside-page .view-line-stroke {
+.view-line-warning-halo {
   stroke: #d8791e;
+  stroke-width: calc(var(--view-line-width, 2) + 4px);
+  stroke-dasharray: 3 3;
+  pointer-events: none;
 }
 .view-line-label text {
   fill: #172b31;
@@ -1033,6 +1039,44 @@ button.view-tree-add:focus-visible {
   font-size: 10px;
   font-weight: 750;
   pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+}
+.view-line-label:active text {
+  cursor: grabbing;
+}
+.view-line-label-rotate {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid #087f7c;
+  border-radius: 50%;
+  background: #fff;
+  color: #075e5c;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+.view-line-label-rotate:focus-visible {
+  outline: 2px solid #087f7c;
+  outline-offset: 1px;
+}
+.view-line-missing rect {
+  fill: #fff7e8;
+  stroke: #c87019;
+  stroke-dasharray: 3 2;
+}
+.view-line-missing text {
+  fill: #914b0b;
+  font-size: 8px;
+  font-weight: 750;
+}
+.view-line-missing.is-selected rect,
+.view-line-missing:focus-visible rect {
+  stroke: #087f7c;
+  stroke-width: 2;
 }
 .view-line-bend {
   fill: #fff;
@@ -1135,40 +1179,11 @@ button.view-tree-add:focus-visible {
   background: transparent;
 }
 
-.view-line-anchors,
 .view-port-range-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.view-line-anchors {
-  z-index: 24;
-}
-.view-line-anchor {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border: 1px solid #fff;
-  border-radius: 50%;
-  background: #087f7c;
-  box-shadow: 0 0 0 1px #087f7c;
-  padding: 0;
-  transform: translate(-50%, -50%);
-  pointer-events: auto;
-}
-.view-line-anchor.is-top {
-  top: 0;
-}
-.view-line-anchor.is-bottom {
-  top: 100%;
-}
-.view-line-anchor.is-left {
-  left: 0;
-}
-.view-line-anchor.is-right {
-  left: 100%;
-}
-
 .view-port-range-overlay {
   z-index: 20;
   overflow: visible;
@@ -1272,6 +1287,40 @@ button.view-tree-add:focus-visible {
 .view-port-range-missing svg {
   width: 6px;
   height: 6px;
+}
+.view-port-range-line-anchor {
+  position: absolute;
+  width: 5.28px;
+  height: 5.28px;
+  border: 0.59px solid #c5d3da;
+  border-radius: 1.76px;
+  background: #fff;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+.view-port-range-line-anchor::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.17px;
+  height: 1.17px;
+  border-radius: 50%;
+  background: #0d1114;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+.view-port-range-line-anchor.is-left {
+  left: -14px;
+}
+.view-port-range-line-anchor.is-right {
+  left: calc(100% + 14px);
+}
+.view-port-range-line-anchor:hover,
+.view-port-range-line-anchor:focus-visible {
+  border-color: #0f6b70;
+  outline: 1px solid rgba(15, 107, 112, 0.55);
+  outline-offset: 1px;
 }
 
 .view-inspector-readonly {
@@ -2909,6 +2958,62 @@ button.view-tree-add:focus-visible {
 .device-diagram-view .device-cable-picker.is-read-only {
   cursor: default;
   pointer-events: none;
+}
+.device-diagram-view .device-cable-picker.is-view-line-anchor {
+  cursor: crosshair;
+}
+.device-diagram-view .device-cable-picker.is-view-line-anchor:focus-visible {
+  border-color: #0f6b70;
+  outline: 3px solid rgba(15, 107, 112, 0.34);
+  outline-offset: 2px;
+}
+.device-diagram-view .device-cable-picker.is-line-covered {
+  opacity: 0.62;
+}
+
+.view-line-color-options,
+.view-line-width-options,
+.view-line-direction-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.view-line-color-options button {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  background: var(--line-swatch-color);
+  box-shadow: 0 0 0 1px #bdc9ce;
+}
+.view-line-color-options button.is-selected {
+  box-shadow:
+    0 0 0 1px #fff,
+    0 0 0 3px #087f7c;
+}
+.view-line-width-options button,
+.view-line-direction-options button {
+  display: inline-grid;
+  min-height: 34px;
+  place-items: center;
+  gap: 3px;
+  border: 1px solid #cbd6da;
+  border-radius: 4px;
+  background: #fff;
+  color: #30454c;
+  padding: 4px 7px;
+  font-size: 0.66rem;
+}
+.view-line-width-options button span {
+  display: block;
+  width: 38px;
+  background: #172b31;
+}
+.view-line-width-options button.is-selected,
+.view-line-direction-options button.is-selected {
+  border-color: #087f7c;
+  background: #edf8f7;
+  color: #075e5c;
 }
 
 .terminal-block-workspace {

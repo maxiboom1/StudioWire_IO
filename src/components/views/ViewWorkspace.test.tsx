@@ -292,4 +292,88 @@ describe('ViewWorkspace', () => {
     expect(canvas.placements[1].xMm - canvas.placements[0].xMm).toBe(100);
     expect(canvas.placements[1].yMm - canvas.placements[0].yMm).toBe(0);
   });
+
+  it('previews a route-constrained label drag and commits one normalized position on release', () => {
+    Object.defineProperty(window, 'PointerEvent', { configurable: true, value: MouseEvent });
+    Object.defineProperty(SVGElement.prototype, 'setPointerCapture', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    const currentView: ProjectView = {
+      ...view('view-line-label', 'Line Label View'),
+      placements: [
+        {
+          id: 'router',
+          sourceType: 'device',
+          sourceId: 'device-router-1',
+          xMm: 20,
+          yMm: 20,
+          scale: 1,
+          labelOverride: null,
+        },
+        {
+          id: 'multiviewer',
+          sourceType: 'device',
+          sourceId: 'device-multiviewer-1',
+          xMm: 180,
+          yMm: 80,
+          scale: 1,
+          labelOverride: null,
+        },
+      ],
+      lines: [
+        {
+          id: 'line-label',
+          from: {
+            kind: 'port',
+            placementId: 'router',
+            portId: 'port-group-router-outputs-port-0001',
+          },
+          to: {
+            kind: 'port',
+            placementId: 'multiviewer',
+            portId: 'port-group-multiviewer-inputs-port-0001',
+          },
+          label: '12x SDI',
+          waypoints: [],
+          color: 'black',
+          width: 'thin',
+          labelOrientation: 'horizontal',
+          labelPosition: 0.5,
+        },
+      ],
+    };
+    const updateViewLine = vi.fn();
+    contextHarness.current = {
+      project: { ...structuredClone(sampleProject), views: [currentView] },
+      addViewPlacement: vi.fn(),
+      replaceViewCanvas: vi.fn(),
+      addViewLine: vi.fn(),
+      updateViewLine,
+      removeViewLine: vi.fn(),
+      addViewAnnotation: vi.fn(),
+      updateViewAnnotation: vi.fn(),
+      removeViewAnnotation: vi.fn(),
+    };
+    const { container } = render(
+      <ViewWorkspace
+        view={currentView}
+        canvasSelection={{ kind: 'line', id: 'line-label' }}
+        onCanvasSelectionChange={vi.fn()}
+      />,
+    );
+    const label = container.querySelector('.view-line-label');
+    const page = screen.getByLabelText('Line Label View A3 portrait page');
+    if (!label) throw new Error('Expected line label.');
+    fireEvent.pointerDown(label, { pointerId: 31, clientX: 300, clientY: 150 });
+    fireEvent.pointerMove(page, { pointerId: 31, clientX: 420, clientY: 240 });
+    expect(updateViewLine).not.toHaveBeenCalled();
+    fireEvent.pointerUp(page, { pointerId: 31, clientX: 420, clientY: 240 });
+    expect(updateViewLine).toHaveBeenCalledTimes(1);
+    expect(updateViewLine).toHaveBeenCalledWith('view-line-label', 'line-label', {
+      labelPosition: expect.any(Number),
+    });
+    expect(updateViewLine.mock.calls[0][2].labelPosition).toBeGreaterThanOrEqual(0);
+    expect(updateViewLine.mock.calls[0][2].labelPosition).toBeLessThanOrEqual(1);
+  });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sampleProject } from './sampleProject';
+import { DEFAULT_VIEW_LINE_STYLE } from './viewLineStyles';
 import type { ProjectView } from './types';
 import {
   addToViewMovableSelection,
@@ -42,10 +43,19 @@ function fixture(): ProjectView {
     lines: [
       {
         id: 'line-attached',
-        from: { placementId: 'placement-router', side: 'right', offset: 0.5 },
-        to: { placementId: 'placement-multiviewer', side: 'left', offset: 0.5 },
+        from: {
+          kind: 'port',
+          placementId: 'placement-router',
+          portId: 'port-group-router-outputs-port-0001',
+        },
+        to: {
+          kind: 'port',
+          placementId: 'placement-multiviewer',
+          portId: 'port-group-multiviewer-inputs-port-0001',
+        },
         label: 'Group line',
         waypoints: [],
+        ...DEFAULT_VIEW_LINE_STYLE,
       },
     ],
     annotations: [

@@ -1,5 +1,5 @@
 import type { ProjectRoot, ProjectView, ViewLine, ViewPoint } from './types';
-import { getLineEndpointPoint } from './viewGeometry';
+import { getViewLineEndpointPoint } from './viewLineEndpoints';
 import { getRenderedLinePoints, normalizeOrthogonalPoints } from './viewRouting';
 
 export function makeLineRouteManual(project: ProjectRoot, view: ProjectView, line: ViewLine): ViewLine {
@@ -15,8 +15,8 @@ export function moveLineWaypoint(
   waypointIndex: number,
   point: ViewPoint,
 ): ViewPoint[] {
-  const start = getLineEndpointPoint(project, view, line.from);
-  const end = getLineEndpointPoint(project, view, line.to);
+  const start = getViewLineEndpointPoint(project, view, line.from);
+  const end = getViewLineEndpointPoint(project, view, line.to);
   if (!start || !end || !line.waypoints[waypointIndex]) return line.waypoints;
   const full = [start, ...line.waypoints.map((item) => ({ ...item })), end];
   const index = waypointIndex + 1;

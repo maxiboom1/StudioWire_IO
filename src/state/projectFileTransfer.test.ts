@@ -12,6 +12,7 @@ describe('project file transfer orchestration', () => {
           ok: true,
           project: structuredClone(sampleProject),
           validationIssues: [{ id: text } as any],
+          removedViewLineCount: 0,
         }),
       },
     );

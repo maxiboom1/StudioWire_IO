@@ -57,7 +57,12 @@ export type AddViewPlacementInput = Omit<ViewPlacement, 'id' | 'scale' | 'labelO
   Partial<Pick<ViewPlacement, 'scale' | 'labelOverride'>>;
 export type ViewPlacementUpdates = Partial<Pick<ViewPlacement, 'xMm' | 'yMm' | 'scale' | 'labelOverride'>>;
 export type AddViewLineInput = Omit<ViewLine, 'id'>;
-export type ViewLineUpdates = Partial<Pick<ViewLine, 'from' | 'to' | 'label' | 'waypoints'>>;
+export type ViewLineUpdates = Partial<
+  Pick<
+    ViewLine,
+    'from' | 'to' | 'label' | 'waypoints' | 'color' | 'width' | 'labelOrientation' | 'labelPosition'
+  >
+>;
 export type ViewAnnotationInput =
   | Omit<ViewTextAnnotation, 'id'>
   | Omit<ViewGroupAnnotation, 'id'>

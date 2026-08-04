@@ -1,10 +1,16 @@
-import { getLineEndpointPoint, VIEW_PLACEMENT_MAX_SCALE, VIEW_PLACEMENT_MIN_SCALE } from './viewGeometry';
+import { VIEW_PLACEMENT_MAX_SCALE, VIEW_PLACEMENT_MIN_SCALE } from './viewGeometry';
+import { getViewLineEndpointPoint, resolveViewLineEndpoint } from './viewLineEndpoints';
 import {
   getViewLayoutScale,
   isViewDeviceScale,
   remapViewLayoutPosition,
   type ViewDeviceScale,
 } from './viewLayoutGrid';
+import {
+  VIEW_LINE_COLOR_VALUES,
+  VIEW_LINE_LABEL_ORIENTATION_VALUES,
+  VIEW_LINE_WIDTH_VALUES,
+} from './types';
 import type {
   ProjectRoot,
   ProjectView,
@@ -255,7 +261,12 @@ export function updateViewLine(
   project: ProjectRoot,
   viewId: string,
   lineId: string,
-  updates: Partial<Pick<ViewLine, 'from' | 'to' | 'label' | 'waypoints'>>,
+  updates: Partial<
+    Pick<
+      ViewLine,
+      'from' | 'to' | 'label' | 'waypoints' | 'color' | 'width' | 'labelOrientation' | 'labelPosition'
+    >
+  >,
 ): ViewOperationResult {
   const view = project.views.find((candidate) => candidate.id === viewId);
   const line = view?.lines.find((candidate) => candidate.id === lineId);
@@ -349,7 +360,22 @@ export function removeViewAnnotation(
   return replaceView(project, {
     ...view,
     annotations: view.annotations.filter((annotation) => annotation.id !== annotationId),
+    lines: view.lines.filter(
+      (line) =>
+        !(
+          (line.from.kind === 'port_range' && line.from.annotationId === annotationId) ||
+          (line.to.kind === 'port_range' && line.to.annotationId === annotationId)
+        ),
+    ),
   });
+}
+
+export function getViewPortRangeAttachedLineCount(view: ProjectView, annotationId: string): number {
+  return view.lines.filter(
+    (line) =>
+      (line.from.kind === 'port_range' && line.from.annotationId === annotationId) ||
+      (line.to.kind === 'port_range' && line.to.annotationId === annotationId),
+  ).length;
 }
 
 export function replaceViewCanvas(
@@ -442,21 +468,25 @@ function validateLine(project: ProjectRoot, view: ProjectView, line: ViewLine): 
     return 'View line operation blocked: a line must connect two different placements.';
   }
 
+  if (!resolveViewLineEndpoint(project, view, line.from) || !resolveViewLineEndpoint(project, view, line.to)) {
+    return 'View line operation blocked: choose a valid standard-device I/O or I/O Range anchor.';
+  }
+
   if (
-    !isFiniteNumber(line.from.offset) ||
-    line.from.offset < 0 ||
-    line.from.offset > 1 ||
-    !isFiniteNumber(line.to.offset) ||
-    line.to.offset < 0 ||
-    line.to.offset > 1 ||
+    !VIEW_LINE_COLOR_VALUES.includes(line.color) ||
+    !VIEW_LINE_WIDTH_VALUES.includes(line.width) ||
+    !VIEW_LINE_LABEL_ORIENTATION_VALUES.includes(line.labelOrientation) ||
+    !isFiniteNumber(line.labelPosition) ||
+    line.labelPosition < 0 ||
+    line.labelPosition > 1 ||
     line.waypoints.some((point) => !isFiniteNumber(point.xMm) || !isFiniteNumber(point.yMm))
   ) {
     return 'View line operation blocked: line geometry is invalid.';
   }
 
   if (line.waypoints.length) {
-    const start = getLineEndpointPoint(project, view, line.from);
-    const end = getLineEndpointPoint(project, view, line.to);
+    const start = getViewLineEndpointPoint(project, view, line.from);
+    const end = getViewLineEndpointPoint(project, view, line.to);
     const points = start && end ? [start, ...line.waypoints, end] : [];
     if (
       points

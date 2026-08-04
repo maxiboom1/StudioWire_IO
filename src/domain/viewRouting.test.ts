@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sampleProject } from './sampleProject';
 import type { ProjectView, ViewLine } from './types';
 import { getAutomaticLineRoute, getRenderedLinePoints, normalizeOrthogonalPoints } from './viewRouting';
+import { DEFAULT_VIEW_LINE_STYLE } from './viewLineStyles';
 
 function view(): ProjectView {
   return {
@@ -29,6 +30,15 @@ function view(): ProjectView {
         scale: 0.8,
         labelOverride: null,
       },
+      {
+        id: 'c',
+        sourceType: 'device',
+        sourceId: 'device-router-1',
+        xMm: 180,
+        yMm: 180,
+        scale: 1,
+        labelOverride: null,
+      },
     ],
     lines: [],
     annotations: [],
@@ -40,16 +50,16 @@ describe('View orthogonal routing', () => {
     const current = view();
     const cases = [
       [
-        { placementId: 'a', side: 'right' as const, offset: 0.25 },
-        { placementId: 'b', side: 'left' as const, offset: 0.75 },
+        { kind: 'port' as const, placementId: 'a', portId: 'port-group-router-outputs-port-0001' },
+        {
+          kind: 'port' as const,
+          placementId: 'b',
+          portId: 'port-group-multiviewer-inputs-port-0001',
+        },
       ],
       [
-        { placementId: 'a', side: 'left' as const, offset: 0.5 },
-        { placementId: 'b', side: 'left' as const, offset: 0.5 },
-      ],
-      [
-        { placementId: 'a', side: 'bottom' as const, offset: 0.5 },
-        { placementId: 'b', side: 'left' as const, offset: 0.25 },
+        { kind: 'port' as const, placementId: 'a', portId: 'port-group-router-outputs-port-0001' },
+        { kind: 'port' as const, placementId: 'c', portId: 'port-group-router-outputs-port-0002' },
       ],
     ] as const;
     for (const [from, to] of cases) {
@@ -78,13 +88,18 @@ describe('View orthogonal routing', () => {
     const current = view();
     const line: ViewLine = {
       id: 'line',
-      from: { placementId: 'a', side: 'right', offset: 0.5 },
-      to: { placementId: 'b', side: 'left', offset: 0.5 },
+      from: { kind: 'port', placementId: 'a', portId: 'port-group-router-outputs-port-0001' },
+      to: {
+        kind: 'port',
+        placementId: 'b',
+        portId: 'port-group-multiviewer-inputs-port-0001',
+      },
       label: '',
       waypoints: [
         { xMm: 130, yMm: 50 },
         { xMm: 130, yMm: 120 },
       ],
+      ...DEFAULT_VIEW_LINE_STYLE,
     };
     expect(getRenderedLinePoints(sampleProject, current, line)).toContainEqual({ xMm: 130, yMm: 50 });
     current.placements[0].xMm += 20;

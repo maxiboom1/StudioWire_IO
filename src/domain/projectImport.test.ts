@@ -242,6 +242,7 @@ describe('importProjectValue structural safety', () => {
   it('supports the current schema, prior View stage, and retained 0.2.8.25 baseline', () => {
     expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([
       STUDIOWIRE_CURRENT_VERSION,
+      '0.2.9.04',
       '0.2.9.03',
       '0.2.9.02',
       '0.2.9.01',
@@ -345,6 +346,72 @@ describe('importProjectValue structural safety', () => {
     }
   });
 
+  it('migrates 0.2.9.04 by removing only legacy boundary-anchored View lines and reports the count', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.04';
+    project.views = [
+      {
+        id: 'view-legacy-lines',
+        name: 'Legacy lines',
+        description: '',
+        pageSize: 'a3',
+        orientation: 'portrait',
+        placements: [
+          {
+            id: 'placement-router',
+            sourceType: 'device',
+            sourceId: 'device-router-1',
+            xMm: 10,
+            yMm: 20,
+            scale: 1,
+            labelOverride: null,
+          },
+        ],
+        lines: [
+          {
+            id: 'legacy-line-a',
+            from: { placementId: 'placement-router', side: 'right', offset: 0.5 },
+            to: { placementId: 'placement-other', side: 'left', offset: 0.5 },
+            label: 'Old',
+            waypoints: [],
+          },
+          {
+            id: 'legacy-line-b',
+            from: { placementId: 'placement-router', side: 'top', offset: 0.25 },
+            to: { placementId: 'placement-other', side: 'bottom', offset: 0.75 },
+            label: 'Old 2',
+            waypoints: [],
+          },
+        ],
+        annotations: [
+          {
+            id: 'legacy-text',
+            kind: 'text',
+            xMm: 5,
+            yMm: 5,
+            widthMm: 30,
+            text: 'Keep me',
+            size: 'medium',
+          },
+        ],
+      },
+    ];
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.removedViewLineCount).toBe(2);
+      expect(result.project.views[0].lines).toEqual([]);
+      expect(result.project.views[0].placements).toEqual(before.views[0].placements);
+      expect(result.project.views[0].annotations).toEqual(before.views[0].annotations);
+      const { schemaVersion: _beforeVersion, views: _beforeViews, ...beforeEngineering } = before;
+      const { schemaVersion: _afterVersion, views: _afterViews, ...afterEngineering } = result.project;
+      expect(afterEngineering).toEqual(beforeEngineering);
+    }
+  });
+
   it('requires Views on current files and round-trips exact View layout data', () => {
     const missingViews = currentProject();
     delete missingViews.views;
@@ -387,14 +454,35 @@ describe('importProjectValue structural safety', () => {
             scale: 1,
             labelOverride: null,
           },
+          {
+            id: 'placement-multiviewer',
+            sourceType: 'device',
+            sourceId: 'device-multiviewer-1',
+            xMm: 180,
+            yMm: 80,
+            scale: 0.9,
+            labelOverride: null,
+          },
         ],
         lines: [
           {
             id: 'line-roundtrip',
-            from: { placementId: 'placement-router', side: 'right', offset: 0.25 },
-            to: { placementId: 'placement-missing', side: 'left', offset: 0.75 },
+            from: {
+              kind: 'port',
+              placementId: 'placement-router',
+              portId: 'port-group-router-outputs-port-0001',
+            },
+            to: {
+              kind: 'port',
+              placementId: 'placement-multiviewer',
+              portId: 'port-group-multiviewer-inputs-port-0001',
+            },
             label: '12 x SDI',
-            waypoints: [{ xMm: 130, yMm: 42.5 }],
+            waypoints: [],
+            color: 'blue',
+            width: 'medium',
+            labelOrientation: 'vertical',
+            labelPosition: 0.35,
           },
         ],
         annotations: [

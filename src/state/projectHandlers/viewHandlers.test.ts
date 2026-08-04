@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_VIEW_LINE_STYLE } from '../../domain/viewLineStyles';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectRoot, ProjectView } from '../../domain/types';
 import { createProjectReducer } from '../projectReducer';
@@ -96,10 +97,19 @@ describe('View project action family', () => {
         viewId: 'view-state',
         line: {
           id: 'line-state',
-          from: { placementId: 'placement-router', side: 'right', offset: 0.5 },
-          to: { placementId: 'placement-multiviewer', side: 'left', offset: 0.5 },
+          from: {
+            kind: 'port',
+            placementId: 'placement-router',
+            portId: 'port-group-router-outputs-port-0001',
+          },
+          to: {
+            kind: 'port',
+            placementId: 'placement-multiviewer',
+            portId: 'port-group-multiviewer-inputs-port-0001',
+          },
           label: '',
           waypoints: [],
+          ...DEFAULT_VIEW_LINE_STYLE,
         },
       },
     });

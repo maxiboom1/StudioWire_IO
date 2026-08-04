@@ -6,6 +6,8 @@ Finish and harden the first usable StudioWire IO View editor at `0.2.9.06`.
 
 This is a feature-development task. Read `AGENTS.md` and `docs/0.2.9.xx/README.md` completely. The repository must start at completed, passing `0.2.9.05` with the Fix 4 workspace, fixed navigator regions, live placements, transient multi-selection, visual Areas, refined device-attached I/O Ranges, port/range-anchored orthogonal Lines, fixed Line styles, and route-constrained labels.
 
+Retain the completed `.05` endpoint resolver, exact style presets, normalized label geometry, and legacy-Line removal reporting as established contracts; harden those implementations rather than replacing them.
+
 This prompt adds transactional View-canvas undo/redo, accessibility and keyboard completion, populated-format-change handling, stale-state hardening, an illustrative sample View, final documentation, and the normal feature-development gate. Do not expand into deferred editor/export features.
 
 ## Target version and final staged compatibility

@@ -50,6 +50,7 @@ describe('projectReducer core project actions', () => {
             objectId: sampleProject.project.id,
           },
         ],
+        removedViewLineCount: 0,
       },
     });
 
@@ -62,6 +63,20 @@ describe('projectReducer core project actions', () => {
     expect(imported.project.validationIssues).toHaveLength(1);
     expect(imported.statusMessage).toBe('Project imported; 1 validation issue(s) found');
     expect(imported.importError).toBeNull();
+  });
+
+  it('reports legacy View-line removal in the normal import status', () => {
+    const imported = projectReducer(createState(), {
+      type: 'IMPORT_PROJECT_JSON',
+      payload: {
+        project: structuredClone(sampleProject),
+        validationIssues: [],
+        removedViewLineCount: 3,
+      },
+    });
+    expect(imported.statusMessage).toBe(
+      'Project imported; 0 validation issue(s) found; removed 3 legacy View line(s)',
+    );
   });
 
   it('handles settings reference edits and duplicate connector safeguards', () => {

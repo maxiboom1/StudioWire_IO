@@ -1,13 +1,12 @@
 import type { ProjectView, ViewGroupAnnotation, ViewTextAnnotation } from '../../domain/types';
 import {
   getAnnotationBounds,
-  getLineEndpointPoint,
   getViewPageDimensions,
   isBoundsOutsidePage,
-  isPointOutsidePage,
 } from '../../domain/viewGeometry';
-import { getPolylineMidpoint, getRenderedLinePoints } from '../../domain/viewRouting';
+import { getViewLineEndpointPoint } from '../../domain/viewLineEndpoints';
 import type { ViewEditorController } from './useViewEditorController';
+import { ViewLineItem } from './ViewLineItem';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
 
 export function ViewDrawingLayer({
@@ -37,56 +36,15 @@ export function ViewDrawingLayer({
         {controller.lineDraft && controller.linePointer ? (
           <LineDraft view={view} controller={controller} />
         ) : null}
-        {view.lines.map((line) => {
-          const renderedLine = controller.linePreview?.id === line.id ? controller.linePreview : line;
-          const points = getRenderedLinePoints(controller.project, view, renderedLine);
-          if (points.length < 2) return null;
-          const selected =
-            controller.canvasSelection?.kind === 'line' && controller.canvasSelection.id === line.id;
-          const outside = points.some((point) => isPointOutsidePage(point, page));
-          const midpoint = getPolylineMidpoint(points);
-          const handles = renderedLine.waypoints.length ? renderedLine.waypoints : points.slice(1, -1);
-          return (
-            <g
-              key={line.id}
-              className={`${selected ? 'is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                controller.selectCanvas({ kind: 'line', id: line.id });
-              }}
-              onDoubleClick={(event) => {
-                const native = event.nativeEvent;
-                controller.addWaypoint(line, {
-                  xMm: native.offsetX / VIEW_PIXELS_PER_MM / controller.zoom,
-                  yMm: native.offsetY / VIEW_PIXELS_PER_MM / controller.zoom,
-                });
-              }}
-            >
-              <polyline className="view-line-hit" points={toSvgPoints(points)} />
-              <polyline className="view-line-stroke" points={toSvgPoints(points)} />
-              {line.label && midpoint ? (
-                <g
-                  className="view-line-label"
-                  transform={`translate(${midpoint.xMm * VIEW_PIXELS_PER_MM} ${midpoint.yMm * VIEW_PIXELS_PER_MM})`}
-                  onDoubleClick={() => focusInspector()}
-                >
-                  <text>{line.label}</text>
-                </g>
-              ) : null}
-              {selected &&
-                handles.map((point, index) => (
-                  <circle
-                    className="view-line-bend"
-                    cx={point.xMm * VIEW_PIXELS_PER_MM}
-                    cy={point.yMm * VIEW_PIXELS_PER_MM}
-                    key={index}
-                    r="4"
-                    onPointerDown={(event) => controller.beginWaypointGesture(event, line, index)}
-                  />
-                ))}
-            </g>
-          );
-        })}
+        {view.lines.map((line, index) => (
+          <ViewLineItem
+            controller={controller}
+            key={line.id}
+            line={line}
+            view={view}
+            warningIndex={index}
+          />
+        ))}
       </svg>
       <div className="view-text-layer">
         {texts.map((item) => (
@@ -184,7 +142,7 @@ function TextItem({
 }
 
 function LineDraft({ view, controller }: { view: ProjectView; controller: ViewEditorController }) {
-  const start = getLineEndpointPoint(controller.project, view, controller.lineDraft!);
+  const start = getViewLineEndpointPoint(controller.project, view, controller.lineDraft!);
   const end = controller.linePointer;
   if (!start || !end) return null;
   return (

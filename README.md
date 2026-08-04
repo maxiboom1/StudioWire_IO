@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.04 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.05 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -102,8 +102,8 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Live device, terminal-block, and rack placement with deterministic virtual-grid insertion, navigator drop, transient modifier/marquee multi-selection, atomic collective move/delete, keyboard grid movement, missing-source and out-of-page diagnostics, and focused Inspectors.
 - A View-wide 70/80/90/100% Device Size control that proportionally scales every device/TB renderer and preserves logical alignment cells; the virtual grid stays invisible behind the existing paper pattern.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
-- View drawing tools for neutral orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. These marks remain presentation-only and cannot change cables, ports, numbering, racks, or locations.
-- JSON import/export: current exports use schema version `0.2.9.04`. Version `0.2.8.25` migrates by adding `views: []`, then each staged version through `0.2.9.03` advances through identity migrations; the chain does not change engineering data.
+- View drawing tools for port/I/O Range anchored orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. Lines use fixed technical color/width presets, route-constrained labels, and presentation-only port IDs; these marks cannot change cables, ports, numbering, racks, or locations.
+- JSON import/export: current exports use schema version `0.2.9.05`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. All other View and engineering data is preserved.
 
 ## Release Gates
 
@@ -148,6 +148,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.05
+
+- Replaced generic placement-boundary line anchors with the existing white row-end squares on standard devices and matching midpoint squares on I/O Ranges; TBs, racks, missing sources, covered rows, and empty rows remain ineligible.
+- Added live port/range endpoint resolution through device movement, row reorder, I/O Range edits, and 70/80/90/100% View device sizing without creating engineering connectivity.
+- Added fixed line color and Hairline/Thin/Medium/Wide presets, black labels, independent selection/warning halos, horizontal or bottom-to-top vertical labels, route-constrained label dragging, and an on-canvas direction toggle.
+- Added selectable missing-endpoint warnings, attached-line confirmation/cascade for I/O Range removal, and relational validation for port/range anchors, styles, geometry, and label bounds.
+- Added the deliberate `0.2.9.04 -> 0.2.9.05` migration that removes and reports legacy boundary-anchored View lines while preserving every placement, annotation, and engineering record.
 
 ### v0.2.9.04
 

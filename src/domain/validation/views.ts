@@ -1,8 +1,19 @@
-import type { ProjectRoot, ProjectView, ValidationIssue, ViewAnnotation, ViewLine } from '../types';
+import {
+  VIEW_LINE_COLOR_VALUES,
+  VIEW_LINE_LABEL_ORIENTATION_VALUES,
+  VIEW_LINE_WIDTH_VALUES,
+} from '../types';
+import type {
+  ProjectRoot,
+  ProjectView,
+  ValidationIssue,
+  ViewAnnotation,
+  ViewLine,
+  ViewLineEndpoint,
+} from '../types';
 import { getOrderedDevicePortColumns } from '../devicePortLayout';
 import {
   getAnnotationBounds,
-  getLineEndpointPoint,
   getPlacementBounds,
   getViewPageDimensions,
   isBoundsOutsidePage,
@@ -10,7 +21,10 @@ import {
   VIEW_PLACEMENT_MAX_SCALE,
   VIEW_PLACEMENT_MIN_SCALE,
 } from '../viewGeometry';
+import { getViewLineEndpointPoint } from '../viewLineEndpoints';
+import { getViewLineLabelBounds, getViewLineLabelPoint } from '../viewLineLabelGeometry';
 import { getViewPortRangeBounds, viewPortRangesOverlap } from '../viewPortRanges';
+import { getRenderedLinePoints } from '../viewRouting';
 import { countBy, type ValidationIssueBuilder } from './shared';
 
 export function validateViews(project: ProjectRoot, issue: ValidationIssueBuilder): ValidationIssue[] {
@@ -122,7 +136,9 @@ function validateViewLines(
   const placementIds = new Set(view.placements.map((placement) => placement.id));
 
   for (const line of view.lines) {
-    if (!placementIds.has(line.from.placementId) || !placementIds.has(line.to.placementId)) {
+    const fromPlacementExists = placementIds.has(line.from.placementId);
+    const toPlacementExists = placementIds.has(line.to.placementId);
+    if (!fromPlacementExists || !toPlacementExists) {
       issues.push(
         issue(
           'error',
@@ -133,6 +149,9 @@ function validateViewLines(
         ),
       );
     }
+
+    if (fromPlacementExists) validateViewLineEndpoint(project, view, line, line.from, issue, issues);
+    if (toPlacementExists) validateViewLineEndpoint(project, view, line, line.to, issue, issues);
 
     if (line.from.placementId === line.to.placementId) {
       issues.push(
@@ -150,16 +169,123 @@ function validateViewLines(
       issues.push(geometryIssue(view, `Line ${line.id} has invalid geometry.`, issue));
     }
 
+
+    if (
+      !VIEW_LINE_COLOR_VALUES.includes(line.color) ||
+      !VIEW_LINE_WIDTH_VALUES.includes(line.width) ||
+      !VIEW_LINE_LABEL_ORIENTATION_VALUES.includes(line.labelOrientation) ||
+      !isFiniteNumber(line.labelPosition) ||
+      line.labelPosition < 0 ||
+      line.labelPosition > 1
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'view-line-style-invalid',
+          `View line ${line.id} has an invalid color, width, label direction, or label position.`,
+          'view',
+          view.id,
+        ),
+      );
+    }
+
     // Keep endpoint resolution exercised independently from page-bound checks.
-    getLineEndpointPoint(project, view, line.from);
-    getLineEndpointPoint(project, view, line.to);
+    getViewLineEndpointPoint(project, view, line.from);
+    getViewLineEndpointPoint(project, view, line.to);
+  }
+}
+
+function validateViewLineEndpoint(
+  project: ProjectRoot,
+  view: ProjectView,
+  line: ViewLine,
+  endpoint: ViewLineEndpoint,
+  issue: ValidationIssueBuilder,
+  issues: ValidationIssue[],
+) {
+  const placement = view.placements.find((candidate) => candidate.id === endpoint.placementId);
+  const device =
+    placement?.sourceType === 'device'
+      ? project.devices.find((candidate) => candidate.id === placement.sourceId)
+      : null;
+  if (endpoint.kind === 'port') {
+    if (!device || device.kind !== 'device') {
+      issues.push(
+        issue(
+          'error',
+          'view-line-port-invalid',
+          `View line ${line.id} port endpoint must use a standard-device placement.`,
+          'view',
+          view.id,
+        ),
+      );
+      return;
+    }
+    const port = project.ports.find((candidate) => candidate.id === endpoint.portId);
+    if (!port || port.deviceId !== device.id) {
+      issues.push(
+        issue(
+          'error',
+          'view-line-port-missing',
+          `View line ${line.id} references a missing port on its placed source device.`,
+          'view',
+          view.id,
+        ),
+      );
+      return;
+    }
+    const columns = getOrderedDevicePortColumns(project, device);
+    if (
+      ![...columns.left, ...columns.right].some((candidate) => candidate.id === endpoint.portId)
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'view-line-port-invalid',
+          `View line ${line.id} port endpoint must resolve to a rendered standard-device row.`,
+          'view',
+          view.id,
+        ),
+      );
+    }
+    return;
+  }
+  const annotation = view.annotations.find((candidate) => candidate.id === endpoint.annotationId);
+  if (!annotation) {
+    issues.push(
+      issue(
+        'error',
+        'view-line-range-missing',
+        `View line ${line.id} references a missing I/O Range.`,
+        'view',
+        view.id,
+      ),
+    );
+    return;
+  }
+  if (
+    annotation.kind !== 'port_range' ||
+    annotation.placementId !== endpoint.placementId ||
+    !device ||
+    device.kind !== 'device' ||
+    !getViewPortRangeBounds(project, view, annotation)
+  ) {
+    issues.push(
+      issue(
+        'error',
+        'view-line-range-invalid',
+        `View line ${line.id} I/O Range endpoint is invalid for its standard-device placement.`,
+        'view',
+        view.id,
+      ),
+    );
   }
 }
 
 function isLineOrthogonal(project: ProjectRoot, view: ProjectView, line: ViewLine): boolean {
   if (!line.waypoints.length) return true;
-  const start = getLineEndpointPoint(project, view, line.from);
-  const end = getLineEndpointPoint(project, view, line.to);
+  const start = getViewLineEndpointPoint(project, view, line.from);
+  const end = getViewLineEndpointPoint(project, view, line.to);
   if (!start || !end) return true;
   const points = [start, ...line.waypoints, end];
   return points
@@ -209,24 +335,21 @@ function validateViewPageBounds(
   }
 
   for (const line of view.lines) {
-    const points = [
-      getLineEndpointPoint(project, view, line.from),
-      ...line.waypoints,
-      getLineEndpointPoint(project, view, line.to),
-    ];
-
-    if (points.some((point) => point !== null && isPointOutsidePage(point, page))) {
+    const points = getRenderedLinePoints(project, view, line);
+    const labelPoint = getViewLineLabelPoint(points, line.labelPosition);
+    const labelOutside = Boolean(
+      line.label &&
+        labelPoint &&
+        isBoundsOutsidePage(getViewLineLabelBounds(labelPoint, line.label, line.labelOrientation), page),
+    );
+    if (points.some((point) => isPointOutsidePage(point, page)) || labelOutside) {
       issues.push(outsidePageIssue(view, `Line ${line.id} extends outside the View page.`, issue));
     }
   }
 }
 
 function isLineGeometryValid(line: ViewLine): boolean {
-  return (
-    isEndpointOffsetValid(line.from.offset) &&
-    isEndpointOffsetValid(line.to.offset) &&
-    line.waypoints.every((point) => isFiniteNumber(point.xMm) && isFiniteNumber(point.yMm))
-  );
+  return line.waypoints.every((point) => isFiniteNumber(point.xMm) && isFiniteNumber(point.yMm));
 }
 
 function isAnnotationGeometryValid(annotation: ViewAnnotation): boolean {
@@ -307,10 +430,6 @@ function validatePortRange(
       ),
     );
   }
-}
-
-function isEndpointOffsetValid(offset: number): boolean {
-  return isFiniteNumber(offset) && offset >= 0 && offset <= 1;
 }
 
 function geometryIssue(view: ProjectView, message: string, issue: ValidationIssueBuilder): ValidationIssue {

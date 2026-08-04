@@ -64,6 +64,37 @@ describe('projectStorage recovery', () => {
     expect(result.project?.views).toEqual([]);
   });
 
+  it('reports legacy View-line removal while keeping the active storage key', () => {
+    const storage = new MemoryStorage();
+    const legacyProject = structuredClone(sampleProject) as any;
+    legacyProject.schemaVersion = '0.2.9.04';
+    legacyProject.views = [
+      {
+        id: 'legacy-view',
+        name: 'Legacy',
+        description: '',
+        pageSize: 'a3',
+        orientation: 'portrait',
+        placements: [],
+        lines: [
+          {
+            id: 'old-line',
+            from: { placementId: 'a', side: 'right', offset: 0.5 },
+            to: { placementId: 'b', side: 'left', offset: 0.5 },
+            label: '',
+            waypoints: [],
+          },
+        ],
+        annotations: [],
+      },
+    ];
+    storage.values.set(ACTIVE_STORAGE_KEY, JSON.stringify(legacyProject));
+    const result = restoreStoredProject(storage);
+    expect(result.key).toBe(ACTIVE_STORAGE_KEY);
+    expect(result.removedViewLineCount).toBe(1);
+    expect(result.project?.views[0].lines).toEqual([]);
+  });
+
   it('handles thrown getItem and removeItem operations without crashing recovery', () => {
     const storage = new MemoryStorage({ getItem: new Error('blocked') });
 

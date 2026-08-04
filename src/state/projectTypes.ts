@@ -127,7 +127,11 @@ export type ProjectAction =
   | { type: 'LOAD_SAMPLE_PROJECT' }
   | {
       type: 'IMPORT_PROJECT_JSON';
-      payload: { project: ProjectRoot; validationIssues: ProjectRoot['validationIssues'] };
+      payload: {
+        project: ProjectRoot;
+        validationIssues: ProjectRoot['validationIssues'];
+        removedViewLineCount: number;
+      };
     }
   | { type: 'IMPORT_PROJECT_FAILED'; payload: { message: string } }
   | {
@@ -196,7 +200,19 @@ export type ProjectAction =
       payload: {
         viewId: string;
         lineId: string;
-        updates: Partial<Pick<ViewLine, 'from' | 'to' | 'label' | 'waypoints'>>;
+        updates: Partial<
+          Pick<
+            ViewLine,
+            | 'from'
+            | 'to'
+            | 'label'
+            | 'waypoints'
+            | 'color'
+            | 'width'
+            | 'labelOrientation'
+            | 'labelPosition'
+          >
+        >;
       };
     }
   | { type: 'REMOVE_VIEW_LINE'; payload: { viewId: string; lineId: string } }

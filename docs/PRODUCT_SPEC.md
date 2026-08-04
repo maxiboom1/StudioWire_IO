@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.04
+# StudioWire IO Product Spec v0.2.9.05
 
-StudioWire IO v0.2.9.04 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.05 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.04` retains neutral manual lines and device-attached I/O Ranges while adding transient multi-selection and user-facing visual Areas. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.05` anchors neutral manual lines to standard-device row squares and I/O Range midpoint squares, with fixed technical styling and route-constrained labels. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
 
 ## Application Layout
 
@@ -206,7 +206,9 @@ The `0.2.9.02-fix-3` Device Size control is View-wide and offers 70%, 80%, 90%, 
 
 The `0.2.9.02-fix-4` workspace keeps its header intentionally shallow: View name, Device Size, and viewport controls only. Page size, orientation, and Notes remain editable in the View Inspector. A selected placement exposes its View-only Display Label and coordinates plus a direct Open Device/Open Rack action; source metadata is not repeated in an accordion. Selection emphasis remains opaque while hovering.
 
-Version `0.2.9.03` adds a compact non-wrapping drawing strip. Lines use placement-boundary anchors and orthogonal automatic/manual routes; their free label is their only meaning. Text and visual Areas follow the same equal-axis virtual grid and commit pointer changes once on release. Areas persist as `kind: 'group'` backgrounds rather than containers.
+Version `0.2.9.03` added the compact drawing strip and initial boundary-anchored lines. Version `0.2.9.05` replaces those legacy endpoints with the existing white row-end squares on standard devices and matching I/O Range midpoint squares. TBs, racks, missing sources, empty rows, and generic boundaries do not expose line anchors. Port/range IDs resolve live drawing geometry only and never assert engineering connectivity.
+
+Lines retain deterministic orthogonal automatic routes and absolute manual waypoints. The Inspector provides fixed black/red/blue/green/orange/purple/gray/teal colors, Hairline/Thin/Medium/Wide strokes, and horizontal or bottom-to-top vertical labels. Label dragging projects onto the route and stores normalized Manhattan arc length. Missing endpoints remain selectable warnings; removing a referenced I/O Range confirms and removes its attached View lines atomically.
 
 Version `0.2.9.04` adds transient collective selection for placements, Text, and Areas. Plain click selects one, Ctrl/Cmd toggles, a plain full-containment marquee replaces, and Shift-marquee adds. Collective drag, grid nudge, and removal commit once for the whole selection and preserve relative positions through one shared delta. This behavior is temporary canvas state, not logical grouping, and never enters JSON or autosave.
 

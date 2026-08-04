@@ -1,11 +1,11 @@
 import type { ProjectRoot, ProjectView, ViewLine, ViewLineEndpoint, ViewPoint } from './types';
-import { getLineEndpointPoint, getPlacementBounds } from './viewGeometry';
+import { resolveViewLineEndpoint } from './viewLineEndpoints';
 
 const ROUTE_EXTENSION_MM = 5;
 
 export function getRenderedLinePoints(project: ProjectRoot, view: ProjectView, line: ViewLine): ViewPoint[] {
-  const start = getLineEndpointPoint(project, view, line.from);
-  const end = getLineEndpointPoint(project, view, line.to);
+  const start = resolveViewLineEndpoint(project, view, line.from)?.point;
+  const end = resolveViewLineEndpoint(project, view, line.to)?.point;
   if (!start || !end) return [];
   return normalizeOrthogonalPoints(
     line.waypoints.length
@@ -20,70 +20,36 @@ export function getAutomaticLineRoute(
   from: ViewLineEndpoint,
   to: ViewLineEndpoint,
 ): ViewPoint[] {
-  const start = getLineEndpointPoint(project, view, from);
-  const end = getLineEndpointPoint(project, view, to);
-  if (!start || !end) return [];
-  const fromHorizontal = from.side === 'left' || from.side === 'right';
-  const toHorizontal = to.side === 'left' || to.side === 'right';
-  if (fromHorizontal && toHorizontal && from.side !== to.side) {
-    const midX = (start.xMm + end.xMm) / 2;
-    return normalizeOrthogonalPoints([
-      start,
-      { xMm: midX, yMm: start.yMm },
-      { xMm: midX, yMm: end.yMm },
-      end,
-    ]);
-  }
-  if (!fromHorizontal && !toHorizontal && from.side !== to.side) {
-    const midY = (start.yMm + end.yMm) / 2;
-    return normalizeOrthogonalPoints([
-      start,
-      { xMm: start.xMm, yMm: midY },
-      { xMm: end.xMm, yMm: midY },
-      end,
-    ]);
-  }
-  const fromExtended = extendPoint(start, from.side, ROUTE_EXTENSION_MM);
-  const toExtended = extendPoint(end, to.side, ROUTE_EXTENSION_MM);
-  if (from.side === to.side) {
-    const placements = [from.placementId, to.placementId]
-      .map((id) => view.placements.find((placement) => placement.id === id))
-      .filter((placement): placement is NonNullable<typeof placement> => Boolean(placement));
-    const bounds = placements.map((placement) => getPlacementBounds(project, placement));
-    if (fromHorizontal) {
-      const channelX =
-        from.side === 'left'
-          ? Math.min(...bounds.map((bound) => bound.xMm)) - ROUTE_EXTENSION_MM * 2
-          : Math.max(...bounds.map((bound) => bound.xMm + bound.widthMm)) + ROUTE_EXTENSION_MM * 2;
-      return normalizeOrthogonalPoints([
-        start,
-        fromExtended,
-        { xMm: channelX, yMm: fromExtended.yMm },
-        { xMm: channelX, yMm: toExtended.yMm },
-        toExtended,
-        end,
-      ]);
-    }
-    const channelY =
-      from.side === 'top'
-        ? Math.min(...bounds.map((bound) => bound.yMm)) - ROUTE_EXTENSION_MM * 2
-        : Math.max(...bounds.map((bound) => bound.yMm + bound.heightMm)) + ROUTE_EXTENSION_MM * 2;
+  const resolvedFrom = resolveViewLineEndpoint(project, view, from);
+  const resolvedTo = resolveViewLineEndpoint(project, view, to);
+  if (!resolvedFrom || !resolvedTo) return [];
+  const start = resolvedFrom.point;
+  const end = resolvedTo.point;
+  const fromExtended = extendPoint(start, resolvedFrom.normal.xMm, ROUTE_EXTENSION_MM);
+  const toExtended = extendPoint(end, resolvedTo.normal.xMm, ROUTE_EXTENSION_MM);
+  if (resolvedFrom.side === resolvedTo.side) {
+    const channelX =
+      resolvedFrom.side === 'left'
+        ? Math.min(fromExtended.xMm, toExtended.xMm) - ROUTE_EXTENSION_MM
+        : Math.max(fromExtended.xMm, toExtended.xMm) + ROUTE_EXTENSION_MM;
     return normalizeOrthogonalPoints([
       start,
       fromExtended,
-      { xMm: fromExtended.xMm, yMm: channelY },
-      { xMm: toExtended.xMm, yMm: channelY },
+      { xMm: channelX, yMm: fromExtended.yMm },
+      { xMm: channelX, yMm: toExtended.yMm },
       toExtended,
       end,
     ]);
   }
-  const dx = Math.abs(toExtended.xMm - fromExtended.xMm);
-  const dy = Math.abs(toExtended.yMm - fromExtended.yMm);
-  const bend =
-    dx >= dy
-      ? { xMm: toExtended.xMm, yMm: fromExtended.yMm }
-      : { xMm: fromExtended.xMm, yMm: toExtended.yMm };
-  return normalizeOrthogonalPoints([start, fromExtended, bend, toExtended, end]);
+  const midX = (fromExtended.xMm + toExtended.xMm) / 2;
+  return normalizeOrthogonalPoints([
+    start,
+    fromExtended,
+    { xMm: midX, yMm: fromExtended.yMm },
+    { xMm: midX, yMm: toExtended.yMm },
+    toExtended,
+    end,
+  ]);
 }
 
 export function normalizeOrthogonalPoints(points: ViewPoint[]): ViewPoint[] {
@@ -124,15 +90,6 @@ export function getPolylineMidpoint(points: ViewPoint[]): ViewPoint | null {
   return points[points.length - 1];
 }
 
-function extendPoint(point: ViewPoint, side: ViewLineEndpoint['side'], distance: number): ViewPoint {
-  switch (side) {
-    case 'left':
-      return { xMm: point.xMm - distance, yMm: point.yMm };
-    case 'right':
-      return { xMm: point.xMm + distance, yMm: point.yMm };
-    case 'top':
-      return { xMm: point.xMm, yMm: point.yMm - distance };
-    case 'bottom':
-      return { xMm: point.xMm, yMm: point.yMm + distance };
-  }
+function extendPoint(point: ViewPoint, xDirection: -1 | 1, distance: number): ViewPoint {
+  return { xMm: point.xMm + xDirection * distance, yMm: point.yMm };
 }

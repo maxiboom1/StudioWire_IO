@@ -2,6 +2,7 @@ import type { CSSProperties, PointerEvent } from 'react';
 import { AlertTriangle, Grip } from 'lucide-react';
 import type { ProjectRoot, ProjectView, ViewPlacement } from '../../domain/types';
 import { DEVICE_DIAGRAM_SOURCE_WIDTH_PX, getPlacementNaturalSize } from '../../domain/viewGeometry';
+import { getCoveredViewPortIds } from '../../domain/viewLineEndpoints';
 import { isPlacementOutsidePage } from '../../domain/viewPlacement';
 import type { ViewEditorController } from './useViewEditorController';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
@@ -39,6 +40,9 @@ export function ViewPlacementBlock({
     yMm: placement.yMm,
     scale: placement.scale,
   });
+  const coveredPortIds = isTechnicalDevice
+    ? getCoveredViewPortIds(project, view, placement.id)
+    : new Set<string>();
   const style = {
     left: placement.xMm * VIEW_PIXELS_PER_MM,
     top: placement.yMm * VIEW_PIXELS_PER_MM,
@@ -104,6 +108,15 @@ export function ViewPlacementBlock({
           device={source}
           displayName={label}
           onHeaderPointerDown={isTechnicalDevice ? begin : undefined}
+          viewLineAnchors={
+            isTechnicalDevice && controller.tool === 'line'
+              ? {
+                  placementId: placement.id,
+                  coveredPortIds,
+                  onSelect: controller.handleLineAnchor,
+                }
+              : undefined
+          }
         />
       ) : placement.sourceType === 'rack' && 'heightRu' in source ? (
         <ViewRackBlockBody project={project} rack={source} />
@@ -111,34 +124,7 @@ export function ViewPlacementBlock({
       {isTechnicalDevice ? (
         <ViewPortRangeOverlay controller={controller} placement={placement} view={view} />
       ) : null}
-      {controller.tool === 'line' && source ? (
-        <LineAnchors controller={controller} placementId={placement.id} />
-      ) : null}
     </article>
-  );
-}
-
-function LineAnchors({ controller, placementId }: { controller: ViewEditorController; placementId: string }) {
-  return (
-    <div className="view-line-anchors">
-      {(['top', 'right', 'bottom', 'left'] as const).flatMap((side) =>
-        [0.25, 0.5, 0.75].map((offset) => (
-          <button
-            aria-label={`Line anchor ${side} ${offset}`}
-            className={`view-line-anchor is-${side}`}
-            key={`${side}-${offset}`}
-            style={
-              side === 'top' || side === 'bottom' ? { left: `${offset * 100}%` } : { top: `${offset * 100}%` }
-            }
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              controller.handleLineAnchor({ placementId, side, offset });
-            }}
-          />
-        )),
-      )}
-    </div>
   );
 }
 

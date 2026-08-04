@@ -1,6 +1,14 @@
 import { ExternalLink, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  VIEW_LINE_COLOR_VALUES,
+  VIEW_LINE_LABEL_ORIENTATION_VALUES,
+  VIEW_LINE_WIDTH_VALUES,
+} from '../../domain/types';
 import type { ProjectView, ViewAnnotation, ViewSourceType } from '../../domain/types';
+import { getViewPortRangeAttachedLineCount } from '../../domain/viewOperations';
+import { VIEW_LINE_COLOR_MAP, VIEW_LINE_WIDTH_MAP } from '../../domain/viewLineStyles';
 import { useProject } from '../../state/ProjectContext';
+import { useConfirmation } from '../common/ConfirmationDialog';
 import { InspectorShell } from '../common/InspectorShell';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -20,11 +28,10 @@ export function ViewElementInspector({
 }) {
   const { project, updateViewLine, removeViewLine, updateViewAnnotation, removeViewAnnotation } =
     useProject();
+  const confirm = useConfirmation();
   if (selection.kind === 'line') {
     const line = view.lines.find((candidate) => candidate.id === selection.id);
     if (!line) return null;
-    const source = placementLabel(view, line.from.placementId, project);
-    const destination = placementLabel(view, line.to.placementId, project);
     return (
       <InspectorShell
         title="Line Inspector"
@@ -37,7 +44,7 @@ export function ViewElementInspector({
             }}
           >
             <Trash2 className="h-4 w-4" />
-            Delete line
+            Remove
           </Button>
         }
       >
@@ -50,9 +57,53 @@ export function ViewElementInspector({
               onBlur={(event) => updateViewLine(view.id, line.id, { label: event.target.value.trim() })}
             />
           </Field>
-          <ReadOnly label="From" value={source} />
-          <ReadOnly label="To" value={destination} />
-          <ReadOnly label="Route" value={line.waypoints.length ? 'Manual' : 'Automatic'} />
+          <Field id="view-line-color" label="Color">
+            <div className="view-line-color-options" id="view-line-color">
+              {VIEW_LINE_COLOR_VALUES.map((color) => (
+                <button
+                  aria-label={`${color} line color`}
+                  aria-pressed={line.color === color}
+                  className={line.color === color ? 'is-selected' : ''}
+                  key={color}
+                  title={titleCase(color)}
+                  type="button"
+                  style={{ '--line-swatch-color': VIEW_LINE_COLOR_MAP[color] } as React.CSSProperties}
+                  onClick={() => updateViewLine(view.id, line.id, { color })}
+                />
+              ))}
+            </div>
+          </Field>
+          <Field id="view-line-width" label="Width">
+            <div className="view-line-width-options" id="view-line-width">
+              {VIEW_LINE_WIDTH_VALUES.map((width) => (
+                <button
+                  aria-pressed={line.width === width}
+                  className={line.width === width ? 'is-selected' : ''}
+                  key={width}
+                  type="button"
+                  onClick={() => updateViewLine(view.id, line.id, { width })}
+                >
+                  <span style={{ height: VIEW_LINE_WIDTH_MAP[width] }} />
+                  {titleCase(width)}
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field id="view-line-direction" label="Label Direction">
+            <div className="view-line-direction-options" id="view-line-direction">
+              {VIEW_LINE_LABEL_ORIENTATION_VALUES.map((labelOrientation) => (
+                <button
+                  aria-pressed={line.labelOrientation === labelOrientation}
+                  className={line.labelOrientation === labelOrientation ? 'is-selected' : ''}
+                  key={labelOrientation}
+                  type="button"
+                  onClick={() => updateViewLine(view.id, line.id, { labelOrientation })}
+                >
+                  {titleCase(labelOrientation)}
+                </button>
+              ))}
+            </div>
+          </Field>
           <Button
             disabled={!line.waypoints.length}
             variant="outline"
@@ -91,7 +142,21 @@ export function ViewElementInspector({
       actions={
         <Button
           variant="destructive"
-          onClick={() => {
+          onClick={async () => {
+            if (annotation.kind === 'port_range') {
+              const attached = getViewPortRangeAttachedLineCount(view, annotation.id);
+              if (
+                attached > 0 &&
+                !(await confirm({
+                  title: 'Remove I/O Range?',
+                  message: `This I/O Range has ${attached} attached View line(s). Removing it will also remove those lines.`,
+                  confirmLabel: 'Remove',
+                  tone: 'danger',
+                }))
+              ) {
+                return;
+              }
+            }
             removeViewAnnotation(view.id, annotation.id);
             onRemoved();
           }}
@@ -236,16 +301,6 @@ function AnnotationFields({
   );
 }
 
-function placementLabel(view: ProjectView, id: string, project: ReturnType<typeof useProject>['project']) {
-  const placement = view.placements.find((candidate) => candidate.id === id);
-  if (!placement) return 'Missing placement';
-  const source =
-    placement.sourceType === 'device'
-      ? project.devices.find((item) => item.id === placement.sourceId)
-      : project.racks.find((item) => item.id === placement.sourceId);
-  return placement.labelOverride ?? source?.name ?? 'Missing source';
-}
-
 function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
     <div className="form-field">
@@ -261,6 +316,10 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function titleCase(value: string): string {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 function NumberField({
   id,

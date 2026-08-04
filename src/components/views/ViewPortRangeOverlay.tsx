@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import type { ProjectView, ViewPlacement, ViewPortRangeAnnotation } from '../../domain/types';
 import {
@@ -54,23 +55,44 @@ export function ViewPortRangeOverlay({
             </button>
           );
         return (
-          <button
-            key={range.id}
-            type="button"
-            className={`view-port-range is-${range.side}${selected ? ' is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
-            style={{
-              top: header + resolved.startIndex * rowHeight,
-              height: (resolved.endIndex - resolved.startIndex + 1) * rowHeight,
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              controller.selectCanvas({ kind: 'portRange', id: range.id });
-            }}
-            onDoubleClick={() => document.getElementById('view-element-label')?.focus()}
-          >
-            <span className="view-port-range-brace" />
-            <span className="view-port-range-label">{range.label}</span>
-          </button>
+          <Fragment key={range.id}>
+            <button
+              type="button"
+              className={`view-port-range is-${range.side}${selected ? ' is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
+              style={{
+                top: header + resolved.startIndex * rowHeight,
+                height: (resolved.endIndex - resolved.startIndex + 1) * rowHeight,
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                controller.selectCanvas({ kind: 'portRange', id: range.id });
+              }}
+              onDoubleClick={() => document.getElementById('view-element-label')?.focus()}
+            >
+              <span className="view-port-range-brace" />
+              <span className="view-port-range-label">{range.label}</span>
+            </button>
+            {controller.tool === 'line' ? (
+              <button
+                aria-label={`Use ${range.label || 'I/O Range'} as View line anchor`}
+                className={`view-port-range-line-anchor is-${range.side}`}
+                style={{
+                  top:
+                    header +
+                    ((resolved.startIndex + resolved.endIndex + 1) / 2) * rowHeight,
+                }}
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  controller.handleLineAnchor({
+                    kind: 'port_range',
+                    placementId: placement.id,
+                    annotationId: range.id,
+                  });
+                }}
+              />
+            ) : null}
+          </Fragment>
         );
       })}
       {controller.tool === 'portRange'

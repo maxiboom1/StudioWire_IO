@@ -4,6 +4,7 @@ import type { ProjectRoot, ProjectView } from '../types';
 import { validateProject } from '../validators';
 import { sampleProject } from '../sampleProject';
 import { getOrderedDevicePortColumns } from '../devicePortLayout';
+import { DEFAULT_VIEW_LINE_STYLE } from '../viewLineStyles';
 
 function emptyProject(): ProjectRoot {
   return createEmptyProject({ id: 'project-view-validation', name: 'View Validation' });
@@ -76,17 +77,19 @@ describe('View relational validation', () => {
         lines: [
           {
             id: 'line-dangling',
-            from: { placementId: 'placement-missing-device', side: 'right', offset: 0.5 },
-            to: { placementId: 'placement-gone', side: 'left', offset: 0.5 },
+            from: { kind: 'port', placementId: 'placement-missing-device', portId: 'port-missing' },
+            to: { kind: 'port', placementId: 'placement-gone', portId: 'port-gone' },
             label: '',
             waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
           },
           {
             id: 'line-self',
-            from: { placementId: 'placement-missing-rack', side: 'right', offset: 0.5 },
-            to: { placementId: 'placement-missing-rack', side: 'left', offset: 0.5 },
+            from: { kind: 'port', placementId: 'placement-missing-rack', portId: 'port-a' },
+            to: { kind: 'port', placementId: 'placement-missing-rack', portId: 'port-b' },
             label: '',
             waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
           },
         ],
       }),
@@ -187,10 +190,11 @@ describe('View relational validation', () => {
         lines: [
           {
             id: project.project.id,
-            from: { placementId: project.project.id, side: 'right', offset: 0.5 },
-            to: { placementId: 'placement-b', side: 'left', offset: 0.5 },
+            from: { kind: 'port', placementId: project.project.id, portId: 'port-a' },
+            to: { kind: 'port', placementId: 'placement-b', portId: 'port-b' },
             label: '',
             waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
           },
         ],
         annotations: [
@@ -276,5 +280,120 @@ describe('View relational validation', () => {
     expect(codes).toContain('view-port-range-port-missing');
     expect(codes).toContain('view-port-range-placement-missing');
     expect(codes).toContain('view-item-outside-page');
+  });
+
+  it('validates port/range line references and fixed style values without rejecting loadable data', () => {
+    const project = structuredClone(sampleProject);
+    project.views = [
+      viewFixture({
+        placements: [
+          {
+            id: 'router',
+            sourceType: 'device',
+            sourceId: 'device-router-1',
+            xMm: 20,
+            yMm: 20,
+            scale: 1,
+            labelOverride: null,
+          },
+          {
+            id: 'multiviewer',
+            sourceType: 'device',
+            sourceId: 'device-multiviewer-1',
+            xMm: 150,
+            yMm: 20,
+            scale: 1,
+            labelOverride: null,
+          },
+          {
+            id: 'rack',
+            sourceType: 'rack',
+            sourceId: 'rack-mcr-a',
+            xMm: 280,
+            yMm: 20,
+            scale: 1,
+            labelOverride: null,
+          },
+        ],
+        annotations: [
+          {
+            id: 'router-range',
+            kind: 'port_range',
+            placementId: 'router',
+            side: 'right',
+            startPortId: 'port-group-router-outputs-port-0001',
+            endPortId: 'port-group-router-outputs-port-0002',
+            label: '',
+          },
+        ],
+        lines: [
+          {
+            id: 'port-missing',
+            from: { kind: 'port', placementId: 'router', portId: 'missing-port' },
+            to: {
+              kind: 'port',
+              placementId: 'multiviewer',
+              portId: 'port-group-multiviewer-inputs-port-0001',
+            },
+            label: '',
+            waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
+          },
+          {
+            id: 'port-invalid',
+            from: { kind: 'port', placementId: 'rack', portId: 'port-group-router-outputs-port-0001' },
+            to: {
+              kind: 'port',
+              placementId: 'multiviewer',
+              portId: 'port-group-multiviewer-inputs-port-0001',
+            },
+            label: '',
+            waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
+          },
+          {
+            id: 'range-missing-line',
+            from: { kind: 'port_range', placementId: 'router', annotationId: 'gone' },
+            to: {
+              kind: 'port',
+              placementId: 'multiviewer',
+              portId: 'port-group-multiviewer-inputs-port-0001',
+            },
+            label: '',
+            waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
+          },
+          {
+            id: 'range-invalid-line',
+            from: { kind: 'port_range', placementId: 'multiviewer', annotationId: 'router-range' },
+            to: { kind: 'port', placementId: 'router', portId: 'port-group-router-outputs-port-0001' },
+            label: '',
+            waypoints: [],
+            ...DEFAULT_VIEW_LINE_STYLE,
+          },
+          {
+            id: 'style-invalid',
+            from: { kind: 'port', placementId: 'router', portId: 'port-group-router-outputs-port-0001' },
+            to: {
+              kind: 'port',
+              placementId: 'multiviewer',
+              portId: 'port-group-multiviewer-inputs-port-0001',
+            },
+            label: 'Outside',
+            waypoints: [],
+            color: 'cyan' as never,
+            width: 'thin',
+            labelOrientation: 'horizontal',
+            labelPosition: 2,
+          },
+        ],
+      }),
+    ];
+    const codes = validateProject(project).map((issue) => issue.code);
+    expect(codes).toContain('view-line-port-missing');
+    expect(codes).toContain('view-line-port-invalid');
+    expect(codes).toContain('view-line-range-missing');
+    expect(codes).toContain('view-line-range-invalid');
+    expect(codes).toContain('view-line-style-invalid');
   });
 });

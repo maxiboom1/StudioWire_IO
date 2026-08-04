@@ -1,5 +1,5 @@
 import type { CSSProperties, PointerEventHandler } from 'react';
-import type { Device, ProjectRoot } from '../../domain/types';
+import type { Device, ProjectRoot, ViewLineEndpoint } from '../../domain/types';
 import { ConnectorIcon } from '../common/ConnectorIcon';
 import { DeviceDiagram } from '../devices/DeviceDiagram';
 import {
@@ -12,11 +12,17 @@ export function ViewDeviceBlockBody({
   device,
   displayName,
   onHeaderPointerDown,
+  viewLineAnchors,
 }: {
   project: ProjectRoot;
   device: Device;
   displayName: string;
   onHeaderPointerDown?: PointerEventHandler<HTMLDivElement>;
+  viewLineAnchors?: {
+    placementId: string;
+    coveredPortIds: ReadonlySet<string>;
+    onSelect: (endpoint: ViewLineEndpoint) => void;
+  };
 }) {
   if (device.kind === 'terminal_block') {
     const model = buildTerminalBlockPresentationModel(project, device);
@@ -41,6 +47,7 @@ export function ViewDeviceBlockBody({
       project={project}
       readOnly
       variant="view"
+      viewLineAnchors={viewLineAnchors}
     />
   );
 }

@@ -6,7 +6,7 @@ This folder is the implementation sequence for the first StudioWire IO multi-obj
 
 Creating or revising these prompt documents does not change the application version. The product implementation started at `0.2.9.00` from the `0.2.8.25` baseline.
 
-Implementation status: prompts 01 through 05 are complete through `0.2.9.04`, including the fixed navigator regions, Area terminology, transient collective selection, and refined device-attached I/O Ranges. Prompts 06 and 07 remain intentionally unimplemented.
+Implementation status: prompts 01 through 06 are complete through `0.2.9.05`, including port/I/O Range anchored lines, fixed technical styles, route-constrained labels, and the reported legacy-line migration. Prompt 07 remains intentionally unimplemented.
 
 The feature is a local, frontend-only presentation layer over project data:
 

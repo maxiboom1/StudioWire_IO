@@ -101,6 +101,7 @@ describe('projectReducer action characterization', () => {
               objectId: sampleProject.project.id,
             },
           ],
+          removedViewLineCount: 0,
         },
       },
       expectedStatus: 'Project imported; 1 validation issue(s) found',
