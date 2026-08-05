@@ -642,7 +642,7 @@ describe('projectReducer action characterization', () => {
   it('characterizes hard delete side effects and reusable reserved-number behavior', () => {
     const result = reduce(createState(), { type: 'DELETE_DEVICE', payload: { id: 'device-router-1' } });
 
-    expect(result.statusMessage).toBe('Device deleted; cable numbers released');
+    expect(result.statusMessage).toBe('Device deleted; cable numbers released; removed from 1 View(s)');
     expect(result.project.devices.some((device) => device.id === 'device-router-1')).toBe(false);
     expect(result.project.portGroups.some((group) => group.deviceId === 'device-router-1')).toBe(false);
     expect(result.project.ports.some((port) => port.portGroupId === 'port-group-router-outputs')).toBe(false);

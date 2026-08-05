@@ -43,6 +43,7 @@ export function ViewPortRangeOverlay({
           return (
             <button
               key={range.id}
+              aria-pressed={selected}
               className={`view-port-range-missing is-${range.side}${selected ? ' is-selected' : ''}`}
               type="button"
               onClick={(event) => {
@@ -57,6 +58,7 @@ export function ViewPortRangeOverlay({
         return (
           <Fragment key={range.id}>
             <button
+              aria-pressed={selected}
               type="button"
               className={`view-port-range is-${range.side}${selected ? ' is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
               style={{
@@ -76,6 +78,7 @@ export function ViewPortRangeOverlay({
               <button
                 aria-label={`Use ${range.label || 'I/O Range'} as View line anchor`}
                 className={`view-port-range-line-anchor is-${range.side}`}
+                title={`Use ${range.label || 'I/O Range'} as View line anchor`}
                 style={{
                   top:
                     header +

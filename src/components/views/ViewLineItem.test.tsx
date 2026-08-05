@@ -89,7 +89,7 @@ describe('ViewLineItem', () => {
     expect(group.style.getPropertyValue('--view-line-width')).toBe('5px');
     expect(container.querySelector('.view-line-selection-halo')).toBeTruthy();
     expect(container.querySelector('.view-line-label.is-vertical')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle line label direction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change line label to horizontal' }));
     expect(editor.toggleLineLabelOrientation).toHaveBeenCalledWith(currentLine);
   });
 

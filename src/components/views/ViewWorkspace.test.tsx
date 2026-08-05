@@ -376,4 +376,43 @@ describe('ViewWorkspace', () => {
     expect(updateViewLine.mock.calls[0][2].labelPosition).toBeGreaterThanOrEqual(0);
     expect(updateViewLine.mock.calls[0][2].labelPosition).toBeLessThanOrEqual(1);
   });
+
+  it('creates Text and Area from the keyboard on focused paper and exposes history controls', async () => {
+    const user = userEvent.setup();
+    const currentView = view('view-keyboard-create', 'Keyboard Create');
+    const addViewAnnotation = vi
+      .fn()
+      .mockReturnValueOnce('text-keyboard')
+      .mockReturnValueOnce('area-keyboard');
+    contextHarness.current = {
+      project: { ...structuredClone(sampleProject), views: [currentView] },
+      addViewPlacement: vi.fn(),
+      replaceViewCanvas: vi.fn(),
+      addViewLine: vi.fn(),
+      updateViewLine: vi.fn(),
+      removeViewLine: vi.fn(),
+      addViewAnnotation,
+      updateViewAnnotation: vi.fn(),
+      removeViewAnnotation: vi.fn(),
+    };
+    render(<ViewWorkspace view={currentView} />);
+    const page = screen.getByLabelText('Keyboard Create A3 portrait page');
+
+    expect(screen.getByRole('button', { name: 'Undo View edit' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Redo View edit' }).hasAttribute('disabled')).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Text' }));
+    fireEvent.keyDown(page, { key: 'Enter' });
+    expect(addViewAnnotation).toHaveBeenCalledWith(
+      currentView.id,
+      expect.objectContaining({ kind: 'text', text: 'Text', widthMm: 40 }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Area' }));
+    fireEvent.keyDown(page, { key: 'Enter' });
+    expect(addViewAnnotation).toHaveBeenCalledWith(
+      currentView.id,
+      expect.objectContaining({ kind: 'group', widthMm: 60, heightMm: 40, label: 'Area' }),
+    );
+  });
 });

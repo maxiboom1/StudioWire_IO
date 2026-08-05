@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type PointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import type { ProjectRoot, ProjectView, ViewPoint } from '../../domain/types';
 import type { ViewDeviceScale } from '../../domain/viewLayoutGrid';
 import {
@@ -38,6 +38,7 @@ interface MoveGesture {
 
 interface MarqueeGesture {
   kind: 'marquee';
+  viewId: string;
   pointerId: number;
   captureTarget: HTMLElement;
   start: ViewPoint;
@@ -71,6 +72,8 @@ export function useViewSelectionGestures({
 }) {
   const [gesture, setGesture] = useState<SelectionGesture | null>(null);
   const [previewView, setPreviewView] = useState<ProjectView | null>(null);
+  const gestureRef = useRef<SelectionGesture | null>(null);
+  gestureRef.current = gesture;
   const movableSelection = canvasSelection?.kind === 'movable' ? canvasSelection.value : null;
 
   const commitView = useCallback(
@@ -90,9 +93,15 @@ export function useViewSelectionGestures({
   }, [commitView, movableSelection, selectCanvas, view]);
 
   useEffect(() => {
-    setGesture(null);
-    setPreviewView(null);
+    cancel();
   }, [view.id]);
+  useEffect(
+    () => () => {
+      const current = gestureRef.current;
+      if (current) releaseCapture(current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!movableSelection) return;
@@ -116,20 +125,6 @@ export function useViewSelectionGestures({
     commitView,
     removeSelected,
   });
-
-  useEffect(() => {
-    if (!gesture) return;
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      releaseCapture(gesture!);
-      selectCanvas(gesture!.selectionBefore);
-      setGesture(null);
-      setPreviewView(null);
-    }
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [gesture, selectCanvas]);
 
   const marqueeBounds = useMemo(
     () => (gesture?.kind === 'marquee' ? normalizeViewMarquee(gesture.start, gesture.current) : null),
@@ -181,6 +176,7 @@ export function useViewSelectionGestures({
     const start = pagePoint(event, zoom);
     setGesture({
       kind: 'marquee',
+      viewId: view.id,
       pointerId: event.pointerId,
       captureTarget: event.currentTarget,
       start,
@@ -218,6 +214,12 @@ export function useViewSelectionGestures({
   function finishPointer(event: PointerEvent<HTMLElement>) {
     if (!gesture || gesture.pointerId !== event.pointerId) return false;
     releaseCapture(gesture);
+    const initiatingViewId = gesture.kind === 'move' ? gesture.startView.id : gesture.viewId;
+    if (initiatingViewId !== view.id) {
+      setGesture(null);
+      setPreviewView(null);
+      return true;
+    }
     if (gesture.kind === 'move') {
       if (gesture.delta.xMm || gesture.delta.yMm) {
         commitView(translateViewMovableElements(gesture.startView, gesture.selection.items, gesture.delta));
@@ -240,9 +242,12 @@ export function useViewSelectionGestures({
   }
 
   function cancel() {
+    const active = Boolean(gesture);
     if (gesture) releaseCapture(gesture);
+    if (gesture) selectCanvas(gesture.selectionBefore);
     setGesture(null);
     setPreviewView(null);
+    return active;
   }
 
   return {

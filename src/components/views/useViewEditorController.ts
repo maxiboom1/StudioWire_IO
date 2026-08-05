@@ -9,6 +9,7 @@ import {
 } from '../../domain/viewLayoutGrid';
 import { getPlacementPage } from '../../domain/viewPlacement';
 import { useProject } from '../../state/ProjectContext';
+import { useViewCanvasCommands, useViewCanvasHistory } from './ViewCanvasHistoryContext';
 import { useViewCreationTools } from './useViewCreationTools';
 import { useViewDrop } from './useViewDrop';
 import { useViewElementGestures } from './useViewElementGestures';
@@ -26,9 +27,10 @@ export function useViewEditorController({
   canvasSelection: ViewCanvasSelection | null;
   onCanvasSelectionChange: (selection: ViewCanvasSelection | null) => void;
 }) {
-  const commands = useProject();
+  const projectContext = useProject();
+  const commands = useViewCanvasCommands();
+  const history = useViewCanvasHistory();
   const {
-    project,
     addViewPlacement,
     replaceViewCanvas,
     addViewLine,
@@ -38,6 +40,7 @@ export function useViewEditorController({
     updateViewAnnotation,
     removeViewAnnotation,
   } = commands;
+  const { project } = projectContext;
   const [notice, setNotice] = useState('');
   const [focusRequest, setFocusRequest] = useState(0);
   const selectedPlacementId =
@@ -123,13 +126,20 @@ export function useViewEditorController({
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      creation.cancel();
-      elements.cancel();
+      if (elements.cancel() || selection.cancel() || creation.cancel()) {
+        event.preventDefault();
+        setNotice('');
+        return;
+      }
+      if (canvasSelection) {
+        event.preventDefault();
+        selectCanvas(null);
+      }
       setNotice('');
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [creation, elements]);
+  }, [canvasSelection, creation, elements, selectCanvas, selection]);
 
   function updateGesture(event: PointerEvent<HTMLElement>) {
     if (creation.updatePointer(event)) return;
@@ -167,6 +177,13 @@ export function useViewEditorController({
     });
   }
 
+  function toggleLineLabelOrientation(line: ProjectView['lines'][number]) {
+    elements.toggleLineLabelOrientation(line);
+    setNotice(
+      `Line label changed to ${line.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal'}.`,
+    );
+  }
+
   return {
     project,
     zoom,
@@ -181,7 +198,8 @@ export function useViewEditorController({
     linePreview: elements.linePreview,
     linePointer: creation.linePointer,
     dropPreview: drop.dropPreview,
-    notice,
+    notice: notice || history.notice,
+    history,
     deviceScaleState,
     layoutScale,
     focusRequest,
@@ -200,12 +218,13 @@ export function useViewEditorController({
     beginAnnotationResize: elements.beginAnnotationResize,
     beginWaypointGesture: elements.beginWaypointGesture,
     beginLineLabelGesture: elements.beginLabelGesture,
-    toggleLineLabelOrientation: elements.toggleLineLabelOrientation,
+    toggleLineLabelOrientation,
     addWaypoint: elements.addWaypoint,
     updateGesture,
     finishGesture,
     cancelGesture,
     handlePagePointerDown,
+    handlePageKeyDown: creation.handlePageKeyDown,
     handleLineAnchor: creation.handleLineAnchor,
     handlePortRangeRow: creation.handlePortRangeRow,
     handlePageDragOver: drop.handlePageDragOver,

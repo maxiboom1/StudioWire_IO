@@ -12,8 +12,10 @@ const reducer = createProjectReducer({
 });
 
 function stateFixture(): ProjectState {
+  const project = structuredClone(sampleProject);
+  project.views = [];
   return {
-    project: structuredClone(sampleProject),
+    project,
     statusMessage: '',
     importError: null,
     persistenceState: 'saved',
@@ -153,7 +155,7 @@ describe('View project action family', () => {
       },
     });
 
-    expect(state.project.views[0]).toMatchObject({
+    expect(state.project.views.find((view) => view.id === 'view-state')).toMatchObject({
       placements: expect.arrayContaining([expect.objectContaining({ id: 'placement-router', xMm: 12.5 })]),
       lines: [expect.objectContaining({ id: 'line-state', label: '4 x SDI' })],
       annotations: [expect.objectContaining({ id: 'annotation-state', text: 'Video Core' })],
@@ -164,14 +166,19 @@ describe('View project action family', () => {
       type: 'REMOVE_VIEW_PLACEMENT',
       payload: { viewId: 'view-state', placementId: 'placement-router' },
     });
-    expect(removed.project.views[0].lines).toEqual([]);
-    expect(removed.project.views[0].annotations).toHaveLength(1);
+    const removedView = removed.project.views.find((view) => view.id === 'view-state');
+    expect(removedView?.lines).toEqual([]);
+    expect(removedView?.annotations).toHaveLength(1);
 
     const replaced = reduce(removed, {
       type: 'REPLACE_VIEW_CANVAS',
       payload: { viewId: 'view-state', canvas: { placements: [], lines: [], annotations: [] } },
     });
-    expect(replaced.project.views[0]).toMatchObject({ placements: [], lines: [], annotations: [] });
+    expect(replaced.project.views.find((view) => view.id === 'view-state')).toMatchObject({
+      placements: [],
+      lines: [],
+      annotations: [],
+    });
 
     const deleted = reduce(replaced, { type: 'DELETE_VIEW', payload: { id: 'view-state' } });
     expect(deleted.project.views).toEqual([]);

@@ -193,7 +193,7 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
           id: 'placement-router',
           sourceType: 'device',
           sourceId: 'device-router-1',
-          xMm: 20,
+          xMm: 170,
           yMm: 20,
           scale: 1,
           labelOverride: null,
@@ -213,8 +213,14 @@ describe('StudioWireShell dirty device inspector navigation guard', () => {
     await user.click(screen.getByRole('button', { name: 'Save View' }));
 
     const confirmation = await screen.findByRole('dialog');
-    expect(confirmation.textContent).toContain('Existing coordinates are retained.');
-    await user.click(within(confirmation).getByRole('button', { name: 'Change Format' }));
+    expect(confirmation.textContent).toContain('1 placement(s), 0 line(s), and 0 annotation(s)');
+    expect(confirmation.textContent).toContain('Existing coordinates, scales, waypoints, and line-label positions');
+    await user.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
+    expect(updateView).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Save View' }));
+    const retainedLayoutConfirmation = await screen.findByRole('dialog');
+    await user.click(within(retainedLayoutConfirmation).getByRole('button', { name: 'Keep layout' }));
 
     expect(updateView).toHaveBeenCalledWith(view.id, {
       name: 'Populated View',

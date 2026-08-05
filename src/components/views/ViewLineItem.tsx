@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import type { ProjectView, ViewLine } from '../../domain/types';
 import { getViewPageDimensions, isBoundsOutsidePage, isPointOutsidePage } from '../../domain/viewGeometry';
 import { resolveViewLineEndpoint } from '../../domain/viewLineEndpoints';
@@ -20,8 +20,18 @@ export function ViewLineItem({
   warningIndex: number;
 }) {
   const renderedLine = controller.linePreview?.id === line.id ? controller.linePreview : line;
-  const from = resolveViewLineEndpoint(controller.project, view, renderedLine.from);
-  const to = resolveViewLineEndpoint(controller.project, view, renderedLine.to);
+  const endpoints = useMemo(
+    () => ({
+      from: resolveViewLineEndpoint(controller.project, view, renderedLine.from),
+      to: resolveViewLineEndpoint(controller.project, view, renderedLine.to),
+    }),
+    [controller.project, renderedLine, view],
+  );
+  const { from, to } = endpoints;
+  const points = useMemo(
+    () => getRenderedLinePoints(controller.project, view, renderedLine),
+    [controller.project, renderedLine, view],
+  );
   const selected = controller.canvasSelection?.kind === 'line' && controller.canvasSelection.id === line.id;
   if (!from || !to) {
     const surviving = from ?? to;
@@ -33,12 +43,19 @@ export function ViewLineItem({
       : { xMm: 12, yMm: 12 + warningIndex * 8 };
     return (
       <g
+        aria-label="Missing line endpoint"
+        aria-pressed={selected}
         className={`view-line-missing${selected ? ' is-selected' : ''}`}
         role="button"
         tabIndex={0}
         transform={`translate(${point.xMm * VIEW_PIXELS_PER_MM} ${point.yMm * VIEW_PIXELS_PER_MM})`}
         onClick={(event) => {
           event.stopPropagation();
+          controller.selectCanvas({ kind: 'line', id: line.id });
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
           controller.selectCanvas({ kind: 'line', id: line.id });
         }}
       >
@@ -48,7 +65,6 @@ export function ViewLineItem({
     );
   }
 
-  const points = getRenderedLinePoints(controller.project, view, renderedLine);
   if (points.length < 2) return null;
   const page = getViewPageDimensions(view.pageSize, view.orientation);
   const labelPoint = getViewLineLabelPoint(points, renderedLine.labelPosition);
@@ -69,8 +85,12 @@ export function ViewLineItem({
 
   return (
     <g
+      aria-label={`${renderedLine.label || 'Unlabeled'} View line${selected ? ', selected' : ''}`}
+      aria-pressed={selected}
       className={`${selected ? 'is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
+      role="button"
       style={style}
+      tabIndex={0}
       onClick={(event) => {
         event.stopPropagation();
         controller.selectCanvas({ kind: 'line', id: line.id });
@@ -81,6 +101,11 @@ export function ViewLineItem({
           xMm: native.offsetX / VIEW_PIXELS_PER_MM / controller.zoom,
           yMm: native.offsetY / VIEW_PIXELS_PER_MM / controller.zoom,
         });
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        controller.selectCanvas({ kind: 'line', id: line.id });
       }}
     >
       {selected ? (
@@ -110,9 +135,9 @@ export function ViewLineItem({
               y={labelPoint.yMm * VIEW_PIXELS_PER_MM - 20}
             >
               <button
-                aria-label="Toggle line label direction"
+                aria-label={`Change line label to ${renderedLine.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal'}`}
                 className="view-line-label-rotate"
-                title="Toggle label direction"
+                title={`Change label to ${renderedLine.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal'}`}
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();

@@ -6,9 +6,11 @@ import {
   MousePointer2,
   Plus,
   RotateCcw,
+  Redo2,
   Square,
   StretchHorizontal,
   Type,
+  Undo2,
 } from 'lucide-react';
 import type { ProjectView } from '../../domain/types';
 import { Button } from '../ui/button';
@@ -46,11 +48,36 @@ export function ViewWorkspace({
         </div>
         <div className="view-viewport-toolbar" aria-label="View controls">
           <ViewToolStrip tool={editor.tool} onChange={editor.setTool} />
+          <div className="view-history-controls" aria-label="View edit history">
+            <Button
+              aria-label="Undo View edit"
+              disabled={!editor.history.canUndo}
+              size="icon"
+              title="Undo View edit (Ctrl+Z)"
+              type="button"
+              variant="outline"
+              onClick={editor.history.undo}
+            >
+              <Undo2 aria-hidden="true" className="h-4 w-4" />
+            </Button>
+            <Button
+              aria-label="Redo View edit"
+              disabled={!editor.history.canRedo}
+              size="icon"
+              title="Redo View edit (Ctrl+Shift+Z or Ctrl+Y)"
+              type="button"
+              variant="outline"
+              onClick={editor.history.redo}
+            >
+              <Redo2 aria-hidden="true" className="h-4 w-4" />
+            </Button>
+          </div>
           <ViewDeviceSizeControl state={editor.deviceScaleState} onChange={editor.changeDeviceScale} />
           <Button
             aria-label="Zoom out"
             disabled={!viewport.canZoomOut}
             size="icon"
+            title="Zoom out"
             variant="outline"
             type="button"
             onClick={viewport.zoomOut}
@@ -64,6 +91,7 @@ export function ViewWorkspace({
             aria-label="Zoom in"
             disabled={!viewport.canZoomIn}
             size="icon"
+            title="Zoom in"
             variant="outline"
             type="button"
             onClick={viewport.zoomIn}
@@ -71,24 +99,30 @@ export function ViewWorkspace({
             <Plus aria-hidden="true" className="h-4 w-4" />
           </Button>
           <Button
+            className="view-fit-control"
             variant={viewport.fitMode === 'page' ? 'default' : 'outline'}
+            aria-label="Fit page"
+            title="Fit page"
             type="button"
             onClick={viewport.fitPage}
           >
             <Maximize2 aria-hidden="true" className="h-4 w-4" />
-            Fit Page
+            <span>Fit Page</span>
           </Button>
           <Button
+            className="view-fit-control"
             variant={viewport.fitMode === 'width' ? 'default' : 'outline'}
+            aria-label="Fit width"
+            title="Fit width"
             type="button"
             onClick={viewport.fitWidth}
           >
             <StretchHorizontal aria-hidden="true" className="h-4 w-4" />
-            Fit Width
+            <span>Fit Width</span>
           </Button>
-          <Button variant="ghost" type="button" onClick={viewport.reset}>
+          <Button className="view-reset-control" aria-label="Reset zoom" title="Reset zoom" variant="ghost" type="button" onClick={viewport.reset}>
             <RotateCcw aria-hidden="true" className="h-4 w-4" />
-            Reset
+            <span>Reset</span>
           </Button>
         </div>
       </header>
@@ -97,7 +131,13 @@ export function ViewWorkspace({
           {editor.notice}
         </p>
       ) : null}
-      <div className="view-viewport" ref={viewport.viewportRef} tabIndex={0}>
+      <p className="sr-only" id={`view-editor-instructions-${view.id}`}>
+        Select items with click. Use Control or Command click to change a multi-selection, or draw a
+        marquee on paper. Line mode uses eligible device I/O and I/O Range anchors. Escape cancels the
+        current action. Delete removes the selection. Arrow keys nudge selected items. Control or Command
+        Z undoes, and Control or Command Shift Z or Y redoes.
+      </p>
+      <div className="view-viewport" ref={viewport.viewportRef}>
         <ViewPage controller={editor} page={page} view={view} zoom={viewport.zoom} />
       </div>
     </section>
@@ -129,7 +169,10 @@ function ViewToolStrip({
           title={label}
           type="button"
           variant={tool === id ? 'default' : 'outline'}
-          onClick={() => onChange(id)}
+          onClick={() => {
+            onChange(id);
+            window.setTimeout(() => document.querySelector<HTMLElement>('.view-page')?.focus(), 0);
+          }}
         >
           <Icon aria-hidden="true" className="h-4 w-4" />
           <span>{label}</span>

@@ -31,7 +31,9 @@ import { getAutomaticLineRoute } from './viewRouting';
 import { DEFAULT_VIEW_LINE_STYLE } from './viewLineStyles';
 
 function projectFixture(): ProjectRoot {
-  return structuredClone(sampleProject);
+  const project = structuredClone(sampleProject);
+  project.views = [];
+  return project;
 }
 
 function viewFixture(overrides: Partial<ProjectView> = {}): ProjectView {

@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.05
+# StudioWire IO Product Spec v0.2.9.06
 
-StudioWire IO v0.2.9.05 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.06 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.05` anchors neutral manual lines to standard-device row squares and I/O Range midpoint squares, with fixed technical styling and route-constrained labels. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.06` completes the first View editor with port/I/O Range anchored technical lines, transient multi-selection, View-local canvas undo/redo, keyboard parity, lifecycle hardening, and exact target-format overflow reporting. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
 
 ## Application Layout
 
@@ -63,7 +63,7 @@ Examples:
 - Rack name, height, numbering direction, assigned device list, and standard-device rack unassign controls.
 - Device name, code, manufacturer, model, role, notes, location, folder, rack placement, and rack units.
 - Locked cable range note for device port groups.
-- View ID, name, description, page size, orientation, canvas counts, and guarded deletion. When a View placement is selected, the same Inspector switches to its presentation label, virtual-grid coordinates, View-wide size note, live source context, and source-safe removal.
+- View name, Notes, page size, orientation, canvas counts, and guarded deletion. When a View placement is selected, the same Inspector switches to its View-only presentation label, virtual-grid coordinates, direct source opening, and source-safe removal.
 
 Object inspectors use one compact, continuous accordion. One parent section is open at a time, nested Device I/O sections may be opened independently, content scrolls within the inspector, and Save/Delete actions remain visible. Dirty inspector navigation is guarded by Save, Discard, and Cancel. Locations, folders, and racks are deleted only when no child objects reference them. Device and TB deletion safely removes owned topology while preserving surviving planned cable slots.
 
@@ -211,6 +211,10 @@ Version `0.2.9.03` added the compact drawing strip and initial boundary-anchored
 Lines retain deterministic orthogonal automatic routes and absolute manual waypoints. The Inspector provides fixed black/red/blue/green/orange/purple/gray/teal colors, Hairline/Thin/Medium/Wide strokes, and horizontal or bottom-to-top vertical labels. Label dragging projects onto the route and stores normalized Manhattan arc length. Missing endpoints remain selectable warnings; removing a referenced I/O Range confirms and removes its attached View lines atomically.
 
 Version `0.2.9.04` adds transient collective selection for placements, Text, and Areas. Plain click selects one, Ctrl/Cmd toggles, a plain full-containment marquee replaces, and Shift-marquee adds. Collective drag, grid nudge, and removal commit once for the whole selection and preserve relative positions through one shared delta. This behavior is temporary canvas state, not logical grouping, and never enters JSON or autosave.
+
+Version `0.2.9.06` adds one transient 50-entry undo/redo history per active View canvas. Placement, line, Text, Area, I/O Range, bend, route, label, style, and collective canvas mutations are transactional history entries; drag and resize pointer movement commits only once on release. View CRUD, View metadata/page settings, imports, project replacement, and underlying engineering-source changes are excluded. Redo is cleared by a new canvas edit, history resets when the active View or project is replaced, and source-only changes update live rendering without consuming history.
+
+The View page is a keyboard-focusable editor with concise instructions, visible focus/selection states, keyboard tool creation, arrow/Shift-arrow movement, Delete/Backspace removal, Escape cancellation precedence, and standard undo/redo shortcuts. Pointer cancellation, lost capture, stale View changes, deleted sources/endpoints, and import replacement terminate transient gestures safely. Populated page-format changes predict target-page overflow using the same live placement, I/O Range, route, line-label, Text, and Area geometry as validation, report counts by element type, and preserve coordinates after confirmation.
 
 I/O Ranges are View-only braces attached to standard-device left or right presentation rows. Two row clicks define a normalized inclusive range; a one-row range and unmarked gaps are valid, while same-side ranges cannot share a row. A range moves and uniformly scales with its device. Stable port IDs keep visual anchors through row changes but imply no direction, connectivity, cable count, or ownership.
 

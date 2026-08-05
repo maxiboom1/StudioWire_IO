@@ -242,6 +242,7 @@ describe('importProjectValue structural safety', () => {
   it('supports the current schema, prior View stage, and retained 0.2.8.25 baseline', () => {
     expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([
       STUDIOWIRE_CURRENT_VERSION,
+      '0.2.9.05',
       '0.2.9.04',
       '0.2.9.03',
       '0.2.9.02',
@@ -285,6 +286,7 @@ describe('importProjectValue structural safety', () => {
   it('imports 0.2.9.00 through an identity migration without changing project data', () => {
     const project = currentProject();
     project.schemaVersion = '0.2.9.00';
+    project.views.forEach((view: { lines: unknown[] }) => (view.lines = []));
     const before = structuredClone(project);
 
     const result = importProjectValue(project);
@@ -301,6 +303,7 @@ describe('importProjectValue structural safety', () => {
   it('imports 0.2.9.01 through an identity migration without changing project data', () => {
     const project = currentProject();
     project.schemaVersion = '0.2.9.01';
+    project.views.forEach((view: { lines: unknown[] }) => (view.lines = []));
     const before = structuredClone(project);
 
     const result = importProjectValue(project);
@@ -317,6 +320,7 @@ describe('importProjectValue structural safety', () => {
   it('imports 0.2.9.02 through an identity migration without changing project data', () => {
     const project = currentProject();
     project.schemaVersion = '0.2.9.02';
+    project.views.forEach((view: { lines: unknown[] }) => (view.lines = []));
     const before = structuredClone(project);
 
     const result = importProjectValue(project);
@@ -333,6 +337,7 @@ describe('importProjectValue structural safety', () => {
   it('imports 0.2.9.03 through an identity migration without changing project data', () => {
     const project = currentProject();
     project.schemaVersion = '0.2.9.03';
+    project.views.forEach((view: { lines: unknown[] }) => (view.lines = []));
     const before = structuredClone(project);
 
     const result = importProjectValue(project);
@@ -409,6 +414,23 @@ describe('importProjectValue structural safety', () => {
       const { schemaVersion: _beforeVersion, views: _beforeViews, ...beforeEngineering } = before;
       const { schemaVersion: _afterVersion, views: _afterViews, ...afterEngineering } = result.project;
       expect(afterEngineering).toEqual(beforeEngineering);
+    }
+  });
+
+  it('imports 0.2.9.05 through an identity migration without changing project data', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.05';
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+      expect(result.removedViewLineCount).toBe(0);
+      const { schemaVersion: _beforeVersion, ...beforeData } = before;
+      const { schemaVersion: _afterVersion, ...afterData } = result.project;
+      expect(afterData).toEqual(beforeData);
     }
   });
 

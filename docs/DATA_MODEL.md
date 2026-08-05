@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.05`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; every other View and engineering record is preserved. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.06`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `0.2.9.05 -> 0.2.9.06` is shape-preserving, and every other View and engineering record is preserved. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.05`.
+- `schemaVersion`: current fixed string `0.2.9.06`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -311,6 +311,12 @@ An I/O Range is a View-only black brace and green vertical label spanning a cont
 
 Area rectangles are visual backgrounds, not containers; moving one does not move enclosed elements. Transient multi-selection may contain placements, Text, and Areas only and is never serialized. A full-containment marquee or Ctrl/Cmd toggle creates that temporary selection; one shared millimetre delta preserves relative positions during atomic collective movement. View render ordering is Area rectangles, lines, placements, text, then transient selection controls.
 
+### Transient View Canvas History
+
+Version `0.2.9.06` keeps a non-persistent history for the active View's `placements`, `lines`, and `annotations` arrays. It retains at most 50 before-snapshots plus redo snapshots. A completed canvas command creates one entry only when those arrays change; continuous pointer movement, no-op commands, selection changes, and focus changes create none. A new edit after undo clears redo.
+
+History covers placement, line, waypoint, Text, Area, I/O Range, style, label, and atomic collective mutations. It excludes View CRUD, View metadata/page settings, imports, autosave, and underlying device/rack/port/cable changes. Switching Views, deleting the active View, or replacing the project resets history. Source-only changes preserve the history because View canvas arrays have not changed. Undo/redo restores only the three View canvas arrays and is never serialized to project JSON or autosave.
+
 Deleting a source device or terminal block removes its matching placements from every View and removes only lines and I/O Ranges attached to those placements. Deleting a rack does the same for direct rack placements. Deleting a device mounted inside a placed rack does not remove the rack placement. Unrelated Text/Area annotations and placements remain unchanged. Structurally valid imported dangling references remain loadable, are reported by relational validation, and may be rendered as removable missing-source placeholders.
 
 ## PortGroup
@@ -452,6 +458,6 @@ Fields:
 
 ## Import And Persistence
 
-Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous stages advance to `0.2.9.04`, then the `.04 -> .05` step removes/counts legacy boundary lines and preserves all other records before current structural validation.
+Browser import, startup recovery, CLI validation, project summaries, and fixture checks use the same staged import pipeline. The runtime structural validator introduced in `0.2.7.1` is the authoritative project boundary: JSON syntax parsing, safe schema-version inspection, compatible-version migration, current JSON Schema validation, and relational validation. Structural errors block import and preserve the open project. Relational validation issues are normal `ValidationIssue[]` data and may be imported when the structure is valid. Version `0.2.8.25` migrates by adding an empty Views collection at `0.2.9.00`; previous stages advance to `0.2.9.04`, the `.04 -> .05` step removes/counts legacy boundary lines and preserves all other records, and `.05 -> .06` preserves the current shape before structural validation.
 
 Views are stored in the normal project JSON and the same compact autosave under `studiowire.io.project.current`; no separate View file or storage key exists. Startup recovery also checks known legacy keys in order, so a corrupt newer record does not block a valid older record. A restored `0.2.8.25` autosave is migrated to the current schema in memory and written back through the normal autosave lifecycle. Storage read, write, remove, quota, and security failures must not crash the app; failed autosave leaves the in-memory project exportable.

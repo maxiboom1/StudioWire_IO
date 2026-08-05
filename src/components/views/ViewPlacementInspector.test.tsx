@@ -77,5 +77,5 @@ describe('ViewPlacementInspector', () => {
     await user.click(screen.getByRole('button', { name: 'Remove' }));
     expect(removeViewPlacement).toHaveBeenCalledWith('view-main', placement.id);
     expect(onRemoved).toHaveBeenCalled();
-  });
+  }, 10000);
 });

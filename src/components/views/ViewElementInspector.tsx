@@ -14,6 +14,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import type { ViewCanvasSelection } from './viewEditorTypes';
+import { useViewCanvasCommands } from './ViewCanvasHistoryContext';
 
 export function ViewElementInspector({
   selection,
@@ -26,8 +27,9 @@ export function ViewElementInspector({
   onOpenSource: (type: ViewSourceType, id: string) => void;
   onRemoved: () => void;
 }) {
-  const { project, updateViewLine, removeViewLine, updateViewAnnotation, removeViewAnnotation } =
-    useProject();
+  const { project } = useProject();
+  const { updateViewLine, removeViewLine, updateViewAnnotation, removeViewAnnotation } =
+    useViewCanvasCommands();
   const confirm = useConfirmation();
   if (selection.kind === 'line') {
     const line = view.lines.find((candidate) => candidate.id === selection.id);
@@ -37,6 +39,7 @@ export function ViewElementInspector({
         title="Line Inspector"
         actions={
           <Button
+            title="Remove View line"
             variant="destructive"
             onClick={() => {
               removeViewLine(view.id, line.id);
@@ -80,6 +83,7 @@ export function ViewElementInspector({
                   aria-pressed={line.width === width}
                   className={line.width === width ? 'is-selected' : ''}
                   key={width}
+                  title={`${titleCase(width)} line width`}
                   type="button"
                   onClick={() => updateViewLine(view.id, line.id, { width })}
                 >
@@ -96,6 +100,7 @@ export function ViewElementInspector({
                   aria-pressed={line.labelOrientation === labelOrientation}
                   className={line.labelOrientation === labelOrientation ? 'is-selected' : ''}
                   key={labelOrientation}
+                  title={`${titleCase(labelOrientation)} line label direction`}
                   type="button"
                   onClick={() => updateViewLine(view.id, line.id, { labelOrientation })}
                 >
@@ -105,6 +110,7 @@ export function ViewElementInspector({
             </div>
           </Field>
           <Button
+            title="Reset line route"
             disabled={!line.waypoints.length}
             variant="outline"
             onClick={() => updateViewLine(view.id, line.id, { waypoints: [] })}
@@ -141,6 +147,7 @@ export function ViewElementInspector({
       }
       actions={
         <Button
+          title={`Remove ${annotation.kind === 'port_range' ? 'I/O Range' : annotation.kind === 'text' ? 'text' : 'Area'}`}
           variant="destructive"
           onClick={async () => {
             if (annotation.kind === 'port_range') {
@@ -207,6 +214,7 @@ function AnnotationFields({
         <ReadOnly label="Start I/O" value={start} />
         <ReadOnly label="End I/O" value={end} />
         <Button
+          title="Open source Device"
           disabled={!placement}
           variant="outline"
           onClick={() => placement && onOpenSource('device', placement.sourceId)}
@@ -234,6 +242,8 @@ function AnnotationFields({
         <Field id="view-text-size" label="Size">
           <select
             id="view-text-size"
+            aria-label="Text size"
+            title="Text size"
             value={annotation.size}
             onChange={(event) =>
               onUpdate({ ...annotation, size: event.target.value as typeof annotation.size })

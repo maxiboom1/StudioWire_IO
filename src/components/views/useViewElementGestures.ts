@@ -1,4 +1,4 @@
-import { useEffect, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import type { ProjectRoot, ProjectView, ViewAnnotation, ViewLine, ViewPoint } from '../../domain/types';
 import {
   insertLineWaypoint,
@@ -19,14 +19,18 @@ import type { ViewCanvasSelection } from './viewEditorTypes';
 type FreeAnnotation = Exclude<ViewAnnotation, { kind: 'port_range' }>;
 
 interface AnnotationGesture {
+  viewId: string;
   pointerId: number;
+  captureTarget: HTMLElement;
   startClientX: number;
   startClientY: number;
   annotation: FreeAnnotation;
 }
 
 interface WaypointGesture {
+  viewId: string;
   pointerId: number;
+  captureTarget: SVGCircleElement;
   startClientX: number;
   startClientY: number;
   line: ViewLine;
@@ -35,7 +39,9 @@ interface WaypointGesture {
 }
 
 interface LabelGesture {
+  viewId: string;
   pointerId: number;
+  captureTarget: SVGElement;
   line: ViewLine;
 }
 
@@ -71,12 +77,27 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
   const [waypointGesture, setWaypointGesture] = useState<WaypointGesture | null>(null);
   const [linePreview, setLinePreview] = useState<ViewLine | null>(null);
   const [labelGesture, setLabelGesture] = useState<LabelGesture | null>(null);
+  const captureRef = useRef<{ target: Element; pointerId: number } | null>(null);
 
-  useEffect(() => cancel(), [view.id]);
+  useEffect(() => {
+    cancel();
+  }, [view.id]);
+
+  useEffect(
+    () => () => {
+      const capture = captureRef.current;
+      if (capture) releasePointerCaptureSafely(capture.target, capture.pointerId);
+    },
+    [],
+  );
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      if (event.key !== 'Delete' || isEditingTarget(event.target)) return;
+      if (
+        (event.key !== 'Delete' && event.key !== 'Backspace') ||
+        isEditingTarget(event.target) ||
+        !(event.target instanceof Element && event.target.closest('.view-page'))
+      ) return;
       if (canvasSelection?.kind === 'line') {
         const line = view.lines.find((candidate) => candidate.id === canvasSelection.id);
         if (line && canvasSelection.bendIndex !== undefined) {
@@ -118,10 +139,13 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
+    captureRef.current = { target: event.currentTarget, pointerId: event.pointerId };
     const selection = createViewMovableSelection([{ kind: annotation.kind, id: annotation.id }]);
     if (selection) selectCanvas({ kind: 'movable', value: selection });
     setAnnotationGesture({
+      viewId: view.id,
       pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
       startClientX: event.clientX,
       startClientY: event.clientY,
       annotation,
@@ -190,18 +214,36 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
 
   function finishPointer(event: PointerEvent<HTMLElement>) {
     if (annotationGesture && annotationGesture.pointerId === event.pointerId && annotationPreview) {
+      if (annotationGesture.viewId !== view.id) {
+        cancel();
+        return true;
+      }
+      releasePointerCaptureSafely(annotationGesture.captureTarget, annotationGesture.pointerId);
+      captureRef.current = null;
       updateViewAnnotation(view.id, annotationPreview.id, annotationPreview);
       setAnnotationGesture(null);
       setAnnotationPreview(null);
       return true;
     }
     if (waypointGesture && waypointGesture.pointerId === event.pointerId && linePreview) {
+      if (waypointGesture.viewId !== view.id) {
+        cancel();
+        return true;
+      }
+      releasePointerCaptureSafely(waypointGesture.captureTarget, waypointGesture.pointerId);
+      captureRef.current = null;
       updateViewLine(view.id, linePreview.id, { waypoints: linePreview.waypoints });
       setWaypointGesture(null);
       setLinePreview(null);
       return true;
     }
     if (labelGesture && labelGesture.pointerId === event.pointerId && linePreview) {
+      if (labelGesture.viewId !== view.id) {
+        cancel();
+        return true;
+      }
+      releasePointerCaptureSafely(labelGesture.captureTarget, labelGesture.pointerId);
+      captureRef.current = null;
       updateViewLine(view.id, linePreview.id, { labelPosition: linePreview.labelPosition });
       setLabelGesture(null);
       setLinePreview(null);
@@ -218,12 +260,15 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
+    captureRef.current = { target: event.currentTarget, pointerId: event.pointerId };
     const manual = makeLineRouteManual(project, view, line);
     const origin = manual.waypoints[waypointIndex];
     if (!origin) return;
     selectCanvas({ kind: 'line', id: line.id, bendIndex: waypointIndex });
     setWaypointGesture({
+      viewId: view.id,
       pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
       startClientX: event.clientX,
       startClientY: event.clientY,
       line: manual,
@@ -242,8 +287,9 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
+    captureRef.current = { target: event.currentTarget, pointerId: event.pointerId };
     selectCanvas({ kind: 'line', id: line.id });
-    setLabelGesture({ pointerId: event.pointerId, line });
+    setLabelGesture({ viewId: view.id, pointerId: event.pointerId, captureTarget: event.currentTarget, line });
     setLinePreview(line);
   }
 
@@ -254,11 +300,21 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
   }
 
   function cancel() {
+    if (annotationGesture)
+      releasePointerCaptureSafely(annotationGesture.captureTarget, annotationGesture.pointerId);
+    if (waypointGesture)
+      releasePointerCaptureSafely(waypointGesture.captureTarget, waypointGesture.pointerId);
+    if (labelGesture) releasePointerCaptureSafely(labelGesture.captureTarget, labelGesture.pointerId);
+    const capture = captureRef.current;
+    if (capture) releasePointerCaptureSafely(capture.target, capture.pointerId);
+    captureRef.current = null;
+    const active = Boolean(annotationGesture || waypointGesture || labelGesture || linePreview);
     setAnnotationGesture(null);
     setAnnotationPreview(null);
     setWaypointGesture(null);
     setLabelGesture(null);
     setLinePreview(null);
+    return active;
   }
 
   return {
@@ -273,6 +329,18 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     finishPointer,
     cancel,
   };
+}
+
+function releasePointerCaptureSafely(target: Element, pointerId: number) {
+  if (
+    'hasPointerCapture' in target &&
+    'releasePointerCapture' in target &&
+    typeof target.hasPointerCapture === 'function' &&
+    typeof target.releasePointerCapture === 'function' &&
+    target.hasPointerCapture(pointerId)
+  ) {
+    target.releasePointerCapture(pointerId);
+  }
 }
 
 function isEditingTarget(target: EventTarget | null) {

@@ -82,6 +82,14 @@ export function ViewPlacementBlock({
           event.ctrlKey || event.metaKey,
         );
       }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        controller.selectMovable(
+          { kind: 'placement', id: placement.id },
+          event.ctrlKey || event.metaKey,
+        );
+      }}
     >
       {!isTechnicalDevice ? (
         <PlacementHeader

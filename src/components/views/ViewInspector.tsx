@@ -11,6 +11,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { createViewFormValues, getViewNameError, isViewPopulated } from './viewUiModel';
+import { predictViewFormatOverflow } from '../../domain/viewFormatPrediction';
 
 export function ViewInspector({
   view,
@@ -37,8 +38,20 @@ export function ViewInspector({
       return false;
     }
 
-    if (formatChanged && isViewPopulated(view) && !(await confirm(buildViewFormatChangeConfirmation(view)))) {
-      return false;
+    if (formatChanged && isViewPopulated(view)) {
+      const overflow = predictViewFormatOverflow(project, view, form.pageSize, form.orientation);
+      if (
+        overflow.totalCount > 0 &&
+        !(await confirm(
+          buildViewFormatChangeConfirmation(
+            view,
+            { pageSize: form.pageSize, orientation: form.orientation },
+            overflow,
+          ),
+        ))
+      ) {
+        return false;
+      }
     }
 
     updateView(view.id, {
@@ -66,10 +79,10 @@ export function ViewInspector({
       title="View Inspector"
       actions={
         <>
-          <Button disabled={!isDirty || Boolean(error)} type="button" onClick={() => void save()}>
+          <Button disabled={!isDirty || Boolean(error)} title="Save View properties" type="button" onClick={() => void save()}>
             Save View
           </Button>
-          <Button variant="destructive" type="button" onClick={() => void handleDelete()}>
+          <Button title="Delete View" variant="destructive" type="button" onClick={() => void handleDelete()}>
             Delete View
           </Button>
         </>
@@ -90,7 +103,7 @@ export function ViewInspector({
             value={form.pageSize}
             onValueChange={(pageSize: ViewPageSize) => setForm({ ...form, pageSize })}
           >
-            <SelectTrigger id="inspector-view-page-size">
+            <SelectTrigger id="inspector-view-page-size" title="View page size">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +118,7 @@ export function ViewInspector({
             value={form.orientation}
             onValueChange={(orientation: ViewOrientation) => setForm({ ...form, orientation })}
           >
-            <SelectTrigger id="inspector-view-orientation">
+            <SelectTrigger id="inspector-view-orientation" title="View page orientation">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

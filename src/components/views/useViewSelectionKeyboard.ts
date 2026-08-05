@@ -29,8 +29,13 @@ export function useViewSelectionKeyboard({
 }) {
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
-      if (tool !== 'select' || !selection || isEditingTarget(event.target)) return;
-      if (event.key === 'Delete') {
+      if (
+        tool !== 'select' ||
+        !selection ||
+        isEditingTarget(event.target) ||
+        !isCanvasKeyboardTarget(event.target)
+      ) return;
+      if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
         removeSelected();
         return;
@@ -51,6 +56,10 @@ export function useViewSelectionKeyboard({
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [commitView, layoutScale, page, project, removeSelected, selection, tool, view]);
+}
+
+function isCanvasKeyboardTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement && Boolean(target.closest('.view-page'));
 }
 
 function arrowDirection(key: string): readonly [number, number] | null {

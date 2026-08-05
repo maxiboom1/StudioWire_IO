@@ -54,7 +54,7 @@ Staged scope:
 - `0.2.9.03` complete: neutral labeled orthogonal lines and route editing, text headings, visual Area rectangles stored as `kind: 'group'`, unified single-element canvas selection/Inspectors, and standard-device-attached I/O Range braces with live row anchors and no engineering semantics.
 - `0.2.9.04` complete: top-aligned/fixed navigator regions, user-facing Area terminology over the compatible `group` annotation, transient modifier/marquee multi-selection, atomic collective movement/removal, and refined I/O Range presentation.
 - `0.2.9.05` complete: standard-device port/I/O Range anchored View lines, covered-row precedence, live endpoint geometry, fixed technical color/width presets, route-constrained label positioning/orientation, missing-endpoint recovery, and reported legacy-line migration.
-- `0.2.9.06` planned: View-local undo/redo, accessibility and lifecycle hardening, sample content, and final editor acceptance.
+- `0.2.9.06` complete: transactional 50-entry View-local undo/redo, keyboard/focus/pointer and stale-lifecycle hardening, exact target-format overflow confirmation, illustrative validated sample content, and final first-editor acceptance.
 
 View printing, title blocks, PDF/SVG generation, and document export remain v0.3 work.
 

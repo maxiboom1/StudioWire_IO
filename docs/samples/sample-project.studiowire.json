@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.9.05",
+  "schemaVersion": "0.2.9.06",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -343,7 +343,76 @@
       "numberingDirection": "bottom_to_top"
     }
   ],
-  "views": [],
+  "views": [
+    {
+      "id": "view-signal-overview",
+      "name": "Signal Overview",
+      "description": "Sample project View with live equipment references and a manual cable-group annotation.",
+      "pageSize": "a3",
+      "orientation": "portrait",
+      "placements": [
+        {
+          "id": "view-placement-router-1",
+          "sourceType": "device",
+          "sourceId": "device-router-1",
+          "xMm": 25,
+          "yMm": 80,
+          "scale": 0.8,
+          "labelOverride": null
+        },
+        {
+          "id": "view-placement-multiviewer-1",
+          "sourceType": "device",
+          "sourceId": "device-multiviewer-1",
+          "xMm": 165,
+          "yMm": 80,
+          "scale": 0.8,
+          "labelOverride": null
+        }
+      ],
+      "lines": [
+        {
+          "id": "view-line-router-to-multiviewer",
+          "from": {
+            "kind": "port",
+            "placementId": "view-placement-router-1",
+            "portId": "port-group-router-outputs-port-0001"
+          },
+          "to": {
+            "kind": "port",
+            "placementId": "view-placement-multiviewer-1",
+            "portId": "port-group-multiviewer-inputs-port-0001"
+          },
+          "label": "4x SDI",
+          "waypoints": [],
+          "color": "blue",
+          "width": "medium",
+          "labelOrientation": "horizontal",
+          "labelPosition": 0.5
+        }
+      ],
+      "annotations": [
+        {
+          "id": "view-group-core-signal-path",
+          "kind": "group",
+          "xMm": 15,
+          "yMm": 55,
+          "widthMm": 265,
+          "heightMm": 155,
+          "label": "Core Signal Path"
+        },
+        {
+          "id": "view-text-signal-overview",
+          "kind": "text",
+          "xMm": 20,
+          "yMm": 20,
+          "widthMm": 120,
+          "text": "Sample Signal Overview",
+          "size": "large"
+        }
+      ]
+    }
+  ],
   "devices": [
     {
       "id": "device-router-1",

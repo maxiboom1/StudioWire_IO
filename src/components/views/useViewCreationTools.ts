@@ -1,4 +1,4 @@
-import { useEffect, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { ProjectRoot, ProjectView, ViewLineEndpoint, ViewPoint } from '../../domain/types';
 import { DEFAULT_VIEW_LINE_STYLE } from '../../domain/viewLineStyles';
 import { normalizeViewPortRange, viewPortRangesOverlap } from '../../domain/viewPortRanges';
@@ -8,7 +8,9 @@ import { VIEW_PIXELS_PER_MM } from './viewViewport';
 import type { ViewCanvasSelection, ViewEditorTool } from './viewEditorTypes';
 
 interface GroupDraft {
+  viewId: string;
   pointerId: number;
+  captureTarget: HTMLElement;
   start: ViewPoint;
   current: ViewPoint;
 }
@@ -50,14 +52,25 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
   const [linePointer, setLinePointer] = useState<ViewPoint | null>(null);
   const [portRangeDraft, setPortRangeDraft] = useState<PortRangeDraft | null>(null);
   const [groupDraft, setGroupDraft] = useState<GroupDraft | null>(null);
+  const groupDraftRef = useRef<GroupDraft | null>(null);
+  groupDraftRef.current = groupDraft;
 
   useEffect(() => {
+    if (groupDraft) releasePointerCaptureSafely(groupDraft.captureTarget, groupDraft.pointerId);
     setToolState('select');
     setLineDraft(null);
     setLinePointer(null);
     setPortRangeDraft(null);
     setGroupDraft(null);
   }, [view.id]);
+
+  useEffect(
+    () => () => {
+      const draft = groupDraftRef.current;
+      if (draft) releasePointerCaptureSafely(draft.captureTarget, draft.pointerId);
+    },
+    [],
+  );
 
   function setTool(next: ViewEditorTool) {
     setToolState(next);
@@ -69,7 +82,23 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
   }
 
   function cancel() {
-    setTool('select');
+    if (groupDraft) {
+      releasePointerCaptureSafely(groupDraft.captureTarget, groupDraft.pointerId);
+      setGroupDraft(null);
+      return true;
+    }
+    if (lineDraft || portRangeDraft) {
+      setLineDraft(null);
+      setLinePointer(null);
+      setPortRangeDraft(null);
+      setNotice('');
+      return true;
+    }
+    if (tool !== 'select') {
+      setTool('select');
+      return true;
+    }
+    return false;
   }
 
   function pagePoint(event: PointerEvent<HTMLElement>, snap = true) {
@@ -143,27 +172,19 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
   function handlePagePointerDown(event: PointerEvent<HTMLElement>) {
     if (event.target !== event.currentTarget) return;
     if (tool === 'text') {
-      const point = pagePoint(event);
-      const id = addViewAnnotation(view.id, {
-        kind: 'text',
-        xMm: Math.min(point.xMm, page.widthMm - 40),
-        yMm: point.yMm,
-        widthMm: 40,
-        text: 'Text',
-        size: 'medium',
-      });
-      selectCanvas({
-        kind: 'movable',
-        value: { primary: { kind: 'text', id }, items: [{ kind: 'text', id }] },
-      });
-      setTool('select');
-      requestFocus(true);
+      createText(pagePoint(event), false);
       return;
     }
     if (tool === 'group') {
       const start = pagePoint(event);
       event.currentTarget.setPointerCapture(event.pointerId);
-      setGroupDraft({ pointerId: event.pointerId, start, current: start });
+      setGroupDraft({
+        viewId: view.id,
+        pointerId: event.pointerId,
+        captureTarget: event.currentTarget,
+        start,
+        current: start,
+      });
       return;
     }
     if (tool === 'line') {
@@ -177,6 +198,53 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
     return;
   }
 
+  function handlePageKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== 'Enter' || event.target !== event.currentTarget) return false;
+    if (tool !== 'text' && tool !== 'group') return false;
+    event.preventDefault();
+    const point = visiblePaperCenter(event.currentTarget, zoom, page, layoutScale);
+    if (tool === 'text') createText(point, true);
+    else createGroup(point);
+    return true;
+  }
+
+  function createText(point: ViewPoint, centered: boolean) {
+    const widthMm = 40;
+    const id = addViewAnnotation(view.id, {
+      kind: 'text',
+      xMm: Math.max(0, Math.min(centered ? point.xMm - widthMm / 2 : point.xMm, page.widthMm - widthMm)),
+      yMm: Math.max(0, Math.min(point.yMm, page.heightMm - 8)),
+      widthMm,
+      text: 'Text',
+      size: 'medium',
+    });
+    selectCanvas({
+      kind: 'movable',
+      value: { primary: { kind: 'text', id }, items: [{ kind: 'text', id }] },
+    });
+    setTool('select');
+    requestFocus(true);
+  }
+
+  function createGroup(point: ViewPoint) {
+    const widthMm = 60;
+    const heightMm = 40;
+    const id = addViewAnnotation(view.id, {
+      kind: 'group',
+      xMm: Math.max(0, Math.min(point.xMm - widthMm / 2, page.widthMm - widthMm)),
+      yMm: Math.max(0, Math.min(point.yMm - heightMm / 2, page.heightMm - heightMm)),
+      widthMm,
+      heightMm,
+      label: 'Area',
+    });
+    selectCanvas({
+      kind: 'movable',
+      value: { primary: { kind: 'group', id }, items: [{ kind: 'group', id }] },
+    });
+    setTool('select');
+    requestFocus(true);
+  }
+
   function updatePointer(event: PointerEvent<HTMLElement>) {
     if (tool === 'line' && lineDraft && !groupDraft) setLinePointer(pagePoint(event, false));
     if (!groupDraft || groupDraft.pointerId !== event.pointerId) return false;
@@ -186,6 +254,11 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
 
   function finishPointer(event: PointerEvent<HTMLElement>) {
     if (!groupDraft || groupDraft.pointerId !== event.pointerId) return false;
+    releasePointerCaptureSafely(groupDraft.captureTarget, groupDraft.pointerId);
+    if (groupDraft.viewId !== view.id) {
+      setGroupDraft(null);
+      return true;
+    }
     const bounds = normalizeDraft(groupDraft.start, groupDraft.current);
     const size =
       bounds.widthMm < 20 || bounds.heightMm < 15 ? { ...bounds, widthMm: 60, heightMm: 40 } : bounds;
@@ -218,9 +291,39 @@ export function useViewCreationTools(options: ViewCreationToolOptions) {
     handleLineAnchor,
     handlePortRangeRow,
     handlePagePointerDown,
+    handlePageKeyDown,
     updatePointer,
     finishPointer,
   };
+}
+
+function releasePointerCaptureSafely(target: HTMLElement, pointerId: number) {
+  if (
+    typeof target.hasPointerCapture === 'function' &&
+    typeof target.releasePointerCapture === 'function' &&
+    target.hasPointerCapture(pointerId)
+  ) {
+    target.releasePointerCapture(pointerId);
+  }
+}
+
+function visiblePaperCenter(
+  pageElement: HTMLElement,
+  zoom: number,
+  page: { widthMm: number; heightMm: number },
+  layoutScale: ViewDeviceScale,
+): ViewPoint {
+  const pageRect = pageElement.getBoundingClientRect();
+  const viewportRect = pageElement.closest<HTMLElement>('.view-viewport')?.getBoundingClientRect();
+  const left = Math.max(pageRect.left, viewportRect?.left ?? pageRect.left);
+  const top = Math.max(pageRect.top, viewportRect?.top ?? pageRect.top);
+  const right = Math.min(pageRect.right, viewportRect?.right ?? pageRect.right);
+  const bottom = Math.min(pageRect.bottom, viewportRect?.bottom ?? pageRect.bottom);
+  const raw = {
+    xMm: Math.max(0, Math.min(((left + right) / 2 - pageRect.left) / zoom / VIEW_PIXELS_PER_MM, page.widthMm)),
+    yMm: Math.max(0, Math.min(((top + bottom) / 2 - pageRect.top) / zoom / VIEW_PIXELS_PER_MM, page.heightMm)),
+  };
+  return snapViewLayoutPosition(raw, layoutScale);
 }
 
 function normalizeDraft(start: ViewPoint, end: ViewPoint) {

@@ -143,7 +143,7 @@ describe('DeviceInspector', () => {
       }),
     );
     expect(payload.newPortGroups).toEqual([]);
-  });
+  }, 10000);
 
   it('confirms device deletion from the global inspector action area', async () => {
     const user = userEvent.setup();

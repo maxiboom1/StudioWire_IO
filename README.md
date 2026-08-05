@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.05 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.06 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -103,7 +103,9 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - A View-wide 70/80/90/100% Device Size control that proportionally scales every device/TB renderer and preserves logical alignment cells; the virtual grid stays invisible behind the existing paper pattern.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
 - View drawing tools for port/I/O Range anchored orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. Lines use fixed technical color/width presets, route-constrained labels, and presentation-only port IDs; these marks cannot change cables, ports, numbering, racks, or locations.
-- JSON import/export: current exports use schema version `0.2.9.05`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. All other View and engineering data is preserved.
+- View-local 50-entry undo/redo for canvas mutations, with transactional collective gestures, redo invalidation, keyboard shortcuts, accessible focus/instructions, and lifecycle-safe reset when a View or project is replaced. View CRUD, page settings, imports, and source-record edits remain outside this transient history.
+- Populated page-format confirmation that reports the exact number of placements, lines, and annotations which would extend outside the target page while preserving every stored coordinate.
+- JSON import/export: current exports use schema version `0.2.9.06`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. The `.05 -> .06` migration is shape-preserving. All other View and engineering data is preserved.
 
 ## Release Gates
 
@@ -148,6 +150,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.06
+
+- Added non-persistent, View-local undo/redo with a 50-entry limit, transactional drag/resize/collective operations, redo invalidation, and Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+Y shortcuts.
+- Hardened canvas focus, keyboard creation and movement, accessible tool/anchor names, selection visibility, pointer-capture cancellation, stale selection, View/project replacement, and source-only live updates.
+- Made populated format confirmation use the final placement, I/O Range, route, line-label, Text, and Area geometry to report exact target-page overflow counts while retaining layout coordinates.
+- Added the validated `Sample Signal Overview` View with two live sample devices, a blue `4x SDI` port-anchored line, a text heading, and a visual Area.
+- Added the shape-preserving `0.2.9.05 -> 0.2.9.06` migration and completed the v0.2.9.x View editor acceptance pass.
 
 ### v0.2.9.05
 

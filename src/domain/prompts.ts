@@ -1,5 +1,6 @@
 import type { Device, Location, ProjectRoot, ProjectView, Rack, SubLocation } from './types';
 import type { ViewSourceImpact } from './viewOperations';
+import type { ViewFormatOverflow } from './viewFormatPrediction';
 
 export type ConfirmationTone = 'default' | 'danger';
 
@@ -129,11 +130,19 @@ export function buildDeleteViewConfirmation(view: ProjectView): ConfirmationCopy
   };
 }
 
-export function buildViewFormatChangeConfirmation(view: ProjectView): ConfirmationCopy {
+export function buildViewFormatChangeConfirmation(
+  view: ProjectView,
+  target?: Pick<ProjectView, 'pageSize' | 'orientation'>,
+  overflow?: ViewFormatOverflow,
+): ConfirmationCopy {
+  const targetLabel = target ? `${target.pageSize.toUpperCase()} ${target.orientation}` : 'the new format';
+  const countMessage = overflow
+    ? `${overflow.placementCount} placement(s), ${overflow.lineCount} line(s), and ${overflow.annotationCount} annotation(s) will be outside the page.`
+    : 'Content outside the new page boundary will be reported.';
   return {
-    title: 'Change populated View format?',
-    message: `Change the page format for "${view.name}"?\n\nExisting coordinates are retained. Content outside the new page boundary will be reported rather than scaled or moved.`,
-    confirmLabel: 'Change Format',
+    title: `Keep layout on ${targetLabel}?`,
+    message: `Change "${view.name}" to ${targetLabel}?\n\n${countMessage} Existing coordinates, scales, waypoints, and line-label positions will be retained.`,
+    confirmLabel: 'Keep layout',
     cancelLabel: 'Cancel',
   };
 }

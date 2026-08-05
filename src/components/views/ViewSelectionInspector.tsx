@@ -1,9 +1,9 @@
 import { Trash2 } from 'lucide-react';
 import type { ProjectView } from '../../domain/types';
 import { removeViewMovableElements, type ViewMovableSelection } from '../../domain/viewSelection';
-import { useProject } from '../../state/ProjectContext';
 import { InspectorShell } from '../common/InspectorShell';
 import { Button } from '../ui/button';
+import { useViewCanvasCommands } from './ViewCanvasHistoryContext';
 
 export function ViewSelectionInspector({
   selection,
@@ -14,7 +14,7 @@ export function ViewSelectionInspector({
   view: ProjectView;
   onRemoved: () => void;
 }) {
-  const { replaceViewCanvas } = useProject();
+  const { replaceViewCanvas } = useViewCanvasCommands();
   const counts = selection.items.reduce(
     (current, item) => ({ ...current, [item.kind]: current[item.kind] + 1 }),
     { placement: 0, text: 0, group: 0 },
@@ -34,7 +34,7 @@ export function ViewSelectionInspector({
     <InspectorShell
       title="Selection Inspector"
       actions={
-        <Button variant="destructive" type="button" onClick={remove}>
+        <Button title="Remove selected canvas items" variant="destructive" type="button" onClick={remove}>
           <Trash2 aria-hidden="true" className="h-4 w-4" />
           Remove Selected
         </Button>

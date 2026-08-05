@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildUnsavedInspectorChangesConfirmation } from '../../domain/prompts';
 import { useProject } from '../../state/ProjectContext';
 import type { InspectorDirtyGuard } from '../common/inspectorDirtyGuard';
@@ -20,6 +20,7 @@ import { useViewShellController } from '../views/useViewShellController';
 import { StudioWireObjectModals, type ObjectModalState } from './StudioWireObjectModals';
 import type { ViewCanvasSelection } from '../views/viewEditorTypes';
 import { normalizeViewMovableSelection } from '../../domain/viewSelection';
+import { ViewCanvasHistoryProvider } from '../views/ViewCanvasHistoryContext';
 
 export function StudioWireShell() {
   return (
@@ -40,6 +41,36 @@ function StudioWireShellContent() {
   const [modal, setModal] = useState<ObjectModalState>(null);
   const [inspectorGuard, setInspectorGuard] = useState<InspectorDirtyGuard | null>(null);
   const [viewCanvasSelection, setViewCanvasSelection] = useState<ViewCanvasSelection | null>(null);
+  const observedProjectRef = useRef({
+    locations: project.locations,
+    racks: project.racks,
+    devices: project.devices,
+    views: project.views,
+    settings: project.settings,
+  });
+
+  useEffect(() => {
+    const previous = observedProjectRef.current;
+    const replaced =
+      previous.locations !== project.locations &&
+      previous.racks !== project.racks &&
+      previous.devices !== project.devices &&
+      previous.views !== project.views &&
+      previous.settings !== project.settings;
+    observedProjectRef.current = {
+      locations: project.locations,
+      racks: project.racks,
+      devices: project.devices,
+      views: project.views,
+      settings: project.settings,
+    };
+    if (!replaced) return;
+    setSelection({ selectedObjectType: 'project', selectedObjectId: project.project.id });
+    setActiveView('workspace');
+    setModal(null);
+    setInspectorGuard(null);
+    setViewCanvasSelection(null);
+  }, [project]);
 
   const runWithUnsavedGuard = useCallback(
     async (action: () => void) => {
@@ -178,8 +209,14 @@ function StudioWireShellContent() {
     void runWithUnsavedGuard(() => setModal({ type: 'terminal_block', locationId }));
   }
 
+  const activeCanvasViewId =
+    activeView === 'workspace' && selection.selectedObjectType === 'view'
+      ? selection.selectedObjectId
+      : null;
+
   return (
-    <SidebarProvider className="app-frame">
+    <ViewCanvasHistoryProvider activeViewId={activeCanvasViewId}>
+      <SidebarProvider className="app-frame">
       <TopBar
         activeView={activeView}
         onSelectProject={selectProject}
@@ -237,6 +274,7 @@ function StudioWireShellContent() {
                   void runWithUnsavedGuard(() => {
                     setActiveView('workspace');
                     setSelection(target);
+                    setViewCanvasSelection(null);
                   });
                 }
               }}
@@ -254,6 +292,7 @@ function StudioWireShellContent() {
         }}
       />
       {viewShell.modalElement}
-    </SidebarProvider>
+      </SidebarProvider>
+    </ViewCanvasHistoryProvider>
   );
 }

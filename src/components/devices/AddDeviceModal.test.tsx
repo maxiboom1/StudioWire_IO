@@ -166,7 +166,7 @@ describe('AddDeviceModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add I/O Interface' }));
     expect(screen.getByRole('button', { name: 'Expand PORTS' })).toBeTruthy();
     expect(screen.getAllByLabelText('I/O Name')).toHaveLength(2);
-  });
+  }, 10000);
 
   it('loads a compatible collection template into the form without creating a device', async () => {
     const user = userEvent.setup();

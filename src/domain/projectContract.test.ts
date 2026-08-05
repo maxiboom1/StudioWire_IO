@@ -41,6 +41,19 @@ describe('current project contract', () => {
     if (result.ok) {
       expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
       expect(result.validationIssues.filter((issue) => issue.severity === 'error')).toHaveLength(0);
+      expect(result.project.views).toEqual([
+        expect.objectContaining({
+          id: 'view-signal-overview',
+          placements: expect.arrayContaining([
+            expect.objectContaining({ id: 'view-placement-router-1' }),
+            expect.objectContaining({ id: 'view-placement-multiviewer-1' }),
+          ]),
+          lines: [expect.objectContaining({ id: 'view-line-router-to-multiviewer' })],
+        }),
+      ]);
+      const roundTrip = importProjectJsonText(JSON.stringify(result.project));
+      expect(roundTrip.ok).toBe(true);
+      if (roundTrip.ok) expect(roundTrip.project).toEqual(result.project);
     }
   });
 

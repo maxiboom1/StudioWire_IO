@@ -779,6 +779,12 @@ button.view-tree-add:focus-visible {
   padding-right: 8px;
 }
 
+.view-history-controls {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
 .view-tool-strip button {
   min-width: 0;
   padding-inline: 7px;
@@ -848,6 +854,11 @@ button.view-tree-add:focus-visible {
     linear-gradient(90deg, rgba(27, 56, 64, 0.035) 1px, transparent 1px), #e6ebed;
   background-size: 24px 24px;
   overscroll-behavior: contain;
+}
+
+.view-page:focus-visible {
+  outline: 2px solid #39999a;
+  outline-offset: 3px;
 }
 
 .view-viewport:focus-visible {
@@ -1386,6 +1397,15 @@ button.view-tree-add:focus-visible {
   }
   .view-device-size-control > span {
     display: none;
+  }
+  .view-fit-control span,
+  .view-reset-control span {
+    display: none;
+  }
+  .view-fit-control,
+  .view-reset-control {
+    width: 30px;
+    padding: 0 !important;
   }
 }
 

@@ -1,4 +1,4 @@
-import type { CSSProperties, PointerEventHandler } from 'react';
+import { useMemo, type CSSProperties, type PointerEventHandler } from 'react';
 import type { PortConnectionChainPart } from '../../domain/connections';
 import type { Device, ProjectRoot, ViewLineEndpoint } from '../../domain/types';
 import { ConnectorIcon } from '../common/ConnectorIcon';
@@ -26,7 +26,7 @@ export function DeviceDiagram({
     onSelect: (endpoint: ViewLineEndpoint) => void;
   };
 }) {
-  const model = buildDevicePresentationModel(project, device);
+  const model = useMemo(() => buildDevicePresentationModel(project, device), [device, project]);
   const rowIndexes = Array.from({ length: model.rowCount }, (_, index) => index);
   const diagramStyle = { '--device-port-rows': model.rowCount } as CSSProperties;
 
@@ -229,6 +229,7 @@ function ConnectionPoint({
       <button
         aria-label={`Use ${lineAnchor.label} as View line anchor`}
         className={`${classes} is-view-line-anchor`}
+        title={`Use ${lineAnchor.label} as View line anchor`}
         type="button"
         onClick={(event) => {
           event.stopPropagation();

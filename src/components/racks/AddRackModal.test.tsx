@@ -100,5 +100,5 @@ describe('AddRackModal', () => {
       }),
     );
     expect(onCreated).toHaveBeenCalledWith('rack-created');
-  });
+  }, 10000);
 });

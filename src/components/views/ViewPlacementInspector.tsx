@@ -9,6 +9,7 @@ import { InspectorShell } from '../common/InspectorShell';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { useViewCanvasCommands } from './ViewCanvasHistoryContext';
 
 interface PlacementForm {
   label: string;
@@ -27,7 +28,8 @@ export function ViewPlacementInspector({
   onOpenSource: (sourceType: ViewSourceType, sourceId: string) => void;
   onRemoved: () => void;
 }) {
-  const { project, updateViewPlacement, removeViewPlacement } = useProject();
+  const { project } = useProject();
+  const { updateViewPlacement, removeViewPlacement } = useViewCanvasCommands();
   const baseline = useMemo(() => createForm(placement), [placement]);
   const [form, setForm] = useState(baseline);
   const source =
@@ -72,10 +74,10 @@ export function ViewPlacementInspector({
       title="Placement Inspector"
       actions={
         <>
-          <Button disabled={!dirty} type="button" onClick={apply}>
+          <Button disabled={!dirty} title="Apply placement changes" type="button" onClick={apply}>
             Apply
           </Button>
-          <Button variant="destructive" type="button" onClick={remove}>
+          <Button title="Remove placement" variant="destructive" type="button" onClick={remove}>
             <Trash2 aria-hidden="true" className="h-4 w-4" />
             Remove
           </Button>
@@ -95,6 +97,7 @@ export function ViewPlacementInspector({
           This label applies only to this View. It does not rename the source object.
         </p>
         <Button
+          title={placement.sourceType === 'device' ? 'Open source Device' : 'Open source Rack'}
           disabled={!source}
           type="button"
           variant="outline"

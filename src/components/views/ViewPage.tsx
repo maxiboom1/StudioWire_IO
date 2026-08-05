@@ -37,8 +37,11 @@ export function ViewPage({
     <div className="view-page-stage" style={{ width: widthPx * zoom, height: heightPx * zoom }}>
       <div
         aria-label={`${view.name} ${view.pageSize.toUpperCase()} ${view.orientation} page`}
+        aria-describedby={`view-editor-instructions-${view.id}`}
         className="view-page"
         ref={pageRef}
+        role="application"
+        tabIndex={0}
         style={
           {
             width: widthPx,
@@ -48,6 +51,7 @@ export function ViewPage({
           } as CSSProperties
         }
         onPointerDown={controller.handlePagePointerDown}
+        onKeyDown={controller.handlePageKeyDown}
         onDragLeave={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
             controller.clearDropPreview();
@@ -56,6 +60,7 @@ export function ViewPage({
         onDragOver={controller.handlePageDragOver}
         onDrop={controller.handlePageDrop}
         onPointerCancel={controller.cancelGesture}
+        onLostPointerCapture={controller.cancelGesture}
         onPointerMove={controller.updateGesture}
         onPointerUp={controller.finishGesture}
       >
