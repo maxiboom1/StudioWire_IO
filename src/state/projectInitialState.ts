@@ -44,6 +44,7 @@ export function restoreProjectState(
           : `Project restored from ${result.key}`,
       importError: null,
       persistenceState: 'saved',
+      projectLifecycleRevision: 0,
     };
   }
 

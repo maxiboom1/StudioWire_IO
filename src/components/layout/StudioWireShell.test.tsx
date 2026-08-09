@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
+import { connectPorts } from '../../domain/connections';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
 import type { ProjectView } from '../../domain/types';
 import { noopViewCommands } from '../../test/projectContextStubs';
@@ -105,6 +106,47 @@ afterEach(() => {
 });
 
 describe('StudioWireShell dirty device inspector navigation guard', () => {
+  it('keeps the selected device open after a crosspoint mutation and resets only for project lifecycle replacement', async () => {
+    const user = userEvent.setup();
+    const context = createContext();
+    context.projectLifecycleRevision = 3;
+    contextHarness.current = context;
+    const { rerender } = render(<StudioWireShell />);
+
+    const routerTreeItem = screen.getByRole('button', { name: /Router 1 Device RTR1/ });
+    await user.click(routerTreeItem);
+    expect(routerTreeItem.getAttribute('data-active')).toBe('true');
+
+    const connected = connectPorts(context.project, {
+      fromPortId: 'port-group-router-outputs-port-0001',
+      toPortId: 'port-group-multiviewer-inputs-port-0001',
+    });
+    if (!connected.ok) throw new Error(connected.error);
+
+    contextHarness.current = {
+      ...context,
+      project: connected.project,
+      statusMessage: connected.message,
+    };
+    rerender(<StudioWireShell />);
+
+    expect(screen.getByRole('button', { name: /Router 1 Device RTR1/ }).getAttribute('data-active')).toBe(
+      'true',
+    );
+    expect(screen.getByText('Device Inspector')).toBeTruthy();
+
+    contextHarness.current = {
+      ...contextHarness.current,
+      projectLifecycleRevision: 4,
+    };
+    rerender(<StudioWireShell />);
+
+    expect(await screen.findByRole('region', { name: 'Project summary' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Router 1 Device RTR1/ }).getAttribute('data-active')).toBe(
+      'false',
+    );
+  }, 10000);
+
   it('creates an A3 portrait View with the next default name', async () => {
     const user = userEvent.setup();
     const addView = vi.fn(() => 'view-created');

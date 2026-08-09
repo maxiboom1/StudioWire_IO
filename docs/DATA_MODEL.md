@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.06`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `0.2.9.05 -> 0.2.9.06` is shape-preserving, and every other View and engineering record is preserved. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.07`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `0.2.9.05 -> 0.2.9.06` and `0.2.9.06 -> 0.2.9.07` are shape-preserving, and every other View and engineering record is preserved. Other older internal-development exports may still be rejected before the first public/released schema baseline.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.06`.
+- `schemaVersion`: current fixed string `0.2.9.07`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.

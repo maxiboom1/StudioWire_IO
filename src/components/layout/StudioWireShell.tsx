@@ -31,7 +31,7 @@ export function StudioWireShell() {
 }
 
 function StudioWireShellContent() {
-  const { project, importError, dismissImportError } = useProject();
+  const { project, importError, dismissImportError, projectLifecycleRevision = 0 } = useProject();
   const chooseConfirmation = useConfirmationChoice();
   const [selection, setSelection] = useState<SelectionState>({
     selectedObjectType: null,
@@ -41,36 +41,18 @@ function StudioWireShellContent() {
   const [modal, setModal] = useState<ObjectModalState>(null);
   const [inspectorGuard, setInspectorGuard] = useState<InspectorDirtyGuard | null>(null);
   const [viewCanvasSelection, setViewCanvasSelection] = useState<ViewCanvasSelection | null>(null);
-  const observedProjectRef = useRef({
-    locations: project.locations,
-    racks: project.racks,
-    devices: project.devices,
-    views: project.views,
-    settings: project.settings,
-  });
+  const observedProjectLifecycleRevisionRef = useRef(projectLifecycleRevision);
 
   useEffect(() => {
-    const previous = observedProjectRef.current;
-    const replaced =
-      previous.locations !== project.locations &&
-      previous.racks !== project.racks &&
-      previous.devices !== project.devices &&
-      previous.views !== project.views &&
-      previous.settings !== project.settings;
-    observedProjectRef.current = {
-      locations: project.locations,
-      racks: project.racks,
-      devices: project.devices,
-      views: project.views,
-      settings: project.settings,
-    };
-    if (!replaced) return;
+    const previousRevision = observedProjectLifecycleRevisionRef.current;
+    observedProjectLifecycleRevisionRef.current = projectLifecycleRevision;
+    if (previousRevision === projectLifecycleRevision) return;
     setSelection({ selectedObjectType: 'project', selectedObjectId: project.project.id });
     setActiveView('workspace');
     setModal(null);
     setInspectorGuard(null);
     setViewCanvasSelection(null);
-  }, [project]);
+  }, [project.project.id, projectLifecycleRevision]);
 
   const runWithUnsavedGuard = useCallback(
     async (action: () => void) => {

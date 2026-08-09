@@ -10,11 +10,12 @@ export function createInitialProjectState(context: ProjectHandlerContext): Proje
     statusMessage: 'New project ready',
     importError: null,
     persistenceState: 'unsaved',
+    projectLifecycleRevision: 0,
   };
 }
 
 export function handleNewProject(
-  _state: ProjectState,
+  state: ProjectState,
   _action: ActionOf<'NEW_PROJECT'>,
   context: ProjectHandlerContext,
 ): ProjectState {
@@ -23,11 +24,12 @@ export function handleNewProject(
     statusMessage: 'New project created',
     importError: null,
     persistenceState: 'unsaved',
+    projectLifecycleRevision: (state.projectLifecycleRevision ?? 0) + 1,
   };
 }
 
 export function handleLoadSampleProject(
-  _state: ProjectState,
+  state: ProjectState,
   _action: ActionOf<'LOAD_SAMPLE_PROJECT'>,
   context: ProjectHandlerContext,
 ): ProjectState {
@@ -36,11 +38,12 @@ export function handleLoadSampleProject(
     statusMessage: 'Sample project loaded',
     importError: null,
     persistenceState: 'unsaved',
+    projectLifecycleRevision: (state.projectLifecycleRevision ?? 0) + 1,
   };
 }
 
 export function handleImportProjectJson(
-  _state: ProjectState,
+  state: ProjectState,
   action: ActionOf<'IMPORT_PROJECT_JSON'>,
   context: ProjectHandlerContext,
 ): ProjectState {
@@ -60,6 +63,7 @@ export function handleImportProjectJson(
     statusMessage: `Project imported; ${action.payload.validationIssues.length} validation issue(s) found${migrationStatus}`,
     importError: null,
     persistenceState: 'unsaved',
+    projectLifecycleRevision: (state.projectLifecycleRevision ?? 0) + 1,
   };
 }
 

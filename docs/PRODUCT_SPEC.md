@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.06
+# StudioWire IO Product Spec v0.2.9.07
 
-StudioWire IO v0.2.9.06 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.07 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.06` completes the first View editor with port/I/O Range anchored technical lines, transient multi-selection, View-local canvas undo/redo, keyboard parity, lifecycle hardening, and exact target-format overflow reporting. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.06` completed the first View editor with port/I/O Range anchored technical lines, transient multi-selection, View-local canvas undo/redo, keyboard parity, lifecycle hardening, and exact target-format overflow reporting. Version `0.2.9.07` corrects project-lifecycle coordination without changing View or engineering records. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
 
 ## Application Layout
 
@@ -157,6 +157,8 @@ Normal devices can be edited after creation. Existing I/O interface count, direc
 Rack-mounted standard devices can be unassigned from their rack without deleting the device. This clears rack assignment and RU placement, preserves mount height, and keeps the device in the rack's location. Terminal blocks are not unassigned through this workflow.
 
 Terminal blocks are modeled as a device kind with fixed 1RU rack placement and matching rear/front port faces. TB creation does not create planned cables or reserve cable numbers. A TB front-to-front patch receives a category-default cable number when the connection is made.
+
+Creating or clearing a crosspoint is a normal project edit and must keep the current device or terminal-block workspace selected. Only explicit project lifecycle replacement—New Project, Import Project, or Load Sample—returns navigation to the project summary and clears stale transient editor state.
 
 ## Port Groups
 

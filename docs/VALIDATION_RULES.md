@@ -2,7 +2,7 @@
 
 Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and only mutates project state when the UI stores the returned issues after the user clicks Validate.
 
-Current-version `0.2.9.06` JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` at `0.2.9.00`; staged versions advance to `.04`, the `.04 -> .05` migration removes and reports legacy boundary-anchored View lines, and `.05 -> .06` is shape-preserving before current structural and relational validation. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
+Current-version `0.2.9.07` JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` at `0.2.9.00`; staged versions advance to `.04`, the `.04 -> .05` migration removes and reports legacy boundary-anchored View lines, and `.05 -> .06 -> .07` is shape-preserving before current structural and relational validation. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
 
 Port label generation resolves `{I/O NAME}` and its supported `{NAME}` alias from the parent `PortGroup.name`. Device metadata changes must not alter labels that use either interface-name token. `{DEVICE}` remains the explicit token for patterns that use the device label prefix.
 

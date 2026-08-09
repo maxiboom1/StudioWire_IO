@@ -23,6 +23,7 @@ export interface ProjectState {
   statusMessage: string;
   importError: string | null;
   persistenceState?: 'saving' | 'saved' | 'unsaved' | 'failed';
+  projectLifecycleRevision?: number;
 }
 
 export interface DeviceDraft {

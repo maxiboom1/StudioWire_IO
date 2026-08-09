@@ -242,6 +242,7 @@ describe('importProjectValue structural safety', () => {
   it('supports the current schema, prior View stage, and retained 0.2.8.25 baseline', () => {
     expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([
       STUDIOWIRE_CURRENT_VERSION,
+      '0.2.9.06',
       '0.2.9.05',
       '0.2.9.04',
       '0.2.9.03',
@@ -420,6 +421,23 @@ describe('importProjectValue structural safety', () => {
   it('imports 0.2.9.05 through an identity migration without changing project data', () => {
     const project = currentProject();
     project.schemaVersion = '0.2.9.05';
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+      expect(result.removedViewLineCount).toBe(0);
+      const { schemaVersion: _beforeVersion, ...beforeData } = before;
+      const { schemaVersion: _afterVersion, ...afterData } = result.project;
+      expect(afterData).toEqual(beforeData);
+    }
+  });
+
+  it('imports 0.2.9.06 through an identity migration without changing project data', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.06';
     const before = structuredClone(project);
 
     const result = importProjectValue(project);

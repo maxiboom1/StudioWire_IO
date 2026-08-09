@@ -79,6 +79,36 @@ describe('projectReducer core project actions', () => {
     );
   });
 
+  it('preserves lifecycle revision for crosspoints and increments it only for project replacement', () => {
+    const connected = projectReducer(
+      { ...createState(), projectLifecycleRevision: 7 },
+      {
+        type: 'CONNECT_PORTS',
+        payload: {
+          fromPortId: 'port-group-router-outputs-port-0001',
+          toPortId: 'port-group-multiviewer-inputs-port-0001',
+        },
+      },
+    );
+    expect(connected.projectLifecycleRevision).toBe(7);
+
+    const loaded = projectReducer(connected, { type: 'LOAD_SAMPLE_PROJECT' });
+    expect(loaded.projectLifecycleRevision).toBe(8);
+
+    const imported = projectReducer(loaded, {
+      type: 'IMPORT_PROJECT_JSON',
+      payload: {
+        project: structuredClone(sampleProject),
+        validationIssues: [],
+        removedViewLineCount: 0,
+      },
+    });
+    expect(imported.projectLifecycleRevision).toBe(9);
+
+    const created = projectReducer(imported, { type: 'NEW_PROJECT' });
+    expect(created.projectLifecycleRevision).toBe(10);
+  });
+
   it('handles settings reference edits and duplicate connector safeguards', () => {
     let state = createState();
 

@@ -6,7 +6,7 @@ This folder is the implementation sequence for the first StudioWire IO multi-obj
 
 Creating or revising these prompt documents does not change the application version. The product implementation started at `0.2.9.00` from the `0.2.8.25` baseline.
 
-Implementation status: prompts 01 through 07 are complete through `0.2.9.06`. The first View editor now includes live technical placements, Areas/Text/I/O Ranges, port/range anchored styled lines, transient multi-selection, transactional View-local undo/redo, accessible keyboard interaction, lifecycle hardening, the reported legacy-line migration, and an illustrative validated sample View.
+Implementation status: prompts 01 through 07 are complete through `0.2.9.06`. The current `0.2.9.07` maintenance release preserves that contract and fixes crosspoint navigation by distinguishing normal project edits from explicit project lifecycle replacement.
 
 The feature is a local, frontend-only presentation layer over project data:
 

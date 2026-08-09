@@ -25,7 +25,8 @@ export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.9.02', to: '0.2.9.03', migrate: identityMigration },
   { from: '0.2.9.03', to: '0.2.9.04', migrate: identityMigration },
   { from: '0.2.9.04', to: '0.2.9.05', migrate: removeLegacyViewLines },
-  { from: '0.2.9.05', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
+  { from: '0.2.9.05', to: '0.2.9.06', migrate: identityMigration },
+  { from: '0.2.9.06', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
 ];
 
 export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {
