@@ -15,6 +15,8 @@ export function formatPortLabel(
     .join(interfaceName)
     .split(LEGACY_IO_NAME_LABEL_TOKEN)
     .join(interfaceName)
+    .split('{0}')
+    .join(String(index))
     .split('{00}')
     .join(String(index).padStart(2, '0'))
     .split('{000}')

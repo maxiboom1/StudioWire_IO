@@ -290,8 +290,6 @@ function validateConnectedCables(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const activeConnectionCounts = new Map<string, number>();
-  const devices = new Map(project.devices.map((device) => [device.id, device]));
-
   for (const cable of project.cables) {
     if (cable.status !== 'connected') {
       continue;

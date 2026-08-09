@@ -119,8 +119,8 @@ describe('connectPorts', () => {
       return;
     }
 
-    const winner = getCableByNumber(result.project, 'V-0001');
-    const loser = getCableByNumber(result.project, 'V-0009');
+    const winner = getCableByNumber(result.project, 'V-001');
+    const loser = getCableByNumber(result.project, 'V-009');
 
     expect(winner.status).toBe('connected');
     expect(winner.sideAEndpoint.id).toBe(routerOut.id);
@@ -263,7 +263,7 @@ describe('connectPorts', () => {
       entryPortId: tbRear.id,
       exitPortId: tbFront.id,
     });
-    expect(tbPart?.continuationCable?.number).toBe('V-0010');
+    expect(tbPart?.continuationCable?.number).toBe('V-010');
   });
 
   it('allocates a cable only when two TB front ports are patched', () => {
@@ -287,7 +287,7 @@ describe('connectPorts', () => {
       return;
     }
 
-    expect(getCableByNumber(result.project, 'V-0009').status).toBe('connected');
+    expect(getCableByNumber(result.project, 'V-009').status).toBe('connected');
     expect(result.project.numberingLedgers[0].ranges).toContainEqual(
       expect.objectContaining({
         from: 9,
@@ -331,9 +331,9 @@ describe('connectPorts', () => {
       return;
     }
 
-    expect(getCableByNumber(secondResult.project, 'V-0001').status).toBe('planned');
-    expect(getCableByNumber(secondResult.project, 'V-0009').status).toBe('connected');
-    expect(getCableByNumber(secondResult.project, 'V-0010').status).toBe('retired');
+    expect(getCableByNumber(secondResult.project, 'V-001').status).toBe('planned');
+    expect(getCableByNumber(secondResult.project, 'V-009').status).toBe('connected');
+    expect(getCableByNumber(secondResult.project, 'V-010').status).toBe('retired');
   });
 
   it('clears a connection and restores both planned cable slots', () => {
@@ -360,8 +360,8 @@ describe('connectPorts', () => {
       return;
     }
 
-    expect(getCableByNumber(disconnectResult.project, 'V-0001').status).toBe('planned');
-    expect(getCableByNumber(disconnectResult.project, 'V-0009').status).toBe('planned');
+    expect(getCableByNumber(disconnectResult.project, 'V-001').status).toBe('planned');
+    expect(getCableByNumber(disconnectResult.project, 'V-009').status).toBe('planned');
     expect(describePortConnection(disconnectResult.project, routerOut.id).isConnected).toBe(false);
     expect(describePortConnection(disconnectResult.project, switcherIn.id).isConnected).toBe(false);
   });
@@ -396,7 +396,7 @@ describe('connectPorts', () => {
       return;
     }
 
-    const slot = getCableByNumber(disconnectResult.project, 'V-0020');
+    const slot = getCableByNumber(disconnectResult.project, 'V-020');
 
     expect(slot.status).toBe('planned');
     expect(slot.sideAEndpoint.id).toBe(bidirectional.id);

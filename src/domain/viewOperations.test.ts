@@ -266,11 +266,7 @@ describe('View domain operations', () => {
     });
     if (!rangeToRange.ok) throw new Error(rangeToRange.error);
     expect(getViewPortRangeAttachedLineCount(rangeToRange.project.views[0], 'range-multiviewer')).toBe(2);
-    const removed = removeViewAnnotation(
-      rangeToRange.project,
-      'view-main',
-      'range-multiviewer',
-    );
+    const removed = removeViewAnnotation(rangeToRange.project, 'view-main', 'range-multiviewer');
     if (!removed.ok) throw new Error(removed.error);
     expect(removed.project.views[0].lines).toEqual([]);
     expect(removed.project.views[0].annotations.map((item) => item.id)).toEqual(['range-router']);

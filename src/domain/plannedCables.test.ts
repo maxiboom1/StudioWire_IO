@@ -10,6 +10,7 @@ function makePort(direction: Port['direction']): Port {
     index: 1,
     name: `${direction} 1`,
     label: `${direction.toUpperCase()}-001`,
+    devicePortLabelOverride: null,
     direction,
     categoryId: 'category-video',
     connectorTypeId: 'connector-bnc',
@@ -25,7 +26,7 @@ describe('createPlannedCableForPort', () => {
     expect(cable.sideAEndpoint).toMatchObject({ type: 'device_port', id: 'port-output' });
     expect(cable.sideBEndpoint).toMatchObject({ type: 'unknown', id: null });
     expect(cable.labelTop).toBe('OUTPUT-001');
-    expect(cable.labelMiddle).toBe('V-0001');
+    expect(cable.labelMiddle).toBe('V-001');
     expect(cable.labelBottom).toBe('');
   });
 
@@ -35,7 +36,7 @@ describe('createPlannedCableForPort', () => {
     expect(cable.sideAEndpoint).toMatchObject({ type: 'unknown', id: null });
     expect(cable.sideBEndpoint).toMatchObject({ type: 'device_port', id: 'port-input' });
     expect(cable.labelTop).toBe('');
-    expect(cable.labelMiddle).toBe('V-0002');
+    expect(cable.labelMiddle).toBe('V-002');
     expect(cable.labelBottom).toBe('INPUT-001');
   });
 

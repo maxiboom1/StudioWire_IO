@@ -14,10 +14,12 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { normalizeDeviceToken } from './addDeviceDraft';
 import {
   createDeviceInspectorForm,
   createInspectorEditInput,
   getDeviceInspectorError,
+  resolveInspectorDevicePortLabels,
 } from './deviceInspectorForm';
 
 export function StandardDeviceInspector({
@@ -33,7 +35,14 @@ export function StandardDeviceInspector({
     () => project.portGroups.filter((group) => group.deviceId === device.id),
     [device.id, project.portGroups],
   );
-  const baseline = useMemo(() => createDeviceInspectorForm(device, portGroups), [device, portGroups]);
+  const ports = useMemo(
+    () => project.ports.filter((port) => port.deviceId === device.id),
+    [device.id, project.ports],
+  );
+  const baseline = useMemo(
+    () => createDeviceInspectorForm(device, portGroups, ports),
+    [device, portGroups, ports],
+  );
   const [form, setForm] = useState(baseline);
   const [activeSection, setActiveSection] = useState<string | null>('edit');
   const [openIoGroups, setOpenIoGroups] = useState<Set<string>>(new Set());
@@ -75,7 +84,54 @@ export function StandardDeviceInspector({
   function updateIoGroup(id: string, updates: Partial<(typeof form.ioGroups)[number]>) {
     setForm((current) => ({
       ...current,
-      ioGroups: current.ioGroups.map((group) => (group.id === id ? { ...group, ...updates } : group)),
+      ioGroups: current.ioGroups.map((group) => {
+        if (group.id !== id) return group;
+        const next = { ...group, ...updates };
+        return next.devicePortLabelMode === 'pattern'
+          ? {
+              ...next,
+              devicePortLabels: resolveInspectorDevicePortLabels(
+                next,
+                normalizeDeviceToken(current.code || current.name),
+              ),
+            }
+          : next;
+      }),
+    }));
+  }
+
+  function updateDevicePortLabel(groupId: string, portId: string, label: string) {
+    setForm((current) => ({
+      ...current,
+      ioGroups: current.ioGroups.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              devicePortLabelMode: 'manual',
+              devicePortLabels: group.devicePortLabels.map((item) =>
+                item.portId === portId ? { ...item, label } : item,
+              ),
+            }
+          : group,
+      ),
+    }));
+  }
+
+  function resetDevicePortLabels(groupId: string) {
+    setForm((current) => ({
+      ...current,
+      ioGroups: current.ioGroups.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              devicePortLabelMode: 'pattern',
+              devicePortLabels: resolveInspectorDevicePortLabels(
+                group,
+                normalizeDeviceToken(current.code || current.name),
+              ),
+            }
+          : group,
+      ),
     }));
   }
 
@@ -199,7 +255,7 @@ export function StandardDeviceInspector({
                 onChange={(event) => updateIoGroup(group.id, { name: event.target.value })}
               />
             </Field>
-            <Field label="Label pattern" id={`inspector-io-pattern-${group.id}`}>
+            <Field label="Cable Label Pattern" id={`inspector-io-pattern-${group.id}`}>
               <Input
                 id={`inspector-io-pattern-${group.id}`}
                 placeholder={DEFAULT_IO_PORT_LABEL_PATTERN}
@@ -211,6 +267,45 @@ export function StandardDeviceInspector({
                 }
               />
             </Field>
+            <Field label="Device Port Label Pattern" id={`inspector-device-io-pattern-${group.id}`}>
+              <Input
+                id={`inspector-device-io-pattern-${group.id}`}
+                placeholder="Same as cable label"
+                value={group.devicePortLabelPattern}
+                onChange={(event) =>
+                  updateIoGroup(group.id, {
+                    devicePortLabelPattern: event.target.value,
+                  })
+                }
+              />
+            </Field>
+            <div className="device-port-label-editor-header">
+              <span>Device labels · {group.devicePortLabelMode === 'manual' ? 'Manual' : 'Pattern'}</span>
+              <Button
+                disabled={group.devicePortLabelMode === 'pattern'}
+                size="sm"
+                type="button"
+                variant="outline"
+                onClick={() => resetDevicePortLabels(group.id)}
+              >
+                Reset to Pattern
+              </Button>
+            </div>
+            <div className="device-port-label-editor-list">
+              {group.devicePortLabels.map((item) => (
+                <Field
+                  key={item.portId}
+                  label={`Port ${item.index}`}
+                  id={`inspector-device-port-label-${item.portId}`}
+                >
+                  <Input
+                    id={`inspector-device-port-label-${item.portId}`}
+                    value={item.label}
+                    onChange={(event) => updateDevicePortLabel(group.id, item.portId, event.target.value)}
+                  />
+                </Field>
+              ))}
+            </div>
             <div className="device-inspector-color-row">
               <Field label="Color" id={`inspector-io-color-${group.id}`}>
                 <input

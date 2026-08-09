@@ -53,8 +53,8 @@ describe('project settings defaults', () => {
     expect(settings.cablePrefixes.at(-1)).toEqual({ id: 'prefix-av', prefix: 'AV', name: 'AV' });
     expect(settings.rackDefaults).toEqual({ heightRu: 48, numberingDirection: 'bottom_to_top' });
     expect(settings.labelRules).toEqual({
-      cableNumberFormat: 'PREFIX-0001',
-      cableNumberPadding: 4,
+      cableNumberFormat: 'PREFIX-001',
+      cableNumberPadding: 3,
     });
   });
 

@@ -35,7 +35,11 @@ function view(xMm: number): ProjectView {
 describe('View canvas history', () => {
   it('ignores no-ops, invalidates redo, and keeps the latest 50 snapshots', () => {
     let history = createEmptyViewCanvasHistory();
-    history = pushViewCanvasHistory(history, createViewCanvasSnapshot(view(0)), createViewCanvasSnapshot(view(0)));
+    history = pushViewCanvasHistory(
+      history,
+      createViewCanvasSnapshot(view(0)),
+      createViewCanvasSnapshot(view(0)),
+    );
     expect(history.past).toHaveLength(0);
 
     for (let index = 0; index < VIEW_CANVAS_HISTORY_LIMIT + 4; index += 1) {
@@ -51,11 +55,7 @@ describe('View canvas history', () => {
     const undone = undoViewCanvasHistory(history, createViewCanvasSnapshot(view(54)))!;
     expect(undone.snapshot.placements[0].xMm).toBe(53);
     expect(undone.history.future).toHaveLength(1);
-    const edited = pushViewCanvasHistory(
-      undone.history,
-      undone.snapshot,
-      createViewCanvasSnapshot(view(70)),
-    );
+    const edited = pushViewCanvasHistory(undone.history, undone.snapshot, createViewCanvasSnapshot(view(70)));
     expect(edited.future).toHaveLength(0);
   });
 

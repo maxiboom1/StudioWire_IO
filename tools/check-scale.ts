@@ -20,7 +20,7 @@ let project = createEmptyProject({
   id: 'project-scale-check',
   name: 'Synthetic Scale Check',
   customer: 'Local release verification',
-  revision: '0.2.8.10',
+  revision: '0.2.9.08',
   status: 'draft',
 });
 
@@ -38,7 +38,7 @@ project = {
 };
 
 const videoCategory = requireEntity(
-  project.settings.categories.find((category) => category.name === 'Video'),
+  project.settings.categories.find((category) => category.id === 'category-video'),
 );
 const bncConnector = requireEntity(
   project.settings.connectorTypes.find((connectorType) => connectorType.name === 'BNC'),
@@ -71,6 +71,8 @@ for (let index = 1; index <= DEVICE_COUNT; index += 1) {
         connectorTypeId: bncConnector.id,
         count: DEVICE_PORTS_PER_DIRECTION,
         portLabelPattern: '{DEVICE}-IN-{000}',
+        devicePortLabelPattern: null,
+        devicePortLabels: null,
         cablePrefix: 'V',
         firstCableNumber: nextCableNumber(project, 'V'),
         createPlannedCables: true,
@@ -82,6 +84,8 @@ for (let index = 1; index <= DEVICE_COUNT; index += 1) {
         connectorTypeId: bncConnector.id,
         count: DEVICE_PORTS_PER_DIRECTION,
         portLabelPattern: '{DEVICE}-OUT-{000}',
+        devicePortLabelPattern: null,
+        devicePortLabels: null,
         cablePrefix: 'V',
         firstCableNumber: nextCableNumber(project, 'V') + DEVICE_PORTS_PER_DIRECTION,
         createPlannedCables: true,

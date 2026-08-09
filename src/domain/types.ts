@@ -9,6 +9,7 @@ export const RACK_NUMBERING_DIRECTION_VALUES = ['bottom_to_top', 'top_to_bottom'
 export const DEVICE_KIND_VALUES = ['device', 'terminal_block'] as const;
 export const DEVICE_MOUNT_TYPE_VALUES = ['rack', 'non_rack', 'virtual'] as const;
 export const PORT_DIRECTION_VALUES = ['input', 'output', 'bidirectional', 'rear', 'front'] as const;
+export const DEVICE_PORT_LABEL_MODE_VALUES = ['pattern', 'manual'] as const;
 export const CABLE_STATUS_VALUES = ['planned', 'connected', 'retired'] as const;
 export const OBJECT_STATUS_VALUES = ['planned', 'connected'] as const;
 export const NUMBERING_RANGE_STATUS_VALUES = ['allocated', 'reserved_gap'] as const;
@@ -47,6 +48,7 @@ export type RackNumberingDirection = (typeof RACK_NUMBERING_DIRECTION_VALUES)[nu
 export type DeviceKind = (typeof DEVICE_KIND_VALUES)[number];
 export type DeviceMountType = (typeof DEVICE_MOUNT_TYPE_VALUES)[number];
 export type PortDirection = (typeof PORT_DIRECTION_VALUES)[number];
+export type DevicePortLabelMode = (typeof DEVICE_PORT_LABEL_MODE_VALUES)[number];
 export type CableStatus = (typeof CABLE_STATUS_VALUES)[number];
 export type ObjectStatus = (typeof OBJECT_STATUS_VALUES)[number];
 export type NumberingRangeStatus = (typeof NUMBERING_RANGE_STATUS_VALUES)[number];
@@ -276,6 +278,8 @@ export interface PortGroup {
   connectorTypeId: string;
   count: number;
   portLabelPattern: string;
+  devicePortLabelPattern: string | null;
+  devicePortLabelMode: DevicePortLabelMode;
   cablePrefix: string;
   firstCableNumber: number | null;
   lastCableNumber: number | null;
@@ -292,6 +296,7 @@ export interface Port {
   index: number;
   name: string;
   label: string;
+  devicePortLabelOverride: string | null;
   direction: PortDirection;
   categoryId: string;
   connectorTypeId: string;

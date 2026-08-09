@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.9.08",
+  "schemaVersion": "0.2.9.07",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -316,8 +316,8 @@
       "numberingDirection": "bottom_to_top"
     },
     "labelRules": {
-      "cableNumberFormat": "PREFIX-001",
-      "cableNumberPadding": 3
+      "cableNumberFormat": "PREFIX-0001",
+      "cableNumberPadding": 4
     }
   },
   "locations": [
@@ -343,7 +343,76 @@
       "numberingDirection": "bottom_to_top"
     }
   ],
-  "views": [],
+  "views": [
+    {
+      "id": "view-signal-overview",
+      "name": "Signal Overview",
+      "description": "Sample project View with live equipment references and a manual cable-group annotation.",
+      "pageSize": "a3",
+      "orientation": "portrait",
+      "placements": [
+        {
+          "id": "view-placement-router-1",
+          "sourceType": "device",
+          "sourceId": "device-router-1",
+          "xMm": 25,
+          "yMm": 80,
+          "scale": 0.8,
+          "labelOverride": null
+        },
+        {
+          "id": "view-placement-multiviewer-1",
+          "sourceType": "device",
+          "sourceId": "device-multiviewer-1",
+          "xMm": 165,
+          "yMm": 80,
+          "scale": 0.8,
+          "labelOverride": null
+        }
+      ],
+      "lines": [
+        {
+          "id": "view-line-router-to-multiviewer",
+          "from": {
+            "kind": "port",
+            "placementId": "view-placement-router-1",
+            "portId": "port-group-router-outputs-port-0001"
+          },
+          "to": {
+            "kind": "port",
+            "placementId": "view-placement-multiviewer-1",
+            "portId": "port-group-multiviewer-inputs-port-0001"
+          },
+          "label": "4x SDI",
+          "waypoints": [],
+          "color": "blue",
+          "width": "medium",
+          "labelOrientation": "horizontal",
+          "labelPosition": 0.5
+        }
+      ],
+      "annotations": [
+        {
+          "id": "view-group-core-signal-path",
+          "kind": "group",
+          "xMm": 15,
+          "yMm": 55,
+          "widthMm": 265,
+          "heightMm": 155,
+          "label": "Core Signal Path"
+        },
+        {
+          "id": "view-text-signal-overview",
+          "kind": "text",
+          "xMm": 20,
+          "yMm": 20,
+          "widthMm": 120,
+          "text": "Sample Signal Overview",
+          "size": "large"
+        }
+      ]
+    }
+  ],
   "devices": [
     {
       "id": "device-router-1",
@@ -404,9 +473,7 @@
       "numberingRangeId": "range-v-router-outputs",
       "createPlannedCables": true,
       "locked": false,
-      "colorOverride": null,
-      "devicePortLabelPattern": null,
-      "devicePortLabelMode": "pattern"
+      "colorOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs",
@@ -423,9 +490,7 @@
       "numberingRangeId": null,
       "createPlannedCables": false,
       "locked": false,
-      "colorOverride": null,
-      "devicePortLabelPattern": null,
-      "devicePortLabelMode": "pattern"
+      "colorOverride": null
     }
   ],
   "ports": [
@@ -440,8 +505,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0001",
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-router-outputs-port-0002",
@@ -454,8 +518,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0002",
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-router-outputs-port-0003",
@@ -468,8 +531,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0003",
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-router-outputs-port-0004",
@@ -482,8 +544,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0004",
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-multiviewer-inputs-port-0001",
@@ -496,8 +557,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-multiviewer-inputs-port-0002",
@@ -510,8 +570,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-multiviewer-inputs-port-0003",
@@ -524,8 +583,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     },
     {
       "id": "port-group-multiviewer-inputs-port-0004",
@@ -538,8 +596,7 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": "",
-      "devicePortLabelOverride": null
+      "notes": ""
     }
   ],
   "cables": [
@@ -549,20 +606,20 @@
       "prefix": "V",
       "index": 1,
       "status": "planned",
-      "labelTop": "OUT-001",
-      "labelMiddle": "V-0001",
-      "labelBottom": "",
-      "notes": "",
-      "sourceEndpoint": {
+      "sideAEndpoint": {
         "type": "device_port",
         "id": "port-group-router-outputs-port-0001",
         "label": "OUT-001"
       },
-      "destinationEndpoint": {
+      "sideBEndpoint": {
         "type": "unknown",
         "id": null,
         "label": "Unknown"
-      }
+      },
+      "labelTop": "OUT-001",
+      "labelMiddle": "V-0001",
+      "labelBottom": "",
+      "notes": ""
     },
     {
       "id": "cable-v-0002",

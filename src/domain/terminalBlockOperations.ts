@@ -191,6 +191,7 @@ function createTerminalBlockPort(group: PortGroup, device: Device, index: number
       index,
       name: '',
       label: '',
+      devicePortLabelOverride: null,
       direction: group.direction,
       categoryId: group.categoryId,
       connectorTypeId: group.connectorTypeId,

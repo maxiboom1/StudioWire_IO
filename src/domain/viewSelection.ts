@@ -196,7 +196,11 @@ export function translateViewMovableElements(
         (annotation.kind === 'text' && textIds.has(annotation.id)) ||
         (annotation.kind === 'group' && groupIds.has(annotation.id));
       return selected
-        ? { ...annotation, xMm: roundMm(annotation.xMm + delta.xMm), yMm: roundMm(annotation.yMm + delta.yMm) }
+        ? {
+            ...annotation,
+            xMm: roundMm(annotation.xMm + delta.xMm),
+            yMm: roundMm(annotation.yMm + delta.yMm),
+          }
         : annotation;
     }),
   };
@@ -259,10 +263,7 @@ function elementKey(item: ViewMovableElementRef): string {
   return `${item.kind}:${item.id}`;
 }
 
-function idsForKind(
-  items: readonly ViewMovableElementRef[],
-  kind: ViewMovableElementKind,
-): Set<string> {
+function idsForKind(items: readonly ViewMovableElementRef[], kind: ViewMovableElementKind): Set<string> {
   return new Set(items.filter((item) => item.kind === kind).map((item) => item.id));
 }
 

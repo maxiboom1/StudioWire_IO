@@ -26,7 +26,8 @@ export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.9.03', to: '0.2.9.04', migrate: identityMigration },
   { from: '0.2.9.04', to: '0.2.9.05', migrate: removeLegacyViewLines },
   { from: '0.2.9.05', to: '0.2.9.06', migrate: identityMigration },
-  { from: '0.2.9.06', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
+  { from: '0.2.9.06', to: '0.2.9.07', migrate: identityMigration },
+  { from: '0.2.9.07', to: STUDIOWIRE_CURRENT_VERSION, migrate: addDevicePortLabels },
 ];
 
 export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {
@@ -97,6 +98,30 @@ function removeLegacyViewLines(project: unknown): MigrationStepResult {
     return { ...view, lines: [] };
   });
   return { project: { ...record, views }, removedViewLineCount };
+}
+
+function addDevicePortLabels(project: unknown): MigrationStepResult {
+  const record = requireRecord(project, '$');
+  if (!Array.isArray(record.portGroups) || !Array.isArray(record.ports)) {
+    throw new MigrationError('$', 'Expected portGroups and ports arrays while migrating device labels.');
+  }
+  const settings = requireRecord(record.settings, '$.settings');
+  return migrationStep({
+    ...record,
+    settings: {
+      ...settings,
+      labelRules: { cableNumberFormat: 'PREFIX-001', cableNumberPadding: 3 },
+    },
+    portGroups: record.portGroups.map((value, index) => ({
+      ...requireRecord(value, `$.portGroups[${index}]`),
+      devicePortLabelPattern: null,
+      devicePortLabelMode: 'pattern',
+    })),
+    ports: record.ports.map((value, index) => ({
+      ...requireRecord(value, `$.ports[${index}]`),
+      devicePortLabelOverride: null,
+    })),
+  });
 }
 
 function migrationStep(project: unknown): MigrationStepResult {

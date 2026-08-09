@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.local/schema/studiowire.device-template.schema.json",
-  "title": "StudioWire IO Device Template v0.1.0",
+  "title": "StudioWire IO Device Template v0.2.0",
   "type": "object",
   "additionalProperties": false,
   "required": ["templateSchemaVersion", "templateType", "device", "ioInterfaces"],
   "properties": {
-    "templateSchemaVersion": { "const": "0.1.0" },
+    "templateSchemaVersion": { "enum": ["0.1.0", "0.2.0"] },
     "templateType": { "const": "device" },
     "device": {
       "type": "object",
@@ -45,6 +45,12 @@
           "connectorName": { "type": "string", "minLength": 1 },
           "count": { "type": "integer", "minimum": 1 },
           "portLabelPattern": { "type": "string", "minLength": 1 },
+          "devicePortLabelPattern": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          },
+          "devicePortLabels": {
+            "anyOf": [{ "type": "array", "items": { "type": "string", "minLength": 1 } }, { "type": "null" }]
+          },
           "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
         }
       }

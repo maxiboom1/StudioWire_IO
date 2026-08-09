@@ -77,8 +77,9 @@ describe('ViewSelectionInspector', () => {
     );
 
     expect(screen.getByText('3 items selected')).toBeTruthy();
-    expect(screen.getByText('Temporary canvas selection only. This does not create a persistent group.'))
-      .toBeTruthy();
+    expect(
+      screen.getByText('Temporary canvas selection only. This does not create a persistent group.'),
+    ).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Remove Selected' }));
 
     expect(replaceViewCanvas).toHaveBeenCalledTimes(1);

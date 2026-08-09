@@ -39,7 +39,10 @@ export interface EditDeviceFormController {
   submit: (confirmWarnings: (request: ConfirmationCopy) => Promise<boolean>) => Promise<boolean>;
   updateExistingPortGroup: (
     id: string,
-    updates: Pick<Partial<ExistingPortGroupForm>, 'name' | 'portLabelPattern' | 'colorOverride'>,
+    updates: Pick<
+      Partial<ExistingPortGroupForm>,
+      'name' | 'portLabelPattern' | 'devicePortLabelPattern' | 'colorOverride'
+    >,
   ) => void;
   updateNewPortGroup: (localId: string, updates: Partial<DevicePortGroupForm>) => void;
   updateNewPortGroupCategory: (localId: string, categoryId: string) => void;
@@ -102,7 +105,10 @@ export function useEditDeviceForm({
 
   function updateExistingPortGroup(
     id: string,
-    updates: Pick<Partial<ExistingPortGroupForm>, 'name' | 'portLabelPattern' | 'colorOverride'>,
+    updates: Pick<
+      Partial<ExistingPortGroupForm>,
+      'name' | 'portLabelPattern' | 'devicePortLabelPattern' | 'colorOverride'
+    >,
   ) {
     setExistingPortGroups((current) => updateExistingPortGroupForms(current, id, updates));
   }

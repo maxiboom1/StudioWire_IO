@@ -1,5 +1,5 @@
 {
-  "templateSchemaVersion": "0.1.0",
+  "templateSchemaVersion": "0.2.0",
   "templateType": "device",
   "device": {
     "name": "Mixer RP1",
@@ -17,7 +17,9 @@
       "connectorName": "DB25",
       "count": 8,
       "portLabelPattern": "{I/O NAME}-{00}",
-      "color": "#DC2626"
+      "color": "#DC2626",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX A.OUT",
@@ -26,7 +28,9 @@
       "connectorName": "XLR",
       "count": 8,
       "portLabelPattern": "{I/O NAME}-{00}",
-      "color": "#DC2626"
+      "color": "#DC2626",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX EMB-1 IN",
@@ -35,7 +39,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX EMB-1 OUT",
@@ -44,7 +50,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX EMB-2 IN",
@@ -53,7 +61,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX EMB-2OUT",
@@ -62,7 +72,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}-{000}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX W/C",
@@ -71,7 +83,9 @@
       "connectorName": "BNC",
       "count": 2,
       "portLabelPattern": "{I/O NAME}-{00}",
-      "color": "#7C3AED"
+      "color": "#7C3AED",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX AES3",
@@ -80,7 +94,9 @@
       "connectorName": "BNC",
       "count": 2,
       "portLabelPattern": "{I/O NAME}-{00}",
-      "color": "#7C3AED"
+      "color": "#7C3AED",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX REF",
@@ -89,7 +105,9 @@
       "connectorName": "BNC",
       "count": 2,
       "portLabelPattern": "{I/O NAME}-{00}",
-      "color": "#7C3AED"
+      "color": "#7C3AED",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX ETH",
@@ -98,7 +116,9 @@
       "connectorName": "RJ45",
       "count": 2,
       "portLabelPattern": "{I/O NAME}-{00}",
-      "color": "#059669"
+      "color": "#059669",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX METERS",
@@ -107,7 +127,9 @@
       "connectorName": "DVI",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "MIX GUI",
@@ -116,7 +138,9 @@
       "connectorName": "DVI",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "HYDRA PRI",
@@ -125,7 +149,9 @@
       "connectorName": "SFP",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#DC2626"
+      "color": "#DC2626",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "HYDRA SEC",
@@ -134,7 +160,9 @@
       "connectorName": "SFP",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#DC2626"
+      "color": "#DC2626",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     }
   ]
 }

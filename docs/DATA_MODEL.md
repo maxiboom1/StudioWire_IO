@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.07`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `0.2.9.05 -> 0.2.9.06` and `0.2.9.06 -> 0.2.9.07` are shape-preserving, and every other View and engineering record is preserved. Other older internal-development exports may still be rejected before the first public/released schema baseline.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.08`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `.05 -> .06 -> .07` is shape-preserving. The `.07 -> .08` migration adds presentation-only device-port fields and three-digit LabelRules while preserving every existing cable string, cable ID, ledger, reference, View line, and annotation.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -8,9 +8,9 @@ IDs are stable strings. References use IDs, not display names. Dates use ISO 860
 
 ## Device Templates
 
-Device templates are bundled application catalog data, not part of `ProjectRoot`. They use the independent template schema version `0.1.0` and live under `collections/devices/<Manufacturer>/<Category>/<Model>/*.studiowire-device.json`.
+Device templates are bundled application catalog data, not part of `ProjectRoot`. New exports use independent template schema version `0.2.0`; `0.1.0` remains import-compatible. Templates live under `collections/devices/<Manufacturer>/<Category>/<Model>/*.studiowire-device.json`.
 
-A template contains Device Name, Device sub-name, manufacturer, model, primary category name, optional rack height, and ordered I/O interfaces. Each I/O interface contains I/O Name, direction, category name, connector name, count, label pattern, and an effective `#RRGGBB` color.
+A template contains Device Name, Device sub-name, manufacturer, model, primary category name, optional rack height, and ordered I/O interfaces. Each I/O interface contains I/O Name, direction, category name, connector name, count, Cable Label Pattern, nullable Device Port Label Pattern, nullable index-ordered manual device-label array, and an effective `#RRGGBB` color. Template schema `0.2.0` stores this presentation state without project IDs or allocations; `0.1.0` imports default it to the cable-label mirror.
 
 Templates use semantic category and connector names because project IDs are local to one project. They never store object IDs, locations, folders, rack placement, cable prefixes, cable numbers, numbering ranges, planned cable IDs, or cable records. Loading a template resolves names against project settings, derives cable prefixes from matched categories, allocates fresh proposed ranges through the normal Add Device workflow, and populates the form without creating a device.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.07`.
+- `schemaVersion`: current fixed string `0.2.9.08`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -70,7 +70,10 @@ Default connector assignments follow the maintained operator baseline. VIDEO inc
 
 The default Video connector group exists with no members. The default Audio connector group contains XLR, PL, and RCA. An empty group does not make different connector types compatible.
 
-Cable numbers use `PREFIX-0001` formatting, for example `V-0001`, `A-0021`, `N-0100`, and `RF-0001`.
+Cable numbers use a minimum three-digit `PREFIX-001` format. Examples include `V-001`, `A-021`,
+`N-100`, `RF-001`, `V-1023`, and `V-10000`. Imported legacy numbers with four or more digits remain
+valid and are not rewritten; new allocations use the current three-digit minimum while the numbering
+ledger continues to reserve numeric indices independently from their displayed padding.
 
 ## Category
 
@@ -248,7 +251,7 @@ Fields:
 
 An exact source may appear only once in one View. A rack and a device mounted in that rack are different representations and may both be placed. Standard devices, terminal blocks, and racks remain live read-only representations of their project records; placement data never changes location or rack assignment.
 
-Placement bounds use the same deterministic natural sizes for validation, insertion, movement, and rendering. Standard devices are 92 mm wide and uniformly reduce the Device Workspace source diagram from 940 px: natural height is `(82 + rowCount * 50) * 92 / 940` mm. This preserves the exact source aspect ratio for the header, rows, connector icons, anchors, lines, and labels. Terminal blocks remain 92 mm wide with a 10 mm header and 2.4 mm per rear/front row. Standard-device row count is the larger of its ordered left and right presentation columns; terminal-block row count is the larger of its rear and front faces. Racks are 58 mm wide, with an 8 mm header and 3 mm per current rack unit. A missing-source placeholder is 60 x 30 mm. The stored uniform scale multiplies both natural dimensions.
+Placement bounds use the same deterministic natural sizes for validation, insertion, movement, and rendering. Standard devices are 92 mm wide and uniformly reduce the Device Workspace source diagram from 940 px: natural height is `(82 + rowCount * 50) * 92 / 940` mm. This preserves the exact source aspect ratio for the header, rows, connector icons, anchors, lines, and labels. Terminal blocks also render at 92 mm wide by uniformly reducing the shared source diagram: its natural height is `(39 + ceil(rowCount / 16) * 158 + 28) * 92 / 1452` mm. Standard-device row count is the larger of its ordered left and right presentation columns; terminal-block row count is the larger of its rear and front faces. Racks are 58 mm wide, with an 8 mm header and 3 mm per current rack unit. A missing-source placeholder is 60 x 30 mm. The stored uniform scale multiplies both natural dimensions.
 
 Version `0.2.9.02` renders placements as read-only live references. Maintenance labels through `0.2.9.02-fix-4` do not change that schema: standard View devices uniformly reduce the complete Device Workspace diagram, with passive endpoint stubs replacing crosspoint controls. The persisted `scale` field remains valid for compatibility and any existing value is rendered uniformly. The current operator UI provides no per-placement resize gesture or Scale field; its View-level Device Size control sets every `sourceType: 'device'` placement to `0.7`, `0.8`, `0.9`, or `1` in one domain operation. Rack scale is unchanged. Device/TB port labels, cable numbers, destination summaries, and rack contents are always resolved from current project records and are never copied into a View. The optional `labelOverride` is presentation-only. Moving, View-wide scaling, labeling, or removing a placement may mutate only the owning View's `placements` plus normal project stamps/change-log metadata; removing a placement also removes View lines attached to that placement. It cannot modify locations, folders, rack assignments, devices, port groups, ports, cables, endpoints, or numbering ledgers.
 
@@ -331,6 +334,8 @@ Fields:
 - `connectorTypeId`
 - `count`
 - `portLabelPattern`
+- `devicePortLabelPattern`: string or `null`
+- `devicePortLabelMode`: `pattern` or `manual`
 - `cablePrefix`
 - `firstCableNumber`
 - `lastCableNumber`
@@ -339,7 +344,21 @@ Fields:
 - `locked`
 - `colorOverride`
 
-`portLabelPattern` supports `{I/O NAME}`, `{NAME}`, `{DEVICE}`, `{00}`, and `{000}`. `{I/O NAME}` is the canonical token for the parent I/O interface name. `{NAME}` remains a supported alias for existing patterns and resolves identically. `{DEVICE}` resolves to the device label prefix. `{00}` resolves to the 1-based port index padded to two digits. `{000}` resolves to the 1-based port index padded to three digits. Relabeling an existing interface must always resolve the interface-name tokens from `PortGroup.name`, never from the device sub-name.
+`portLabelPattern` is the Cable Label Pattern and remains the source for `Port.label`, cable endpoints,
+and planned-cable labels. `devicePortLabelPattern` is presentation-only. `null` means the device body
+mirrors `Port.label`; otherwise it independently generates the label rendered inside the device body.
+Both patterns support `{I/O NAME}`, `{NAME}`, `{DEVICE}`, `{0}`, `{00}`, and `{000}`. `{I/O NAME}` is
+the canonical token for the parent I/O interface name. `{NAME}` remains a supported compatibility alias.
+`{DEVICE}` resolves to the device label prefix. `{0}` resolves to the unpadded 1-based port index;
+`{00}` and `{000}` pad it to two or three digits. Interface-name tokens always resolve from
+`PortGroup.name`, never from the device sub-name.
+
+In `pattern` mode, every port in the group keeps `devicePortLabelOverride: null` and the displayed label
+is resolved live from the device pattern or Cable Label Pattern fallback. Editing one generated row
+materializes all current row labels for that I/O interface and switches the group to `manual`. In manual
+mode every group port has a non-empty override, pattern changes do not overwrite those values, and Reset
+to Pattern clears every override in the group together. These fields never alter engineering connectivity,
+cable endpoint labels, cable numbers, or numbering ledgers.
 
 Standard devices use `input`, `output`, or `bidirectional` groups. Terminal blocks use exactly one `rear` group and one `front` group with matching count, category, and exact connector type.
 
@@ -362,6 +381,7 @@ Fields:
 - `index`
 - `name`
 - `label`
+- `devicePortLabelOverride`: string or `null`
 - `direction`
 - `categoryId`
 - `connectorTypeId`

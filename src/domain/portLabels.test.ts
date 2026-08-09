@@ -19,4 +19,9 @@ describe('formatPortLabel', () => {
   it('does not fall back to the device prefix for an omitted interface name', () => {
     expect(formatPortLabel('{I/O NAME}-{000}', 'MV1', 12)).toBe('-012');
   });
+
+  it('supports unpadded row numbering with the {0} token', () => {
+    expect(formatPortLabel('{0}', 'RTR1', 7, 'SDI OUT')).toBe('7');
+    expect(formatPortLabel('{0}', 'RTR1', 1234, 'SDI OUT')).toBe('1234');
+  });
 });

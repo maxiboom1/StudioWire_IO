@@ -320,8 +320,14 @@ function visiblePaperCenter(
   const right = Math.min(pageRect.right, viewportRect?.right ?? pageRect.right);
   const bottom = Math.min(pageRect.bottom, viewportRect?.bottom ?? pageRect.bottom);
   const raw = {
-    xMm: Math.max(0, Math.min(((left + right) / 2 - pageRect.left) / zoom / VIEW_PIXELS_PER_MM, page.widthMm)),
-    yMm: Math.max(0, Math.min(((top + bottom) / 2 - pageRect.top) / zoom / VIEW_PIXELS_PER_MM, page.heightMm)),
+    xMm: Math.max(
+      0,
+      Math.min(((left + right) / 2 - pageRect.left) / zoom / VIEW_PIXELS_PER_MM, page.widthMm),
+    ),
+    yMm: Math.max(
+      0,
+      Math.min(((top + bottom) / 2 - pageRect.top) / zoom / VIEW_PIXELS_PER_MM, page.heightMm),
+    ),
   };
   return snapViewLayoutPosition(raw, layoutScale);
 }

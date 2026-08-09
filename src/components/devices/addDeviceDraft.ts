@@ -85,6 +85,8 @@ export function createQuickPortGroups(
       connectorTypeId: findConnectorTypeId(project, categoryId, input.connectorName),
       count: input.count ?? 4,
       portLabelPattern: input.pattern,
+      devicePortLabelPattern: null,
+      devicePortLabels: null,
       cablePrefix: defaultPrefix,
       firstCableNumber: null,
       createPlannedCables: true,
@@ -220,6 +222,8 @@ export function addPortGroupDraft(
       connectorTypeId: getDefaultConnectorForCategory(project.settings, device.categoryId)?.id ?? '',
       count: 1,
       portLabelPattern: DEFAULT_IO_PORT_LABEL_PATTERN,
+      devicePortLabelPattern: null,
+      devicePortLabels: null,
       cablePrefix: prefix,
       firstCableNumber: null,
       createPlannedCables: true,
@@ -387,6 +391,14 @@ export function getAddDeviceValidation(
       errors.push(`${group.name || 'I/O interface'} count must be positive.`);
     }
 
+    if (group.devicePortLabels) {
+      if (!hasValidCount || group.devicePortLabels.length !== count) {
+        errors.push(`${group.name || 'I/O interface'} manual device labels must match its I/O count.`);
+      } else if (group.devicePortLabels.some((label) => !label.trim())) {
+        errors.push(`${group.name || 'I/O interface'} manual device labels cannot be empty.`);
+      }
+    }
+
     if (!project.settings.cablePrefixes.some((prefix) => prefix.prefix === group.cablePrefix)) {
       errors.push(`${group.name || 'I/O interface'} uses an unknown cable prefix.`);
     }
@@ -471,6 +483,8 @@ export function createAddDeviceCommandInput(
     },
     portGroups: portGroups.map(({ localId: _localId, ...group }) => ({
       ...group,
+      devicePortLabelPattern: group.devicePortLabelPattern?.trim() || null,
+      devicePortLabels: group.devicePortLabels?.map((label) => label.trim()) ?? null,
       count: Number(group.count),
       firstCableNumber: group.createPlannedCables ? group.firstCableNumber : null,
     })),

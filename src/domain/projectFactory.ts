@@ -222,6 +222,8 @@ export interface PortGroupInput {
   connectorTypeId: string;
   count: number;
   portLabelPattern?: string;
+  devicePortLabelPattern?: string | null;
+  devicePortLabelMode?: PortGroup['devicePortLabelMode'];
   cablePrefix: string;
   firstCableNumber?: number | null;
   lastCableNumber?: number | null;
@@ -243,6 +245,8 @@ export function createPortGroup(input: PortGroupInput): PortGroup {
     connectorTypeId: input.connectorTypeId,
     count: input.count,
     portLabelPattern: input.portLabelPattern ?? DEFAULT_IO_PORT_LABEL_PATTERN,
+    devicePortLabelPattern: input.devicePortLabelPattern ?? null,
+    devicePortLabelMode: input.devicePortLabelMode ?? 'pattern',
     cablePrefix: input.cablePrefix,
     firstCableNumber: input.firstCableNumber ?? null,
     lastCableNumber: input.lastCableNumber ?? null,
@@ -269,6 +273,7 @@ export function createPortsForGroup(portGroup: PortGroup, deviceLabelPrefix = ''
         index,
         portGroup.name,
       ),
+      devicePortLabelOverride: null,
       direction: portGroup.direction,
       categoryId: portGroup.categoryId,
       connectorTypeId: portGroup.connectorTypeId,

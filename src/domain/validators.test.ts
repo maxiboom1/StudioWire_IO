@@ -341,6 +341,28 @@ describe('validateProject port group planned-cable mode rules', () => {
 
     expect(codes).toContain('port-group-color-override-invalid');
   });
+
+  it('validates automatic and manual device-body label state per interface', () => {
+    const project = structuredClone(sampleProject);
+    const group = project.portGroups.find((item) => item.id === 'port-group-router-outputs')!;
+    const groupPorts = project.ports.filter((port) => port.portGroupId === group.id);
+    group.devicePortLabelMode = 'pattern';
+    groupPorts[0].devicePortLabelOverride = 'unexpected';
+    expect(validateProject(project).map((issue) => issue.code)).toContain(
+      'port-group-device-label-pattern-overrides',
+    );
+
+    group.devicePortLabelMode = 'manual';
+    groupPorts[0].devicePortLabelOverride = '1';
+    expect(validateProject(project).map((issue) => issue.code)).toContain(
+      'port-group-device-label-manual-incomplete',
+    );
+
+    groupPorts.forEach((port) => (port.devicePortLabelOverride = String(port.index)));
+    expect(validateProject(project).map((issue) => issue.code)).not.toContain(
+      'port-group-device-label-manual-incomplete',
+    );
+  });
 });
 
 describe('validateProject ledger rules', () => {

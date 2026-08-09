@@ -42,6 +42,8 @@ export function mapDeviceTemplateToFormDraft(
       connectorTypeId: resolved.connectorTypeId,
       count: ioInterface.count,
       portLabelPattern: ioInterface.portLabelPattern,
+      devicePortLabelPattern: ioInterface.devicePortLabelPattern,
+      devicePortLabels: ioInterface.devicePortLabels,
       cablePrefix: resolved.cablePrefix,
       firstCableNumber,
       createPlannedCables: true,

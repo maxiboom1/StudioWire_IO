@@ -97,7 +97,9 @@ describe('confirmation prompts', () => {
       annotations: [],
     });
 
-    expect(confirmation.message).toContain('Existing coordinates, scales, waypoints, and line-label positions');
+    expect(confirmation.message).toContain(
+      'Existing coordinates, scales, waypoints, and line-label positions',
+    );
     expect(confirmation.confirmLabel).toBe('Keep layout');
   });
 });

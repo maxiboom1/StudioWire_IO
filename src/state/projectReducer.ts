@@ -98,6 +98,21 @@ function reduceProjectState(
   action: ProjectAction,
   context: ProjectHandlerContext,
 ): ProjectState {
+  const nextState = dispatchProjectAction(state, action, context);
+
+  return nextState.projectLifecycleRevision === undefined
+    ? {
+        ...nextState,
+        projectLifecycleRevision: state.projectLifecycleRevision ?? 0,
+      }
+    : nextState;
+}
+
+function dispatchProjectAction(
+  state: ProjectState,
+  action: ProjectAction,
+  context: ProjectHandlerContext,
+): ProjectState {
   switch (action.type) {
     case 'NEW_PROJECT':
       return handleNewProject(state, action, context);

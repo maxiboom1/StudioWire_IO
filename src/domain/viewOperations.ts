@@ -6,11 +6,7 @@ import {
   remapViewLayoutPosition,
   type ViewDeviceScale,
 } from './viewLayoutGrid';
-import {
-  VIEW_LINE_COLOR_VALUES,
-  VIEW_LINE_LABEL_ORIENTATION_VALUES,
-  VIEW_LINE_WIDTH_VALUES,
-} from './types';
+import { VIEW_LINE_COLOR_VALUES, VIEW_LINE_LABEL_ORIENTATION_VALUES, VIEW_LINE_WIDTH_VALUES } from './types';
 import type {
   ProjectRoot,
   ProjectView,
@@ -468,7 +464,10 @@ function validateLine(project: ProjectRoot, view: ProjectView, line: ViewLine): 
     return 'View line operation blocked: a line must connect two different placements.';
   }
 
-  if (!resolveViewLineEndpoint(project, view, line.from) || !resolveViewLineEndpoint(project, view, line.to)) {
+  if (
+    !resolveViewLineEndpoint(project, view, line.from) ||
+    !resolveViewLineEndpoint(project, view, line.to)
+  ) {
     return 'View line operation blocked: choose a valid standard-device I/O or I/O Range anchor.';
   }
 

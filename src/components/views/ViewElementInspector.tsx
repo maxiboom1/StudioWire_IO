@@ -6,6 +6,7 @@ import {
 } from '../../domain/types';
 import type { ProjectView, ViewAnnotation, ViewSourceType } from '../../domain/types';
 import { getViewPortRangeAttachedLineCount } from '../../domain/viewOperations';
+import { getDevicePortLabel } from '../../domain/devicePortLabels';
 import { VIEW_LINE_COLOR_MAP, VIEW_LINE_WIDTH_MAP } from '../../domain/viewLineStyles';
 import { useProject } from '../../state/ProjectContext';
 import { useConfirmation } from '../common/ConfirmationDialog';
@@ -27,7 +28,6 @@ export function ViewElementInspector({
   onOpenSource: (type: ViewSourceType, id: string) => void;
   onRemoved: () => void;
 }) {
-  const { project } = useProject();
   const { updateViewLine, removeViewLine, updateViewAnnotation, removeViewAnnotation } =
     useViewCanvasCommands();
   const confirm = useConfirmation();
@@ -198,8 +198,8 @@ function AnnotationFields({
   const { project } = useProject();
   if (annotation.kind === 'port_range') {
     const placement = view.placements.find((candidate) => candidate.id === annotation.placementId);
-    const start = project.ports.find((port) => port.id === annotation.startPortId)?.label ?? 'Missing I/O';
-    const end = project.ports.find((port) => port.id === annotation.endPortId)?.label ?? 'Missing I/O';
+    const start = getPresentationPortLabel(project, annotation.startPortId);
+    const end = getPresentationPortLabel(project, annotation.endPortId);
     return (
       <div className="editor-form inspector-form">
         <Field id="view-element-label" label="Label">
@@ -309,6 +309,14 @@ function AnnotationFields({
       </p>
     </div>
   );
+}
+
+function getPresentationPortLabel(project: ReturnType<typeof useProject>['project'], portId: string): string {
+  const port = project.ports.find((item) => item.id === portId);
+  if (!port) return 'Missing I/O';
+  const device = project.devices.find((item) => item.id === port.deviceId);
+  const group = project.portGroups.find((item) => item.id === port.portGroupId);
+  return device && group ? getDevicePortLabel(device, group, port) : port.label;
 }
 
 function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {

@@ -1,7 +1,11 @@
 import type { CSSProperties, PointerEvent } from 'react';
 import { AlertTriangle, Grip } from 'lucide-react';
 import type { ProjectRoot, ProjectView, ViewPlacement } from '../../domain/types';
-import { DEVICE_DIAGRAM_SOURCE_WIDTH_PX, getPlacementNaturalSize } from '../../domain/viewGeometry';
+import {
+  DEVICE_DIAGRAM_SOURCE_WIDTH_PX,
+  TERMINAL_BLOCK_DIAGRAM_SOURCE_WIDTH_PX,
+  getPlacementNaturalSize,
+} from '../../domain/viewGeometry';
 import { getCoveredViewPortIds } from '../../domain/viewLineEndpoints';
 import { isPlacementOutsidePage } from '../../domain/viewPlacement';
 import type { ViewEditorController } from './useViewEditorController';
@@ -34,6 +38,9 @@ export function ViewPlacementBlock({
   const label = placement.labelOverride ?? sourceName;
   const isTechnicalDevice =
     placement.sourceType === 'device' && source && 'kind' in source && source.kind === 'device';
+  const isTerminalBlock =
+    placement.sourceType === 'device' && source && 'kind' in source && source.kind === 'terminal_block';
+  const isDiagramDevice = isTechnicalDevice || isTerminalBlock;
   const outsidePage = isPlacementOutsidePage(project, view, {
     ...placement,
     xMm: placement.xMm,
@@ -49,7 +56,9 @@ export function ViewPlacementBlock({
     width: natural.widthMm * VIEW_PIXELS_PER_MM,
     height: natural.heightMm * VIEW_PIXELS_PER_MM,
     transform: `scale(${placement.scale})`,
-    '--view-device-diagram-scale': (natural.widthMm * VIEW_PIXELS_PER_MM) / DEVICE_DIAGRAM_SOURCE_WIDTH_PX,
+    '--view-device-diagram-scale':
+      (natural.widthMm * VIEW_PIXELS_PER_MM) /
+      (isTerminalBlock ? TERMINAL_BLOCK_DIAGRAM_SOURCE_WIDTH_PX : DEVICE_DIAGRAM_SOURCE_WIDTH_PX),
   } as CSSProperties;
 
   function begin(event: PointerEvent<HTMLElement>) {
@@ -63,7 +72,8 @@ export function ViewPlacementBlock({
       className={[
         'view-placement',
         `is-${placement.sourceType}`,
-        isTechnicalDevice ? 'is-device-diagram' : '',
+        isDiagramDevice ? 'is-device-diagram' : '',
+        isTerminalBlock ? 'is-terminal-block-diagram' : '',
         selected ? 'is-selected' : '',
         primary ? 'is-primary' : '',
         outsidePage ? 'is-outside-page' : '',
@@ -77,21 +87,15 @@ export function ViewPlacementBlock({
       tabIndex={0}
       onClick={(event) => {
         event.stopPropagation();
-        controller.selectMovable(
-          { kind: 'placement', id: placement.id },
-          event.ctrlKey || event.metaKey,
-        );
+        controller.selectMovable({ kind: 'placement', id: placement.id }, event.ctrlKey || event.metaKey);
       }}
       onKeyDown={(event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return;
         event.preventDefault();
-        controller.selectMovable(
-          { kind: 'placement', id: placement.id },
-          event.ctrlKey || event.metaKey,
-        );
+        controller.selectMovable({ kind: 'placement', id: placement.id }, event.ctrlKey || event.metaKey);
       }}
     >
-      {!isTechnicalDevice ? (
+      {!isDiagramDevice ? (
         <PlacementHeader
           label={label}
           outsidePage={outsidePage}
@@ -115,13 +119,22 @@ export function ViewPlacementBlock({
           project={project}
           device={source}
           displayName={label}
-          onHeaderPointerDown={isTechnicalDevice ? begin : undefined}
+          onHeaderPointerDown={isDiagramDevice ? begin : undefined}
           viewLineAnchors={
-            isTechnicalDevice && controller.tool === 'line'
+            isTechnicalDevice &&
+            (controller.tool === 'line' || controller.selectedLine || controller.endpointReconnect)
               ? {
                   placementId: placement.id,
                   coveredPortIds,
-                  onSelect: controller.handleLineAnchor,
+                  onSelect: controller.tool === 'line' ? controller.handleLineAnchor : undefined,
+                  getReconnectRole: controller.getReconnectEndpointRole,
+                  isReconnectTarget: controller.isReconnectTarget,
+                  reconnecting: Boolean(controller.endpointReconnect),
+                  onBeginReconnect: (event, _endpoint, role) => {
+                    if (controller.selectedLine) {
+                      controller.beginEndpointReconnect(event, controller.selectedLine, role);
+                    }
+                  },
                 }
               : undefined
           }

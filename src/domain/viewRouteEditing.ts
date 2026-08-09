@@ -50,6 +50,15 @@ export function insertLineWaypoint(
   line: ViewLine,
   point: ViewPoint,
 ) {
+  return insertLineWaypointWithIndex(project, view, line, point).waypoints;
+}
+
+export function insertLineWaypointWithIndex(
+  project: ProjectRoot,
+  view: ProjectView,
+  line: ViewLine,
+  point: ViewPoint,
+): { waypoints: ViewPoint[]; waypointIndex: number } {
   const manual = makeLineRouteManual(project, view, line);
   const full = getRenderedLinePoints(project, view, manual);
   let segment = 0;
@@ -66,7 +75,7 @@ export function insertLineWaypoint(
   }
   const waypoints = [...manual.waypoints];
   waypoints.splice(segment, 0, projected);
-  return waypoints;
+  return { waypoints, waypointIndex: segment };
 }
 
 function projectPointToSegment(point: ViewPoint, start: ViewPoint, end: ViewPoint): ViewPoint {

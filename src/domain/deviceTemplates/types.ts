@@ -1,9 +1,10 @@
 import type { DevicePortGroupDraft, DeviceDraft } from '../../state/projectTypes';
 
-export const DEVICE_TEMPLATE_SCHEMA_VERSION = '0.1.0' as const;
+export const DEVICE_TEMPLATE_SCHEMA_VERSION = '0.2.0' as const;
+export const LEGACY_DEVICE_TEMPLATE_SCHEMA_VERSION = '0.1.0' as const;
 
 export interface DeviceTemplate {
-  templateSchemaVersion: typeof DEVICE_TEMPLATE_SCHEMA_VERSION;
+  templateSchemaVersion: typeof DEVICE_TEMPLATE_SCHEMA_VERSION | typeof LEGACY_DEVICE_TEMPLATE_SCHEMA_VERSION;
   templateType: 'device';
   device: {
     name: string;
@@ -23,6 +24,8 @@ export interface DeviceTemplateIoInterface {
   connectorName: string;
   count: number;
   portLabelPattern: string;
+  devicePortLabelPattern: string | null;
+  devicePortLabels: string[] | null;
   color: string;
 }
 

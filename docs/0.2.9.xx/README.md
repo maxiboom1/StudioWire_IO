@@ -6,7 +6,7 @@ This folder is the implementation sequence for the first StudioWire IO multi-obj
 
 Creating or revising these prompt documents does not change the application version. The product implementation started at `0.2.9.00` from the `0.2.8.25` baseline.
 
-Implementation status: prompts 01 through 07 are complete through `0.2.9.06`. The current `0.2.9.07` maintenance release preserves that contract and fixes crosspoint navigation by distinguishing normal project edits from explicit project lifecycle replacement.
+Implementation status: prompts 01 through 07 are complete through `0.2.9.06`. Releases `0.2.9.07` and `0.2.9.08` preserve the presentation-only contract while fixing lifecycle coordination, adding independent device-body labels, and refining View-line/TB/rack editing.
 
 The feature is a local, frontend-only presentation layer over project data:
 
@@ -101,15 +101,7 @@ type ViewLineEndpoint =
       annotationId: string;
     };
 
-type ViewLineColor =
-  | 'black'
-  | 'red'
-  | 'blue'
-  | 'green'
-  | 'orange'
-  | 'purple'
-  | 'gray'
-  | 'teal';
+type ViewLineColor = 'black' | 'red' | 'blue' | 'green' | 'orange' | 'purple' | 'gray' | 'teal';
 
 type ViewLineWidth = 'hairline' | 'thin' | 'medium' | 'wide';
 type ViewLineLabelOrientation = 'horizontal' | 'vertical';
@@ -212,10 +204,11 @@ The operator creates placements only by dragging existing navigator devices/rack
 - Lines have no arrowhead and no stored engineering direction.
 - Empty `waypoints` selects an automatically calculated orthogonal route.
 - Default routing extends `5 mm` along each endpoint's live left/right normal before joining orthogonally.
-- Manual bend editing stores absolute millimetre waypoints. Normalize consecutive duplicate/collinear points and maintain horizontal/vertical segments.
+- Ctrl/Cmd-clicking or Ctrl/Cmd-dragging a segment converts an automatic route when necessary and inserts one grid-aware bend; selected bends can be dragged or removed independently. Manual bend editing stores absolute millimetre waypoints. Normalize consecutive duplicate/collinear points and maintain horizontal/vertical segments.
 - Moving/scaling a placement or editing a range moves its resolved anchors. Manual waypoints stay fixed until the user edits them or invokes **Reset Route**.
 - Lines use the fixed black/red/blue/green/orange/purple/gray/teal palette and Hairline/Thin/Medium/Wide widths. Labels stay black.
 - `labelPosition` is normalized route arc length `0..1`; label dragging projects onto the orthogonal route. Orientation is horizontal or bottom-to-top vertical.
+- A selected endpoint is reconnected by dragging its existing row-end or I/O Range square to another eligible standard-device placement. Invalid drops and Escape preserve the line; successful drops change only that endpoint. Label orientation remains an Inspector control and has no on-canvas rotate widget.
 
 ### Annotations and layers
 
@@ -301,8 +294,10 @@ The user explicitly requested safe staged compatibility, overriding the normal c
 - Prompts through `0.2.9.04` add identity migrations from the immediately previous v0.2.9.x version.
 - `0.2.9.04 -> 0.2.9.05` deliberately removes old boundary-anchored `views[].lines`, reports the removed count, and preserves every other project record before adopting the port/range endpoint and Line-style shape. Do not retain a legacy endpoint variant or infer nearest ports.
 - `0.2.9.05 -> 0.2.9.06` is an identity migration.
+- `0.2.9.06 -> 0.2.9.07` is an identity migration.
+- `0.2.9.07 -> 0.2.9.08` adds nullable/pattern device-port presentation state and changes LabelRules to `PREFIX-001`/3 while preserving exact cable records, ledgers, and View content.
 - Keep `0.2.8.25` and all earlier staged v0.2.9.x versions in the supported-version list so users can move directly to the final stage.
-- Preserve one realistic `0.2.8.25` legacy fixture. Do not add a large fixture for every identity-only step; focused migration-unit tests are sufficient for the staged versions.
+- Preserve realistic `0.2.8.25` and `0.2.9.07` fixtures. Do not add a large fixture for every identity-only step; focused migration-unit tests are sufficient for the staged versions.
 - The active localStorage key remains unchanged. Restored old data migrates before the next autosave writes the current shape.
 
 ## Prompt Sequence

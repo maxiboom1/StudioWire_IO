@@ -47,19 +47,19 @@ describe('project behavior characterization', () => {
         severity: 'error',
         code: 'planned-cable-label-middle-mismatch',
         objectType: 'cable',
-        objectId: 'cable-v-0001',
+        objectId: 'cable-v-001',
       },
       {
         severity: 'error',
         code: 'cable-number-format-invalid',
         objectType: 'cable',
-        objectId: 'cable-v-0001',
+        objectId: 'cable-v-001',
       },
       {
         severity: 'error',
         code: 'planned-cable-label-middle-mismatch',
         objectType: 'cable',
-        objectId: 'cable-v-0001',
+        objectId: 'cable-v-001',
       },
       {
         severity: 'error',

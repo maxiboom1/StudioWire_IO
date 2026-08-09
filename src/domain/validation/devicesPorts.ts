@@ -1,3 +1,4 @@
+import { DEVICE_PORT_LABEL_MODE_VALUES } from '../types';
 import type { Cable, Device, Port, ProjectRoot, ValidationIssue } from '../types';
 import { endpointIdInSet, type ValidationIssueBuilder } from './shared';
 
@@ -62,6 +63,58 @@ export function validatePortsAndGroups(
           'error',
           'port-group-color-override-invalid',
           `Port group ${portGroup.name} color override must use #RRGGBB format.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    if (portGroup.devicePortLabelPattern !== null && !portGroup.devicePortLabelPattern.trim()) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-device-label-pattern-invalid',
+          `Port group ${portGroup.name} Device Port Label Pattern must not be blank.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    }
+
+    if (!DEVICE_PORT_LABEL_MODE_VALUES.includes(portGroup.devicePortLabelMode)) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-device-label-mode-invalid',
+          `Port group ${portGroup.name} has an invalid device-port label mode.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    } else if (
+      portGroup.devicePortLabelMode === 'pattern' &&
+      generatedPorts.some((port) => port.devicePortLabelOverride !== null)
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-device-label-pattern-overrides',
+          `Port group ${portGroup.name} uses Pattern mode but retains manual device-port labels.`,
+          'portGroup',
+          portGroup.id,
+        ),
+      );
+    } else if (
+      portGroup.devicePortLabelMode === 'manual' &&
+      generatedPorts.some(
+        (port) => port.devicePortLabelOverride === null || !port.devicePortLabelOverride.trim(),
+      )
+    ) {
+      issues.push(
+        issue(
+          'error',
+          'port-group-device-label-manual-incomplete',
+          `Port group ${portGroup.name} Manual mode requires a non-empty device label for every port.`,
           'portGroup',
           portGroup.id,
         ),

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type PointerEvent } from 'react';
-import type { ProjectView, ViewPlacement } from '../../domain/types';
+import type { ProjectView, ViewLineEndpoint, ViewPlacement } from '../../domain/types';
 import { applyViewDeviceScale } from '../../domain/viewOperations';
 import { getPortRangeRows } from '../../domain/viewPortRanges';
 import {
@@ -8,6 +8,7 @@ import {
   type ViewDeviceScale,
 } from '../../domain/viewLayoutGrid';
 import { getPlacementPage } from '../../domain/viewPlacement';
+import { getViewLineEndpointRole, isValidViewLineReconnectTarget } from '../../domain/viewLineReconnection';
 import { useProject } from '../../state/ProjectContext';
 import { useViewCanvasCommands, useViewCanvasHistory } from './ViewCanvasHistoryContext';
 import { useViewCreationTools } from './useViewCreationTools';
@@ -48,6 +49,10 @@ export function useViewEditorController({
       ? canvasSelection.value.primary.id
       : null;
   const selectedPlacement = view.placements.find((placement) => placement.id === selectedPlacementId) ?? null;
+  const selectedLine =
+    canvasSelection?.kind === 'line'
+      ? (view.lines.find((line) => line.id === canvasSelection.id) ?? null)
+      : null;
   const page = getPlacementPage(project, view);
   const deviceScaleState = getViewDeviceScaleState(view);
   const layoutScale = getViewLayoutScale(view);
@@ -177,13 +182,6 @@ export function useViewEditorController({
     });
   }
 
-  function toggleLineLabelOrientation(line: ProjectView['lines'][number]) {
-    elements.toggleLineLabelOrientation(line);
-    setNotice(
-      `Line label changed to ${line.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal'}.`,
-    );
-  }
-
   return {
     project,
     zoom,
@@ -191,6 +189,7 @@ export function useViewEditorController({
     setTool: creation.setTool,
     canvasSelection,
     selectedPlacement,
+    selectedLine,
     renderedView: selection.renderedView,
     movableSelection: selection.movableSelection,
     marqueeBounds: selection.marqueeBounds,
@@ -217,8 +216,22 @@ export function useViewEditorController({
     beginMovableGesture: selection.beginMovableGesture,
     beginAnnotationResize: elements.beginAnnotationResize,
     beginWaypointGesture: elements.beginWaypointGesture,
+    beginInsertedWaypointGesture: elements.beginInsertedWaypointGesture,
     beginLineLabelGesture: elements.beginLabelGesture,
-    toggleLineLabelOrientation,
+    beginEndpointReconnect: elements.beginEndpointReconnect,
+    endpointReconnect: elements.endpointReconnect,
+    getReconnectEndpointRole: (endpoint: ViewLineEndpoint) =>
+      selectedLine ? getViewLineEndpointRole(selectedLine, endpoint) : null,
+    isReconnectTarget: (endpoint: ViewLineEndpoint) =>
+      elements.endpointReconnect
+        ? isValidViewLineReconnectTarget(
+            project,
+            view,
+            elements.endpointReconnect.line,
+            elements.endpointReconnect.role,
+            endpoint,
+          )
+        : false,
     addWaypoint: elements.addWaypoint,
     updateGesture,
     finishGesture,

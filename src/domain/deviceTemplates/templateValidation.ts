@@ -7,6 +7,7 @@ import type {
   DeviceTemplatePathParts,
   DeviceTemplateSourceEntry,
 } from './types';
+import { DEVICE_TEMPLATE_SCHEMA_VERSION, LEGACY_DEVICE_TEMPLATE_SCHEMA_VERSION } from './types';
 
 const validateTemplateSchema = createTemplateValidator();
 const COLLECTION_PREFIX = 'collections/devices/';
@@ -33,7 +34,10 @@ export function validateDeviceTemplateSource(source: DeviceTemplateSourceEntry):
     return { template: null, pathParts, issues };
   }
 
-  const template = source.value as unknown as DeviceTemplate;
+  const raw = source.value as unknown as DeviceTemplate;
+  const template = normalizeDeviceTemplate(raw, issues);
+
+  if (!template) return { template: null, pathParts, issues };
 
   if (pathParts) {
     comparePathPart(issues, 'manufacturer', pathParts.manufacturer, template.device.manufacturer);
@@ -42,6 +46,44 @@ export function validateDeviceTemplateSource(source: DeviceTemplateSourceEntry):
   }
 
   return { template, pathParts, issues };
+}
+
+function normalizeDeviceTemplate(
+  template: DeviceTemplate,
+  issues: DeviceTemplateIssue[],
+): DeviceTemplate | null {
+  const legacy = template.templateSchemaVersion === LEGACY_DEVICE_TEMPLATE_SCHEMA_VERSION;
+  const ioInterfaces = template.ioInterfaces.map((item, index) => {
+    const current = item as DeviceTemplate['ioInterfaces'][number] & {
+      devicePortLabelPattern?: string | null;
+      devicePortLabels?: string[] | null;
+    };
+    if (!legacy && (!('devicePortLabelPattern' in current) || !('devicePortLabels' in current))) {
+      issues.push({
+        code: 'device-template-label-shape-invalid',
+        path: `$.ioInterfaces[${index}]`,
+        message: 'Current templates require Device Port Label Pattern and label mode data.',
+      });
+    }
+    const devicePortLabels = current.devicePortLabels ?? null;
+    if (
+      devicePortLabels &&
+      (devicePortLabels.length !== current.count || devicePortLabels.some((label) => !label.trim()))
+    ) {
+      issues.push({
+        code: 'device-template-manual-label-count-mismatch',
+        path: `$.ioInterfaces[${index}].devicePortLabels`,
+        message: 'Manual device-port labels must contain one non-empty label per I/O row.',
+      });
+    }
+    return {
+      ...current,
+      devicePortLabelPattern: current.devicePortLabelPattern?.trim() || null,
+      devicePortLabels: devicePortLabels?.map((label) => label.trim()) ?? null,
+    };
+  });
+  if (issues.length > 0) return null;
+  return { ...template, templateSchemaVersion: DEVICE_TEMPLATE_SCHEMA_VERSION, ioInterfaces };
 }
 
 export function parseDeviceTemplatePath(path: string): DeviceTemplatePathParts | null {

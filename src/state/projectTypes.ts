@@ -51,6 +51,8 @@ export interface DevicePortGroupDraft {
   connectorTypeId: string;
   count: number;
   portLabelPattern: string;
+  devicePortLabelPattern?: string | null;
+  devicePortLabels?: string[] | null;
   cablePrefix: string;
   firstCableNumber: number | null;
   createPlannedCables: boolean;
@@ -104,6 +106,8 @@ export interface ExistingDevicePortGroupEdit {
   id: string;
   name: string;
   portLabelPattern: string;
+  devicePortLabelPattern?: string | null;
+  devicePortLabels?: Array<{ portId: string; label: string }> | null;
   colorOverride?: string | null;
 }
 
@@ -204,14 +208,7 @@ export type ProjectAction =
         updates: Partial<
           Pick<
             ViewLine,
-            | 'from'
-            | 'to'
-            | 'label'
-            | 'waypoints'
-            | 'color'
-            | 'width'
-            | 'labelOrientation'
-            | 'labelPosition'
+            'from' | 'to' | 'label' | 'waypoints' | 'color' | 'width' | 'labelOrientation' | 'labelPosition'
           >
         >;
       };

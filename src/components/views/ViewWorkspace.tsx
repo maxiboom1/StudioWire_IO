@@ -120,7 +120,14 @@ export function ViewWorkspace({
             <StretchHorizontal aria-hidden="true" className="h-4 w-4" />
             <span>Fit Width</span>
           </Button>
-          <Button className="view-reset-control" aria-label="Reset zoom" title="Reset zoom" variant="ghost" type="button" onClick={viewport.reset}>
+          <Button
+            className="view-reset-control"
+            aria-label="Reset zoom"
+            title="Reset zoom"
+            variant="ghost"
+            type="button"
+            onClick={viewport.reset}
+          >
             <RotateCcw aria-hidden="true" className="h-4 w-4" />
             <span>Reset</span>
           </Button>
@@ -132,10 +139,10 @@ export function ViewWorkspace({
         </p>
       ) : null}
       <p className="sr-only" id={`view-editor-instructions-${view.id}`}>
-        Select items with click. Use Control or Command click to change a multi-selection, or draw a
-        marquee on paper. Line mode uses eligible device I/O and I/O Range anchors. Escape cancels the
-        current action. Delete removes the selection. Arrow keys nudge selected items. Control or Command
-        Z undoes, and Control or Command Shift Z or Y redoes.
+        Select items with click. Use Control or Command click to change a multi-selection, or draw a marquee
+        on paper. Line mode uses eligible device I/O and I/O Range anchors. Escape cancels the current action.
+        Delete removes the selection. Arrow keys nudge selected items. Control or Command Z undoes, and
+        Control or Command Shift Z or Y redoes.
       </p>
       <div className="view-viewport" ref={viewport.viewportRef}>
         <ViewPage controller={editor} page={page} view={view} zoom={viewport.zoom} />

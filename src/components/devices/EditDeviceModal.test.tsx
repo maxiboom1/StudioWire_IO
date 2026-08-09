@@ -149,7 +149,7 @@ describe('EditDeviceModal', () => {
       { target: { value: 'PROGRAM' } },
     );
     fireEvent.change(
-      screen.getByLabelText('Label Pattern', {
+      screen.getByLabelText('Cable Label Pattern', {
         selector: '#port-group-pattern-port-group-router-outputs',
       }),
       { target: { value: '{DEVICE}-PROGRAM-{000}' } },
@@ -198,6 +198,8 @@ describe('EditDeviceModal', () => {
         id: 'port-group-router-outputs',
         name: 'PROGRAM',
         portLabelPattern: '{DEVICE}-PROGRAM-{000}',
+        devicePortLabelPattern: null,
+        devicePortLabels: null,
         colorOverride: null,
       },
     ]);

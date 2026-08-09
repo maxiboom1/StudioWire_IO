@@ -1,9 +1,23 @@
-import { useMemo, type CSSProperties, type PointerEventHandler } from 'react';
+import { useMemo, type CSSProperties, type PointerEvent, type PointerEventHandler } from 'react';
 import type { PortConnectionChainPart } from '../../domain/connections';
 import type { Device, ProjectRoot, ViewLineEndpoint } from '../../domain/types';
 import { ConnectorIcon } from '../common/ConnectorIcon';
 import { CrosspointPicker } from '../connections/CrosspointPicker';
 import { buildDevicePresentationModel, type DevicePortPresentation } from './devicePresentationModel';
+
+export interface DeviceDiagramViewLineAnchors {
+  placementId: string;
+  coveredPortIds: ReadonlySet<string>;
+  onSelect?: (endpoint: ViewLineEndpoint) => void;
+  getReconnectRole?: (endpoint: ViewLineEndpoint) => 'from' | 'to' | null;
+  isReconnectTarget?: (endpoint: ViewLineEndpoint) => boolean;
+  reconnecting?: boolean;
+  onBeginReconnect?: (
+    event: PointerEvent<HTMLElement>,
+    endpoint: ViewLineEndpoint,
+    role: 'from' | 'to',
+  ) => void;
+}
 
 export function DeviceDiagram({
   project,
@@ -20,11 +34,7 @@ export function DeviceDiagram({
   variant?: 'workspace' | 'view';
   readOnly?: boolean;
   onHeaderPointerDown?: PointerEventHandler<HTMLDivElement>;
-  viewLineAnchors?: {
-    placementId: string;
-    coveredPortIds: ReadonlySet<string>;
-    onSelect: (endpoint: ViewLineEndpoint) => void;
-  };
+  viewLineAnchors?: DeviceDiagramViewLineAnchors;
 }) {
   const model = useMemo(() => buildDevicePresentationModel(project, device), [device, project]);
   const rowIndexes = Array.from({ length: model.rowCount }, (_, index) => index);
@@ -97,7 +107,7 @@ function DevicePortLabel({
       className={`device-port-label device-port-label-${side}`}
       style={{ '--device-port-color': row.accentColor } as CSSProperties}
     >
-      <span>{row.port.label}</span>
+      <span>{row.deviceLabel}</span>
     </span>
   );
 }
@@ -117,11 +127,7 @@ function CableLineRow({
   row: DevicePortPresentation | undefined;
   side: 'input' | 'output';
   readOnly: boolean;
-  viewLineAnchors?: {
-    placementId: string;
-    coveredPortIds: ReadonlySet<string>;
-    onSelect: (endpoint: ViewLineEndpoint) => void;
-  };
+  viewLineAnchors?: DeviceDiagramViewLineAnchors;
 }) {
   if (!row) {
     return <div className="device-wire-row" />;
@@ -129,27 +135,30 @@ function CableLineRow({
 
   const inlineMarker = row.terminalBlockMarker;
   const hasInlineFrontPoint = Boolean(inlineMarker?.exitPortId);
+  const viewEndpoint: ViewLineEndpoint | null = viewLineAnchors
+    ? { kind: 'port', placementId: viewLineAnchors.placementId, portId: row.port.id }
+    : null;
+  const lineAnchor =
+    viewLineAnchors && viewEndpoint
+      ? {
+          endpoint: viewEndpoint,
+          label: row.deviceLabel,
+          covered: viewLineAnchors.coveredPortIds.has(row.port.id),
+          onSelect: viewLineAnchors.onSelect ? () => viewLineAnchors.onSelect?.(viewEndpoint) : undefined,
+          reconnectRole: viewLineAnchors.getReconnectRole?.(viewEndpoint) ?? null,
+          reconnecting: Boolean(viewLineAnchors.reconnecting),
+          isReconnectTarget: viewLineAnchors.isReconnectTarget?.(viewEndpoint) ?? false,
+          onBeginReconnect: viewLineAnchors.onBeginReconnect,
+        }
+      : undefined;
   const rowStyle = { '--device-port-color': row.accentColor } as CSSProperties;
   const primaryPoint = (
     <ConnectionPoint
-      ariaLabel={`Connect ${row.port.label}`}
+      ariaLabel={`Connect ${row.deviceLabel}`}
       className={hasInlineFrontPoint ? 'device-cable-picker-primary' : ''}
       portId={row.port.id}
       readOnly={readOnly}
-      lineAnchor={
-        viewLineAnchors && !hasInlineFrontPoint
-          ? {
-              label: row.port.label,
-              covered: viewLineAnchors.coveredPortIds.has(row.port.id),
-              onSelect: () =>
-                viewLineAnchors.onSelect({
-                  kind: 'port',
-                  placementId: viewLineAnchors.placementId,
-                  portId: row.port.id,
-                }),
-            }
-          : undefined
-      }
+      lineAnchor={viewLineAnchors && !hasInlineFrontPoint ? lineAnchor : undefined}
     />
   );
   const secondaryPoint = inlineMarker?.exitPortId ? (
@@ -158,20 +167,7 @@ function CableLineRow({
       className="device-cable-picker-secondary"
       portId={inlineMarker.exitPortId}
       readOnly={readOnly}
-      lineAnchor={
-        viewLineAnchors
-          ? {
-              label: row.port.label,
-              covered: viewLineAnchors.coveredPortIds.has(row.port.id),
-              onSelect: () =>
-                viewLineAnchors.onSelect({
-                  kind: 'port',
-                  placementId: viewLineAnchors.placementId,
-                  portId: row.port.id,
-                }),
-            }
-          : undefined
-      }
+      lineAnchor={lineAnchor}
     />
   ) : null;
 
@@ -220,20 +216,43 @@ function ConnectionPoint({
   className: string;
   portId: string;
   readOnly: boolean;
-  lineAnchor?: { label: string; covered: boolean; onSelect: () => void };
+  lineAnchor?: {
+    endpoint: ViewLineEndpoint;
+    label: string;
+    covered: boolean;
+    onSelect?: () => void;
+    reconnectRole: 'from' | 'to' | null;
+    reconnecting: boolean;
+    isReconnectTarget: boolean;
+    onBeginReconnect?: DeviceDiagramViewLineAnchors['onBeginReconnect'];
+  };
 }) {
   const classes = `device-cable-picker${className ? ` ${className}` : ''}`;
 
-  if (lineAnchor && !lineAnchor.covered) {
+  if (
+    lineAnchor &&
+    (!lineAnchor.covered || Boolean(lineAnchor.reconnectRole)) &&
+    (lineAnchor.onSelect || lineAnchor.reconnectRole || lineAnchor.isReconnectTarget)
+  ) {
     return (
       <button
         aria-label={`Use ${lineAnchor.label} as View line anchor`}
-        className={`${classes} is-view-line-anchor`}
+        className={`${classes} is-view-line-anchor${lineAnchor.reconnectRole ? ' is-reconnect-handle' : ''}${lineAnchor.isReconnectTarget ? ' is-reconnect-target' : ''}`}
+        data-view-line-endpoint-id={
+          lineAnchor.endpoint.kind === 'port' ? lineAnchor.endpoint.portId : undefined
+        }
+        data-view-line-endpoint-kind="port"
+        data-view-line-endpoint-placement-id={lineAnchor.endpoint.placementId}
         title={`Use ${lineAnchor.label} as View line anchor`}
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          lineAnchor.onSelect();
+          if (!lineAnchor.reconnecting) lineAnchor.onSelect?.();
+        }}
+        onPointerDown={(event) => {
+          if (lineAnchor.reconnectRole) {
+            lineAnchor.onBeginReconnect?.(event, lineAnchor.endpoint, lineAnchor.reconnectRole);
+          }
         }}
       />
     );

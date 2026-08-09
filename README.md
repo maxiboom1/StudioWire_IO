@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.07 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.08 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -86,14 +86,14 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Browser-only project editing with localStorage autosave.
 - Project settings for project info, connector catalog, category connector assignments, connector compatibility groups, and cable prefixes.
 - Location, folder, rack, device, and terminal-block inspectors with buffered editing, guarded navigation, and safe deletion rules.
-- Device creation, metadata editing, folder assignment, interface relabeling, new-interface append, rack unassign, and standard-device hard delete.
+- Device creation, metadata editing, folder assignment, independent cable/device-body I/O labels with pattern or per-row manual control, new-interface append, rack unassign, and standard-device hard delete.
 - Terminal block creation and editing as fixed 1RU rack objects with unnumbered rear/front port faces.
 - Port group definitions during device creation.
 - Generated port records and planned cable records.
 - Crosspoint creation from Device and TB views, including direct device links, device/TB segments, and TB front-to-front patches.
 - Crosspoint disconnect from the shared picker, restoring affected cable slots to planned state.
 - Cable register viewing and filtering.
-- Planned cable numbering with project numbering ledgers and reusable released allocations.
+- Planned cable numbering with three-digit minimum formatting, preserved legacy four-digit records, project numbering ledgers, and reusable released allocations.
 - Reserved cable number gaps that require confirmation and cannot be reused.
 - Validation in the UI and from CLI tools.
 - Persistent project-level View records for named A4/A3 layouts, live device/rack references, manual lines, and annotations.
@@ -102,10 +102,10 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Live device, terminal-block, and rack placement with deterministic virtual-grid insertion, navigator drop, transient modifier/marquee multi-selection, atomic collective move/delete, keyboard grid movement, missing-source and out-of-page diagnostics, and focused Inspectors.
 - A View-wide 70/80/90/100% Device Size control that proportionally scales every device/TB renderer and preserves logical alignment cells; the virtual grid stays invisible behind the existing paper pattern.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
-- View drawing tools for port/I/O Range anchored orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. Lines use fixed technical color/width presets, route-constrained labels, and presentation-only port IDs; these marks cannot change cables, ports, numbering, racks, or locations.
+- View drawing tools for port/I/O Range anchored orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. Lines use fixed technical color/width presets, route-constrained labels, Ctrl/Cmd bend insertion, bend removal/reset, and endpoint reconnection through the existing source squares; these marks cannot change cables, ports, numbering, racks, or locations.
 - View-local 50-entry undo/redo for canvas mutations, with transactional collective gestures, redo invalidation, keyboard shortcuts, accessible focus/instructions, and lifecycle-safe reset when a View or project is replaced. View CRUD, page settings, imports, and source-record edits remain outside this transient history.
 - Populated page-format confirmation that reports the exact number of placements, lines, and annotations which would extend outside the target page while preserving every stored coordinate.
-- JSON import/export: current exports use schema version `0.2.9.07`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. The `.05 -> .06` and `.06 -> .07` migrations are shape-preserving. All other View and engineering data is preserved.
+- JSON import/export: current exports use schema version `0.2.9.08`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. The `.05 -> .06` and `.06 -> .07` migrations are shape-preserving; `.07 -> .08` adds presentation-only device-port labels and the three-digit default without rewriting existing cables or Views.
 
 ## Release Gates
 
@@ -150,6 +150,14 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.08
+
+- Added independent Device Port Label Patterns, `{0}` numbering, interface-wide manual label freeze/edit/reset, and semantic clone/device-template support while keeping cable labels and connectivity unchanged.
+- Advanced device templates to `0.2.0` while retaining `0.1.0` import compatibility, and migrated projects from `.07` with appearance-preserving label defaults.
+- Changed new cable allocation formatting to a three-digit minimum while retaining exact legacy cable numbers and ledger indices.
+- Unified TB Workspace/View rendering, simplified rack device blocks, removed the malformed canvas rotation control, and refined zoom-stable line selection/bend handles.
+- Added transactional Ctrl/Cmd bend insertion/drag/removal and reconnection of View-line endpoints through existing device/I/O Range squares without engineering side effects.
 
 ### v0.2.9.07
 

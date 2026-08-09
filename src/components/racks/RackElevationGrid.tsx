@@ -85,7 +85,7 @@ export function RackElevationGrid({
             <span>{dropPreview?.ok ? 'Move here' : 'Blocked'}</span>
           </div>
         ) : null}
-        {model.mountedDevices.map(({ device, bottomRu, topRu, rowStart, rowEnd, diagnostics }) => (
+        {model.mountedDevices.map(({ device, rowStart, rowEnd, diagnostics }) => (
           <div
             className={[
               'rack-device-block',
@@ -106,12 +106,6 @@ export function RackElevationGrid({
             }
           >
             <strong>{device.name}</strong>
-            {device.kind !== 'terminal_block' ? (
-              <span>
-                {String(bottomRu).padStart(2, '0')}-{String(topRu).padStart(2, '0')}
-                {device.rackSizeRu ? ` / ${device.rackSizeRu} RU` : ''}
-              </span>
-            ) : null}
             {diagnostics.length > 0 ? <em>Placement issue</em> : null}
           </div>
         ))}

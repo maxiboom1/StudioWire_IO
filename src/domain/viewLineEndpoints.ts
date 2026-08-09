@@ -112,18 +112,12 @@ export function getCoveredViewPortIds(
   return covered;
 }
 
-function getPortAnchorPoint(
-  placement: ViewPlacement,
-  side: 'left' | 'right',
-  rowIndex: number,
-): ViewPoint {
+function getPortAnchorPoint(placement: ViewPlacement, side: 'left' | 'right', rowIndex: number): ViewPoint {
   const mmPerSourcePx = (VIEW_DEVICE_WIDTH_MM / DEVICE_DIAGRAM_SOURCE_WIDTH_PX) * placement.scale;
   return {
     xMm:
       placement.xMm +
-      (side === 'left'
-        ? CABLE_PICKER_CENTER_PX
-        : DEVICE_DIAGRAM_SOURCE_WIDTH_PX - CABLE_PICKER_CENTER_PX) *
+      (side === 'left' ? CABLE_PICKER_CENTER_PX : DEVICE_DIAGRAM_SOURCE_WIDTH_PX - CABLE_PICKER_CENTER_PX) *
         mmPerSourcePx,
     yMm:
       placement.yMm +

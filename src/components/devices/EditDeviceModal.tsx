@@ -214,6 +214,7 @@ export function EditDeviceModal({
                         ? form.updateExistingPortGroup(localId, {
                             name: updates.name,
                             portLabelPattern: updates.portLabelPattern,
+                            devicePortLabelPattern: updates.devicePortLabelPattern,
                             colorOverride: updates.colorOverride,
                           })
                         : form.updateNewPortGroup(localId, updates)

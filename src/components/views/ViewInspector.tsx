@@ -79,7 +79,12 @@ export function ViewInspector({
       title="View Inspector"
       actions={
         <>
-          <Button disabled={!isDirty || Boolean(error)} title="Save View properties" type="button" onClick={() => void save()}>
+          <Button
+            disabled={!isDirty || Boolean(error)}
+            title="Save View properties"
+            type="button"
+            onClick={() => void save()}
+          >
             Save View
           </Button>
           <Button title="Delete View" variant="destructive" type="button" onClick={() => void handleDelete()}>

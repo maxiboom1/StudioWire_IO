@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import type { ProjectRoot, ProjectView, ViewAnnotation, ViewLine, ViewPoint } from '../../domain/types';
+import type {
+  ProjectRoot,
+  ProjectView,
+  ViewAnnotation,
+  ViewLine,
+  ViewLineEndpoint,
+  ViewPoint,
+} from '../../domain/types';
 import {
   insertLineWaypoint,
+  insertLineWaypointWithIndex,
   makeLineRouteManual,
   moveLineWaypoint,
   removeLineWaypoint,
@@ -11,6 +19,7 @@ import { getRenderedLinePoints } from '../../domain/viewRouting';
 import { snapViewLayoutPosition, type ViewDeviceScale } from '../../domain/viewLayoutGrid';
 import { createViewMovableSelection } from '../../domain/viewSelection';
 import { getViewPortRangeAttachedLineCount } from '../../domain/viewOperations';
+import { isValidViewLineReconnectTarget, type ViewLineEndpointRole } from '../../domain/viewLineReconnection';
 import type { ProjectContextValue } from '../../state/projectContextTypes';
 import { useOptionalConfirmation } from '../common/ConfirmationDialog';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
@@ -30,7 +39,7 @@ interface AnnotationGesture {
 interface WaypointGesture {
   viewId: string;
   pointerId: number;
-  captureTarget: SVGCircleElement;
+  captureTarget: SVGElement;
   startClientX: number;
   startClientY: number;
   line: ViewLine;
@@ -43,6 +52,15 @@ interface LabelGesture {
   pointerId: number;
   captureTarget: SVGElement;
   line: ViewLine;
+}
+
+interface EndpointReconnectGesture {
+  viewId: string;
+  pointerId: number;
+  captureTarget: HTMLElement;
+  line: ViewLine;
+  role: ViewLineEndpointRole;
+  candidate: ViewLineEndpoint | null;
 }
 
 interface ViewElementGestureOptions {
@@ -77,6 +95,7 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
   const [waypointGesture, setWaypointGesture] = useState<WaypointGesture | null>(null);
   const [linePreview, setLinePreview] = useState<ViewLine | null>(null);
   const [labelGesture, setLabelGesture] = useState<LabelGesture | null>(null);
+  const [endpointReconnect, setEndpointReconnect] = useState<EndpointReconnectGesture | null>(null);
   const captureRef = useRef<{ target: Element; pointerId: number } | null>(null);
 
   useEffect(() => {
@@ -97,7 +116,8 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
         (event.key !== 'Delete' && event.key !== 'Backspace') ||
         isEditingTarget(event.target) ||
         !(event.target instanceof Element && event.target.closest('.view-page'))
-      ) return;
+      )
+        return;
       if (canvasSelection?.kind === 'line') {
         const line = view.lines.find((candidate) => candidate.id === canvasSelection.id);
         if (line && canvasSelection.bendIndex !== undefined) {
@@ -154,6 +174,25 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
   }
 
   function updatePointer(event: PointerEvent<HTMLElement>) {
+    if (endpointReconnect && endpointReconnect.pointerId === event.pointerId) {
+      const candidate = readViewLineEndpointAt(event.clientX, event.clientY);
+      const valid =
+        candidate &&
+        isValidViewLineReconnectTarget(
+          project,
+          view,
+          endpointReconnect.line,
+          endpointReconnect.role,
+          candidate,
+        )
+          ? candidate
+          : null;
+      setEndpointReconnect({ ...endpointReconnect, candidate: valid });
+      setLinePreview(
+        valid ? { ...endpointReconnect.line, [endpointReconnect.role]: valid } : endpointReconnect.line,
+      );
+      return true;
+    }
     if (annotationGesture && annotationGesture.pointerId === event.pointerId) {
       const dx = (event.clientX - annotationGesture.startClientX) / zoom / VIEW_PIXELS_PER_MM;
       const dy = (event.clientY - annotationGesture.startClientY) / zoom / VIEW_PIXELS_PER_MM;
@@ -193,14 +232,8 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     }
     if (labelGesture && labelGesture.pointerId === event.pointerId) {
       const point = {
-        xMm:
-          (event.clientX - event.currentTarget.getBoundingClientRect().left) /
-          zoom /
-          VIEW_PIXELS_PER_MM,
-        yMm:
-          (event.clientY - event.currentTarget.getBoundingClientRect().top) /
-          zoom /
-          VIEW_PIXELS_PER_MM,
+        xMm: (event.clientX - event.currentTarget.getBoundingClientRect().left) / zoom / VIEW_PIXELS_PER_MM,
+        yMm: (event.clientY - event.currentTarget.getBoundingClientRect().top) / zoom / VIEW_PIXELS_PER_MM,
       };
       const projected = projectViewLineLabelToRoute(
         getRenderedLinePoints(project, view, labelGesture.line),
@@ -213,6 +246,24 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
   }
 
   function finishPointer(event: PointerEvent<HTMLElement>) {
+    if (endpointReconnect && endpointReconnect.pointerId === event.pointerId) {
+      releasePointerCaptureSafely(endpointReconnect.captureTarget, endpointReconnect.pointerId);
+      captureRef.current = null;
+      const dropped = readViewLineEndpointAt(event.clientX, event.clientY);
+      const candidate =
+        dropped &&
+        isValidViewLineReconnectTarget(project, view, endpointReconnect.line, endpointReconnect.role, dropped)
+          ? dropped
+          : null;
+      if (endpointReconnect.viewId === view.id && candidate) {
+        updateViewLine(view.id, endpointReconnect.line.id, {
+          [endpointReconnect.role]: candidate,
+        });
+      }
+      setEndpointReconnect(null);
+      setLinePreview(null);
+      return true;
+    }
     if (annotationGesture && annotationGesture.pointerId === event.pointerId && annotationPreview) {
       if (annotationGesture.viewId !== view.id) {
         cancel();
@@ -278,6 +329,29 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     setLinePreview(manual);
   }
 
+  function beginInsertedWaypointGesture(event: PointerEvent<SVGElement>, line: ViewLine, point: ViewPoint) {
+    event.preventDefault();
+    event.stopPropagation();
+    const inserted = insertLineWaypointWithIndex(project, view, line, point);
+    const manual = { ...line, waypoints: inserted.waypoints };
+    const origin = manual.waypoints[inserted.waypointIndex];
+    if (!origin) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    captureRef.current = { target: event.currentTarget, pointerId: event.pointerId };
+    selectCanvas({ kind: 'line', id: line.id, bendIndex: inserted.waypointIndex });
+    setWaypointGesture({
+      viewId: view.id,
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      line: manual,
+      waypointIndex: inserted.waypointIndex,
+      origin,
+    });
+    setLinePreview(manual);
+  }
+
   function addWaypoint(line: ViewLine, point: ViewPoint) {
     updateViewLine(view.id, line.id, { waypoints: insertLineWaypoint(project, view, line, point) });
     selectCanvas({ kind: 'line', id: line.id });
@@ -289,14 +363,34 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     event.currentTarget.setPointerCapture(event.pointerId);
     captureRef.current = { target: event.currentTarget, pointerId: event.pointerId };
     selectCanvas({ kind: 'line', id: line.id });
-    setLabelGesture({ viewId: view.id, pointerId: event.pointerId, captureTarget: event.currentTarget, line });
+    setLabelGesture({
+      viewId: view.id,
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      line,
+    });
     setLinePreview(line);
   }
 
-  function toggleLineLabelOrientation(line: ViewLine) {
-    updateViewLine(view.id, line.id, {
-      labelOrientation: line.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal',
+  function beginEndpointReconnect(
+    event: PointerEvent<HTMLElement>,
+    line: ViewLine,
+    role: ViewLineEndpointRole,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    captureRef.current = { target: event.currentTarget, pointerId: event.pointerId };
+    selectCanvas({ kind: 'line', id: line.id });
+    setEndpointReconnect({
+      viewId: view.id,
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      line,
+      role,
+      candidate: null,
     });
+    setLinePreview(line);
   }
 
   function cancel() {
@@ -305,14 +399,19 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     if (waypointGesture)
       releasePointerCaptureSafely(waypointGesture.captureTarget, waypointGesture.pointerId);
     if (labelGesture) releasePointerCaptureSafely(labelGesture.captureTarget, labelGesture.pointerId);
+    if (endpointReconnect)
+      releasePointerCaptureSafely(endpointReconnect.captureTarget, endpointReconnect.pointerId);
     const capture = captureRef.current;
     if (capture) releasePointerCaptureSafely(capture.target, capture.pointerId);
     captureRef.current = null;
-    const active = Boolean(annotationGesture || waypointGesture || labelGesture || linePreview);
+    const active = Boolean(
+      annotationGesture || waypointGesture || labelGesture || endpointReconnect || linePreview,
+    );
     setAnnotationGesture(null);
     setAnnotationPreview(null);
     setWaypointGesture(null);
     setLabelGesture(null);
+    setEndpointReconnect(null);
     setLinePreview(null);
     return active;
   }
@@ -322,13 +421,31 @@ export function useViewElementGestures(options: ViewElementGestureOptions) {
     linePreview,
     beginAnnotationResize,
     beginWaypointGesture,
+    beginInsertedWaypointGesture,
     beginLabelGesture,
-    toggleLineLabelOrientation,
+    beginEndpointReconnect,
+    endpointReconnect,
     addWaypoint,
     updatePointer,
     finishPointer,
     cancel,
   };
+}
+
+function readViewLineEndpointAt(clientX: number, clientY: number): ViewLineEndpoint | null {
+  const element = document
+    .elementFromPoint(clientX, clientY)
+    ?.closest<HTMLElement>('[data-view-line-endpoint-kind]');
+  if (!element) return null;
+  const kind = element.dataset.viewLineEndpointKind;
+  const placementId = element.dataset.viewLineEndpointPlacementId;
+  const endpointId = element.dataset.viewLineEndpointId;
+  if (!placementId || !endpointId) return null;
+  return kind === 'port'
+    ? { kind, placementId, portId: endpointId }
+    : kind === 'port_range'
+      ? { kind, placementId, annotationId: endpointId }
+      : null;
 }
 
 function releasePointerCaptureSafely(target: Element, pointerId: number) {

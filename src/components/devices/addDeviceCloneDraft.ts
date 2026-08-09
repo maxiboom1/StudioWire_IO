@@ -28,6 +28,14 @@ export function createClonedAddDeviceDraft(
       connectorTypeId: group.connectorTypeId,
       count: group.count,
       portLabelPattern: group.portLabelPattern,
+      devicePortLabelPattern: group.devicePortLabelPattern,
+      devicePortLabels:
+        group.devicePortLabelMode === 'manual'
+          ? project.ports
+              .filter((port) => port.portGroupId === group.id)
+              .sort((left, right) => left.index - right.index)
+              .map((port) => port.devicePortLabelOverride ?? port.label)
+          : null,
       cablePrefix: getDefaultPrefixForCategory(project, group.categoryId),
       firstCableNumber: null,
       createPlannedCables: true,

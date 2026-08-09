@@ -1014,6 +1014,7 @@ button.view-tree-add:focus-visible {
   stroke-linecap: square;
   stroke-linejoin: miter;
   pointer-events: stroke;
+  vector-effect: non-scaling-stroke;
 }
 .view-line-stroke {
   stroke: var(--view-line-color, #172b31);
@@ -1026,11 +1027,11 @@ button.view-tree-add:focus-visible {
 }
 .view-line-hit {
   stroke: transparent;
-  stroke-width: 12;
+  stroke-width: 8;
 }
 .view-line-selection-halo {
-  stroke: rgba(8, 127, 124, 0.55);
-  stroke-width: calc(var(--view-line-width, 2) + 5px);
+  stroke: rgba(8, 127, 124, 0.38);
+  stroke-width: calc(var(--view-line-width, 2) + 4px);
   pointer-events: none;
 }
 .view-line-warning-halo {
@@ -1056,24 +1057,6 @@ button.view-tree-add:focus-visible {
 .view-line-label:active text {
   cursor: grabbing;
 }
-.view-line-label-rotate {
-  display: grid;
-  width: 16px;
-  height: 16px;
-  place-items: center;
-  border: 1px solid #087f7c;
-  border-radius: 50%;
-  background: #fff;
-  color: #075e5c;
-  padding: 0;
-  font-size: 11px;
-  line-height: 1;
-  cursor: pointer;
-}
-.view-line-label-rotate:focus-visible {
-  outline: 2px solid #087f7c;
-  outline-offset: 1px;
-}
 .view-line-missing rect {
   fill: #fff7e8;
   stroke: #c87019;
@@ -1093,6 +1076,7 @@ button.view-tree-add:focus-visible {
   fill: #fff;
   stroke: #078b87;
   stroke-width: 2;
+  vector-effect: non-scaling-stroke;
   pointer-events: all;
 }
 
@@ -1332,6 +1316,17 @@ button.view-tree-add:focus-visible {
   border-color: #0f6b70;
   outline: 1px solid rgba(15, 107, 112, 0.55);
   outline-offset: 1px;
+}
+.view-port-range-line-anchor.is-reconnect-handle,
+.device-diagram-view .device-cable-picker.is-reconnect-handle {
+  cursor: grab;
+  outline: 1px solid rgba(8, 127, 124, 0.62);
+  outline-offset: 1px;
+}
+.view-port-range-line-anchor.is-reconnect-target,
+.device-diagram-view .device-cable-picker.is-reconnect-target {
+  border-color: #0a8f5b;
+  box-shadow: 0 0 0 2px rgba(10, 143, 91, 0.18);
 }
 
 .view-inspector-readonly {
@@ -2961,6 +2956,32 @@ button.view-tree-add:focus-visible {
   overflow: visible;
 }
 
+.terminal-block-diagram-view-frame {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.terminal-block-diagram-view {
+  min-width: 1452px;
+  transform: scale(var(--view-device-diagram-scale));
+  transform-origin: top left;
+}
+
+.terminal-block-diagram-view .terminal-block-name.is-draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.terminal-block-diagram-view .terminal-block-name.is-draggable:active {
+  cursor: grabbing;
+}
+
+.terminal-block-diagram-view .terminal-block-crosspoint.is-read-only {
+  cursor: default;
+  pointer-events: none;
+}
+
 .device-diagram-view {
   transform: scale(var(--view-device-diagram-scale));
   transform-origin: top left;
@@ -3432,6 +3453,24 @@ button.view-tree-add:focus-visible {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 8px;
+}
+
+.device-port-label-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #526970;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.device-port-label-editor-list {
+  display: grid;
+  max-height: 220px;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 3px;
 }
 
 .device-inspector-color-row input[type='color'] {

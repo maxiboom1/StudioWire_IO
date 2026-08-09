@@ -37,15 +37,7 @@ type ViewLineEndpoint =
       annotationId: string;
     };
 
-type ViewLineColor =
-  | 'black'
-  | 'red'
-  | 'blue'
-  | 'green'
-  | 'orange'
-  | 'purple'
-  | 'gray'
-  | 'teal';
+type ViewLineColor = 'black' | 'red' | 'blue' | 'green' | 'orange' | 'purple' | 'gray' | 'teal';
 
 type ViewLineWidth = 'hairline' | 'thin' | 'medium' | 'wide';
 type ViewLineLabelOrientation = 'horizontal' | 'vertical';
@@ -137,24 +129,24 @@ If one endpoint cannot resolve, render a small selectable missing-endpoint warni
 Use these fixed technical presets and no free color picker:
 
 | Stored color | Stroke color |
-| --- | --- |
-| `black` | `#172B31` |
-| `red` | `#D83A34` |
-| `blue` | `#3465EB` |
-| `green` | `#0A8F5B` |
-| `orange` | `#C87019` |
-| `purple` | `#7A3CE0` |
-| `gray` | `#66757B` |
-| `teal` | `#087F7C` |
+| ------------ | ------------ |
+| `black`      | `#172B31`    |
+| `red`        | `#D83A34`    |
+| `blue`       | `#3465EB`    |
+| `green`      | `#0A8F5B`    |
+| `orange`     | `#C87019`    |
+| `purple`     | `#7A3CE0`    |
+| `gray`       | `#66757B`    |
+| `teal`       | `#087F7C`    |
 
 Use these base widths at 100% page zoom; normal page zoom scales the complete drawing:
 
 | Stored width | SVG stroke width |
-| --- | --- |
-| `hairline` | `1 px` |
-| `thin` | `2 px` |
-| `medium` | `3 px` |
-| `wide` | `5 px` |
+| ------------ | ---------------- |
+| `hairline`   | `1 px`           |
+| `thin`       | `2 px`           |
+| `medium`     | `3 px`           |
+| `wide`       | `5 px`           |
 
 - The transparent hit stroke remains large enough for reliable selection regardless of visible width.
 - Line labels are always black, independent of Line color, and retain a restrained white halo for legibility.

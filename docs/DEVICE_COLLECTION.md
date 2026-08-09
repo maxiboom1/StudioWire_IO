@@ -12,9 +12,11 @@ The three folder names must match the template manufacturer, primary category, a
 
 ## Template Contract
 
-Templates use schema version `0.1.0`. They contain visible hardware metadata and ordered I/O definitions only. Category and connector references are names that are matched case-insensitively against the open project's settings.
+New templates use schema version `0.2.0`; StudioWire IO continues importing `0.1.0`. They contain visible hardware metadata and ordered I/O definitions only. Category and connector references are names that are matched case-insensitively against the open project's settings.
 
-Templates must not contain project IDs, location or folder assignments, rack placement, cable prefixes, cable numbers, numbering ranges, planned cable IDs, or cable records. The project derives those values when the template fills Add Device.
+Each `0.2.0` I/O interface stores its Cable Label Pattern, nullable Device Port Label Pattern, and either `null` or one trimmed manual device-body label per ordered row. Legacy `0.1.0` interfaces are loaded as pattern mode with Device Port Label Pattern set to “Same as cable label.” Manual labels remain presentation-only and never become cable labels.
+
+Templates must not contain project IDs, location or folder assignments, rack placement, cable prefixes, cable numbers, numbering ranges, planned cable IDs, or cable records. The project derives those values when the template fills Add Device. A manual label array must exactly match its interface count and contain no empty labels.
 
 Run `npm run validate:collections` after adding or editing templates. Invalid templates remain visible in the application for diagnosis, but cannot be loaded.
 

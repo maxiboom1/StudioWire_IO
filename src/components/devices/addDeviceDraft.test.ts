@@ -241,8 +241,8 @@ describe('Add Device cable range formatting and validation', () => {
   it('formats range badges and last cable numbers', () => {
     const group = validGroups()[0];
 
-    expect(formatPortGroupRange(group)).toBe('V-0009 -> V-0012');
-    expect(formatPortGroupLastCableNumber(group)).toBe('V-0012');
+    expect(formatPortGroupRange(group)).toBe('V-009 -> V-012');
+    expect(formatPortGroupLastCableNumber(group)).toBe('V-012');
     expect(formatPortGroupRange({ ...group, count: '' })).toBe('Set count');
     expect(formatPortGroupLastCableNumber({ ...group, count: '' })).toBe('');
     expect(formatPortGroupRange({ ...group, count: 0 })).toBe('Set count');
@@ -268,7 +268,7 @@ describe('Add Device cable range formatting and validation', () => {
     const restoredGroups = rebalancePlannedCableRanges(project, [{ ...blankGroups[0], count: 2 }]);
 
     expect(restoredGroups[0].firstCableNumber).toBe(9);
-    expect(formatPortGroupRange(restoredGroups[0])).toBe('V-0009 -> V-0010');
+    expect(formatPortGroupRange(restoredGroups[0])).toBe('V-009 -> V-010');
   });
 
   it('returns warnings for reserved gaps and errors for overlapping or invalid ranges', () => {
@@ -289,10 +289,10 @@ describe('Add Device cable range formatting and validation', () => {
     ];
 
     expect(getAddDeviceValidation(project, device, reservedGapGroups).warnings).toEqual([
-      'Numbers V-0009 to V-0011 will be reserved and cannot be used later.',
+      'Numbers V-009 to V-011 will be reserved and cannot be used later.',
     ]);
     expect(getAddDeviceValidation(project, device, overlapGroups).errors).toContain(
-      'SDI IN: New V allocations must start at or after V-0009.',
+      'SDI IN: New V allocations must start at or after V-009.',
     );
     expect(getAddDeviceValidation(project, device, invalidGroups).errors).toEqual(
       expect.arrayContaining([
@@ -384,6 +384,8 @@ describe('Add Device token normalization and submit shaping', () => {
           connectorTypeId: 'connector-bnc',
           count: 4,
           portLabelPattern: '{I/O NAME}-{000}',
+          devicePortLabelPattern: null,
+          devicePortLabels: null,
           cablePrefix: 'V',
           firstCableNumber: 9,
           createPlannedCables: true,
@@ -396,6 +398,8 @@ describe('Add Device token normalization and submit shaping', () => {
           connectorTypeId: 'connector-bnc',
           count: 4,
           portLabelPattern: '{I/O NAME}-{000}',
+          devicePortLabelPattern: null,
+          devicePortLabels: null,
           cablePrefix: 'V',
           firstCableNumber: null,
           createPlannedCables: false,

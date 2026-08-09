@@ -626,13 +626,13 @@ describe('projectReducer action characterization', () => {
     });
 
     expect(connected.statusMessage).toContain('connected OUT-001 to IN-001');
-    expect(connected.project.cables.find((cable) => cable.id === 'cable-v-0001')).toMatchObject({
+    expect(connected.project.cables.find((cable) => cable.id === 'cable-v-001')).toMatchObject({
       status: 'connected',
       sideBEndpoint: { id: 'port-group-multiviewer-inputs-port-0001' },
     });
     expect(rejectedConnect.statusMessage).toBe('Cannot connect a port to itself.');
     expect(disconnected.statusMessage).toBe('Connection cleared for OUT-001');
-    expect(disconnected.project.cables.find((cable) => cable.id === 'cable-v-0001')).toMatchObject({
+    expect(disconnected.project.cables.find((cable) => cable.id === 'cable-v-001')).toMatchObject({
       status: 'planned',
       sideBEndpoint: { type: 'unknown', id: null },
     });

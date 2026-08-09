@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.9.07",
+  "title": "StudioWire IO Project v0.2.9.08",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.9.07"
+      "const": "0.2.9.08"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -341,7 +341,7 @@
       "required": ["cableNumberFormat", "cableNumberPadding"],
       "properties": {
         "cableNumberFormat": {
-          "const": "PREFIX-0001"
+          "const": "PREFIX-001"
         },
         "cableNumberPadding": {
           "type": "integer",
@@ -834,6 +834,8 @@
         "connectorTypeId",
         "count",
         "portLabelPattern",
+        "devicePortLabelPattern",
+        "devicePortLabelMode",
         "cablePrefix",
         "firstCableNumber",
         "lastCableNumber",
@@ -873,6 +875,12 @@
         "portLabelPattern": {
           "type": "string",
           "minLength": 1
+        },
+        "devicePortLabelPattern": {
+          "type": ["string", "null"]
+        },
+        "devicePortLabelMode": {
+          "enum": ["pattern", "manual"]
         },
         "cablePrefix": {
           "type": "string",
@@ -952,6 +960,7 @@
         "index",
         "name",
         "label",
+        "devicePortLabelOverride",
         "direction",
         "categoryId",
         "connectorTypeId",
@@ -981,6 +990,9 @@
         },
         "label": {
           "type": "string"
+        },
+        "devicePortLabelOverride": {
+          "type": ["string", "null"]
         },
         "direction": {
           "$ref": "#/$defs/PortDirection"
@@ -1024,7 +1036,7 @@
         },
         "number": {
           "type": "string",
-          "pattern": "^[A-Z]+-[0-9]{4,}$"
+          "pattern": "^[A-Z]+-[0-9]{3,}$"
         },
         "prefix": {
           "type": "string",

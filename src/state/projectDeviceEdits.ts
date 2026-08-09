@@ -115,6 +115,16 @@ export function editDeviceInProject(
       ...group,
       name: edit.name.trim(),
       portLabelPattern: edit.portLabelPattern,
+      devicePortLabelPattern:
+        edit.devicePortLabelPattern === undefined
+          ? group.devicePortLabelPattern
+          : edit.devicePortLabelPattern?.trim() || null,
+      devicePortLabelMode:
+        edit.devicePortLabels === undefined
+          ? group.devicePortLabelMode
+          : edit.devicePortLabels
+            ? ('manual' as const)
+            : ('pattern' as const),
       colorOverride: edit.colorOverride ?? null,
     };
   });
@@ -145,6 +155,13 @@ export function editDeviceInProject(
       ...port,
       name: `${group.name} ${port.index}`,
       label: nextLabel,
+      devicePortLabelOverride:
+        existingEditsById.get(group.id)?.devicePortLabels === undefined
+          ? port.devicePortLabelOverride
+          : (existingEditsById
+              .get(group.id)
+              ?.devicePortLabels?.find((candidate) => candidate.portId === port.id)
+              ?.label.trim() ?? null),
     };
   });
   let nextProject: ProjectRoot = {
@@ -204,6 +221,8 @@ export function editDeviceInProject(
       connectorTypeId: draft.connectorTypeId,
       count: draft.count,
       portLabelPattern: draft.portLabelPattern,
+      devicePortLabelPattern: draft.devicePortLabelPattern?.trim() || null,
+      devicePortLabelMode: draft.devicePortLabels ? 'manual' : 'pattern',
       cablePrefix: draft.cablePrefix,
       firstCableNumber,
       lastCableNumber,
@@ -283,6 +302,13 @@ function validateNewPortGroup(project: ProjectRoot, draft: DevicePortGroupDraft)
     return `${draft.name} needs a positive first cable number.`;
   }
 
+  if (
+    draft.devicePortLabels &&
+    (draft.devicePortLabels.length !== draft.count || draft.devicePortLabels.some((label) => !label.trim()))
+  ) {
+    return `${draft.name} manual device labels must include one non-empty label per port.`;
+  }
+
   return null;
 }
 
@@ -297,6 +323,7 @@ function createPortsForDraft(device: Device, portGroupId: string, draft: DeviceP
       index,
       name: `${draft.name.trim()} ${index}`,
       label: formatPortLabel(draft.portLabelPattern, device.labelPrefix, index, draft.name.trim()),
+      devicePortLabelOverride: draft.devicePortLabels?.[offset]?.trim() || null,
       direction: draft.direction,
       categoryId: draft.categoryId,
       connectorTypeId: draft.connectorTypeId,

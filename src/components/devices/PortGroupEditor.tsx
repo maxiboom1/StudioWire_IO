@@ -232,12 +232,25 @@ export function PortGroupEditor({
                 </Button>
               </div>
               <div className="form-field">
-                <Label htmlFor={`port-group-pattern-${group.localId}`}>Label Pattern</Label>
+                <Label htmlFor={`port-group-pattern-${group.localId}`}>Cable Label Pattern</Label>
                 <Input
                   id={`port-group-pattern-${group.localId}`}
                   placeholder={DEFAULT_IO_PORT_LABEL_PATTERN}
                   value={group.portLabelPattern}
                   onChange={(event) => onUpdate(group.localId, { portLabelPattern: event.target.value })}
+                />
+              </div>
+              <div className="form-field">
+                <Label htmlFor={`port-group-device-pattern-${group.localId}`}>
+                  Device Port Label Pattern
+                </Label>
+                <Input
+                  id={`port-group-device-pattern-${group.localId}`}
+                  placeholder="Same as cable label"
+                  value={group.devicePortLabelPattern ?? ''}
+                  onChange={(event) =>
+                    onUpdate(group.localId, { devicePortLabelPattern: event.target.value || null })
+                  }
                 />
               </div>
               <div className="form-field">

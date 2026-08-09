@@ -49,6 +49,6 @@ describe('View device geometry', () => {
     });
 
     expect(size.widthMm).toBe(VIEW_DEVICE_WIDTH_MM);
-    expect(size.heightMm).toBe(12.4);
+    expect(size.heightMm).toBeCloseTo(14.2562, 4);
   });
 });

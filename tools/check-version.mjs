@@ -26,6 +26,7 @@ const checks = [
   ],
   ['README current release', () => match(read('README.md'), /repository contains the v([0-9.]+)/)],
   ['DATA_MODEL current schema', () => match(read('docs/DATA_MODEL.md'), /current schema version `([^`]+)`/)],
+  ['source package target', () => match(read('tools/package-source.mjs'), /const target = '([^']+)'/)],
 ];
 
 for (const [label, getValue] of checks) {
@@ -44,8 +45,8 @@ if (read('AGENTS.md').includes('V0_2_5') || read('README.md').includes('V0_2_5')
   failures.push('current instructions must not reference V0_2_5 document names');
 }
 
-if (expected !== '0.2.9.07') {
-  failures.push(`0.2.9.07 implementation target mismatch: package.json is ${expected}`);
+if (expected !== '0.2.9.08') {
+  failures.push(`0.2.9.08 implementation target mismatch: package.json is ${expected}`);
 }
 
 if (failures.length > 0) {

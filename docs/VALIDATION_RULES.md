@@ -2,13 +2,13 @@
 
 Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and only mutates project state when the UI stores the returned issues after the user clicks Validate.
 
-Current-version `0.2.9.07` JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` at `0.2.9.00`; staged versions advance to `.04`, the `.04 -> .05` migration removes and reports legacy boundary-anchored View lines, and `.05 -> .06 -> .07` is shape-preserving before current structural and relational validation. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
+Current-version `0.2.9.08` JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` at `0.2.9.00`; staged versions advance to `.04`, the `.04 -> .05` migration removes and reports legacy boundary-anchored View lines, and `.05 -> .06 -> .07` is shape-preserving. The `.07 -> .08` migration adds presentation-only device-port label state and changes LabelRules to the three-digit default without rewriting existing cable records. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
 
-Port label generation resolves `{I/O NAME}` and its supported `{NAME}` alias from the parent `PortGroup.name`. Device metadata changes must not alter labels that use either interface-name token. `{DEVICE}` remains the explicit token for patterns that use the device label prefix.
+Port label generation resolves `{I/O NAME}` and its supported `{NAME}` alias from the parent `PortGroup.name`. Device metadata changes must not alter labels that use either interface-name token. `{DEVICE}` remains the explicit token for patterns that use the device label prefix, and `{0}` is the unpadded 1-based index. Device-port presentation labels are validated independently and never change `Port.label` or cable data.
 
 ## Device Collection Rules
 
-Bundled device templates are validated independently from project JSON. Every file must match device-template schema `0.1.0`, and its path must be `collections/devices/<Manufacturer>/<Category>/<Model>/*.studiowire-device.json`. Path manufacturer, category, and model segments must match the template metadata after trimming and case folding. A collection may contain only one entry for each normalized manufacturer/category/model combination.
+Bundled device templates are validated independently from project JSON. Current exports use device-template schema `0.2.0`; `0.1.0` templates remain loadable and default to Cable Label Pattern presentation. Template paths must be `collections/devices/<Manufacturer>/<Category>/<Model>/*.studiowire-device.json`. Path manufacturer, category, and model segments must match the template metadata after trimming and case folding. A collection may contain only one entry for each normalized manufacturer/category/model combination.
 
 Template objects reject unknown properties. This prevents project IDs, placement data, cable prefixes, cable numbers, allocations, planned cable references, and cable records from entering the collection format.
 
@@ -19,7 +19,7 @@ Compatibility validation reports all mismatches before a template can fill Add D
 - `duplicate-object-id`: object IDs must not collide across project data objects.
 - `duplicate-cable-number`: cable numbers must be unique per project.
 - `planned-cable-duplicate`: planned cables must not duplicate another planned cable number.
-- `cable-number-format-invalid`: cable numbers must match `PREFIX-0001` style formatting.
+- `cable-number-format-invalid`: cable numbers must use uppercase `PREFIX-001` formatting with at least three digits; legacy four-or-more-digit numbers remain valid.
 - `cable-index-mismatch`: `Cable.prefix` and `Cable.index` must match the parsed cable number.
 - `duplicate-cable-prefix-value`: cable prefix values must be unique.
 - `invalid-cable-prefix-format`: cable prefixes must contain uppercase letters only.
@@ -69,6 +69,7 @@ The Fix 3 View-wide Device Size UI offers only scale values `0.7`, `0.8`, `0.9`,
 - `view-item-outside-page`: a placement, Text/Area extent, derived I/O Range brace/label extent, resolved line route, or configured line-label extent outside the selected ISO page is reported as a warning; format changes retain the stored coordinates. Placement bounds use current live source content and the same natural-size formulas as the editor: device/TB rows are derived from ordered port presentation data, racks use current RU height, and dangling sources use the 60 x 30 mm missing-source placeholder. Source growth may therefore introduce a warning without changing stored View geometry.
 
 The `0.2.9.06` populated-format predictor reuses these same bounds, endpoint, route, and label calculations against the requested target page. It does not mutate or validate history: selection, preview state, and the transient 50-entry View-canvas undo/redo stacks are UI-only and never enter project JSON.
+
 - `duplicate-project-item-name`: folders, racks, standard devices, and terminal blocks share one unique trimmed, case-insensitive name namespace.
 - `sub-location-without-location`: folders must reference an existing location.
 - `sub-location-name-required`: folder names are required.
@@ -94,6 +95,10 @@ The `0.2.9.06` populated-format predictor reuses these same bounds, endpoint, ro
 - `port-group-count-mismatch`: generated ports must match `PortGroup.count`.
 - `port-group-count-positive`: port group count must be positive.
 - `port-group-color-override-invalid`: port group color overrides must be `null` or `#RRGGBB`.
+- `port-group-device-label-pattern-invalid`: a non-null Device Port Label Pattern must contain non-whitespace text.
+- `port-group-device-label-mode-invalid`: device-port label mode must be `pattern` or `manual`.
+- `port-group-device-label-pattern-overrides`: pattern-mode groups must not retain manual port overrides.
+- `port-group-device-label-manual-incomplete`: every port in a manual group must contain one non-empty presentation-label override, and no foreign port may be included.
 - `device-invalid-port-direction`: standard device port groups must use input, output, or bidirectional.
 - `terminal-block-face-groups-required`: terminal blocks must have exactly one rear and one front group.
 - `terminal-block-invalid-port-direction`: terminal block groups and ports must use rear or front.

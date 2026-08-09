@@ -79,7 +79,7 @@ describe('projectReducer core project actions', () => {
     );
   });
 
-  it('preserves lifecycle revision for crosspoints and increments it only for project replacement', () => {
+  it('preserves lifecycle revision for ordinary mutations and increments it only for project replacement', () => {
     const connected = projectReducer(
       { ...createState(), projectLifecycleRevision: 7 },
       {
@@ -92,7 +92,13 @@ describe('projectReducer core project actions', () => {
     );
     expect(connected.projectLifecycleRevision).toBe(7);
 
-    const loaded = projectReducer(connected, { type: 'LOAD_SAMPLE_PROJECT' });
+    const connectorAdded = projectReducer(connected, {
+      type: 'ADD_CONNECTOR_TYPE',
+      payload: { id: 'connector-lifecycle-test', name: 'Lifecycle test', iconKey: 'generic' },
+    });
+    expect(connectorAdded.projectLifecycleRevision).toBe(7);
+
+    const loaded = projectReducer(connectorAdded, { type: 'LOAD_SAMPLE_PROJECT' });
     expect(loaded.projectLifecycleRevision).toBe(8);
 
     const imported = projectReducer(loaded, {

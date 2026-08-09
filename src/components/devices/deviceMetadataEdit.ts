@@ -42,6 +42,17 @@ export function createDeviceMetadataEditInput(
         id: group.id,
         name: group.name,
         portLabelPattern: group.portLabelPattern,
+        devicePortLabelPattern: group.devicePortLabelPattern,
+        devicePortLabels:
+          group.devicePortLabelMode === 'manual'
+            ? project.ports
+                .filter((port) => port.portGroupId === group.id)
+                .sort((left, right) => left.index - right.index)
+                .map((port) => ({
+                  portId: port.id,
+                  label: port.devicePortLabelOverride ?? port.label,
+                }))
+            : null,
         colorOverride: group.colorOverride,
       })),
     newPortGroups: [],

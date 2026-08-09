@@ -1,5 +1,5 @@
 {
-  "templateSchemaVersion": "0.1.0",
+  "templateSchemaVersion": "0.2.0",
   "templateType": "device",
   "device": {
     "name": "Router 1",
@@ -17,7 +17,9 @@
       "connectorName": "BNC",
       "count": 8,
       "portLabelPattern": "IN-{000}",
-      "color": "#EF4444"
+      "color": "#EF4444",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "OUT",
@@ -26,7 +28,9 @@
       "connectorName": "BNC",
       "count": 8,
       "portLabelPattern": "OUT-{000}",
-      "color": "#3B5BDB"
+      "color": "#3B5BDB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     }
   ]
 }

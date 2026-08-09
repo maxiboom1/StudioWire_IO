@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { importProjectJsonText, importProjectValue, parseImportedProject } from './projectImport';
 import { sampleProject } from './sampleProject';
 import { STUDIOWIRE_CURRENT_VERSION, SUPPORTED_SCHEMA_VERSIONS } from './version';
@@ -242,6 +243,7 @@ describe('importProjectValue structural safety', () => {
   it('supports the current schema, prior View stage, and retained 0.2.8.25 baseline', () => {
     expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([
       STUDIOWIRE_CURRENT_VERSION,
+      '0.2.9.07',
       '0.2.9.06',
       '0.2.9.05',
       '0.2.9.04',
@@ -450,6 +452,26 @@ describe('importProjectValue structural safety', () => {
       const { schemaVersion: _afterVersion, ...afterData } = result.project;
       expect(afterData).toEqual(beforeData);
     }
+  });
+
+  it('migrates the realistic 0.2.9.07 fixture without rewriting legacy cable numbers or Views', () => {
+    const legacy = JSON.parse(readFileSync('docs/samples/legacy/project-0-2-9-07.studiowire.json', 'utf8'));
+    const cablesBefore = structuredClone(legacy.cables);
+    const viewsBefore = structuredClone(legacy.views);
+    const result = importProjectValue(legacy);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.schemaVersion).toBe(STUDIOWIRE_CURRENT_VERSION);
+    expect(result.project.settings.labelRules).toEqual({
+      cableNumberFormat: 'PREFIX-001',
+      cableNumberPadding: 3,
+    });
+    expect(result.project.cables).toEqual(cablesBefore);
+    expect(result.project.views).toEqual(viewsBefore);
+    expect(result.project.portGroups.every((group) => group.devicePortLabelMode === 'pattern')).toBe(true);
+    expect(result.project.portGroups.every((group) => group.devicePortLabelPattern === null)).toBe(true);
+    expect(result.project.ports.every((port) => port.devicePortLabelOverride === null)).toBe(true);
   });
 
   it('requires Views on current files and round-trips exact View layout data', () => {

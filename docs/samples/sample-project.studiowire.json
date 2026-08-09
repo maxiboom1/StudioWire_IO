@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.9.07",
+  "schemaVersion": "0.2.9.08",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -316,8 +316,8 @@
       "numberingDirection": "bottom_to_top"
     },
     "labelRules": {
-      "cableNumberFormat": "PREFIX-0001",
-      "cableNumberPadding": 4
+      "cableNumberFormat": "PREFIX-001",
+      "cableNumberPadding": 3
     }
   },
   "locations": [
@@ -473,7 +473,9 @@
       "numberingRangeId": "range-v-router-outputs",
       "createPlannedCables": true,
       "locked": false,
-      "colorOverride": null
+      "colorOverride": null,
+      "devicePortLabelPattern": null,
+      "devicePortLabelMode": "pattern"
     },
     {
       "id": "port-group-multiviewer-inputs",
@@ -490,7 +492,9 @@
       "numberingRangeId": null,
       "createPlannedCables": false,
       "locked": false,
-      "colorOverride": null
+      "colorOverride": null,
+      "devicePortLabelPattern": null,
+      "devicePortLabelMode": "pattern"
     }
   ],
   "ports": [
@@ -504,8 +508,9 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0001",
-      "notes": ""
+      "plannedCableId": "cable-v-001",
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-router-outputs-port-0002",
@@ -517,8 +522,9 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0002",
-      "notes": ""
+      "plannedCableId": "cable-v-002",
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-router-outputs-port-0003",
@@ -530,8 +536,9 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0003",
-      "notes": ""
+      "plannedCableId": "cable-v-003",
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-router-outputs-port-0004",
@@ -543,8 +550,9 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0004",
-      "notes": ""
+      "plannedCableId": "cable-v-004",
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0001",
@@ -557,7 +565,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0002",
@@ -570,7 +579,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0003",
@@ -583,7 +593,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0004",
@@ -596,13 +607,14 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     }
   ],
   "cables": [
     {
-      "id": "cable-v-0001",
-      "number": "V-0001",
+      "id": "cable-v-001",
+      "number": "V-001",
       "prefix": "V",
       "index": 1,
       "status": "planned",
@@ -617,13 +629,13 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-001",
-      "labelMiddle": "V-0001",
+      "labelMiddle": "V-001",
       "labelBottom": "",
       "notes": ""
     },
     {
-      "id": "cable-v-0002",
-      "number": "V-0002",
+      "id": "cable-v-002",
+      "number": "V-002",
       "prefix": "V",
       "index": 2,
       "status": "planned",
@@ -638,13 +650,13 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-002",
-      "labelMiddle": "V-0002",
+      "labelMiddle": "V-002",
       "labelBottom": "",
       "notes": ""
     },
     {
-      "id": "cable-v-0003",
-      "number": "V-0003",
+      "id": "cable-v-003",
+      "number": "V-003",
       "prefix": "V",
       "index": 3,
       "status": "planned",
@@ -659,13 +671,13 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-003",
-      "labelMiddle": "V-0003",
+      "labelMiddle": "V-003",
       "labelBottom": "",
       "notes": ""
     },
     {
-      "id": "cable-v-0004",
-      "number": "V-0004",
+      "id": "cable-v-004",
+      "number": "V-004",
       "prefix": "V",
       "index": 4,
       "status": "planned",
@@ -680,7 +692,7 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-004",
-      "labelMiddle": "V-0004",
+      "labelMiddle": "V-004",
       "labelBottom": "",
       "notes": ""
     }

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleProject } from '../../domain/sampleProject';
 import type { ProjectView, ViewPlacement } from '../../domain/types';
@@ -45,6 +45,8 @@ function controller(
     updateGesture: vi.fn(),
     finishGesture: vi.fn(),
     cancelGesture: vi.fn(),
+    getReconnectEndpointRole: vi.fn(() => null),
+    isReconnectTarget: vi.fn(() => false),
     handlePlacementKeyDown: vi.fn(),
     handlePageDragOver: vi.fn(),
     handlePageDrop: vi.fn(),
@@ -168,6 +170,36 @@ describe('ViewPlacementBlock', () => {
     });
   });
 
+  it('reuses a selected line endpoint square as the reconnection drag handle', () => {
+    const project = structuredClone(sampleProject);
+    const currentView = structuredClone(project.views[0]);
+    const placement = currentView.placements[0];
+    const selectedLine = currentView.lines[0];
+    const beginEndpointReconnect = vi.fn();
+    const editor = controller(project, {
+      selectedLine,
+      beginEndpointReconnect,
+      getReconnectEndpointRole: (endpoint) =>
+        endpoint.kind === 'port' &&
+        selectedLine.from.kind === 'port' &&
+        endpoint.portId === selectedLine.from.portId
+          ? 'from'
+          : null,
+    });
+    render(
+      <ViewPlacementBlock
+        controller={editor}
+        placement={placement}
+        project={project}
+        selected
+        view={currentView}
+      />,
+    );
+    const handle = screen.getByRole('button', { name: 'Use OUT-001 as View line anchor' });
+    fireEvent.pointerDown(handle, { pointerId: 3 });
+    expect(beginEndpointReconnect).toHaveBeenCalledWith(expect.anything(), selectedLine, 'from');
+  });
+
   it('keeps a missing I/O Range selectable and removable through its warning', () => {
     const editor = controller();
     const placement: ViewPlacement = {
@@ -225,6 +257,9 @@ describe('ViewPlacementBlock', () => {
       />,
     );
     expect(screen.getByText('MCR Rack A')).toBeTruthy();
+    const mountedDevice = screen.getByText('Router 1').closest('.rack-device-block');
+    expect(mountedDevice).toBeTruthy();
+    expect(mountedDevice?.querySelector('span')).toBeNull();
     expect(document.querySelector('[draggable="true"]')).toBeNull();
 
     const missing = { ...rackPlacement, id: 'placement-missing', sourceId: 'rack-missing' };

@@ -17,7 +17,7 @@ function createState(project: ProjectRoot = structuredClone(sampleProject)): Pro
 describe('buildCableTableRows', () => {
   it('resolves output planned cable source and unknown destination', () => {
     const rows = buildCableTableRows(structuredClone(sampleProject));
-    const row = rows.find((candidate) => candidate.cableNumber === 'V-0001');
+    const row = rows.find((candidate) => candidate.cableNumber === 'V-001');
 
     expect(row).toMatchObject({
       sideALabel: 'OUT-001',
@@ -44,7 +44,7 @@ describe('buildCableTableRows', () => {
     inputPort.plannedCableId = cable.id;
     project.cables.push(cable);
 
-    const row = buildCableTableRows(project).find((candidate) => candidate.cableNumber === 'V-0020');
+    const row = buildCableTableRows(project).find((candidate) => candidate.cableNumber === 'V-020');
 
     expect(row).toMatchObject({
       sideALabel: 'N/C',
@@ -106,9 +106,7 @@ describe('buildCableTableRows', () => {
       return;
     }
 
-    const row = buildCableTableRows(connected.project).find(
-      (candidate) => candidate.cableNumber === 'V-0009',
-    );
+    const row = buildCableTableRows(connected.project).find((candidate) => candidate.cableNumber === 'V-009');
 
     expect(row).toMatchObject({
       sideALabel: 'TB-CR (F)-01',

@@ -128,6 +128,8 @@ describe('DeviceInspector', () => {
       'PROGRAM',
     );
     fireEvent.change(screen.getByLabelText('Color'), { target: { value: '#123456' } });
+    await user.clear(screen.getByLabelText('Port 1'));
+    await user.type(screen.getByLabelText('Port 1'), '1');
 
     await user.click(screen.getByRole('button', { name: 'Save Device' }));
 
@@ -140,6 +142,12 @@ describe('DeviceInspector', () => {
         id: 'port-group-router-outputs',
         name: 'PROGRAM',
         colorOverride: '#123456',
+        devicePortLabels: [
+          { portId: 'port-group-router-outputs-port-0001', label: '1' },
+          { portId: 'port-group-router-outputs-port-0002', label: 'PROGRAM-002' },
+          { portId: 'port-group-router-outputs-port-0003', label: 'PROGRAM-003' },
+          { portId: 'port-group-router-outputs-port-0004', label: 'PROGRAM-004' },
+        ],
       }),
     );
     expect(payload.newPortGroups).toEqual([]);

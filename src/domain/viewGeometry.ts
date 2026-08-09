@@ -1,6 +1,5 @@
 import type {
   ProjectRoot,
-  ProjectView,
   ViewAnnotation,
   ViewOrientation,
   ViewPageSize,
@@ -17,10 +16,13 @@ export const VIEW_DEVICE_WIDTH_MM = 92;
 export const DEVICE_DIAGRAM_SOURCE_WIDTH_PX = 940;
 export const DEVICE_DIAGRAM_SOURCE_HEADER_HEIGHT_PX = 82;
 export const DEVICE_DIAGRAM_SOURCE_ROW_HEIGHT_PX = 50;
+export const TERMINAL_BLOCK_DIAGRAM_SOURCE_WIDTH_PX = 1452;
+export const TERMINAL_BLOCK_DIAGRAM_HEADER_HEIGHT_PX = 39;
+export const TERMINAL_BLOCK_DIAGRAM_ROW_HEIGHT_PX = 158;
+export const TERMINAL_BLOCK_DIAGRAM_PANEL_CHROME_PX = 28;
+export const TERMINAL_BLOCK_DIAGRAM_COLUMNS = 16;
 
 const DEVICE_DIAGRAM_MM_PER_SOURCE_PX = VIEW_DEVICE_WIDTH_MM / DEVICE_DIAGRAM_SOURCE_WIDTH_PX;
-const TERMINAL_BLOCK_HEADER_HEIGHT_MM = 10;
-const TERMINAL_BLOCK_ROW_HEIGHT_MM = 2.4;
 const RACK_WIDTH_MM = 58;
 const RACK_HEADER_HEIGHT_MM = 8;
 const RACK_RU_HEIGHT_MM = 3;
@@ -81,10 +83,18 @@ export function getPlacementNaturalSize(
     widthMm: VIEW_DEVICE_WIDTH_MM,
     heightMm:
       device.kind === 'terminal_block'
-        ? TERMINAL_BLOCK_HEADER_HEIGHT_MM + rowCount * TERMINAL_BLOCK_ROW_HEIGHT_MM
+        ? getTerminalBlockDiagramHeightMm(rowCount)
         : getStandardDeviceDiagramHeightMm(rowCount),
     sourceMissing: false,
   };
+}
+
+export function getTerminalBlockDiagramHeightMm(rowCount: number): number {
+  const sourceHeightPx =
+    TERMINAL_BLOCK_DIAGRAM_HEADER_HEIGHT_PX +
+    Math.ceil(rowCount / TERMINAL_BLOCK_DIAGRAM_COLUMNS) * TERMINAL_BLOCK_DIAGRAM_ROW_HEIGHT_PX +
+    TERMINAL_BLOCK_DIAGRAM_PANEL_CHROME_PX;
+  return (sourceHeightPx * VIEW_DEVICE_WIDTH_MM) / TERMINAL_BLOCK_DIAGRAM_SOURCE_WIDTH_PX;
 }
 
 export function getStandardDeviceDiagramHeightMm(rowCount: number): number {

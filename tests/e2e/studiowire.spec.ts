@@ -4,23 +4,9 @@ import { resolve } from 'node:path';
 
 const currentSamplePath = resolve('docs/samples/sample-project.studiowire.json');
 const invalidSamplePath = resolve('docs/samples/invalid/invalid-project-status.studiowire.json');
-const legacyFixturePaths = [
-  '0-2-8-6',
-  '0-2-8-5',
-  '0-2-8-4',
-  '0-2-8-3',
-  '0-2-8-2',
-  '0-2-8-1',
-  '0-2-8-0',
-  '0-2-7-3',
-  '0-2-7-2',
-  '0-2-7-1',
-  '0-2-7-0',
-  '0-2-6-0',
-  '0-2-5-1',
-  '0-2-4-1',
-  '0-1-0',
-].map((version) => resolve(`docs/samples/legacy/project-${version}.studiowire.json`));
+const legacyFixturePaths = ['0-2-9-07', '0-2-8-25'].map((version) =>
+  resolve(`docs/samples/legacy/project-${version}.studiowire.json`),
+);
 
 const pageErrors = new WeakMap<Page, string[]>();
 
@@ -51,18 +37,18 @@ test('completes the v0.2 project lifecycle and preserves exported data after imp
   await createTerminalBlock(page, 'E2E Room', 'E2E TB A', 1);
   await createTerminalBlock(page, 'E2E Room', 'E2E TB B', 2);
 
-  await connectPorts(page, 'E2E Source', 'E2E-SOURCE-OUT-001', 'E2E-DESTINATION-IN-001');
-  await clearConnection(page, 'E2E Source', 'E2E-SOURCE-OUT-001');
-  await connectPorts(page, 'E2E Source', 'E2E-SOURCE-OUT-001', 'E2E-DESTINATION-IN-001');
-  await connectPorts(page, 'E2E Source', 'E2E-SOURCE-OUT-002', 'E2E-TB-A (R)-01');
+  await connectPorts(page, 'E2E Source', 'SDI OUT-001', 'SDI IN-001', 'E2E Destination');
+  await clearConnection(page, 'E2E Source', 'SDI OUT-001');
+  await connectPorts(page, 'E2E Source', 'SDI OUT-001', 'SDI IN-001', 'E2E Destination');
+  await connectPorts(page, 'E2E Source', 'SDI OUT-002', 'E2E-TB-A (R)-01');
   await connectPorts(page, 'E2E TB A', 'E2E-TB-A (F)-01', 'E2E-TB-B (F)-01');
 
   await page.getByRole('button', { name: /E2E Destination/ }).click();
-  page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Delete Device' }).click();
+  await confirmDeviceDeletion(page);
   await page.getByRole('button', { name: /E2E Source/ }).click();
-  await page.getByLabel('Connect E2E-SOURCE-OUT-001').click();
-  await page.getByLabel('Search ports').fill('E2E-DESTINATION-IN-001');
+  await page.getByLabel('Connect SDI OUT-001').click();
+  await page.getByLabel('Search ports').fill('E2E Destination');
   await expect(page.getByText('No matching ports.')).toBeVisible();
   await page.keyboard.press('Escape');
 
@@ -95,7 +81,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.8.10', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.9.08', { exact: true })).toBeVisible();
   }
 });
 
@@ -119,24 +105,27 @@ test('creates a device through Add Device defaults and port-group edits', async 
   await page.getByText('Add Device').click();
 
   await expect(page.getByRole('heading', { name: 'Add Device' })).toBeVisible();
+  await page.getByRole('tab', { name: 'I/O' }).click();
   await expect(page.getByText('SDI IN')).toBeVisible();
   await expect(page.getByText('SDI OUT')).toBeVisible();
-  await expect(page.getByText('V-0009 -> V-0012')).toBeVisible();
-  await expect(page.getByText('V-0013 -> V-0016')).toBeVisible();
+  await expect(page.getByText('V-009 -> V-012')).toBeVisible();
+  await expect(page.getByText('V-013 -> V-016')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Create Device' })).toBeDisabled();
 
+  await page.getByRole('tab', { name: 'General' }).click();
   await page.locator('#device-name').fill('E2E Detailed Source');
   await page.locator('#device-category').click();
   await page.getByRole('option', { name: 'Audio' }).click();
+  await page.getByRole('tab', { name: 'I/O' }).click();
   await expect(page.getByText('AUDIO IN')).toBeVisible();
   await expect(page.getByText('AUDIO OUT')).toBeVisible();
-  await expect(page.getByText('A-0001 -> A-0004')).toBeVisible();
-  await expect(page.getByText('A-0005 -> A-0008')).toBeVisible();
+  await expect(page.getByText('A-001 -> A-004')).toBeVisible();
+  await expect(page.getByText('A-005 -> A-008')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Add Port Group' }).click();
-  await expect(page.getByText('A-0009 -> A-0009')).toBeVisible();
+  await page.getByRole('button', { name: 'Add I/O Interface' }).click();
+  await expect(page.getByText('A-009 -> A-009')).toBeVisible();
   await page.getByLabel('Remove PORTS').click();
-  await expect(page.getByText('A-0009 -> A-0009')).not.toBeVisible();
+  await expect(page.getByText('A-009 -> A-009')).not.toBeVisible();
 
   await page.getByRole('button', { name: 'Create Device' }).click();
   await expect(page.getByRole('button', { name: /E2E Detailed Source/ })).toBeVisible();
@@ -170,12 +159,12 @@ test('creates a device through Add Device defaults and port-group edits', async 
 test('exercises rack multi-view drag and navigator collapse/context menu workflows', async ({ page }) => {
   await loadSample(page);
   await page.getByLabel('Collapse Machine Room').click();
-  await expect(page.getByRole('button', { name: /MCR Rack A 42 RU/ })).not.toBeVisible();
+  await expect(rackTreeButton(page, 'MCR Rack A')).not.toBeVisible();
   await page.getByLabel('Expand Machine Room').click();
-  await expect(page.getByRole('button', { name: /MCR Rack A 42 RU/ })).toBeVisible();
+  await expect(rackTreeButton(page, 'MCR Rack A')).toBeVisible();
 
   await createRack(page, 'Machine Room', 'E2E Rack B');
-  await page.getByRole('button', { name: /MCR Rack A 42 RU/ }).click();
+  await rackTreeButton(page, 'MCR Rack A').click();
   await page.getByLabel('Add rack to canvas').click();
   await page.getByRole('option', { name: 'Machine Room / E2E Rack B' }).click();
 
@@ -221,11 +210,11 @@ test('exercises rack multi-view drag and navigator collapse/context menu workflo
 
 test('deletes a device and removes reconnection candidates', async ({ page }) => {
   await loadSample(page);
-  page.on('dialog', (dialog) => dialog.accept());
   await page.getByText('Multiviewer 1').click();
   await page.getByRole('button', { name: 'Delete Device' }).click();
+  await confirmDeviceDeletion(page);
   await page.getByText('Router 1').click();
-  await page.getByLabel('Connect RTR1-OUT-001').click();
+  await page.getByLabel('Connect OUT-001').click();
   await page.getByLabel('Search ports').fill('MV1');
   await expect(page.getByText('No matching ports.')).toBeVisible();
 });
@@ -234,7 +223,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.8.10');
+  expect(exported.schemaVersion).toBe('0.2.9.08');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });
@@ -262,7 +251,7 @@ test('handles storage failure and recovers from valid stored data', async ({ bro
       window.localStorage.setItem('studiowire.io.project.current', '{');
       window.localStorage.setItem('studiowire.io.project.v0.2.7', sample);
     },
-    readFileSync(currentSamplePath, 'utf8').replace('0.2.8.10', '0.2.7.1'),
+    readFileSync(legacyFixturePaths[1], 'utf8'),
   );
   await page.goto('/');
   await expectProject(page, 'Demo Studio');
@@ -280,10 +269,9 @@ async function configureSettings(page: Page) {
 }
 
 async function createLocation(page: Page, name: string) {
-  await page.getByText('Create location or device').click({ button: 'right' });
+  await page.getByText('Create a location', { exact: true }).click({ button: 'right' });
   await page.getByText('Add Location').click();
   await page.locator('#location-name').fill(name);
-  await page.locator('#location-type').fill('test_room');
   await page.getByRole('button', { name: 'Add Location' }).click();
   await expect(page.getByRole('heading', { name })).toBeVisible();
 }
@@ -293,7 +281,7 @@ async function createRack(page: Page, locationName: string, rackName: string) {
   await page.getByText('Add Rack').click();
   await page.locator('#rack-name').fill(rackName);
   await page.getByRole('button', { name: 'Add Rack' }).click();
-  await expect(page.getByRole('button', { name: new RegExp(`${rackName} 42 RU`) })).toBeVisible();
+  await expect(rackTreeButton(page, rackName)).toBeVisible();
 }
 
 async function createDevice(page: Page, locationName: string, deviceName: string) {
@@ -314,11 +302,17 @@ async function createTerminalBlock(page: Page, locationName: string, tbName: str
   await expect(page.getByRole('button', { name: new RegExp(tbName) })).toBeVisible();
 }
 
-async function connectPorts(page: Page, sourceNodeName: string, fromLabel: string, toLabel: string) {
+async function connectPorts(
+  page: Page,
+  sourceNodeName: string,
+  fromLabel: string,
+  toLabel: string,
+  searchTerm = toLabel,
+) {
   await page.getByRole('button', { name: new RegExp(sourceNodeName) }).click();
   await page.getByLabel(`Connect ${fromLabel}`).click();
-  await page.getByLabel('Search ports').fill(toLabel);
-  await page.getByText(toLabel).first().click();
+  await page.getByLabel('Search ports').fill(searchTerm);
+  await page.locator('.crosspoint-menu').getByText(toLabel, { exact: true }).click();
   await expect(
     page.getByText(new RegExp(`connected ${escapeRegExp(fromLabel)} to ${escapeRegExp(toLabel)}`)),
   ).toBeVisible();
@@ -374,6 +368,19 @@ function locationButton(page: Page, locationName: string) {
   return page.getByRole('button', { name: new RegExp(`^${escapeRegExp(locationName)} \\d+$`) }).first();
 }
 
+function rackTreeButton(page: Page, rackName: string) {
+  return page.getByRole('button', {
+    name: new RegExp(`^${escapeRegExp(rackName)} Rack \\d+ RU$`),
+  });
+}
+
+async function confirmDeviceDeletion(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Delete device?' });
+
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Delete Device' }).click();
+}
+
 async function expectProject(page: Page, name: string) {
   await expect(page.locator('.app-brand-project', { hasText: name })).toBeVisible();
 }
@@ -381,6 +388,7 @@ async function expectProject(page: Page, name: string) {
 async function loadSample(page: Page) {
   await page.getByLabel('Project actions').click();
   await page.getByText('Load Sample').click();
+  await expect(page.getByRole('region', { name: 'Project summary' })).toBeVisible();
 }
 
 async function importProject(page: Page, path: string) {

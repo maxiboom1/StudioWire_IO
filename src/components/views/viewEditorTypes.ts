@@ -1,4 +1,5 @@
 import type { ViewPlacement } from '../../domain/types';
+import type { ViewLineEndpointRole } from '../../domain/viewLineReconnection';
 import type { ViewMovableElementRef, ViewMovableSelection } from '../../domain/viewSelection';
 
 export interface ViewDropPreview {
@@ -14,3 +15,4 @@ export type ViewCanvasSelection =
   | { kind: 'portRange'; id: string };
 
 export type { ViewMovableElementRef, ViewMovableSelection };
+export type { ViewLineEndpointRole };

@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.07
+# StudioWire IO Product Spec v0.2.9.08
 
-StudioWire IO v0.2.9.07 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.08 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.06` completed the first View editor with port/I/O Range anchored technical lines, transient multi-selection, View-local canvas undo/redo, keyboard parity, lifecycle hardening, and exact target-format overflow reporting. Version `0.2.9.07` corrects project-lifecycle coordination without changing View or engineering records. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.08` adds precise bend editing and endpoint reconnection while preserving the View-only boundary. It also separates device-body I/O labels from cable-facing labels, simplifies rack/TB presentation, and changes only the default formatting of newly allocated cable numbers. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
 
 ## Application Layout
 
@@ -95,7 +95,7 @@ Project settings define global configuration used by the rest of the project:
 
 Settings are part of project data and must be included in JSON import/export. Imports use staged syntax, schema-version, structural, migration, and relational validation; failed structural imports preserve the open project.
 
-New projects start with the maintained operator settings baseline: VIDEO, Audio, Network, Reference, RF, Control, and AV categories; V, A, N, R, RF, C, and AV cable prefixes; the global broadcast connector catalog including DVI; the documented category assignments; an empty Video connector group; an Audio connector group containing XLR, PL, and RCA; 48 RU racks; and `PREFIX-0001` cable labels with four-digit padding.
+New projects start with the maintained operator settings baseline: VIDEO, Audio, Network, Reference, RF, Control, and AV categories; V, A, N, R, RF, C, and AV cable prefixes; the global broadcast connector catalog including DVI; the documented category assignments; an empty Video connector group; an Audio connector group containing XLR, PL, and RCA; 48 RU racks; and `PREFIX-001` cable labels with a three-digit minimum.
 
 Connector icons are fixed CSS-drawn in-app symbols selected by `iconKey`; users do not upload connector images or provide SVG/path assets. Category colors are editable hex values and may be overridden per I/O interface for drawing presentation.
 
@@ -152,7 +152,7 @@ Standard devices can be exported as device-template JSON from the navigator. Exp
 
 Standard devices also provide a `Clone and Edit` navigator action. It opens Add Device with the source hardware and ordered I/O definition prefilled, retains the source Location and Folder as editable defaults, clears rack placement and runtime identity, and proposes fresh category-derived cable ranges. The draft still passes through the normal Add Device validation and does not create anything until the operator submits it.
 
-Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names and label patterns, and may append new I/O interfaces with the same allocation rules used during creation.
+Normal devices can be edited after creation. Existing I/O interface count, direction, connector, prefix, planned-cable mode, and cable range stay locked; users may edit interface names, Cable Label Patterns, Device Port Label Patterns, and per-row manual device labels, and may append new I/O interfaces with the same allocation rules used during creation.
 
 Rack-mounted standard devices can be unassigned from their rack without deleting the device. This clears rack assignment and RU placement, preserves mount height, and keeps the device in the rack's location. Terminal blocks are not unassigned through this workflow.
 
@@ -182,7 +182,7 @@ Each port group has:
 
 Generated ports must match the declared count.
 
-New I/O interfaces default to `{I/O NAME}-{000}` label patterns. `{I/O NAME}` resolves to the parent interface name, and `{NAME}` remains a supported alias for existing patterns. `{DEVICE}` remains available for patterns that intentionally use the device sub-name. Add/Edit Device and Device Inspector label the interface field `I/O Name` so its relationship to the pattern token is explicit.
+New I/O interfaces default to `{I/O NAME}-{000}` Cable Label Patterns. A blank Device Port Label Pattern mirrors that cable-facing label; a separate pattern changes only the device-body presentation. `{0}` is unpadded, while `{00}` and `{000}` remain padded. Editing one device row freezes all current labels in that interface for independent manual editing; Reset to Pattern clears every override. Device label operations never alter `Port.label`, cable endpoints, cable tables, connectivity, or numbering.
 
 New Add/Edit Device interfaces derive their cable prefix from the selected category's `defaultCablePrefix`. Existing locked interfaces preserve their stored prefix.
 
@@ -210,7 +210,7 @@ The `0.2.9.02-fix-4` workspace keeps its header intentionally shallow: View name
 
 Version `0.2.9.03` added the compact drawing strip and initial boundary-anchored lines. Version `0.2.9.05` replaces those legacy endpoints with the existing white row-end squares on standard devices and matching I/O Range midpoint squares. TBs, racks, missing sources, empty rows, and generic boundaries do not expose line anchors. Port/range IDs resolve live drawing geometry only and never assert engineering connectivity.
 
-Lines retain deterministic orthogonal automatic routes and absolute manual waypoints. The Inspector provides fixed black/red/blue/green/orange/purple/gray/teal colors, Hairline/Thin/Medium/Wide strokes, and horizontal or bottom-to-top vertical labels. Label dragging projects onto the route and stores normalized Manhattan arc length. Missing endpoints remain selectable warnings; removing a referenced I/O Range confirms and removes its attached View lines atomically.
+Lines retain deterministic orthogonal automatic routes and absolute manual waypoints. Ctrl/Cmd-click inserts a bend at the nearest segment; the same pointer gesture can drag it, Delete removes only the selected bend, and Reset Route restores automatic routing. A selected endpoint is reconnected by dragging its existing device/I/O Range square to another valid standard-device placement; invalid targets and cancellation leave the line unchanged. The Inspector provides fixed colors, widths, and horizontal or bottom-to-top vertical labels. Label dragging projects onto the route and stores normalized Manhattan arc length. All of these operations are View-only transactions.
 
 Version `0.2.9.04` adds transient collective selection for placements, Text, and Areas. Plain click selects one, Ctrl/Cmd toggles, a plain full-containment marquee replaces, and Shift-marquee adds. Collective drag, grid nudge, and removal commit once for the whole selection and preserve relative positions through one shared delta. This behavior is temporary canvas state, not logical grouping, and never enters JSON or autosave.
 
@@ -220,7 +220,7 @@ The View page is a keyboard-focusable editor with concise instructions, visible 
 
 I/O Ranges are View-only braces attached to standard-device left or right presentation rows. Two row clicks define a normalized inclusive range; a one-row range and unmarked gaps are valid, while same-side ranges cannot share a row. A range moves and uniformly scales with its device. Stable port IDs keep visual anchors through row changes but imply no direction, connectivity, cable count, or ownership.
 
-Terminal blocks use a compact rear/front representation. Rack blocks use the current numbering direction, mounted source names/RU spans, and existing placement diagnostics. These blocks expose no patch, rack-assignment, source drag, or other engineering-data editing controls. Missing imported sources remain selectable and removable placeholders. Placement growth or movement outside the paper is highlighted and reported without scaling or rewriting coordinates. Devices and racks can be dropped from the existing navigator directly onto the View paper; duplicate sources focus the existing placement.
+Terminal blocks reuse the same rear/front connector, cable-number, and destination diagram in their source workspace and read-only View placement. Rack blocks use the current numbering direction, mounted source names, and existing placement diagnostics without repeating RU range/size inside each device block. These blocks expose no patch, rack-assignment, source drag, or other engineering-data editing controls. Missing imported sources remain selectable and removable placeholders. Placement growth or movement outside the paper is highlighted and reported without scaling or rewriting coordinates.
 
 ## Cable Numbering
 
@@ -233,7 +233,7 @@ The numbering model includes:
 - A numbering ledger for allocated, skipped, and reserved numbers.
 - Cable records that reference a unique cable number.
 
-Cable numbers must be unique per project. Skipped gaps are reserved and cannot be reused.
+Cable numbers must be unique per project. New allocations use a three-digit minimum (`A-001`, `A-999`, `A-1000`); values grow naturally beyond three digits. Imported legacy four-or-more-digit numbers remain exact. Skipped gaps are reserved and cannot be reused, and ledger indices—not visual padding—control allocation safety.
 
 StudioWire IO v0.2 tracks planned cable numbers, direct device links, device/TB links, TB front-to-front patching, cable register/filtering, standard-device deletion, JSON import/export, resilient local persistence, and validation. Interactive rack, device, and TB views are generated in-app views over project data; they are distinct from future exported drawing documents and prewire packages.
 

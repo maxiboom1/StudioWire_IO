@@ -1,3 +1,4 @@
+import { getManualDevicePortLabels } from '../devicePortLabels';
 import type { Device, ProjectRoot } from '../types';
 import type { DeviceTemplate, DeviceTemplateExportResult, DeviceTemplateIssue } from './types';
 import { DEVICE_TEMPLATE_SCHEMA_VERSION } from './types';
@@ -62,6 +63,11 @@ export function exportDeviceTemplate(project: ProjectRoot, device: Device): Devi
         connectorName: connector.name,
         count: group.count,
         portLabelPattern: group.portLabelPattern,
+        devicePortLabelPattern: group.devicePortLabelPattern,
+        devicePortLabels: getManualDevicePortLabels(
+          group,
+          project.ports.filter((port) => port.portGroupId === group.id),
+        ),
         color: group.colorOverride ?? category.color,
       },
     ];

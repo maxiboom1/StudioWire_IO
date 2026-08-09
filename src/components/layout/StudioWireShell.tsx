@@ -192,88 +192,86 @@ function StudioWireShellContent() {
   }
 
   const activeCanvasViewId =
-    activeView === 'workspace' && selection.selectedObjectType === 'view'
-      ? selection.selectedObjectId
-      : null;
+    activeView === 'workspace' && selection.selectedObjectType === 'view' ? selection.selectedObjectId : null;
 
   return (
     <ViewCanvasHistoryProvider activeViewId={activeCanvasViewId}>
       <SidebarProvider className="app-frame">
-      <TopBar
-        activeView={activeView}
-        onSelectProject={selectProject}
-        onSelectSettings={selectSettings}
-        onViewChange={(view) => void runWithUnsavedGuard(() => setActiveView(view))}
-      />
-      <div className="app-body">
-        <LeftTree
-          selection={selection}
-          onSelectObject={selectObject}
-          onAddLocation={() => void runWithUnsavedGuard(() => setModal({ type: 'location' }))}
-          onAddRack={(locationId) => void runWithUnsavedGuard(() => setModal({ type: 'rack', locationId }))}
-          onAddDevice={openAddDevice}
-          onCloneDevice={openCloneDevice}
-          onEditDevice={openEditDevice}
-          onEditTerminalBlock={openEditTerminalBlock}
-          onAddTerminalBlock={openAddTerminalBlock}
-          onAddView={viewShell.openAddView}
-          onRenameView={viewShell.openRenameView}
-          onDeleteView={viewShell.requestDeleteView}
+        <TopBar
+          activeView={activeView}
+          onSelectProject={selectProject}
+          onSelectSettings={selectSettings}
+          onViewChange={(view) => void runWithUnsavedGuard(() => setActiveView(view))}
         />
-        <SidebarInset className="app-shell">
-          {importError ? (
-            <div className="app-alert" role="alert">
-              <span>{importError}</span>
-              <button type="button" onClick={dismissImportError}>
-                Dismiss
-              </button>
-            </div>
-          ) : null}
-          <section className="app-grid" aria-label={`${project.project.name} project editor`}>
-            {activeView === 'workspace' ? (
-              <Workspace
+        <div className="app-body">
+          <LeftTree
+            selection={selection}
+            onSelectObject={selectObject}
+            onAddLocation={() => void runWithUnsavedGuard(() => setModal({ type: 'location' }))}
+            onAddRack={(locationId) => void runWithUnsavedGuard(() => setModal({ type: 'rack', locationId }))}
+            onAddDevice={openAddDevice}
+            onCloneDevice={openCloneDevice}
+            onEditDevice={openEditDevice}
+            onEditTerminalBlock={openEditTerminalBlock}
+            onAddTerminalBlock={openAddTerminalBlock}
+            onAddView={viewShell.openAddView}
+            onRenameView={viewShell.openRenameView}
+            onDeleteView={viewShell.requestDeleteView}
+          />
+          <SidebarInset className="app-shell">
+            {importError ? (
+              <div className="app-alert" role="alert">
+                <span>{importError}</span>
+                <button type="button" onClick={dismissImportError}>
+                  Dismiss
+                </button>
+              </div>
+            ) : null}
+            <section className="app-grid" aria-label={`${project.project.name} project editor`}>
+              {activeView === 'workspace' ? (
+                <Workspace
+                  selection={selection}
+                  viewCanvasSelection={viewCanvasSelection}
+                  onViewCanvasSelectionChange={setViewCanvasSelection}
+                  onAddDevice={openAddDevice}
+                  onAddTerminalBlock={openAddTerminalBlock}
+                />
+              ) : (
+                <CablesWorkspace />
+              )}
+              <Inspector
                 selection={selection}
                 viewCanvasSelection={viewCanvasSelection}
                 onViewCanvasSelectionChange={setViewCanvasSelection}
-                onAddDevice={openAddDevice}
-                onAddTerminalBlock={openAddTerminalBlock}
+                onOpenObject={(type, id) => selectObject(type, id)}
+                onInspectorDirtyGuardChange={setInspectorGuard}
               />
-            ) : (
-              <CablesWorkspace />
-            )}
-            <Inspector
-              selection={selection}
-              viewCanvasSelection={viewCanvasSelection}
-              onViewCanvasSelectionChange={setViewCanvasSelection}
-              onOpenObject={(type, id) => selectObject(type, id)}
-              onInspectorDirtyGuardChange={setInspectorGuard}
-            />
-            <ValidationPanel
-              onSelectIssue={(issue) => {
-                const target = resolveIssueSelection(project, issue);
+              <ValidationPanel
+                onSelectIssue={(issue) => {
+                  const target = resolveIssueSelection(project, issue);
 
-                if (target) {
-                  void runWithUnsavedGuard(() => {
-                    setActiveView('workspace');
-                    setSelection(target);
-                    setViewCanvasSelection(null);
-                  });
-                }
-              }}
-            />
-          </section>
-        </SidebarInset>
-      </div>
-      <StudioWireObjectModals
-        modal={modal}
-        project={project}
-        onClose={() => setModal(null)}
-        onSubmitted={(type, id) => {
-          setModal(null);
-          selectObjectImmediately(type, id);
-        }}
-      />
-      {viewShell.modalElement}
+                  if (target) {
+                    void runWithUnsavedGuard(() => {
+                      setActiveView('workspace');
+                      setSelection(target);
+                      setViewCanvasSelection(null);
+                    });
+                  }
+                }}
+              />
+            </section>
+          </SidebarInset>
+        </div>
+        <StudioWireObjectModals
+          modal={modal}
+          project={project}
+          onClose={() => setModal(null)}
+          onSubmitted={(type, id) => {
+            setModal(null);
+            selectObjectImmediately(type, id);
+          }}
+        />
+        {viewShell.modalElement}
       </SidebarProvider>
     </ViewCanvasHistoryProvider>
   );

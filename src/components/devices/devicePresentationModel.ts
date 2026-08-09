@@ -4,11 +4,13 @@ import {
   type PortConnectionSummary,
 } from '../../domain/connections';
 import { getOrderedDevicePortColumns } from '../../domain/devicePortLayout';
+import { getDevicePortLabel } from '../../domain/devicePortLabels';
 import type { Device, Port, PortDirection, ProjectRoot } from '../../domain/types';
 import { getPortGroupColor, getPortGroupConnectorIconKey } from '../common/connectorVisuals';
 
 export interface DevicePortPresentation {
   port: Port;
+  deviceLabel: string;
   side: 'left' | 'right';
   direction: PortDirection;
   connection: PortConnectionSummary;
@@ -44,8 +46,8 @@ export interface TerminalBlockPresentationModel {
 
 export function buildDevicePresentationModel(project: ProjectRoot, device: Device): DevicePresentationModel {
   const columns = getOrderedDevicePortColumns(project, device);
-  const left = columns.left.map((port) => buildPortPresentation(project, port, 'left'));
-  const right = columns.right.map((port) => buildPortPresentation(project, port, 'right'));
+  const left = columns.left.map((port) => buildPortPresentation(project, device, port, 'left'));
+  const right = columns.right.map((port) => buildPortPresentation(project, device, port, 'right'));
   const rowCount = Math.max(left.length, right.length, 1);
 
   return {
@@ -70,14 +72,17 @@ export function buildTerminalBlockPresentationModel(
     rowCount,
     pairs: Array.from({ length: rowCount }, (_, index) => ({
       index: index + 1,
-      rear: columns.left[index] ? buildPortPresentation(project, columns.left[index], 'left') : null,
-      front: columns.right[index] ? buildPortPresentation(project, columns.right[index], 'right') : null,
+      rear: columns.left[index] ? buildPortPresentation(project, device, columns.left[index], 'left') : null,
+      front: columns.right[index]
+        ? buildPortPresentation(project, device, columns.right[index], 'right')
+        : null,
     })),
   };
 }
 
 function buildPortPresentation(
   project: ProjectRoot,
+  device: Device,
   port: Port,
   side: 'left' | 'right',
 ): DevicePortPresentation {
@@ -91,6 +96,7 @@ function buildPortPresentation(
 
   return {
     port,
+    deviceLabel: group ? getDevicePortLabel(device, group, port) : port.label,
     side,
     direction: port.direction,
     connection,

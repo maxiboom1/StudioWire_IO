@@ -43,8 +43,8 @@ export interface AllocateCableRangeResult {
   reservedGapRange: NumberingRange | null;
 }
 
-const CABLE_NUMBER_PATTERN = /^([A-Z]+)-([0-9]{4,})$/;
-const MIN_CABLE_NUMBER_DIGITS = 4;
+const CABLE_NUMBER_PATTERN = /^([A-Z]+)-([0-9]{3,})$/;
+const MIN_CABLE_NUMBER_DIGITS = 3;
 
 export function parseCableNumber(input: string): ParsedCableNumber {
   const match = input.trim().match(CABLE_NUMBER_PATTERN);

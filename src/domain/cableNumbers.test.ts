@@ -26,6 +26,13 @@ describe('parseCableNumber', () => {
     });
   });
 
+  it('accepts the three-digit minimum and retains longer legacy/growing values', () => {
+    expect(parseCableNumber('A-001').index).toBe(1);
+    expect(parseCableNumber('A-0001').index).toBe(1);
+    expect(parseCableNumber('A-1023').index).toBe(1023);
+    expect(() => parseCableNumber('A-01')).toThrow();
+  });
+
   it('rejects invalid cable numbers', () => {
     expect(() => parseCableNumber('V0001')).toThrow();
     expect(() => parseCableNumber('V-0000')).toThrow();
@@ -35,12 +42,18 @@ describe('parseCableNumber', () => {
 });
 
 describe('formatCableNumber', () => {
-  it('formats V 1 as V-0001', () => {
-    expect(formatCableNumber('V', 1)).toBe('V-0001');
+  it('formats V 1 as V-001', () => {
+    expect(formatCableNumber('V', 1)).toBe('V-001');
   });
 
   it('supports multi-letter prefixes', () => {
-    expect(formatCableNumber('RF', 7)).toBe('RF-0007');
+    expect(formatCableNumber('RF', 7)).toBe('RF-007');
+  });
+
+  it('grows naturally past the three-digit minimum', () => {
+    expect(formatCableNumber('A', 999)).toBe('A-999');
+    expect(formatCableNumber('A', 1000)).toBe('A-1000');
+    expect(formatCableNumber('A', 10000)).toBe('A-10000');
   });
 });
 

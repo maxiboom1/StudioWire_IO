@@ -43,12 +43,12 @@ describe('deleteNormalDeviceFromProject', () => {
     }
 
     expect(result.project.devices.some((device) => device.id === 'device-multiviewer-1')).toBe(false);
-    expect(result.project.cables.find((cable) => cable.id === 'cable-v-0001')).toMatchObject({
+    expect(result.project.cables.find((cable) => cable.id === 'cable-v-001')).toMatchObject({
       status: 'planned',
       sideAEndpoint: { id: 'port-group-router-outputs-port-0001' },
       sideBEndpoint: { type: 'unknown', id: null },
       labelTop: 'OUT-001',
-      labelMiddle: 'V-0001',
+      labelMiddle: 'V-001',
       labelBottom: '',
     });
   });

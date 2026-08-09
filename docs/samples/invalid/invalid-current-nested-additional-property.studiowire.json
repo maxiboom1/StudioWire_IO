@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.9.07",
+  "schemaVersion": "0.2.9.08",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -317,8 +317,8 @@
       "numberingDirection": "bottom_to_top"
     },
     "labelRules": {
-      "cableNumberFormat": "PREFIX-0001",
-      "cableNumberPadding": 4
+      "cableNumberFormat": "PREFIX-001",
+      "cableNumberPadding": 3
     }
   },
   "locations": [
@@ -405,7 +405,9 @@
       "numberingRangeId": "range-v-router-outputs",
       "createPlannedCables": true,
       "locked": false,
-      "colorOverride": null
+      "colorOverride": null,
+      "devicePortLabelPattern": null,
+      "devicePortLabelMode": "pattern"
     },
     {
       "id": "port-group-multiviewer-inputs",
@@ -422,7 +424,9 @@
       "numberingRangeId": null,
       "createPlannedCables": false,
       "locked": false,
-      "colorOverride": null
+      "colorOverride": null,
+      "devicePortLabelPattern": null,
+      "devicePortLabelMode": "pattern"
     }
   ],
   "ports": [
@@ -437,7 +441,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0001",
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-router-outputs-port-0002",
@@ -450,7 +455,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0002",
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-router-outputs-port-0003",
@@ -463,7 +469,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0003",
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-router-outputs-port-0004",
@@ -476,7 +483,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": "cable-v-0004",
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0001",
@@ -489,7 +497,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0002",
@@ -502,7 +511,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0003",
@@ -515,7 +525,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     },
     {
       "id": "port-group-multiviewer-inputs-port-0004",
@@ -528,7 +539,8 @@
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
       "plannedCableId": null,
-      "notes": ""
+      "notes": "",
+      "devicePortLabelOverride": null
     }
   ],
   "cables": [

@@ -137,6 +137,19 @@ describe('DeviceWorkspace', () => {
     expect(contextHarness.current.editDevice).not.toHaveBeenCalled();
   });
 
+  it('renders independent device-body labels while preserving cable-facing port labels', () => {
+    contextHarness.current = createContext();
+    const project = contextHarness.current.project;
+    const device = project.devices.find((candidate) => candidate.id === 'device-router-1')!;
+    const group = project.portGroups.find((candidate) => candidate.id === 'port-group-router-outputs')!;
+    group.devicePortLabelPattern = '{0}';
+    render(<DeviceWorkspace device={device} />);
+
+    expect(screen.getByText('1').closest('.device-port-label')).toBeTruthy();
+    expect(screen.queryByText('OUT-001')).toBeNull();
+    expect(project.ports.find((port) => port.portGroupId === group.id)?.label).toBe('OUT-001');
+  });
+
   it('starts input and output port rows from the top independently', () => {
     contextHarness.current = createContext();
     const project = contextHarness.current.project;

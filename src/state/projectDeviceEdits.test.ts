@@ -72,11 +72,11 @@ describe('editDeviceInProject', () => {
       name: 'PROGRAM 1',
       label: 'PROGRAM-001',
     });
-    expect(result.project.cables.find((cable) => cable.id === 'cable-v-0001')).toMatchObject({
+    expect(result.project.cables.find((cable) => cable.id === 'cable-v-001')).toMatchObject({
       status: 'connected',
       sideAEndpoint: { id: 'port-group-router-outputs-port-0001', label: 'PROGRAM-001' },
       labelTop: 'PROGRAM-001',
-      labelMiddle: 'V-0001',
+      labelMiddle: 'V-001',
       labelBottom: 'IN-001',
     });
   });
@@ -96,6 +96,52 @@ describe('editDeviceInProject', () => {
     expect(
       result.project.ports.find((port) => port.id === 'port-group-router-outputs-port-0001')?.label,
     ).toBe('OUT-001');
+  });
+
+  it('edits device-body labels without changing engineering connectivity or numbering', () => {
+    const project = structuredClone(sampleProject);
+    const input = baseEdit(project);
+    const group = project.portGroups.find((item) => item.id === 'port-group-router-outputs')!;
+    const ports = project.ports
+      .filter((port) => port.portGroupId === group.id)
+      .sort((left, right) => left.index - right.index);
+    const engineeringBefore = {
+      cables: structuredClone(project.cables),
+      ledgers: structuredClone(project.numberingLedgers),
+      racks: structuredClone(project.racks),
+      locations: structuredClone(project.locations),
+    };
+    input.existingPortGroups = input.existingPortGroups.map((item) =>
+      item.id === group.id
+        ? {
+            ...item,
+            devicePortLabelPattern: '{0}',
+            devicePortLabels: ports.map((port) => ({ portId: port.id, label: `Body ${port.index}` })),
+          }
+        : item,
+    );
+
+    const result = editDeviceInProject(project, input, TEST_TIMESTAMP);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.portGroups.find((item) => item.id === group.id)).toMatchObject({
+      devicePortLabelPattern: '{0}',
+      devicePortLabelMode: 'manual',
+    });
+    expect(
+      result.project.ports
+        .filter((port) => port.portGroupId === group.id)
+        .map((port) => port.devicePortLabelOverride),
+    ).toEqual(['Body 1', 'Body 2', 'Body 3', 'Body 4']);
+    expect(
+      result.project.ports.filter((port) => port.portGroupId === group.id).map((port) => port.label),
+    ).toEqual(ports.map((port) => port.label));
+    expect({
+      cables: result.project.cables,
+      ledgers: result.project.numberingLedgers,
+      racks: result.project.racks,
+      locations: result.project.locations,
+    }).toEqual(engineeringBefore);
   });
 
   it('adds a new interface with ports, planned cables, and numbering ledger allocation', () => {
@@ -132,10 +178,10 @@ describe('editDeviceInProject', () => {
     });
     expect(result.project.ports.find((port) => port.portGroupId === group?.id)).toMatchObject({
       label: 'MGMT-001',
-      plannedCableId: 'cable-n-0001',
+      plannedCableId: 'cable-n-001',
     });
-    expect(result.project.cables.find((cable) => cable.id === 'cable-n-0001')).toMatchObject({
-      number: 'N-0001',
+    expect(result.project.cables.find((cable) => cable.id === 'cable-n-001')).toMatchObject({
+      number: 'N-001',
       labelTop: 'MGMT-001',
     });
     expect(result.project.numberingLedgers.find((ledger) => ledger.prefix === 'N')?.ranges[0]).toMatchObject({

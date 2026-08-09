@@ -102,11 +102,7 @@ export function ViewCanvasHistoryProvider({
       setNotice('');
       pendingRef.current = null;
     } else if (changedCanvas) {
-      if (
-        pending &&
-        pending.viewId === activeViewId &&
-        pending.beforeSignature === previous.signature
-      ) {
+      if (pending && pending.viewId === activeViewId && pending.beforeSignature === previous.signature) {
         if (pending.kind === 'edit') {
           setHistory((current) =>
             pushViewCanvasHistory(current, pending.before, createViewCanvasSnapshot(activeView)),

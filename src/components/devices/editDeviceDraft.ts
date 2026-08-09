@@ -21,6 +21,7 @@ import type { AddDeviceLocalIdFactory } from './addDeviceLocalIds';
 
 export interface ExistingPortGroupForm extends DevicePortGroupForm {
   id: string;
+  existingDevicePortLabels: Array<{ portId: string; label: string }> | null;
 }
 
 export interface EditDeviceValidation extends AddDeviceValidation {}
@@ -52,7 +53,7 @@ export function createExistingPortGroupForms(
   return project.portGroups
     .filter((group) => group.deviceId === deviceId)
     .map((group) => ({
-      ...groupToForm(group),
+      ...groupToForm(project, group),
       id: group.id,
       localId: group.id,
     }));
@@ -61,7 +62,10 @@ export function createExistingPortGroupForms(
 export function updateExistingPortGroupForms(
   groups: ExistingPortGroupForm[],
   id: string,
-  updates: Pick<Partial<ExistingPortGroupForm>, 'name' | 'portLabelPattern' | 'colorOverride'>,
+  updates: Pick<
+    Partial<ExistingPortGroupForm>,
+    'name' | 'portLabelPattern' | 'devicePortLabelPattern' | 'colorOverride'
+  >,
 ): ExistingPortGroupForm[] {
   return groups.map((group) =>
     group.id === id
@@ -69,6 +73,9 @@ export function updateExistingPortGroupForms(
           ...group,
           ...(updates.name === undefined ? {} : { name: updates.name }),
           ...(updates.portLabelPattern === undefined ? {} : { portLabelPattern: updates.portLabelPattern }),
+          ...(updates.devicePortLabelPattern === undefined
+            ? {}
+            : { devicePortLabelPattern: updates.devicePortLabelPattern }),
           ...(updates.colorOverride === undefined ? {} : { colorOverride: updates.colorOverride }),
         }
       : group,
@@ -275,6 +282,8 @@ export function createEditDeviceCommandInput(
       id: group.id,
       name: group.name.trim(),
       portLabelPattern: group.portLabelPattern,
+      devicePortLabelPattern: group.devicePortLabelPattern?.trim() || null,
+      devicePortLabels: group.existingDevicePortLabels,
       colorOverride: group.colorOverride,
     })),
     newPortGroups: newGroups.map((group) => ({
@@ -287,7 +296,7 @@ export function createEditDeviceCommandInput(
   };
 }
 
-function groupToForm(group: PortGroup): Omit<ExistingPortGroupForm, 'id' | 'localId'> {
+function groupToForm(project: ProjectRoot, group: PortGroup): Omit<ExistingPortGroupForm, 'id' | 'localId'> {
   return {
     name: group.name,
     direction: group.direction,
@@ -295,6 +304,15 @@ function groupToForm(group: PortGroup): Omit<ExistingPortGroupForm, 'id' | 'loca
     connectorTypeId: group.connectorTypeId,
     count: group.count,
     portLabelPattern: group.portLabelPattern,
+    devicePortLabelPattern: group.devicePortLabelPattern,
+    devicePortLabels: null,
+    existingDevicePortLabels:
+      group.devicePortLabelMode === 'manual'
+        ? project.ports
+            .filter((port) => port.portGroupId === group.id)
+            .sort((left, right) => left.index - right.index)
+            .map((port) => ({ portId: port.id, label: port.devicePortLabelOverride ?? port.label }))
+        : null,
     cablePrefix: group.cablePrefix,
     firstCableNumber: group.firstCableNumber,
     createPlannedCables: group.createPlannedCables,

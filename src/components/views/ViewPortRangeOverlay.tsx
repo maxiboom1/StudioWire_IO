@@ -10,6 +10,8 @@ import {
   isBoundsOutsidePage,
 } from '../../domain/viewGeometry';
 import { getViewPortRangeBounds, resolveViewPortRange } from '../../domain/viewPortRanges';
+import { getDevicePortLabel } from '../../domain/devicePortLabels';
+import type { Port, ProjectRoot } from '../../domain/types';
 import type { ViewEditorController } from './useViewEditorController';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
 
@@ -32,6 +34,13 @@ export function ViewPortRangeOverlay({
   return (
     <div className="view-port-range-overlay">
       {ranges.map((range) => {
+        const endpoint = {
+          kind: 'port_range' as const,
+          placementId: placement.id,
+          annotationId: range.id,
+        };
+        const reconnectRole = controller.getReconnectEndpointRole(endpoint);
+        const reconnectTarget = controller.isReconnectTarget(endpoint);
         const resolved = resolveViewPortRange(controller.project, view, range);
         const bounds = getViewPortRangeBounds(controller.project, view, range);
         const outside = Boolean(
@@ -74,24 +83,28 @@ export function ViewPortRangeOverlay({
               <span className="view-port-range-brace" />
               <span className="view-port-range-label">{range.label}</span>
             </button>
-            {controller.tool === 'line' ? (
+            {controller.tool === 'line' || reconnectRole || reconnectTarget ? (
               <button
                 aria-label={`Use ${range.label || 'I/O Range'} as View line anchor`}
-                className={`view-port-range-line-anchor is-${range.side}`}
+                className={`view-port-range-line-anchor is-${range.side}${reconnectRole ? ' is-reconnect-handle' : ''}${reconnectTarget ? ' is-reconnect-target' : ''}`}
+                data-view-line-endpoint-id={range.id}
+                data-view-line-endpoint-kind="port_range"
+                data-view-line-endpoint-placement-id={placement.id}
                 title={`Use ${range.label || 'I/O Range'} as View line anchor`}
                 style={{
-                  top:
-                    header +
-                    ((resolved.startIndex + resolved.endIndex + 1) / 2) * rowHeight,
+                  top: header + ((resolved.startIndex + resolved.endIndex + 1) / 2) * rowHeight,
                 }}
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
-                  controller.handleLineAnchor({
-                    kind: 'port_range',
-                    placementId: placement.id,
-                    annotationId: range.id,
-                  });
+                  if (!controller.endpointReconnect && controller.tool === 'line') {
+                    controller.handleLineAnchor(endpoint);
+                  }
+                }}
+                onPointerDown={(event) => {
+                  if (reconnectRole && controller.selectedLine) {
+                    controller.beginEndpointReconnect(event, controller.selectedLine, reconnectRole);
+                  }
                 }}
               />
             ) : null}
@@ -102,7 +115,7 @@ export function ViewPortRangeOverlay({
         ? (['left', 'right'] as const).flatMap((side) =>
             controller.getPortRangeRows(placement, side).map((port, index) => (
               <button
-                aria-label={`Select ${port.label} for I/O Range`}
+                aria-label={`Select ${getPresentationPortLabel(controller.project, port)} for I/O Range`}
                 className={`view-port-range-target is-${side}`}
                 key={`${side}-${port.id}`}
                 style={{ top: header + index * rowHeight, height: rowHeight }}
@@ -117,4 +130,10 @@ export function ViewPortRangeOverlay({
         : null}
     </div>
   );
+}
+
+function getPresentationPortLabel(project: ProjectRoot, port: Port): string {
+  const device = project.devices.find((item) => item.id === port.deviceId);
+  const group = project.portGroups.find((item) => item.id === port.portGroupId);
+  return device && group ? getDevicePortLabel(device, group, port) : port.label;
 }

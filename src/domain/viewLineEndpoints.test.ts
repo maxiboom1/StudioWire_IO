@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getOrderedDevicePortColumns } from './devicePortLayout';
 import { sampleProject } from './sampleProject';
 import type { ProjectRoot, ProjectView } from './types';
-import {
-  getCoveredViewPortIds,
-  resolveViewLineEndpoint,
-} from './viewLineEndpoints';
+import { getCoveredViewPortIds, resolveViewLineEndpoint } from './viewLineEndpoints';
 
 function fixture(): { project: ProjectRoot; view: ProjectView } {
   const project = structuredClone(sampleProject);
@@ -68,9 +65,7 @@ describe('View line endpoint resolution', () => {
       expect(resolved.point.xMm - view.placements[0].xMm).toBeCloseTo((931 * 92 * scale) / 940);
     }
     view.placements[0].xMm += 12.5;
-    expect(resolveViewLineEndpoint(project, view, right)!.point.xMm).toBeCloseTo(
-      32.5 + (931 * 92) / 940,
-    );
+    expect(resolveViewLineEndpoint(project, view, right)!.point.xMm).toBeCloseTo(32.5 + (931 * 92) / 940);
   });
 
   it('keeps port IDs stable while row insertion/reorder changes current geometry', () => {

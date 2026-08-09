@@ -34,7 +34,8 @@ export function useViewSelectionKeyboard({
         !selection ||
         isEditingTarget(event.target) ||
         !isCanvasKeyboardTarget(event.target)
-      ) return;
+      )
+        return;
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
         removeSelected();

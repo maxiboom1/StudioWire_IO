@@ -1,5 +1,5 @@
 {
-  "templateSchemaVersion": "0.1.0",
+  "templateSchemaVersion": "0.2.0",
   "templateType": "device",
   "device": {
     "name": "ACID Camera",
@@ -17,7 +17,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#7C3AED"
+      "color": "#7C3AED",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "SDI OUT",
@@ -26,7 +28,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "UC OUT",
@@ -35,7 +39,9 @@
       "connectorName": "BNC",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#2563EB"
+      "color": "#2563EB",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     },
     {
       "name": "ETH",
@@ -44,7 +50,9 @@
       "connectorName": "RJ45",
       "count": 1,
       "portLabelPattern": "{I/O NAME}",
-      "color": "#059669"
+      "color": "#059669",
+      "devicePortLabelPattern": null,
+      "devicePortLabels": null
     }
   ]
 }

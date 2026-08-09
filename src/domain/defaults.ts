@@ -11,8 +11,8 @@ import type {
   Settings,
 } from './types';
 
-export const DEFAULT_CABLE_NUMBER_PADDING = 4;
-export const DEFAULT_CABLE_NUMBER_FORMAT = 'PREFIX-0001';
+export const DEFAULT_CABLE_NUMBER_PADDING = 3;
+export const DEFAULT_CABLE_NUMBER_FORMAT = 'PREFIX-001';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'category-video', name: 'VIDEO', defaultCablePrefix: 'V', color: '#2563EB' },

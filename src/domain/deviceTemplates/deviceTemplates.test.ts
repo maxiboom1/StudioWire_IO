@@ -5,6 +5,7 @@ import { checkDeviceTemplateCompatibility } from './compatibility';
 import { exportDeviceTemplate, serializeDeviceTemplate } from './templateExport';
 import { mapDeviceTemplateToFormDraft } from './templateMapping';
 import type { DeviceTemplate } from './types';
+import { validateDeviceTemplateSource } from './templateValidation';
 
 const template: DeviceTemplate = {
   templateSchemaVersion: '0.1.0',
@@ -25,6 +26,8 @@ const template: DeviceTemplate = {
       connectorName: 'bnc',
       count: 2,
       portLabelPattern: '{I/O NAME}-{000}',
+      devicePortLabelPattern: null,
+      devicePortLabels: null,
       color: '#112233',
     },
     {
@@ -34,6 +37,8 @@ const template: DeviceTemplate = {
       connectorName: 'RJ45',
       count: 1,
       portLabelPattern: 'CTRL-{000}',
+      devicePortLabelPattern: null,
+      devicePortLabels: null,
       color: '#445566',
     },
   ],
@@ -117,6 +122,12 @@ describe('device template collection domain', () => {
   it('exports semantic hardware data without project IDs, placement, or cable allocations', () => {
     const project = structuredClone(sampleProject);
     const device = project.devices.find((candidate) => candidate.kind === 'device')!;
+    const group = project.portGroups.find((candidate) => candidate.deviceId === device.id)!;
+    group.devicePortLabelPattern = '{0}';
+    group.devicePortLabelMode = 'manual';
+    project.ports
+      .filter((port) => port.portGroupId === group.id)
+      .forEach((port) => (port.devicePortLabelOverride = `Body ${port.index}`));
     const result = exportDeviceTemplate(project, device);
 
     expect(result.issues).toEqual([]);
@@ -137,5 +148,26 @@ describe('device template collection domain', () => {
     for (const key of forbiddenKeys) {
       expect(json).not.toContain(`"${key}"`);
     }
+    expect(result.template?.templateSchemaVersion).toBe('0.2.0');
+    expect(result.template?.ioInterfaces[0]).toMatchObject({
+      devicePortLabelPattern: '{0}',
+      devicePortLabels: ['Body 1', 'Body 2', 'Body 3', 'Body 4'],
+    });
+  });
+
+  it('loads a real 0.1.0 shape as cable-label mirroring presentation data', () => {
+    const legacy = structuredClone(template) as unknown as Record<string, unknown>;
+    for (const item of legacy.ioInterfaces as Array<Record<string, unknown>>) {
+      delete item.devicePortLabelPattern;
+      delete item.devicePortLabels;
+    }
+    const result = validateDeviceTemplateSource({
+      path: 'collections/devices/Example Systems/Video/XR-16/xr-16.studiowire-device.json',
+      value: legacy,
+    });
+    expect(result.issues).toEqual([]);
+    expect(result.template?.templateSchemaVersion).toBe('0.2.0');
+    expect(result.template?.ioInterfaces.every((item) => item.devicePortLabelPattern === null)).toBe(true);
+    expect(result.template?.ioInterfaces.every((item) => item.devicePortLabels === null)).toBe(true);
   });
 });

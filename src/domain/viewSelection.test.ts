@@ -99,9 +99,7 @@ describe('View transient selection', () => {
 
     expect(selection).toEqual({ primary: text, items: [router, text] });
     expect(toggleViewMovableSelection(selection, text)).toEqual({ primary: router, items: [router] });
-    expect(addToViewMovableSelection(selection, [{ kind: 'group', id: 'area-main' }])?.primary).toEqual(
-      text,
-    );
+    expect(addToViewMovableSelection(selection, [{ kind: 'group', id: 'area-main' }])?.primary).toEqual(text);
     expect(
       normalizeViewMovableSelection(view, {
         primary: { kind: 'text', id: 'stale' },
@@ -159,9 +157,7 @@ describe('View transient selection', () => {
 
   it('clamps a selection that begins inside but permits repair movement for outside content', () => {
     const inside = fixture();
-    const selection = createViewMovableSelection([
-      { kind: 'placement', id: 'placement-multiviewer' },
-    ])!;
+    const selection = createViewMovableSelection([{ kind: 'placement', id: 'placement-multiviewer' }])!;
     const clamped = getViewPointerTranslation(
       sampleProject,
       inside,

@@ -37,14 +37,12 @@ function validateLegacyFixtures() {
   const files = readdirSync(legacyDir)
     .filter((name) => name.endsWith('.json'))
     .sort();
-  const expectedLegacyVersions = SUPPORTED_SCHEMA_VERSIONS.filter(
-    (version) => version !== STUDIOWIRE_CURRENT_VERSION,
-  );
+  const expectedLegacyVersions: SchemaVersion[] = ['0.2.8.25', '0.2.9.07'];
   const actualVersions = files.map(versionFromLegacyFixtureName).sort();
 
   if (JSON.stringify(actualVersions) !== JSON.stringify([...expectedLegacyVersions].sort())) {
     fail(
-      `${legacyDir} must contain exactly one fixture for each legacy version: ${expectedLegacyVersions.join(
+      `${legacyDir} must contain the retained baseline and latest real migration fixture: ${expectedLegacyVersions.join(
         ', ',
       )}. Found: ${actualVersions.join(', ')}.`,
     );
@@ -124,17 +122,23 @@ function validateLegacySentinel(path: string, version: SchemaVersion, raw: any, 
     fail(`${path} did not preserve stable project identity.`);
   }
 
-  if (version !== '0.2.8.25') {
-    fail(`${path} is not the retained 0.2.8.25 compatibility fixture.`);
+  if (version === '0.2.8.25') {
+    if ('views' in raw) fail(`${path} must retain the real pre-View 0.2.8.25 shape.`);
+    if (project.views.length !== 0) fail(`${path} did not migrate to an empty Views collection.`);
+    return;
   }
 
-  if ('views' in raw) {
-    fail(`${path} must retain the real pre-View 0.2.8.25 shape.`);
+  if (version === '0.2.9.07') {
+    if (raw.portGroups.some((group: any) => 'devicePortLabelMode' in group)) {
+      fail(`${path} must retain the pre-device-label 0.2.9.07 shape.`);
+    }
+    if (JSON.stringify(raw.cables) !== JSON.stringify(project.cables)) {
+      fail(`${path} rewrote legacy cable records during the 0.2.9.07 migration.`);
+    }
+    return;
   }
 
-  if (project.views.length !== 0) {
-    fail(`${path} did not migrate to an empty Views collection.`);
-  }
+  fail(`${path} is not a maintained realistic legacy fixture.`);
 }
 
 function versionFromLegacyFixtureName(file: string): SchemaVersion {

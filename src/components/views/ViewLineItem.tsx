@@ -60,7 +60,9 @@ export function ViewLineItem({
         }}
       >
         <rect height="18" rx="3" width="94" x="-3" y="-9" />
-        <text x="4" y="1">Missing line endpoint</text>
+        <text x="4" y="1">
+          Missing line endpoint
+        </text>
       </g>
     );
   }
@@ -93,13 +95,16 @@ export function ViewLineItem({
       tabIndex={0}
       onClick={(event) => {
         event.stopPropagation();
+        if (event.ctrlKey || event.metaKey) return;
         controller.selectCanvas({ kind: 'line', id: line.id });
       }}
-      onDoubleClick={(event) => {
-        const native = event.nativeEvent;
-        controller.addWaypoint(line, {
-          xMm: native.offsetX / VIEW_PIXELS_PER_MM / controller.zoom,
-          yMm: native.offsetY / VIEW_PIXELS_PER_MM / controller.zoom,
+      onPointerDown={(event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        const page = event.currentTarget.closest('.view-page')?.getBoundingClientRect();
+        if (!page) return;
+        controller.beginInsertedWaypointGesture(event, line, {
+          xMm: (event.clientX - page.left) / VIEW_PIXELS_PER_MM / controller.zoom,
+          yMm: (event.clientY - page.top) / VIEW_PIXELS_PER_MM / controller.zoom,
         });
       }}
       onKeyDown={(event) => {
@@ -108,9 +113,7 @@ export function ViewLineItem({
         controller.selectCanvas({ kind: 'line', id: line.id });
       }}
     >
-      {selected ? (
-        <polyline className="view-line-selection-halo" points={toSvgPoints(points)} />
-      ) : null}
+      {selected ? <polyline className="view-line-selection-halo" points={toSvgPoints(points)} /> : null}
       {outside ? <polyline className="view-line-warning-halo" points={toSvgPoints(points)} /> : null}
       <polyline className="view-line-hit" points={toSvgPoints(points)} />
       <polyline className="view-line-stroke" points={toSvgPoints(points)} />
@@ -127,27 +130,6 @@ export function ViewLineItem({
           >
             <text>{renderedLine.label}</text>
           </g>
-          {selected ? (
-            <foreignObject
-              height="18"
-              width="18"
-              x={labelPoint.xMm * VIEW_PIXELS_PER_MM + 7}
-              y={labelPoint.yMm * VIEW_PIXELS_PER_MM - 20}
-            >
-              <button
-                aria-label={`Change line label to ${renderedLine.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal'}`}
-                className="view-line-label-rotate"
-                title={`Change label to ${renderedLine.labelOrientation === 'horizontal' ? 'vertical' : 'horizontal'}`}
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  controller.toggleLineLabelOrientation(renderedLine);
-                }}
-              >
-                ↻
-              </button>
-            </foreignObject>
-          ) : null}
         </>
       ) : null}
       {selected &&
@@ -157,7 +139,7 @@ export function ViewLineItem({
             cx={point.xMm * VIEW_PIXELS_PER_MM}
             cy={point.yMm * VIEW_PIXELS_PER_MM}
             key={index}
-            r="4"
+            r={3 / controller.zoom}
             onPointerDown={(event) => controller.beginWaypointGesture(event, line, index)}
           />
         ))}

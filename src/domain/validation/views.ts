@@ -1,8 +1,4 @@
-import {
-  VIEW_LINE_COLOR_VALUES,
-  VIEW_LINE_LABEL_ORIENTATION_VALUES,
-  VIEW_LINE_WIDTH_VALUES,
-} from '../types';
+import { VIEW_LINE_COLOR_VALUES, VIEW_LINE_LABEL_ORIENTATION_VALUES, VIEW_LINE_WIDTH_VALUES } from '../types';
 import type {
   ProjectRoot,
   ProjectView,
@@ -169,7 +165,6 @@ function validateViewLines(
       issues.push(geometryIssue(view, `Line ${line.id} has invalid geometry.`, issue));
     }
 
-
     if (
       !VIEW_LINE_COLOR_VALUES.includes(line.color) ||
       !VIEW_LINE_WIDTH_VALUES.includes(line.width) ||
@@ -235,9 +230,7 @@ function validateViewLineEndpoint(
       return;
     }
     const columns = getOrderedDevicePortColumns(project, device);
-    if (
-      ![...columns.left, ...columns.right].some((candidate) => candidate.id === endpoint.portId)
-    ) {
+    if (![...columns.left, ...columns.right].some((candidate) => candidate.id === endpoint.portId)) {
       issues.push(
         issue(
           'error',

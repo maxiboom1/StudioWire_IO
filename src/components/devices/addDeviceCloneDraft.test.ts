@@ -16,6 +16,11 @@ describe('Add Device clone draft', () => {
       description: '',
     });
     project.portGroups[0].colorOverride = '#123456';
+    project.portGroups[0].devicePortLabelPattern = '{0}';
+    project.portGroups[0].devicePortLabelMode = 'manual';
+    project.ports
+      .filter((port) => port.portGroupId === project.portGroups[0].id)
+      .forEach((port) => (port.devicePortLabelOverride = `Body ${port.index}`));
 
     const draft = createClonedAddDeviceDraft(
       project,
@@ -48,6 +53,8 @@ describe('Add Device clone draft', () => {
         connectorTypeId: 'connector-bnc',
         count: 4,
         portLabelPattern: '{I/O NAME}-{000}',
+        devicePortLabelPattern: '{0}',
+        devicePortLabels: ['Body 1', 'Body 2', 'Body 3', 'Body 4'],
         cablePrefix: 'V',
         firstCableNumber: 9,
         createPlannedCables: true,

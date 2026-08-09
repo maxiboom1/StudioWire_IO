@@ -1,9 +1,5 @@
 import type { ProjectView, ViewGroupAnnotation, ViewTextAnnotation } from '../../domain/types';
-import {
-  getAnnotationBounds,
-  getViewPageDimensions,
-  isBoundsOutsidePage,
-} from '../../domain/viewGeometry';
+import { getAnnotationBounds, getViewPageDimensions, isBoundsOutsidePage } from '../../domain/viewGeometry';
 import { getViewLineEndpointPoint } from '../../domain/viewLineEndpoints';
 import type { ViewEditorController } from './useViewEditorController';
 import { ViewLineItem } from './ViewLineItem';
@@ -37,13 +33,7 @@ export function ViewDrawingLayer({
           <LineDraft view={view} controller={controller} />
         ) : null}
         {view.lines.map((line, index) => (
-          <ViewLineItem
-            controller={controller}
-            key={line.id}
-            line={line}
-            view={view}
-            warningIndex={index}
-          />
+          <ViewLineItem controller={controller} key={line.id} line={line} view={view} warningIndex={index} />
         ))}
       </svg>
       <div className="view-text-layer">
