@@ -27,7 +27,9 @@ export const MIGRATION_STEPS: MigrationStep[] = [
   { from: '0.2.9.04', to: '0.2.9.05', migrate: removeLegacyViewLines },
   { from: '0.2.9.05', to: '0.2.9.06', migrate: identityMigration },
   { from: '0.2.9.06', to: '0.2.9.07', migrate: identityMigration },
-  { from: '0.2.9.07', to: STUDIOWIRE_CURRENT_VERSION, migrate: addDevicePortLabels },
+  { from: '0.2.9.07', to: '0.2.9.08', migrate: addDevicePortLabels },
+  { from: '0.2.9.08', to: '0.2.9.09', migrate: addViewLineFlexPathIds },
+  { from: '0.2.9.09', to: STUDIOWIRE_CURRENT_VERSION, migrate: identityMigration },
 ];
 
 export function migrateProjectToCurrent(payload: unknown, version: SchemaVersion): MigrationResult {
@@ -121,6 +123,47 @@ function addDevicePortLabels(project: unknown): MigrationStepResult {
       ...requireRecord(value, `$.ports[${index}]`),
       devicePortLabelOverride: null,
     })),
+  });
+}
+
+function addViewLineFlexPathIds(project: unknown): MigrationStepResult {
+  const record = requireRecord(project, '$');
+  if (!Array.isArray(record.views)) {
+    throw new MigrationError('$.views', 'Expected an array of Views while migrating View line waypoints.');
+  }
+  return migrationStep({
+    ...record,
+    views: record.views.map((viewValue, viewIndex) => {
+      const view = requireRecord(viewValue, `$.views[${viewIndex}]`);
+      if (!Array.isArray(view.lines)) {
+        throw new MigrationError(
+          `$.views[${viewIndex}].lines`,
+          'Expected an array of View lines while migrating View line waypoints.',
+        );
+      }
+      return {
+        ...view,
+        lines: view.lines.map((lineValue, lineIndex) => {
+          const line = requireRecord(lineValue, `$.views[${viewIndex}].lines[${lineIndex}]`);
+          if (!Array.isArray(line.waypoints)) {
+            throw new MigrationError(
+              `$.views[${viewIndex}].lines[${lineIndex}].waypoints`,
+              'Expected an array of View line waypoints.',
+            );
+          }
+          return {
+            ...line,
+            waypoints: line.waypoints.map((pointValue, pointIndex) => ({
+              ...requireRecord(
+                pointValue,
+                `$.views[${viewIndex}].lines[${lineIndex}].waypoints[${pointIndex}]`,
+              ),
+              flexPathId: null,
+            })),
+          };
+        }),
+      };
+    }),
   });
 }
 

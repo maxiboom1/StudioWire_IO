@@ -33,6 +33,24 @@ export function ViewPage({
     target?.focus();
   }, [controller.focusRequest, controller.selectedPlacement?.id]);
 
+  useEffect(() => {
+    const pageElement = pageRef.current;
+    if (!pageElement) return;
+    const useKeyboardFocus = () => {
+      pageElement.dataset.inputModality = 'keyboard';
+    };
+    const usePointerFocus = () => {
+      pageElement.dataset.inputModality = 'pointer';
+    };
+    pageElement.dataset.inputModality = 'pointer';
+    window.addEventListener('keydown', useKeyboardFocus, true);
+    window.addEventListener('pointerdown', usePointerFocus, true);
+    return () => {
+      window.removeEventListener('keydown', useKeyboardFocus, true);
+      window.removeEventListener('pointerdown', usePointerFocus, true);
+    };
+  }, [view.id]);
+
   return (
     <div className="view-page-stage" style={{ width: widthPx * zoom, height: heightPx * zoom }}>
       <div

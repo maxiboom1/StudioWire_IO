@@ -1,6 +1,6 @@
 # StudioWire IO Data Model
 
-Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.08`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `.05 -> .06 -> .07` is shape-preserving. The `.07 -> .08` migration adds presentation-only device-port fields and three-digit LabelRules while preserving every existing cable string, cable ID, ledger, reference, View line, and annotation.
+Project data is the source of truth. StudioWire IO imports and exports a single JSON document using current schema version `0.2.9.10`. Version `0.2.8.25` is the retained compatibility baseline for the View model: importing or restoring that version first adds `views: []` at `0.2.9.00`, then advances through the staged chain to `0.2.9.04`. The `0.2.9.04 -> 0.2.9.05` migration deliberately removes and reports legacy boundary-anchored View lines before adopting port/range endpoints; `.05 -> .06 -> .07` is shape-preserving. The `.07 -> .08` migration adds presentation-only device-port fields and three-digit LabelRules while preserving every existing cable string, cable ID, ledger, reference, View line, and annotation. The `.08 -> .09` migration adds `flexPathId: null` to existing manual View-line waypoints without changing their coordinates or any engineering record; `.09 -> .10` is shape-preserving and only refines transient route editing.
 
 Active StudioWire IO app and project schema versions always match and use four numeric components.
 
@@ -18,7 +18,7 @@ Templates use semantic category and connector names because project IDs are loca
 
 Top-level project object:
 
-- `schemaVersion`: current fixed string `0.2.9.08`.
+- `schemaVersion`: current fixed string `0.2.9.10`.
 - `project`: `ProjectInfo`.
 - `settings`: `Settings`.
 - `locations`: `Location[]`.
@@ -265,7 +265,7 @@ Fields:
 - `from`: `ViewLineEndpoint`
 - `to`: `ViewLineEndpoint`
 - `label`: the View-local custom meaning of the line
-- `waypoints`: `ViewPoint[]`
+- `waypoints`: `ViewLineWaypoint[]`
 - `color`: `black`, `red`, `blue`, `green`, `orange`, `purple`, `gray`, or `teal`
 - `width`: `hairline`, `thin`, `medium`, or `wide`
 - `labelOrientation`: `horizontal` or `vertical`
@@ -275,7 +275,11 @@ Each endpoint is either `{ kind: 'port', placementId, portId }` for a rendered s
 
 The stored port and annotation IDs are stable presentation anchors only. They do not assert direction, connectivity, cable ownership, cable count, or engineering endpoint semantics and never mutate physical cables or ports. The visible outer white device-row squares become focusable anchors only while the Line tool is active. Rows covered by an I/O Range remain visible but are inactive; the range provides one matching square at its midpoint.
 
-Routes are orthogonal. Empty `waypoints` requests automatic routing, beginning with a 5 mm outward extension from each live endpoint. Manual bend editing stores absolute millimetre points; moving/scaling a placement or changing a range updates live endpoints while preserving those waypoints. Resetting a route clears its waypoints. Removing a placement removes its attached lines. Removing a referenced I/O Range confirms and removes its attached lines atomically.
+`ViewLineWaypoint` extends `ViewPoint` with `flexPathId: string | null`. An ungrouped manual bend uses `null`. Four consecutive waypoints sharing one non-empty line-scoped ID form one **Flex path**: a non-zero orthogonal U-shaped detour that returns to its source segment axis. Multiple Flex paths may exist on a line, but Flex paths cannot nest or share waypoint members.
+
+Routes are always rendered orthogonally. Empty `waypoints` requests automatic routing, beginning with a 5 mm outward extension from each live endpoint. Manual bend editing stores internal millimetre coordinates, while the canonical route resolver elastically aligns the terminal legs to live left/right anchors and inserts safe orthogonal elbows when required. Moving/scaling a placement, changing source row geometry, reconnecting an endpoint, or changing an I/O Range can therefore never render a diagonal segment. Duplicate and redundant collinear points are normalized without breaking valid Flex membership. Resetting a route clears every grouped and ungrouped waypoint. Removing a placement removes its attached lines. Removing a referenced I/O Range confirms and removes its attached lines atomically.
+
+When a line is selected, midpoint controls represent straight segments. Dragging a midpoint moves that segment parallel while adjacent legs extend or contract. Shift-dragging an eligible midpoint creates a four-bend Flex path with a two-grid-pitch span and user-controlled perpendicular depth; segments shorter than four grid pitches are ineligible. Flex creation is never initiated from a corner handle. Dragging Flex corners adjusts its span/depth while preserving the U invariant. Removing a selected Flex corner removes the complete four-waypoint group. All route gestures are View-history transactions and never alter cable or port records.
 
 New lines default to black, Thin, horizontal labels, and `labelPosition: 0.5`. Labels always render black. `labelPosition` uses Manhattan arc length along the complete rendered orthogonal polyline; dragging projects the label to the closest route segment and commits one normalized value. Vertical labels read bottom-to-top. Missing port/range anchors remain structurally loadable, validate as relational errors, and render a selectable warning so the drawing-only line can be removed.
 

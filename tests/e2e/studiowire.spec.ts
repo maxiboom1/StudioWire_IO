@@ -81,7 +81,7 @@ test('imports current and legacy fixtures', async ({ page }) => {
   for (const fixturePath of legacyFixturePaths) {
     await importProject(page, fixturePath);
     await expectProject(page, 'Demo Studio');
-    await expect(page.getByText('Schema 0.2.9.08', { exact: true })).toBeVisible();
+    await expect(page.getByText('Schema 0.2.9.10', { exact: true })).toBeVisible();
   }
 });
 
@@ -223,7 +223,7 @@ test('exports and re-imports JSON', async ({ page }) => {
   await loadSample(page);
   const exported = await exportProject(page);
 
-  expect(exported.schemaVersion).toBe('0.2.9.08');
+  expect(exported.schemaVersion).toBe('0.2.9.10');
   await importProject(page, exported.path);
   await expectProject(page, 'Demo Studio');
 });

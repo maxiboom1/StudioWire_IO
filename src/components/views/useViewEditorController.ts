@@ -89,6 +89,7 @@ export function useViewEditorController({
     removeViewLine,
     updateViewAnnotation,
     removeViewAnnotation,
+    setNotice,
   });
 
   const selection = useViewSelectionGestures({
@@ -195,6 +196,7 @@ export function useViewEditorController({
     marqueeBounds: selection.marqueeBounds,
     annotationPreview: elements.annotationPreview,
     linePreview: elements.linePreview,
+    flexPathPreview: elements.flexPathPreview,
     linePointer: creation.linePointer,
     dropPreview: drop.dropPreview,
     notice: notice || history.notice,
@@ -216,7 +218,7 @@ export function useViewEditorController({
     beginMovableGesture: selection.beginMovableGesture,
     beginAnnotationResize: elements.beginAnnotationResize,
     beginWaypointGesture: elements.beginWaypointGesture,
-    beginInsertedWaypointGesture: elements.beginInsertedWaypointGesture,
+    beginSegmentGesture: elements.beginSegmentGesture,
     beginLineLabelGesture: elements.beginLabelGesture,
     beginEndpointReconnect: elements.beginEndpointReconnect,
     endpointReconnect: elements.endpointReconnect,
@@ -232,7 +234,6 @@ export function useViewEditorController({
             endpoint,
           )
         : false,
-    addWaypoint: elements.addWaypoint,
     updateGesture,
     finishGesture,
     cancelGesture,

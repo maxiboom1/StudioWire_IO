@@ -2,7 +2,7 @@
 
 Validation runs against `ProjectRoot` data. It returns `ValidationIssue[]` and only mutates project state when the UI stores the returned issues after the user clicks Validate.
 
-Current-version `0.2.9.08` JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` at `0.2.9.00`; staged versions advance to `.04`, the `.04 -> .05` migration removes and reports legacy boundary-anchored View lines, and `.05 -> .06 -> .07` is shape-preserving. The `.07 -> .08` migration adds presentation-only device-port label state and changes LabelRules to the three-digit default without rewriting existing cable records. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
+Current-version `0.2.9.10` JSON imports are structurally validated exactly as supplied before any migration or cleanup. Version `0.2.8.25` is the retained compatibility baseline and migrates only by adding `views: []` at `0.2.9.00`; staged versions advance to `.04`, the `.04 -> .05` migration removes and reports legacy boundary-anchored View lines, and `.05 -> .06 -> .07` is shape-preserving. The `.07 -> .08` migration adds presentation-only device-port label state and changes LabelRules to the three-digit default without rewriting existing cable records. The `.08 -> .09` migration adds `flexPathId: null` to every existing manual View-line waypoint while preserving its coordinates and all other project data; `.09 -> .10` is shape-preserving. Earlier internal schemas are not maintained import baselines, and current imports report schema errors for legacy-only fields at the offending path.
 
 Port label generation resolves `{I/O NAME}` and its supported `{NAME}` alias from the parent `PortGroup.name`. Device metadata changes must not alter labels that use either interface-name token. `{DEVICE}` remains the explicit token for patterns that use the device label prefix, and `{0}` is the unpadded 1-based index. Device-port presentation labels are validated independently and never change `Port.label` or cable data.
 
@@ -58,11 +58,12 @@ Compatibility validation reports all mismatches before a template can fill Add D
 - `view-line-range-invalid`: an I/O Range endpoint must match its placement and resolve to valid rendered rows on a standard device.
 - `view-line-self-reference`: a View line must connect two different placements; parallel lines between the same pair remain valid.
 - `view-line-style-invalid`: line color, width, label orientation, and normalized label position must use the fixed supported values and finite `0..1` range.
+- `view-line-flex-invalid`: each non-null Flex path ID must be non-empty and identify exactly four consecutive waypoints in one line; those points must form a non-zero orthogonal U-shaped detour that returns to one source axis. Flex groups cannot overlap or nest.
 - `view-port-range-placement-missing`: an I/O Range must reference a standard-device placement in the same View.
 - `view-port-range-port-missing`: both I/O Range endpoint ports must still exist on the referenced source device.
 - `view-port-range-invalid`: both endpoints must resolve to the selected rendered side of the standard device.
 - `view-port-range-overlap`: I/O Ranges on the same placement side cannot share a rendered row; opposite sides are independent.
-- `view-geometry-invalid`: View coordinates must be finite, placement scale must be from 0.25 through 3, manual line routes must remain orthogonal, and annotation dimensions must be positive.
+- `view-geometry-invalid`: View coordinates must be finite, placement scale must be from 0.25 through 3, canonical manual line routes must remain orthogonal with horizontal terminal legs, every waypoint must have a valid nullable Flex ID, and annotation dimensions must be positive. Invalid imported manual control points must never render a diagonal segment; the safe canonical resolver supplies orthogonal elbows while validation reports the stored defect.
 
 The Fix 3 View-wide Device Size UI offers only scale values `0.7`, `0.8`, `0.9`, and `1`. This is an operator constraint, not a tighter import rule: older or externally authored placement scales from 0.25 through 3 remain structurally valid and renderable, and the preset control can normalize mixed device scales.
 

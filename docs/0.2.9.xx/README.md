@@ -6,7 +6,7 @@ This folder is the implementation sequence for the first StudioWire IO multi-obj
 
 Creating or revising these prompt documents does not change the application version. The product implementation started at `0.2.9.00` from the `0.2.8.25` baseline.
 
-Implementation status: prompts 01 through 07 are complete through `0.2.9.06`. Releases `0.2.9.07` and `0.2.9.08` preserve the presentation-only contract while fixing lifecycle coordination, adding independent device-body labels, and refining View-line/TB/rack editing.
+Implementation status: prompts 01 through 07 are complete through `0.2.9.06`. Releases `0.2.9.07` through `0.2.9.10` preserve the presentation-only contract while fixing lifecycle coordination, adding independent device-body labels, refining View-line/TB/rack editing, completing orthogonal Flex paths, and making route-axis snapping reversible.
 
 The feature is a local, frontend-only presentation layer over project data:
 
@@ -82,11 +82,15 @@ interface ViewLine {
   from: ViewLineEndpoint;
   to: ViewLineEndpoint;
   label: string;
-  waypoints: ViewPoint[];
+  waypoints: ViewLineWaypoint[];
   color: ViewLineColor;
   width: ViewLineWidth;
   labelOrientation: ViewLineLabelOrientation;
   labelPosition: number;
+}
+
+interface ViewLineWaypoint extends ViewPoint {
+  flexPathId: string | null;
 }
 
 type ViewLineEndpoint =
@@ -204,8 +208,9 @@ The operator creates placements only by dragging existing navigator devices/rack
 - Lines have no arrowhead and no stored engineering direction.
 - Empty `waypoints` selects an automatically calculated orthogonal route.
 - Default routing extends `5 mm` along each endpoint's live left/right normal before joining orthogonally.
-- Ctrl/Cmd-clicking or Ctrl/Cmd-dragging a segment converts an automatic route when necessary and inserts one grid-aware bend; selected bends can be dragged or removed independently. Manual bend editing stores absolute millimetre waypoints. Normalize consecutive duplicate/collinear points and maintain horizontal/vertical segments.
-- Moving/scaling a placement or editing a range moves its resolved anchors. Manual waypoints stay fixed until the user edits them or invokes **Reset Route**.
+- Dragging a straight-segment midpoint converts an automatic route when necessary and moves the complete segment in parallel. Shift-dragging an eligible midpoint creates a four-corner grouped Flex path; Flex creation never starts from a corner handle. Manual bend editing stores absolute millimetre waypoints.
+- A pure canonical resolver normalizes duplicate/redundant points and guarantees horizontal/vertical rendered segments. Moving/scaling a placement or editing a range moves its resolved anchors through elastic orthogonal terminal legs; internal manual coordinates stay fixed until edited or **Reset Route** is invoked.
+- Four consecutive waypoints sharing one non-empty `flexPathId` form a non-zero U-shaped Flex. Multiple non-nested Flex paths are allowed. Flex corner/midpoint edits preserve the invariant, collapse on return to the original axis, and delete atomically as one View-history transaction.
 - Lines use the fixed black/red/blue/green/orange/purple/gray/teal palette and Hairline/Thin/Medium/Wide widths. Labels stay black.
 - `labelPosition` is normalized route arc length `0..1`; label dragging projects onto the orthogonal route. Orientation is horizontal or bottom-to-top vertical.
 - A selected endpoint is reconnected by dragging its existing row-end or I/O Range square to another eligible standard-device placement. Invalid drops and Escape preserve the line; successful drops change only that endpoint. Label orientation remains an Inspector control and has no on-canvas rotate widget.
@@ -272,6 +277,7 @@ Use these validation codes consistently:
 - Add tools only when functional: Select, Line, Text, Area, I/O Range. `Area` retains persisted `kind: 'group'` for compatibility.
 - Devices/racks enter only through existing navigator drag payloads dropped onto the paper.
 - Canvas-element selection is transient UI state coordinated between ViewWorkspace and the existing Inspector; it is not serialized. Ctrl/Cmd-click toggles movable items, plain marquee replaces, and Shift-marquee adds fully enclosed placements/Text/Areas.
+- Mouse selection is handles-only: no line halo and no enclosing border, outline, or shadow is added to placements, Text, Areas, or I/O Ranges. Preserve authored frames, keyboard-only focus indication, warnings, and the smallest relevant movement/resize/route handles.
 - Dragging or nudging a movable multi-selection applies one shared grid-aware delta and commits one atomic canvas mutation. Lines and I/O Ranges do not join movable multi-selection.
 - Commit pointer move/resize/route changes once at pointer release. Do not dispatch or autosave on every pointer move.
 - Escape cancels an active creation/edit gesture. Delete removes the selected View element.
@@ -296,8 +302,10 @@ The user explicitly requested safe staged compatibility, overriding the normal c
 - `0.2.9.05 -> 0.2.9.06` is an identity migration.
 - `0.2.9.06 -> 0.2.9.07` is an identity migration.
 - `0.2.9.07 -> 0.2.9.08` adds nullable/pattern device-port presentation state and changes LabelRules to `PREFIX-001`/3 while preserving exact cable records, ledgers, and View content.
+- `0.2.9.08 -> 0.2.9.09` assigns `flexPathId: null` to every existing manual waypoint without changing coordinates, line endpoints/styles, annotations, placements, or engineering data.
+- `0.2.9.09 -> 0.2.9.10` is shape-preserving; it only refines transient line focus, snapping, and route canonicalization behavior.
 - Keep `0.2.8.25` and all earlier staged v0.2.9.x versions in the supported-version list so users can move directly to the final stage.
-- Preserve realistic `0.2.8.25` and `0.2.9.07` fixtures. Do not add a large fixture for every identity-only step; focused migration-unit tests are sufficient for the staged versions.
+- Preserve realistic `0.2.8.25`, `0.2.9.07`, and manual-route `0.2.9.08` fixtures. Do not add a large fixture for every identity-only step; focused migration-unit tests are sufficient for the staged versions.
 - The active localStorage key remains unchanged. Restored old data migrates before the next autosave writes the current shape.
 
 ## Prompt Sequence

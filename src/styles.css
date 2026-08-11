@@ -856,7 +856,7 @@ button.view-tree-add:focus-visible {
   overscroll-behavior: contain;
 }
 
-.view-page:focus-visible {
+.view-page[data-input-modality='keyboard']:focus-visible {
   outline: 2px solid #39999a;
   outline-offset: 3px;
 }
@@ -987,11 +987,8 @@ button.view-tree-add:focus-visible {
   font-weight: 800;
 }
 
-.view-group-annotation.is-selected {
-  border-color: #168c89;
-  box-shadow: 0 0 0 1px rgba(22, 140, 137, 0.55);
-}
-.view-group-annotation.is-primary {
+.view-page[data-input-modality='keyboard'] .view-group-annotation:focus-visible {
+  outline: none;
   box-shadow:
     0 0 0 1px #fff,
     0 0 0 2px #168c89;
@@ -1008,8 +1005,9 @@ button.view-tree-add:focus-visible {
 
 .view-line-stroke,
 .view-line-hit,
-.view-line-selection-halo,
-.view-line-warning-halo {
+.view-line-warning-halo,
+.view-line-flex-preview,
+.view-line-flex-guide {
   fill: none;
   stroke-linecap: square;
   stroke-linejoin: miter;
@@ -1020,6 +1018,18 @@ button.view-tree-add:focus-visible {
   stroke: var(--view-line-color, #172b31);
   stroke-width: var(--view-line-width, 2);
 }
+.view-line-item:focus {
+  outline: none;
+}
+.view-page[data-input-modality='keyboard'] .view-line-layer > g[role='button']:focus-visible {
+  outline: none;
+}
+.view-page[data-input-modality='keyboard']
+  .view-line-layer
+  > g[role='button']:focus-visible
+  .view-line-stroke {
+  filter: drop-shadow(0 0 1px #087f7c);
+}
 .view-line-stroke.is-draft {
   stroke: #168c89;
   stroke-dasharray: 5 4;
@@ -1029,15 +1039,22 @@ button.view-tree-add:focus-visible {
   stroke: transparent;
   stroke-width: 8;
 }
-.view-line-selection-halo {
-  stroke: rgba(8, 127, 124, 0.38);
-  stroke-width: calc(var(--view-line-width, 2) + 4px);
-  pointer-events: none;
-}
 .view-line-warning-halo {
   stroke: #d8791e;
   stroke-width: calc(var(--view-line-width, 2) + 4px);
   stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+.view-line-flex-preview {
+  stroke: #087f7c;
+  stroke-width: 1.5px;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+.view-line-flex-guide {
+  stroke: rgba(8, 127, 124, 0.58);
+  stroke-width: 1px;
+  stroke-dasharray: 2 3;
   pointer-events: none;
 }
 .view-line-label text {
@@ -1067,8 +1084,7 @@ button.view-tree-add:focus-visible {
   font-size: 8px;
   font-weight: 750;
 }
-.view-line-missing.is-selected rect,
-.view-line-missing:focus-visible rect {
+.view-page[data-input-modality='keyboard'] .view-line-missing:focus-visible rect {
   stroke: #087f7c;
   stroke-width: 2;
 }
@@ -1078,6 +1094,14 @@ button.view-tree-add:focus-visible {
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
   pointer-events: all;
+}
+.view-line-segment-handle {
+  fill: #fff;
+  stroke: #087f7c;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: all;
+  cursor: move;
 }
 
 .view-text-annotation {
@@ -1100,11 +1124,8 @@ button.view-tree-add:focus-visible {
   font-size: 15px;
   font-weight: 800;
 }
-.view-text-annotation.is-selected {
-  border-color: #168c89;
-  box-shadow: 0 0 0 1px rgba(22, 140, 137, 0.55);
-}
-.view-text-annotation.is-primary {
+.view-page[data-input-modality='keyboard'] .view-text-annotation:focus-visible {
+  outline: none;
   box-shadow:
     0 0 0 1px #fff,
     0 0 0 2px #168c89;
@@ -1136,12 +1157,7 @@ button.view-tree-add:focus-visible {
   user-select: none;
 }
 
-.view-placement:hover {
-  box-shadow: 0 2px 7px rgba(14, 35, 40, 0.2);
-}
-
-.view-placement.is-selected,
-.view-placement:focus-visible {
+.view-page[data-input-modality='keyboard'] .view-placement:focus-visible {
   z-index: 10;
   border-color: #0f8583;
   box-shadow:
@@ -1150,23 +1166,9 @@ button.view-tree-add:focus-visible {
     0 3px 9px rgba(12, 73, 76, 0.16);
 }
 
-.view-placement.is-primary {
-  box-shadow:
-    0 0 0 1px #fff,
-    0 0 0 3px #159794,
-    0 4px 12px rgba(12, 73, 76, 0.2);
-}
-
 .view-placement.is-outside-page {
   border-color: #dc7a1c;
   background: #fffaf3;
-}
-
-.view-placement.is-outside-page.is-selected {
-  box-shadow:
-    0 0 0 2px #fff,
-    0 0 0 4px #e4892f,
-    0 4px 12px rgba(115, 61, 9, 0.2);
 }
 
 .view-placement.is-device-diagram {
@@ -1231,13 +1233,7 @@ button.view-tree-add:focus-visible {
 .view-port-range.is-right .view-port-range-label {
   left: 5px;
 }
-.view-port-range.is-selected {
-  background: transparent;
-  outline: none;
-  box-shadow: 0 0 0 1px rgba(22, 140, 137, 0.45);
-}
-.view-port-range:hover,
-.view-port-range:focus-visible {
+.view-page[data-input-modality='keyboard'] .view-port-range:focus-visible {
   background: rgba(20, 151, 117, 0.045);
   outline: 1px solid rgba(22, 140, 137, 0.35);
 }

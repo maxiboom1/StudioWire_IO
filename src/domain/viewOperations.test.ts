@@ -180,7 +180,9 @@ describe('View domain operations', () => {
     const movedLine = movedView.lines.find((line) => line.id === 'line-main');
     if (!movedLine) throw new Error('Expected the routed line.');
     const routed = updateViewLine(moved.project, 'view-main', 'line-main', {
-      waypoints: getAutomaticLineRoute(moved.project, movedView, movedLine.from, movedLine.to).slice(1, -1),
+      waypoints: getAutomaticLineRoute(moved.project, movedView, movedLine.from, movedLine.to)
+        .slice(1, -1)
+        .map((point) => ({ ...point, flexPathId: null })),
     });
     if (!routed.ok) throw new Error(routed.error);
     const annotated = addViewAnnotation(routed.project, 'view-main', {

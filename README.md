@@ -2,7 +2,7 @@
 
 StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
 
-This repository contains the v0.2.9.08 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
+This repository contains the v0.2.9.10 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
 ## Install
 
@@ -102,10 +102,10 @@ StudioWire IO review is controlled by the user and can use an uploaded source ar
 - Live device, terminal-block, and rack placement with deterministic virtual-grid insertion, navigator drop, transient modifier/marquee multi-selection, atomic collective move/delete, keyboard grid movement, missing-source and out-of-page diagnostics, and focused Inspectors.
 - A View-wide 70/80/90/100% Device Size control that proportionally scales every device/TB renderer and preserves logical alignment cells; the virtual grid stays invisible behind the existing paper pattern.
 - Compact read-only technical blocks that resolve current I/O labels, cable numbers, connection destinations, TB faces, rack contents, and source-deletion impact without exposing engineering edit controls.
-- View drawing tools for port/I/O Range anchored orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. Lines use fixed technical color/width presets, route-constrained labels, Ctrl/Cmd bend insertion, bend removal/reset, and endpoint reconnection through the existing source squares; these marks cannot change cables, ports, numbering, racks, or locations.
+- View drawing tools for port/I/O Range anchored orthogonal lines, text headings, visual Area rectangles stored as `kind: 'group'`, and standard-device-attached I/O Ranges. Lines use fixed technical color/width presets, route-constrained labels, parallel segment movement, Shift-drag Flex paths, bend/Flex removal, route reset, and endpoint reconnection through the existing source squares; these marks cannot change cables, ports, numbering, racks, or locations.
 - View-local 50-entry undo/redo for canvas mutations, with transactional collective gestures, redo invalidation, keyboard shortcuts, accessible focus/instructions, and lifecycle-safe reset when a View or project is replaced. View CRUD, page settings, imports, and source-record edits remain outside this transient history.
 - Populated page-format confirmation that reports the exact number of placements, lines, and annotations which would extend outside the target page while preserving every stored coordinate.
-- JSON import/export: current exports use schema version `0.2.9.08`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. The `.05 -> .06` and `.06 -> .07` migrations are shape-preserving; `.07 -> .08` adds presentation-only device-port labels and the three-digit default without rewriting existing cables or Views.
+- JSON import/export: current exports use schema version `0.2.9.10`. Version `0.2.8.25` migrates by adding `views: []`; staged versions advance through `0.2.9.04`, whose legacy boundary-anchored View lines are deliberately removed and reported before adopting the `.05` port/range line shape. The `.05 -> .06` and `.06 -> .07` migrations are shape-preserving; `.07 -> .08` adds presentation-only device-port labels and the three-digit default; `.08 -> .09` adds nullable Flex identities to existing manual waypoints without changing coordinates or engineering data; `.09 -> .10` is shape-preserving.
 
 ## Release Gates
 
@@ -150,6 +150,20 @@ See `docs/ROADMAP.md` for planned version boundaries.
 See `docs/V0_2_ACCEPTANCE.md` for the maintained v0.2 release acceptance gate.
 
 ## Version Changelog
+
+### v0.2.9.10
+
+- Removed the browser-native SVG focus rectangle that appeared as a thick black border around pointer-selected View lines while retaining restrained keyboard focus feedback.
+- Added route-axis-aware magnetic snapping so manually moved bends and segments align exactly with live port rows and existing route axes before falling back to the equal-axis page grid.
+- Canonicalized committed manual routes so returning a displaced segment to its original axis removes collapsed micro-elbows and exactly restores the prior orthogonal route.
+
+### v0.2.9.09
+
+- Replaced raw manual-route rendering with a safe canonical resolver that guarantees horizontal/vertical segments as device geometry, scale, rows, and endpoints change.
+- Added midpoint segment controls: drag to move a segment in parallel, or Shift-drag an eligible straight segment to create one transactional four-corner Flex path with grid snapping and Alt bypass.
+- Added grouped Flex reshaping, whole-Flex deletion/collapse, Reset Route integration, validation, migration, and View-history coverage without engineering side effects.
+- Removed mouse-selection halos and enclosing block/annotation outlines while retaining compact constant-screen editing handles, keyboard focus, and warning states.
+- Added the real `0.2.9.08 -> 0.2.9.09` waypoint migration and a realistic retained `0.2.9.08` manual-route fixture.
 
 ### v0.2.9.08
 

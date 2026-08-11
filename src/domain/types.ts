@@ -199,7 +199,7 @@ export interface ViewLine {
   from: ViewLineEndpoint;
   to: ViewLineEndpoint;
   label: string;
-  waypoints: ViewPoint[];
+  waypoints: ViewLineWaypoint[];
   color: ViewLineColor;
   width: ViewLineWidth;
   labelOrientation: ViewLineLabelOrientation;
@@ -213,6 +213,10 @@ export type ViewLineEndpoint =
 export interface ViewPoint {
   xMm: number;
   yMm: number;
+}
+
+export interface ViewLineWaypoint extends ViewPoint {
+  flexPathId: string | null;
 }
 
 export type ViewAnnotation = ViewTextAnnotation | ViewGroupAnnotation | ViewPortRangeAnnotation;

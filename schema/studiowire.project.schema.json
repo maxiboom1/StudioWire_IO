@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studiowire.io/schema/studiowire.project.schema.json",
-  "title": "StudioWire IO Project v0.2.9.08",
+  "title": "StudioWire IO Project v0.2.9.10",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "0.2.9.08"
+      "const": "0.2.9.10"
     },
     "project": {
       "$ref": "#/$defs/ProjectInfo"
@@ -531,7 +531,7 @@
         "waypoints": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ViewPoint"
+            "$ref": "#/$defs/ViewLineWaypoint"
           }
         },
         "color": {
@@ -584,6 +584,22 @@
         },
         "yMm": {
           "type": "number"
+        }
+      }
+    },
+    "ViewLineWaypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xMm", "yMm", "flexPathId"],
+      "properties": {
+        "xMm": {
+          "type": "number"
+        },
+        "yMm": {
+          "type": "number"
+        },
+        "flexPathId": {
+          "type": ["string", "null"]
         }
       }
     },

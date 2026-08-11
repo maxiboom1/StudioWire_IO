@@ -1,10 +1,10 @@
-# StudioWire IO Product Spec v0.2.9.08
+# StudioWire IO Product Spec v0.2.9.10
 
-StudioWire IO v0.2.9.08 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
+StudioWire IO v0.2.9.10 is the current local, frontend-only broadcast engineering project editor. The application edits structured project data and validates that data before it is saved or exported as JSON.
 
 Drawings, spreadsheets, and CAD artifacts are not source documents. They are generated views or future v0.3.0.0 exports of the project data.
 
-Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.08` adds precise bend editing and endpoint reconnection while preserving the View-only boundary. It also separates device-body I/O labels from cable-facing labels, simplifies rack/TB presentation, and changes only the default formatting of newly allocated cable numbers. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
+Project Views are persistent presentation data inside the normal project JSON, not engineering source records. Version `0.2.9.10` refines manual line editing with route-axis-aware grid snapping, reversible segment movement, canonical collapsed-elbow cleanup, and quiet pointer selection while preserving guaranteed orthogonal rendering and grouped Visio-style Flex paths. It retains independent device-body labels, shared rack/TB presentation, three-digit new cable-number formatting, and endpoint reconnection. All drawing content belongs only to its View and cannot create, remove, connect, disconnect, or renumber engineering records.
 
 ## Application Layout
 
@@ -191,7 +191,7 @@ New Add/Edit Device interfaces derive their cable prefix from the selected categ
 A View is a named A4 or A3 portrait/landscape presentation canvas stored as a sibling collection on the project root. A new View defaults to A3 portrait, uses millimetre coordinates, and contains:
 
 - Live placements referencing an existing standard device, terminal block, or rack by ID.
-- Neutral, labeled, orthogonal manual lines between placement boundaries.
+- Neutral, labeled, orthogonal manual lines between standard-device port or I/O Range anchors.
 - View-only text headings and visual group rectangles.
 
 Views do not copy source devices or racks. They never create, remove, renumber, connect, or disconnect ports or physical cables, and they do not change location hierarchy or rack assignment. Source changes remain live through ID references. Deleting a source removes only its direct View placements and attached View lines; unrelated placements and annotations remain.
@@ -210,7 +210,9 @@ The `0.2.9.02-fix-4` workspace keeps its header intentionally shallow: View name
 
 Version `0.2.9.03` added the compact drawing strip and initial boundary-anchored lines. Version `0.2.9.05` replaces those legacy endpoints with the existing white row-end squares on standard devices and matching I/O Range midpoint squares. TBs, racks, missing sources, empty rows, and generic boundaries do not expose line anchors. Port/range IDs resolve live drawing geometry only and never assert engineering connectivity.
 
-Lines retain deterministic orthogonal automatic routes and absolute manual waypoints. Ctrl/Cmd-click inserts a bend at the nearest segment; the same pointer gesture can drag it, Delete removes only the selected bend, and Reset Route restores automatic routing. A selected endpoint is reconnected by dragging its existing device/I/O Range square to another valid standard-device placement; invalid targets and cancellation leave the line unchanged. The Inspector provides fixed colors, widths, and horizontal or bottom-to-top vertical labels. Label dragging projects onto the route and stores normalized Manhattan arc length. All of these operations are View-only transactions.
+Lines retain deterministic orthogonal automatic routes and absolute manual waypoints. A canonical resolver keeps every rendered leg orthogonal even after endpoint movement, scaling, row changes, or malformed imported geometry. Dragging a straight-segment midpoint moves that segment in parallel; Shift-dragging an eligible midpoint creates a grouped four-corner Flex path, while corner handles reshape bends/Flex geometry without permitting diagonal legs. Delete removes one ungrouped bend or the complete selected Flex, and Reset Route restores automatic routing. A selected endpoint is reconnected by dragging its existing device/I/O Range square to another valid standard-device placement; invalid targets and cancellation leave the line unchanged. The Inspector provides fixed colors, widths, and horizontal or bottom-to-top vertical labels. Label dragging projects onto the route and stores normalized Manhattan arc length. All of these operations are single View-only transactions.
+
+Mouse selection uses a quiet handles-only presentation: no line halo and no enclosing selection border or shadow on placements, Text, Areas, or I/O Ranges. Authored borders remain unchanged; keyboard focus, missing-reference warnings, out-of-page warnings, endpoint squares, bend handles, segment midpoint controls, placement grips, and resize handles remain available.
 
 Version `0.2.9.04` adds transient collective selection for placements, Text, and Areas. Plain click selects one, Ctrl/Cmd toggles, a plain full-containment marquee replaces, and Shift-marquee adds. Collective drag, grid nudge, and removal commit once for the whole selection and preserve relative positions through one shared delta. This behavior is temporary canvas state, not logical grouping, and never enters JSON or autosave.
 

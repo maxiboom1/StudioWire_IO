@@ -57,6 +57,8 @@ Staged scope:
 - `0.2.9.06` complete: transactional 50-entry View-local undo/redo, keyboard/focus/pointer and stale-lifecycle hardening, exact target-format overflow confirmation, illustrative validated sample content, and final first-editor acceptance.
 - `0.2.9.07` complete maintenance fix: crosspoint creation and clearing preserve the selected device/TB workspace; only explicit project lifecycle replacement resets navigation and transient editor state.
 - `0.2.9.08` complete: independent device-body I/O labels and template schema `0.2.0`, three-digit new cable numbering, shared TB/rack presentation polish, and transactional View-line bend/reconnection editing.
+- `0.2.9.09` complete: guaranteed canonical orthogonal View-line routes, parallel segment controls, grouped Shift-drag Flex paths, and quiet handles-only mouse selection.
+- `0.2.9.10` complete: route-axis-aware grid snapping, reversible segment restoration without micro-elbows, and removal of the browser-native SVG selection rectangle.
 
 View printing, title blocks, PDF/SVG generation, and document export remain v0.3 work.
 

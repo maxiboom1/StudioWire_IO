@@ -140,9 +140,10 @@ export function ViewWorkspace({
       ) : null}
       <p className="sr-only" id={`view-editor-instructions-${view.id}`}>
         Select items with click. Use Control or Command click to change a multi-selection, or draw a marquee
-        on paper. Line mode uses eligible device I/O and I/O Range anchors. Escape cancels the current action.
-        Delete removes the selection. Arrow keys nudge selected items. Control or Command Z undoes, and
-        Control or Command Shift Z or Y redoes.
+        on paper. Line mode uses eligible device I/O and I/O Range anchors. On a selected line, drag a segment
+        midpoint to move it in parallel, or Shift-drag an eligible midpoint to create a Flex path. Escape
+        cancels the current action. Delete removes the selection. Arrow keys nudge selected items. Control or
+        Command Z undoes, and Control or Command Shift Z or Y redoes.
       </p>
       <div className="view-viewport" ref={viewport.viewportRef}>
         <ViewPage controller={editor} page={page} view={view} zoom={viewport.zoom} />

@@ -125,6 +125,24 @@ describe('ViewPage navigator drop', () => {
       }),
     );
   });
+
+  it('limits canvas focus emphasis to keyboard input modality', () => {
+    const project = structuredClone(sampleProject);
+    contextHarness.current = {
+      project,
+      addViewPlacement: vi.fn(),
+      updateViewPlacement: vi.fn(),
+      removeViewPlacement: vi.fn(),
+    } as unknown as ProjectContextValue;
+
+    render(<Harness view={emptyView()} />);
+    const page = screen.getByLabelText('Main A3 portrait page');
+    expect(page.dataset.inputModality).toBe('pointer');
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(page.dataset.inputModality).toBe('keyboard');
+    fireEvent.pointerDown(window, { pointerId: 4 });
+    expect(page.dataset.inputModality).toBe('pointer');
+  });
 });
 
 function Harness({ view }: { view: ProjectView }) {

@@ -54,7 +54,7 @@ function view(): ProjectView {
           portId: 'port-group-multiviewer-inputs-port-0001',
         },
         label: '12x SDI',
-        waypoints: [{ xMm: 120, yMm: 20 }],
+        waypoints: [{ xMm: 120, yMm: 20, flexPathId: null }],
         color: 'black',
         width: 'thin',
         labelOrientation: 'horizontal',

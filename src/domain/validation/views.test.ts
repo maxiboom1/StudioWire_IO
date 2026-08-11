@@ -396,4 +396,29 @@ describe('View relational validation', () => {
     expect(codes).toContain('view-line-range-invalid');
     expect(codes).toContain('view-line-style-invalid');
   });
+
+  it('reports malformed grouped Flex paths without preventing safe View validation', () => {
+    const project = structuredClone(sampleProject);
+    project.views[0].lines[0].waypoints = [
+      { xMm: 110, yMm: 90, flexPathId: 'flex-broken' },
+      { xMm: 110, yMm: 100, flexPathId: 'flex-broken' },
+      { xMm: 120, yMm: 100, flexPathId: 'flex-broken' },
+    ];
+
+    expect(validateProject(project)).toContainEqual(
+      expect.objectContaining({
+        code: 'view-line-flex-invalid',
+        objectType: 'view',
+        objectId: 'view-signal-overview',
+      }),
+    );
+
+    project.views[0].lines[0].waypoints = [
+      { xMm: 110, yMm: 90, flexPathId: null },
+      { xMm: 110, yMm: 90, flexPathId: null },
+    ];
+    expect(validateProject(project)).toContainEqual(
+      expect.objectContaining({ code: 'view-geometry-invalid', objectId: 'view-signal-overview' }),
+    );
+  });
 });

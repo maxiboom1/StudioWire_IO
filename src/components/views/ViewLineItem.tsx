@@ -4,7 +4,7 @@ import { getViewPageDimensions, isBoundsOutsidePage, isPointOutsidePage } from '
 import { resolveViewLineEndpoint } from '../../domain/viewLineEndpoints';
 import { getViewLineLabelBounds, getViewLineLabelPoint } from '../../domain/viewLineLabelGeometry';
 import { VIEW_LINE_COLOR_MAP, VIEW_LINE_WIDTH_MAP } from '../../domain/viewLineStyles';
-import { getRenderedLinePoints } from '../../domain/viewRouting';
+import { getRenderedLineRoute, getViewLineSegments } from '../../domain/viewRouting';
 import type { ViewEditorController } from './useViewEditorController';
 import { VIEW_PIXELS_PER_MM } from './viewViewport';
 
@@ -19,7 +19,9 @@ export function ViewLineItem({
   view: ProjectView;
   warningIndex: number;
 }) {
-  const renderedLine = controller.linePreview?.id === line.id ? controller.linePreview : line;
+  const flexPreviewActive = controller.flexPathPreview?.lineId === line.id;
+  const activePreview = controller.linePreview?.id === line.id ? controller.linePreview : null;
+  const renderedLine = flexPreviewActive ? line : (activePreview ?? line);
   const endpoints = useMemo(
     () => ({
       from: resolveViewLineEndpoint(controller.project, view, renderedLine.from),
@@ -28,10 +30,17 @@ export function ViewLineItem({
     [controller.project, renderedLine, view],
   );
   const { from, to } = endpoints;
-  const points = useMemo(
-    () => getRenderedLinePoints(controller.project, view, renderedLine),
+  const route = useMemo(
+    () => getRenderedLineRoute(controller.project, view, renderedLine),
     [controller.project, renderedLine, view],
   );
+  const points = useMemo(() => route.map(({ xMm, yMm }) => ({ xMm, yMm })), [route]);
+  const previewPoints = useMemo(() => {
+    if (!flexPreviewActive || !activePreview || !controller.flexPathPreview) return [];
+    return getRenderedLineRoute(controller.project, view, activePreview)
+      .filter((point) => point.flexPathId === controller.flexPathPreview!.flexPathId)
+      .map(({ xMm, yMm }) => ({ xMm, yMm }));
+  }, [activePreview, controller.flexPathPreview, controller.project, flexPreviewActive, view]);
   const selected = controller.canvasSelection?.kind === 'line' && controller.canvasSelection.id === line.id;
   if (!from || !to) {
     const surviving = from ?? to;
@@ -79,7 +88,8 @@ export function ViewLineItem({
       ),
   );
   const outside = points.some((point) => isPointOutsidePage(point, page)) || labelOutside;
-  const handles = renderedLine.waypoints.length ? renderedLine.waypoints : points.slice(1, -1);
+  const bends = route.slice(1, -1);
+  const segments = getViewLineSegments(route);
   const style = {
     '--view-line-color': VIEW_LINE_COLOR_MAP[renderedLine.color],
     '--view-line-width': `${VIEW_LINE_WIDTH_MAP[renderedLine.width]}px`,
@@ -89,23 +99,13 @@ export function ViewLineItem({
     <g
       aria-label={`${renderedLine.label || 'Unlabeled'} View line${selected ? ', selected' : ''}`}
       aria-pressed={selected}
-      className={`${selected ? 'is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
+      className={`view-line-item${selected ? ' is-selected' : ''}${outside ? ' is-outside-page' : ''}`}
       role="button"
       style={style}
       tabIndex={0}
       onClick={(event) => {
         event.stopPropagation();
-        if (event.ctrlKey || event.metaKey) return;
         controller.selectCanvas({ kind: 'line', id: line.id });
-      }}
-      onPointerDown={(event) => {
-        if (!event.ctrlKey && !event.metaKey) return;
-        const page = event.currentTarget.closest('.view-page')?.getBoundingClientRect();
-        if (!page) return;
-        controller.beginInsertedWaypointGesture(event, line, {
-          xMm: (event.clientX - page.left) / VIEW_PIXELS_PER_MM / controller.zoom,
-          yMm: (event.clientY - page.top) / VIEW_PIXELS_PER_MM / controller.zoom,
-        });
       }}
       onKeyDown={(event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -113,36 +113,66 @@ export function ViewLineItem({
         controller.selectCanvas({ kind: 'line', id: line.id });
       }}
     >
-      {selected ? <polyline className="view-line-selection-halo" points={toSvgPoints(points)} /> : null}
       {outside ? <polyline className="view-line-warning-halo" points={toSvgPoints(points)} /> : null}
       <polyline className="view-line-hit" points={toSvgPoints(points)} />
       <polyline className="view-line-stroke" points={toSvgPoints(points)} />
-      {renderedLine.label && labelPoint ? (
+      {flexPreviewActive && previewPoints.length > 1 ? (
         <>
-          <g
-            className={`view-line-label is-${renderedLine.labelOrientation}`}
-            transform={`translate(${labelPoint.xMm * VIEW_PIXELS_PER_MM} ${labelPoint.yMm * VIEW_PIXELS_PER_MM})${renderedLine.labelOrientation === 'vertical' ? ' rotate(-90)' : ''}`}
-            onDoubleClick={(event) => {
-              event.stopPropagation();
-              focusInspector();
-            }}
-            onPointerDown={(event) => controller.beginLineLabelGesture(event, renderedLine)}
-          >
-            <text>{renderedLine.label}</text>
-          </g>
+          <polyline className="view-line-flex-preview" points={toSvgPoints(previewPoints)} />
+          <line
+            className="view-line-flex-guide"
+            x1={controller.flexPathPreview!.guideStart.xMm * VIEW_PIXELS_PER_MM}
+            x2={controller.flexPathPreview!.guideEnd.xMm * VIEW_PIXELS_PER_MM}
+            y1={controller.flexPathPreview!.guideStart.yMm * VIEW_PIXELS_PER_MM}
+            y2={controller.flexPathPreview!.guideEnd.yMm * VIEW_PIXELS_PER_MM}
+          />
         </>
       ) : null}
-      {selected &&
-        handles.map((point, index) => (
-          <circle
-            className="view-line-bend"
-            cx={point.xMm * VIEW_PIXELS_PER_MM}
-            cy={point.yMm * VIEW_PIXELS_PER_MM}
-            key={index}
-            r={3 / controller.zoom}
-            onPointerDown={(event) => controller.beginWaypointGesture(event, line, index)}
-          />
-        ))}
+      {renderedLine.label && labelPoint ? (
+        <g
+          className={`view-line-label is-${renderedLine.labelOrientation}`}
+          transform={`translate(${labelPoint.xMm * VIEW_PIXELS_PER_MM} ${labelPoint.yMm * VIEW_PIXELS_PER_MM})${renderedLine.labelOrientation === 'vertical' ? ' rotate(-90)' : ''}`}
+          onDoubleClick={(event) => {
+            event.stopPropagation();
+            focusInspector();
+          }}
+          onPointerDown={(event) => controller.beginLineLabelGesture(event, renderedLine)}
+        >
+          <text>{renderedLine.label}</text>
+        </g>
+      ) : null}
+      {selected && !flexPreviewActive
+        ? bends.map((point, index) => (
+            <circle
+              aria-label={point.flexPathId ? 'Adjust Flex path corner' : 'Adjust line bend'}
+              className={`view-line-bend${point.flexPathId ? ' is-flex' : ''}`}
+              cx={point.xMm * VIEW_PIXELS_PER_MM}
+              cy={point.yMm * VIEW_PIXELS_PER_MM}
+              key={`bend-${index}`}
+              r={2.5 / controller.zoom}
+              role="button"
+              tabIndex={0}
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={(event) => controller.beginWaypointGesture(event, renderedLine, index)}
+            />
+          ))
+        : null}
+      {selected && !flexPreviewActive
+        ? segments.map((segment) => (
+            <circle
+              aria-label={`Move ${segment.orientation} line segment; Shift-drag to create Flex path`}
+              className={`view-line-segment-handle${segment.flexPathId ? ' is-flex' : ''}`}
+              cx={segment.midpoint.xMm * VIEW_PIXELS_PER_MM}
+              cy={segment.midpoint.yMm * VIEW_PIXELS_PER_MM}
+              key={`segment-${segment.index}`}
+              r={2 / controller.zoom}
+              role="button"
+              tabIndex={0}
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={(event) => controller.beginSegmentGesture(event, renderedLine, segment.index)}
+            />
+          ))
+        : null}
     </g>
   );
 }

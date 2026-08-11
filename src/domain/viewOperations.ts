@@ -1,5 +1,7 @@
 import { VIEW_PLACEMENT_MAX_SCALE, VIEW_PLACEMENT_MIN_SCALE } from './viewGeometry';
-import { getViewLineEndpointPoint, resolveViewLineEndpoint } from './viewLineEndpoints';
+import { resolveViewLineEndpoint } from './viewLineEndpoints';
+import { getViewFlexPathValidationError } from './viewFlexPaths';
+import { getRenderedLinePoints } from './viewRouting';
 import {
   getViewLayoutScale,
   isViewDeviceScale,
@@ -478,22 +480,35 @@ function validateLine(project: ProjectRoot, view: ProjectView, line: ViewLine): 
     !isFiniteNumber(line.labelPosition) ||
     line.labelPosition < 0 ||
     line.labelPosition > 1 ||
-    line.waypoints.some((point) => !isFiniteNumber(point.xMm) || !isFiniteNumber(point.yMm))
+    line.waypoints.some(
+      (point) =>
+        !isFiniteNumber(point.xMm) ||
+        !isFiniteNumber(point.yMm) ||
+        (point.flexPathId !== null && typeof point.flexPathId !== 'string'),
+    )
   ) {
     return 'View line operation blocked: line geometry is invalid.';
   }
 
-  if (line.waypoints.length) {
-    const start = getViewLineEndpointPoint(project, view, line.from);
-    const end = getViewLineEndpointPoint(project, view, line.to);
-    const points = start && end ? [start, ...line.waypoints, end] : [];
-    if (
-      points
-        .slice(1)
-        .some((point, index) => point.xMm !== points[index].xMm && point.yMm !== points[index].yMm)
-    ) {
-      return 'View line operation blocked: manual routes must remain orthogonal.';
-    }
+  const flexError = getViewFlexPathValidationError(line.waypoints);
+  if (flexError) return `View line operation blocked: ${flexError}`;
+
+  const renderedPoints = getRenderedLinePoints(project, view, line);
+  if (
+    line.waypoints
+      .slice(1)
+      .some(
+        (point, index) =>
+          (point.xMm !== line.waypoints[index].xMm && point.yMm !== line.waypoints[index].yMm) ||
+          (point.xMm === line.waypoints[index].xMm && point.yMm === line.waypoints[index].yMm),
+      ) ||
+    renderedPoints
+      .slice(1)
+      .some(
+        (point, index) => point.xMm !== renderedPoints[index].xMm && point.yMm !== renderedPoints[index].yMm,
+      )
+  ) {
+    return 'View line operation blocked: manual routes must remain orthogonal.';
   }
 
   return null;

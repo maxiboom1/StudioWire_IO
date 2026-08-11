@@ -37,7 +37,7 @@ function validateLegacyFixtures() {
   const files = readdirSync(legacyDir)
     .filter((name) => name.endsWith('.json'))
     .sort();
-  const expectedLegacyVersions: SchemaVersion[] = ['0.2.8.25', '0.2.9.07'];
+  const expectedLegacyVersions: SchemaVersion[] = ['0.2.8.25', '0.2.9.07', '0.2.9.08'];
   const actualVersions = files.map(versionFromLegacyFixtureName).sort();
 
   if (JSON.stringify(actualVersions) !== JSON.stringify([...expectedLegacyVersions].sort())) {
@@ -134,6 +134,21 @@ function validateLegacySentinel(path: string, version: SchemaVersion, raw: any, 
     }
     if (JSON.stringify(raw.cables) !== JSON.stringify(project.cables)) {
       fail(`${path} rewrote legacy cable records during the 0.2.9.07 migration.`);
+    }
+    return;
+  }
+
+  if (version === '0.2.9.08') {
+    const rawWaypoints = raw.views.flatMap((view: any) => view.lines.flatMap((line: any) => line.waypoints));
+    if (rawWaypoints.length === 0) {
+      fail(`${path} must exercise a real pre-Flex manual route.`);
+    }
+    if (rawWaypoints.some((point: any) => 'flexPathId' in point)) {
+      fail(`${path} must retain the pre-Flex 0.2.9.08 waypoint shape.`);
+    }
+    const migratedWaypoints = project.views.flatMap((view) => view.lines.flatMap((line) => line.waypoints));
+    if (migratedWaypoints.some((point) => point.flexPathId !== null)) {
+      fail(`${path} assigned a non-null Flex identity during migration.`);
     }
     return;
   }

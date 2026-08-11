@@ -66,17 +66,17 @@ function controller(selection: 'line' | null = 'line') {
     project: structuredClone(sampleProject),
     zoom: 1,
     linePreview: null,
+    flexPathPreview: null,
     canvasSelection: selection ? { kind: 'line', id: 'line' } : null,
     selectCanvas: vi.fn(),
-    addWaypoint: vi.fn(),
-    beginInsertedWaypointGesture: vi.fn(),
     beginWaypointGesture: vi.fn(),
+    beginSegmentGesture: vi.fn(),
     beginLineLabelGesture: vi.fn(),
   } as unknown as ViewEditorController;
 }
 
 describe('ViewLineItem', () => {
-  it('keeps configured stroke color/width, black label class, and restrained selection halo', () => {
+  it('keeps configured stroke color/width and exposes only editing handles when selected', () => {
     const currentLine = line();
     const editor = controller();
     const { container } = render(
@@ -85,9 +85,11 @@ describe('ViewLineItem', () => {
       </svg>,
     );
     const group = container.querySelector('g.is-selected') as SVGGElement;
+    expect(group.classList.contains('view-line-item')).toBe(true);
     expect(group.style.getPropertyValue('--view-line-color')).toBe('#3465EB');
     expect(group.style.getPropertyValue('--view-line-width')).toBe('5px');
-    expect(container.querySelector('.view-line-selection-halo')).toBeTruthy();
+    expect(container.querySelector('.view-line-selection-halo')).toBeNull();
+    expect(container.querySelector('.view-line-segment-handle')).toBeTruthy();
     expect(container.querySelector('.view-line-label.is-vertical')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Change line label/ })).toBeNull();
   });
@@ -107,7 +109,7 @@ describe('ViewLineItem', () => {
     expect(editor.selectCanvas).toHaveBeenCalledWith({ kind: 'line', id: 'line' });
   });
 
-  it('starts one bend insertion gesture on Ctrl-pointer down at the page point', () => {
+  it('starts Flex creation only from a segment midpoint Shift-drag gesture', () => {
     const currentLine = line();
     const editor = controller();
     const { container } = render(
@@ -117,31 +119,40 @@ describe('ViewLineItem', () => {
         </svg>
       </div>,
     );
-    const page = container.querySelector('.view-page') as HTMLElement;
-    vi.spyOn(page, 'getBoundingClientRect').mockReturnValue({
-      left: 30,
-      top: 20,
-      right: 630,
-      bottom: 420,
-      width: 600,
-      height: 400,
-      x: 30,
-      y: 20,
-      toJSON: () => ({}),
-    });
-    const group = container.querySelector('g.is-selected') as SVGGElement;
+    const handle = container.querySelector('.view-line-segment-handle') as SVGCircleElement;
     const pointerDown = new MouseEvent('pointerdown', {
       bubbles: true,
       cancelable: true,
-      clientX: 60,
-      clientY: 50,
-      ctrlKey: true,
+      shiftKey: true,
     });
     Object.defineProperty(pointerDown, 'pointerId', { value: 7 });
-    fireEvent(group, pointerDown);
-    expect(editor.beginInsertedWaypointGesture).toHaveBeenCalledWith(expect.anything(), currentLine, {
-      xMm: 10,
-      yMm: 10,
+    fireEvent(handle, pointerDown);
+    expect(editor.beginSegmentGesture).toHaveBeenCalledWith(expect.anything(), currentLine, 0);
+  });
+
+  it('keeps a Flex corner click from falling back to whole-line selection', () => {
+    const currentLine = line({
+      waypoints: [
+        { xMm: 115, yMm: 35, flexPathId: 'flex-a' },
+        { xMm: 115, yMm: 50, flexPathId: 'flex-a' },
+        { xMm: 125, yMm: 50, flexPathId: 'flex-a' },
+        { xMm: 125, yMm: 35, flexPathId: 'flex-a' },
+      ],
     });
+    const editor = controller();
+    render(
+      <svg>
+        <ViewLineItem controller={editor} line={currentLine} view={view(currentLine)} warningIndex={0} />
+      </svg>,
+    );
+    const corner = screen.getAllByRole('button', { name: 'Adjust Flex path corner' })[0];
+    fireEvent.pointerDown(corner, { pointerId: 9 });
+    fireEvent.click(corner);
+    expect(editor.beginWaypointGesture).toHaveBeenCalledWith(
+      expect.anything(),
+      currentLine,
+      expect.any(Number),
+    );
+    expect(editor.selectCanvas).not.toHaveBeenCalled();
   });
 });

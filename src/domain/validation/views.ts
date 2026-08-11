@@ -18,6 +18,7 @@ import {
   VIEW_PLACEMENT_MIN_SCALE,
 } from '../viewGeometry';
 import { getViewLineEndpointPoint } from '../viewLineEndpoints';
+import { getViewFlexPathValidationError } from '../viewFlexPaths';
 import { getViewLineLabelBounds, getViewLineLabelPoint } from '../viewLineLabelGeometry';
 import { getViewPortRangeBounds, viewPortRangesOverlap } from '../viewPortRanges';
 import { getRenderedLinePoints } from '../viewRouting';
@@ -165,6 +166,19 @@ function validateViewLines(
       issues.push(geometryIssue(view, `Line ${line.id} has invalid geometry.`, issue));
     }
 
+    const flexError = getViewFlexPathValidationError(line.waypoints);
+    if (flexError) {
+      issues.push(
+        issue(
+          'error',
+          'view-line-flex-invalid',
+          `View line ${line.id} has invalid Flex path geometry: ${flexError}`,
+          'view',
+          view.id,
+        ),
+      );
+    }
+
     if (
       !VIEW_LINE_COLOR_VALUES.includes(line.color) ||
       !VIEW_LINE_WIDTH_VALUES.includes(line.width) ||
@@ -276,11 +290,15 @@ function validateViewLineEndpoint(
 }
 
 function isLineOrthogonal(project: ProjectRoot, view: ProjectView, line: ViewLine): boolean {
-  if (!line.waypoints.length) return true;
-  const start = getViewLineEndpointPoint(project, view, line.from);
-  const end = getViewLineEndpointPoint(project, view, line.to);
-  if (!start || !end) return true;
-  const points = [start, ...line.waypoints, end];
+  const storedOrthogonal = line.waypoints
+    .slice(1)
+    .every(
+      (point, index) =>
+        (point.xMm === line.waypoints[index].xMm || point.yMm === line.waypoints[index].yMm) &&
+        (point.xMm !== line.waypoints[index].xMm || point.yMm !== line.waypoints[index].yMm),
+    );
+  if (!storedOrthogonal) return false;
+  const points = getRenderedLinePoints(project, view, line);
   return points
     .slice(1)
     .every((point, index) => point.xMm === points[index].xMm || point.yMm === points[index].yMm);
@@ -342,7 +360,12 @@ function validateViewPageBounds(
 }
 
 function isLineGeometryValid(line: ViewLine): boolean {
-  return line.waypoints.every((point) => isFiniteNumber(point.xMm) && isFiniteNumber(point.yMm));
+  return line.waypoints.every(
+    (point) =>
+      isFiniteNumber(point.xMm) &&
+      isFiniteNumber(point.yMm) &&
+      (point.flexPathId === null || typeof point.flexPathId === 'string'),
+  );
 }
 
 function isAnnotationGeometryValid(annotation: ViewAnnotation): boolean {

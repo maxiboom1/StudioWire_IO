@@ -243,6 +243,8 @@ describe('importProjectValue structural safety', () => {
   it('supports the current schema, prior View stage, and retained 0.2.8.25 baseline', () => {
     expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([
       STUDIOWIRE_CURRENT_VERSION,
+      '0.2.9.09',
+      '0.2.9.08',
       '0.2.9.07',
       '0.2.9.06',
       '0.2.9.05',
@@ -472,6 +474,46 @@ describe('importProjectValue structural safety', () => {
     expect(result.project.portGroups.every((group) => group.devicePortLabelMode === 'pattern')).toBe(true);
     expect(result.project.portGroups.every((group) => group.devicePortLabelPattern === null)).toBe(true);
     expect(result.project.ports.every((port) => port.devicePortLabelOverride === null)).toBe(true);
+  });
+
+  it('migrates 0.2.9.08 waypoints by adding only nullable Flex path identities', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.08';
+    project.views[0].lines[0].waypoints = [
+      { xMm: 125, yMm: 20 },
+      { xMm: 125, yMm: 80 },
+    ];
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.views[0].lines[0].waypoints).toEqual([
+      { xMm: 125, yMm: 20, flexPathId: null },
+      { xMm: 125, yMm: 80, flexPathId: null },
+    ]);
+    const migrated = structuredClone(result.project) as any;
+    migrated.schemaVersion = '0.2.9.08';
+    migrated.views[0].lines[0].waypoints = migrated.views[0].lines[0].waypoints.map(
+      ({ flexPathId: _flexPathId, ...point }: { flexPathId: string | null; xMm: number; yMm: number }) =>
+        point,
+    );
+    expect(migrated).toEqual(before);
+  });
+
+  it('imports 0.2.9.09 through a shape-preserving route-polish migration', () => {
+    const project = currentProject();
+    project.schemaVersion = '0.2.9.09';
+    const before = structuredClone(project);
+
+    const result = importProjectValue(project);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const { schemaVersion: _beforeVersion, ...beforeData } = before;
+    const { schemaVersion: _afterVersion, ...afterData } = result.project;
+    expect(afterData).toEqual(beforeData);
   });
 
   it('requires Views on current files and round-trips exact View layout data', () => {

@@ -96,16 +96,43 @@ describe('View orthogonal routing', () => {
       },
       label: '',
       waypoints: [
-        { xMm: 130, yMm: 50 },
-        { xMm: 130, yMm: 120 },
+        { xMm: 130, yMm: 50, flexPathId: null },
+        { xMm: 130, yMm: 120, flexPathId: null },
       ],
       ...DEFAULT_VIEW_LINE_STYLE,
     };
-    expect(getRenderedLinePoints(sampleProject, current, line)).toContainEqual({ xMm: 130, yMm: 50 });
+    expect(isOrthogonal(getRenderedLinePoints(sampleProject, current, line))).toBe(true);
     current.placements[0].xMm += 20;
+    expect(isOrthogonal(getRenderedLinePoints(sampleProject, current, line))).toBe(true);
     expect(line.waypoints).toEqual([
-      { xMm: 130, yMm: 50 },
-      { xMm: 130, yMm: 120 },
+      { xMm: 130, yMm: 50, flexPathId: null },
+      { xMm: 130, yMm: 120, flexPathId: null },
     ]);
   });
+
+  it('renders malformed imported manual geometry through a safe orthogonal route', () => {
+    const current = view();
+    const line: ViewLine = {
+      id: 'line-invalid-import',
+      from: { kind: 'port', placementId: 'a', portId: 'port-group-router-outputs-port-0001' },
+      to: {
+        kind: 'port',
+        placementId: 'b',
+        portId: 'port-group-multiviewer-inputs-port-0001',
+      },
+      label: '',
+      waypoints: [
+        { xMm: 120, yMm: 50, flexPathId: null },
+        { xMm: 145, yMm: 85, flexPathId: null },
+      ],
+      ...DEFAULT_VIEW_LINE_STYLE,
+    };
+    expect(isOrthogonal(getRenderedLinePoints(sampleProject, current, line))).toBe(true);
+  });
 });
+
+function isOrthogonal(points: Array<{ xMm: number; yMm: number }>) {
+  return points
+    .slice(1)
+    .every((point, index) => point.xMm === points[index].xMm || point.yMm === points[index].yMm);
+}

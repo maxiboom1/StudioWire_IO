@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.9.10",
+  "schemaVersion": "0.2.9.08",
   "project": {
     "id": "project-demo-studio",
     "name": "Demo Studio",
@@ -343,7 +343,85 @@
       "numberingDirection": "bottom_to_top"
     }
   ],
-  "views": [],
+  "views": [
+    {
+      "id": "view-signal-overview",
+      "name": "Signal Overview",
+      "description": "Sample project View with live equipment references and a manual cable-group annotation.",
+      "pageSize": "a3",
+      "orientation": "portrait",
+      "placements": [
+        {
+          "id": "view-placement-router-1",
+          "sourceType": "device",
+          "sourceId": "device-router-1",
+          "xMm": 25,
+          "yMm": 80,
+          "scale": 0.8,
+          "labelOverride": null
+        },
+        {
+          "id": "view-placement-multiviewer-1",
+          "sourceType": "device",
+          "sourceId": "device-multiviewer-1",
+          "xMm": 165,
+          "yMm": 80,
+          "scale": 0.8,
+          "labelOverride": null
+        }
+      ],
+      "lines": [
+        {
+          "id": "view-line-router-to-multiviewer",
+          "from": {
+            "kind": "port",
+            "placementId": "view-placement-router-1",
+            "portId": "port-group-router-outputs-port-0001"
+          },
+          "to": {
+            "kind": "port",
+            "placementId": "view-placement-multiviewer-1",
+            "portId": "port-group-multiviewer-inputs-port-0001"
+          },
+          "label": "4x SDI",
+          "waypoints": [
+            {
+              "xMm": 125,
+              "yMm": 90
+            },
+            {
+              "xMm": 125,
+              "yMm": 115
+            }
+          ],
+          "color": "blue",
+          "width": "medium",
+          "labelOrientation": "horizontal",
+          "labelPosition": 0.5
+        }
+      ],
+      "annotations": [
+        {
+          "id": "view-group-core-signal-path",
+          "kind": "group",
+          "xMm": 15,
+          "yMm": 55,
+          "widthMm": 265,
+          "heightMm": 155,
+          "label": "Core Signal Path"
+        },
+        {
+          "id": "view-text-signal-overview",
+          "kind": "text",
+          "xMm": 20,
+          "yMm": 20,
+          "widthMm": 120,
+          "text": "Sample Signal Overview",
+          "size": "large"
+        }
+      ]
+    }
+  ],
   "devices": [
     {
       "id": "device-router-1",
@@ -382,27 +460,6 @@
       "rackId": null,
       "rackSizeRu": null,
       "rackBottomRu": null,
-      "status": "planned",
-      "notes": "",
-      "createdAt": "2026-05-06T00:00:00.000Z",
-      "updatedAt": "2026-05-06T00:00:00.000Z"
-    },
-    {
-      "id": "device-tb-strict-import",
-      "name": "TB Strict Import",
-      "kind": "terminal_block",
-      "code": "TB",
-      "manufacturer": "Legacy",
-      "model": "Legacy Model",
-      "categoryId": "category-video",
-      "locationId": "location-machine-room",
-      "subLocationId": null,
-      "role": "Legacy Role",
-      "labelPrefix": "TB",
-      "mountType": "rack",
-      "rackId": "rack-mcr-a",
-      "rackSizeRu": 1,
-      "rackBottomRu": 1,
       "status": "planned",
       "notes": "",
       "createdAt": "2026-05-06T00:00:00.000Z",
@@ -460,7 +517,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0001",
+      "plannedCableId": "cable-v-001",
       "notes": "",
       "devicePortLabelOverride": null
     },
@@ -474,7 +531,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0002",
+      "plannedCableId": "cable-v-002",
       "notes": "",
       "devicePortLabelOverride": null
     },
@@ -488,7 +545,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0003",
+      "plannedCableId": "cable-v-003",
       "notes": "",
       "devicePortLabelOverride": null
     },
@@ -502,7 +559,7 @@
       "direction": "output",
       "categoryId": "category-video",
       "connectorTypeId": "connector-bnc",
-      "plannedCableId": "cable-v-0004",
+      "plannedCableId": "cable-v-004",
       "notes": "",
       "devicePortLabelOverride": null
     },
@@ -565,8 +622,8 @@
   ],
   "cables": [
     {
-      "id": "cable-v-0001",
-      "number": "V-0001",
+      "id": "cable-v-001",
+      "number": "V-001",
       "prefix": "V",
       "index": 1,
       "status": "planned",
@@ -581,13 +638,13 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-001",
-      "labelMiddle": "V-0001",
+      "labelMiddle": "V-001",
       "labelBottom": "",
       "notes": ""
     },
     {
-      "id": "cable-v-0002",
-      "number": "V-0002",
+      "id": "cable-v-002",
+      "number": "V-002",
       "prefix": "V",
       "index": 2,
       "status": "planned",
@@ -602,13 +659,13 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-002",
-      "labelMiddle": "V-0002",
+      "labelMiddle": "V-002",
       "labelBottom": "",
       "notes": ""
     },
     {
-      "id": "cable-v-0003",
-      "number": "V-0003",
+      "id": "cable-v-003",
+      "number": "V-003",
       "prefix": "V",
       "index": 3,
       "status": "planned",
@@ -623,13 +680,13 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-003",
-      "labelMiddle": "V-0003",
+      "labelMiddle": "V-003",
       "labelBottom": "",
       "notes": ""
     },
     {
-      "id": "cable-v-0004",
-      "number": "V-0004",
+      "id": "cable-v-004",
+      "number": "V-004",
       "prefix": "V",
       "index": 4,
       "status": "planned",
@@ -644,7 +701,7 @@
         "label": "Unknown"
       },
       "labelTop": "OUT-004",
-      "labelMiddle": "V-0004",
+      "labelMiddle": "V-004",
       "labelBottom": "",
       "notes": ""
     }
