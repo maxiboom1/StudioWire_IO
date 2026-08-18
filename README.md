@@ -1,6 +1,6 @@
 # StudioWire IO
 
-StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export.
+StudioWire IO is a local broadcast engineering project editor. It manages structured project data for settings, locations, racks, devices, port groups, generated ports, planned cable numbers, project Views, validation, and JSON import/export. 
 
 This repository contains the v0.2.9.10 React, TypeScript, Vite, Tailwind CSS, and shadcn/ui app. It runs entirely in the browser with local autosave and JSON import/export.
 
